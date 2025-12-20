@@ -20,7 +20,7 @@
         accel_profile = "flat"; # Disable mouse acceleration
 
         touchpad = {
-          natural_scroll = false; # false: Swipe down -> content moves down
+          natural_scroll = true; # true: Swipe down -> content moves down
         };
       };
 
