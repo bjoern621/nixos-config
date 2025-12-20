@@ -10,6 +10,11 @@
   wayland.windowManager.hyprland = {
     enable = true;
     settings = {
+      # https://wiki.hypr.land/Configuring/Variables/#general
+      general = {
+        border_size = 2;
+      };
+
       input = {
         kb_layout = "de";
         accel_profile = "flat"; # Disable mouse acceleration
