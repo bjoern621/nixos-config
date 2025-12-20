@@ -29,6 +29,11 @@
         disable_splash_rendering = true;
       };
 
+      # Make fuzzel close instantly (disable layer animations for fuzzel)
+      layerrule = [
+        "noanim, ^(fuzzel)$"
+      ];
+
       exec-once = [ "hyprpaper" ];
     };
   };
