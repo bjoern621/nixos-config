@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  imports = [
+    ./hyprpaper.nix
+  ];
+
   wayland.windowManager.hyprland = {
     enable = true;
     settings = {
@@ -13,6 +17,10 @@
         "col.active_border" = "rgb(ff69b4)";
         "col.inactive_border" = "rgb(444444)";
       };
+
+     
+
+      exec-once = [ "hyprpaper" ];
     };
   };
 }
