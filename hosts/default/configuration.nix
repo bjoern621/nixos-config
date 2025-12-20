@@ -5,10 +5,11 @@
 { config, pkgs, ... }:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+{
+  imports = [
+    ./hardware-configuration.nix
+    ../../modules/hyprland.nix
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -117,10 +118,6 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.11"; # Did you read the comment?
-
-  environment.systemPackages = with pkgs; [
-    kitty # Required for the default Hyprland config
-  ];
 
   # Enable Spotify Connect discovery
   networking.firewall.allowedUDPPorts = [ 5353 ];
