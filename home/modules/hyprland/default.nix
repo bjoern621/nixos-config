@@ -24,7 +24,7 @@
         rounding = 10;
 
         shadow = {
-          enable = true;
+          enabled = true;
         };
 
         blur = {
