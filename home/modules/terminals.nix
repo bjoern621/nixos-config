@@ -6,6 +6,5 @@
     foot
     wezterm
     gnome-terminal
-    konsole
   ];
 }
