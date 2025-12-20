@@ -10,6 +10,10 @@
     settings = {
       input = {
         kb_layout = "de";
+
+        touchpad = {
+          natural_scroll = false; # false: Swipe down -> content moves down
+        };
       };
 
       # Pink accent color
