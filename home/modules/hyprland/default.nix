@@ -19,10 +19,19 @@
         };
       };
 
-      # Pink accent color
-      general = {
-        "col.active_border" = "rgb(ff69b4)";
-        "col.inactive_border" = "rgb(444444)";
+      # https://wiki.hypr.land/Configuring/Variables/#decoration
+      decoration = {
+        rounding = 10;
+
+        shadow = {
+          enable = true;
+        };
+
+        blur = {
+          enabled = true;
+          size = 8;
+          passes = 1;
+        };
       };
 
       misc = {
