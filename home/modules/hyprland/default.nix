@@ -10,6 +10,7 @@
     settings = {
       input = {
         kb_layout = "de";
+        accel_profile = "flat"; # Disable mouse acceleration
 
         touchpad = {
           natural_scroll = false; # false: Swipe down -> content moves down
