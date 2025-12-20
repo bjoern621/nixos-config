@@ -5,9 +5,8 @@
 { config, pkgs, ... }:
 
 {
-{
   imports = [
-    ./hardware-configuration.nix
+    ../../hardware-configuration.nix
     ../../modules/hyprland.nix
   ];
 
