@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./modules/hyprland.nix
     ./modules/spotify.nix
     ./modules/discord.nix
   ];
