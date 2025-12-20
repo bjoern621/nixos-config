@@ -5,6 +5,7 @@
     ./modules/spotify.nix
     ./modules/discord.nix
     ./modules/hyprland
+    ./modules/terminals.nix
   ];
 
   home.username = "bjoern";
