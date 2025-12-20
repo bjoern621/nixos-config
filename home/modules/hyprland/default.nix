@@ -3,6 +3,8 @@
 {
   imports = [
     ./hyprpaper.nix
+    ./fuzzel.nix
+    ./keybinds.nix
   ];
 
   wayland.windowManager.hyprland = {
