@@ -1,15 +1,18 @@
 { config, pkgs, ... }:
 
 {
-  wayland.windowManager.hyprland.settings = {
-    input = {
-      kb_layout = "de";
-    };
+  wayland.windowManager.hyprland = {
+    enable = true;
+    settings = {
+      input = {
+        kb_layout = "de";
+      };
 
-    # Pink accent color
-    general = {
-      "col.active_border" = "rgb(ff69b4)";
-      "col.inactive_border" = "rgb(444444)";
+      # Pink accent color
+      general = {
+        "col.active_border" = "rgb(ff69b4)";
+        "col.inactive_border" = "rgb(444444)";
+      };
     };
   };
 }
