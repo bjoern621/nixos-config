@@ -18,7 +18,9 @@
         "col.inactive_border" = "rgb(444444)";
       };
 
-     
+      misc = {
+        disable_splash_rendering = true;
+      };
 
       exec-once = [ "hyprpaper" ];
     };
