@@ -118,15 +118,7 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.11"; # Did you read the comment?
 
-
-  programs.hyprland.enable = true;
-  # Hint electron apps to use wayland
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
-
   environment.systemPackages = with pkgs; [
-    discord
-    spotify
-    google-chrome
     kitty # Required for the default Hyprland config
   ];
 
