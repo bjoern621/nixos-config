@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 
 let
-  sys-conf-update = pkgs.writeShellScriptBin "sys-conf-update" ''
+  sysconf-update = pkgs.writeShellScriptBin "sysconf-update" ''
     set -e
     
     NIXOS_CONFIG="/etc/nixos"
@@ -18,5 +18,5 @@ let
   '';
 in
 {
-  environment.systemPackages = [ sys-conf-update ];
+  environment.systemPackages = [ sysconf-update ];
 }
