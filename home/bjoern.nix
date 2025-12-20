@@ -14,6 +14,7 @@
   home.packages = with pkgs; [
     google-chrome
     firefox
+    git
   ];
 
   home.stateVersion = "25.11";
