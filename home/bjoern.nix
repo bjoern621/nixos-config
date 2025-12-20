@@ -4,6 +4,7 @@
   imports = [
     ./modules/spotify.nix
     ./modules/discord.nix
+    ./modules/hyprland.nix
   ];
 
   home.username = "bjoern";
