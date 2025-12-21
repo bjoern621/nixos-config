@@ -2,21 +2,43 @@
 
 let
   sysconf-update = pkgs.writeShellScriptBin "sysconf-update" ''
-    set -e
-    
-    NIXOS_CONFIG="/etc/nixos"
-    
-    echo "Pulling latest changes..."
-    cd "$NIXOS_CONFIG"
-    sudo git pull
-    
-    echo "Rebuilding NixOS..."
+    # set -e: exit immediately when a command fails
+    # set -u: treat unset variables as an error
+    # set -o pipefail: a pipeline fails if any command in it fails
+    set -euo pipefail
+
+    SOURCE_REPO="/root/nixos-config"
+    NIXOS_CONFIG_ROOT="/etc/nixos"
+    NIXOS_CONFIG="$NIXOS_CONFIG_ROOT/nixosconfig"
+
+    if [[ ! -d "$SOURCE_REPO" ]]; then
+      echo "Missing source repo: $SOURCE_REPO" >&2
+      exit 1
+    fi
+
+    if [[ ! -d "$NIXOS_CONFIG_ROOT" ]]; then
+      echo "Missing target config dir: $NIXOS_CONFIG_ROOT" >&2
+      exit 1
+    fi
+
+    echo "Pulling latest changes in $SOURCE_REPO..."
+    sudo git -C "$SOURCE_REPO" pull
+
+    echo "Syncing $SOURCE_REPO -> $NIXOS_CONFIG..."
+    sudo rm -rf "$NIXOS_CONFIG"
+    sudo mkdir -p "$NIXOS_CONFIG"
+    sudo cp -a "$SOURCE_REPO/." "$NIXOS_CONFIG/" # cp -a: archive mode (preserves permissions/ownership/timestamps and copies directories recursively)
+    sudo rm -rf "$NIXOS_CONFIG/.git"
+
+    echo "Rebuilding NixOS from $NIXOS_CONFIG..."
     sudo nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
-    
+
     echo "System updated successfully!"
     echo "You may want to reboot now."
   '';
 in
 {
-  environment.systemPackages = [ sysconf-update ];
+  environment.systemPackages = with pkgs; [
+    sysconf-update
+  ];
 }
