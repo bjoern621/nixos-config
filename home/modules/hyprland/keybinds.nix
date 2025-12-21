@@ -12,7 +12,7 @@
     bind = [
       # Application shortcuts
       "$mainMod, Q, exec, $terminal"
-      "$mainMod, C, killactive,"
+      "$mainMod, W, killactive,"
       "$mainMod, M, exit,"
       "$mainMod, E, exec, $fileManager"
       "$mainMod, V, togglefloating,"
