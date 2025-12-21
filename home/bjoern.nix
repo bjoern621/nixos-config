@@ -28,7 +28,7 @@
       firefox
       git
       vscode
-      notepad-plus-plus
+      kdePackages.kate
       vlc
     ];
 
