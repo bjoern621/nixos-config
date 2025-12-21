@@ -58,8 +58,6 @@
       layerrule = [
         "noanim, ^(fuzzel)$"
       ];
-
-      exec-once = [ "hyprpaper" ];
     };
   };
 }

@@ -24,4 +24,6 @@ in
     disable_splash_rendering = true;
     disable_hyprland_logo = true;
   };
+
+  wayland.windowManager.hyprland.settings.exec-once = [ "hyprpaper" ];
 }
