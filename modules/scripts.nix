@@ -28,8 +28,8 @@ let
     fi
 
     echo "Pulling latest changes in $SOURCE_REPO..."
-    # git -C <path>: run git as if started in <path> (without needing to cd)
-    sudo git -C "$SOURCE_REPO" pull --ff-only
+    cd "$SOURCE_REPO"
+    sudo git pull --ff-only
 
     echo "Syncing $SOURCE_REPO -> $NIXOS_CONFIG..."
     sudo rm -rf "$NIXOS_CONFIG"
