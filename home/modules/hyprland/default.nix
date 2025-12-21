@@ -6,6 +6,7 @@
     ./fuzzel.nix
     ./keybinds.nix
     ./animations.nix
+    ./waybar/waybar.nix
   ];
 
   wayland.windowManager.hyprland = {
