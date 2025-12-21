@@ -1,3 +1,9 @@
+/*
+    Waybar is a GTK based application.
+    Only GTK CSS properties are supported.
+    More info: https://docs.gtk.org/gtk3/css-properties.html
+*/
+
 #waybar {
     background: rgba(30, 30, 46, 0.95);
     color: #cdd6f4;
