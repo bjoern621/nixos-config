@@ -18,4 +18,6 @@
       };
     };
   };
+
+  wayland.windowManager.hyprland.exec-once = [ "waybar" ];
 }
