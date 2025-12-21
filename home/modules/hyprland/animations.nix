@@ -3,7 +3,7 @@
 {
   # https://wiki.hypr.land/Configuring/Variables/#animations
   wayland.windowManager.hyprland.settings.animations = {
-    enabled = yes, please :)
+    enabled = true
 
     # Default curves, see https://wiki.hypr.land/Configuring/Animations/#curves
     #        NAME,           X0,   Y0,   X1,   Y1
