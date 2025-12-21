@@ -6,6 +6,7 @@
     ./modules/discord.nix
     ./modules/hyprland
     ./modules/terminals.nix
+    ./modules/vscode.nix
   ];
 
   home.username = "bjoern";
@@ -27,7 +28,6 @@
     home.packages = with pkgs; [
       firefox
       git
-      vscode
       kdePackages.kate
       vlc
     ];
