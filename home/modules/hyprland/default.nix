@@ -31,7 +31,7 @@
       input = {
         kb_layout = "de";
         accel_profile = "flat"; # Disable mouse acceleration
-        scroll_factor = 0.5;
+        scroll_factor = 0.1;
 
         touchpad = {
           natural_scroll = true; # true: Swipe down -> content moves down
