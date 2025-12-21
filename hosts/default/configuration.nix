@@ -6,7 +6,7 @@
 
 {
   imports = [
-    ../../hardware-configuration.nix
+    /etc/nixos/hardware-configuration.nix
     ../../modules/hyprland.nix
     ../../modules/google-chrome.nix
     ../../modules/pipewire.nix
