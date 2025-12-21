@@ -10,14 +10,14 @@ let
     NIXOS_CONFIG_ROOT="/etc/nixos"
     NIXOS_CONFIG="$NIXOS_CONFIG_ROOT/nixos-config"
 
-    if [[ ! -d "$SOURCE_REPO" ]]; then
-      echo "Missing source repo: $SOURCE_REPO" >&2
+    if [[ ! -d "$NIXOS_CONFIG" ]]; then
+      echo "Missing source repo: $NIXOS_CONFIG" >&2
       exit 1
     fi
 
-    if ! sudo test -d "$SOURCE_REPO/.git"; then
-      echo "Source path exists but is not a git repo: $SOURCE_REPO" >&2
-      echo "Create it with: sudo git clone <remote> $SOURCE_REPO" >&2
+    if ! sudo test -d "$NIXOS_CONFIG/.git"; then
+      echo "Source path exists but is not a git repo: $NIXOS_CONFIG" >&2
+      echo "Create it with: sudo git clone <remote> $NIXOS_CONFIG" >&2
       exit 1
     fi
 
