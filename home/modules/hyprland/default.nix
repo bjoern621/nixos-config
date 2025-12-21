@@ -26,9 +26,11 @@
         "HYPRCURSOR_SIZE,24"
       ];
 
+      # https://wiki.hypr.land/Configuring/Variables/#input
       input = {
         kb_layout = "de";
         accel_profile = "flat"; # Disable mouse acceleration
+        scroll_factor = 0.5;
 
         touchpad = {
           natural_scroll = true; # true: Swipe down -> content moves down
