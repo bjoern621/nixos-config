@@ -9,7 +9,7 @@ let
 
     SOURCE_REPO="/etc/nixos/nixos-config"
     NIXOS_CONFIG_ROOT="/etc/nixos"
-    NIXOS_CONFIG="$NIXOS_CONFIG_ROOT/nixosconfig"
+    NIXOS_CONFIG="$NIXOS_CONFIG_ROOT/nixos-config"
 
     if [[ ! -d "$SOURCE_REPO" ]]; then
       echo "Missing source repo: $SOURCE_REPO" >&2
