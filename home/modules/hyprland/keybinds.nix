@@ -14,11 +14,7 @@
       "$mainMod, Q, exec, $terminal"
       "$mainMod, W, killactive,"
       "$mainMod, M, exit,"
-      "$mainMod, E, exec, $fileManager"
       "$mainMod, V, togglefloating,"
-      "$mainMod, R, exec, $menu"
-      "$mainMod, P, pseudo," # dwindle
-      "$mainMod, J, togglesplit," # dwindle
 
       # Move focus with mainMod + arrow keys
       "$mainMod, left, movefocus, l"
