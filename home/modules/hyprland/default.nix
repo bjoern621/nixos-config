@@ -31,11 +31,10 @@
       input = {
         kb_layout = "de";
         accel_profile = "flat"; # Disable mouse acceleration
-        scroll_speed = 0.1;
-
-        touchpad = {
-          natural_scroll = true; # true: Swipe down -> content moves down
-        };
+          touchpad = {
+            natural_scroll = true; # true: Swipe down -> content moves down
+            scroll_factor = 0.5;
+          };
       };
 
       # https://wiki.hypr.land/Configuring/Variables/#decoration
