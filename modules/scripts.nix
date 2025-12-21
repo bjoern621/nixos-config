@@ -16,13 +16,20 @@ let
       exit 1
     fi
 
+    if ! sudo test -d "$SOURCE_REPO/.git"; then
+      echo "Source path exists but is not a git repo: $SOURCE_REPO" >&2
+      echo "Create it with: sudo git clone <remote> $SOURCE_REPO" >&2
+      exit 1
+    fi
+
     if [[ ! -d "$NIXOS_CONFIG_ROOT" ]]; then
       echo "Missing target config dir: $NIXOS_CONFIG_ROOT" >&2
       exit 1
     fi
 
     echo "Pulling latest changes in $SOURCE_REPO..."
-    sudo git -C "$SOURCE_REPO" pull
+    # git -C <path>: run git as if started in <path> (without needing to cd)
+    sudo git -C "$SOURCE_REPO" pull --ff-only
 
     echo "Syncing $SOURCE_REPO -> $NIXOS_CONFIG..."
     sudo rm -rf "$NIXOS_CONFIG"
