@@ -25,7 +25,6 @@
 
   # User packages
   home.packages = with pkgs; [
-    google-chrome
     firefox
     git
   ];

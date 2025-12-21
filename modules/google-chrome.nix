@@ -1,6 +1,10 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
+  environment.systemPackages = with pkgs; [
+    google-chrome
+  ];
+
   environment.etc."opt/chrome/policies/managed/nixos.json".text = builtins.toJSON {
     DefaultSearchProviderEnabled = true;
     DefaultSearchProviderName = "Google";
