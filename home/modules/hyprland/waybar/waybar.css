@@ -29,16 +29,6 @@
     border-radius: 6px;
 }
 
-/* Center area: date + clock alignment */
-.center {
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-.center > * {
-    padding: 0 6px;
-}
-
 /* Power menu button */
 #custom-powermenu {
     padding: 0 10px;
