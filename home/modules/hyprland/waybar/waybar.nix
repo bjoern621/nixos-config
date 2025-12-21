@@ -1,3 +1,8 @@
+{ pkgs, ... }:
+
+let
+  powerMenu = pkgs.writeShellScriptBin "power-menu" (builtins.readFile ./power-menu.sh);
+in
 {
   programs.waybar = {
     enable = true;
@@ -8,27 +13,37 @@
         position = "top";
 
         modules-left = [ "hyprland/workspaces" ];
-        modules-center = [ "custom/date" "clock" ];
-        modules-right = [ "tray" "battery" "custom/powermenu" ];
+        modules-center = [ "clock" ];
+        modules-right = [ "tray" "battery" "pulseaudio" "network" "custom/powermenu" ];
 
         "clock" = {
-          format = "{:%H:%M}";
-        };
-
-        "custom/date" = {
-          exec = "date '+%a %d %b %Y'";
-          interval = 60;
-          format = "{output}";
+          format = " {:L%I:%M %p}";
         };
 
         "battery" = {
           format = "{capacity}% {icon}";
+          format-icons = ["", "", "", "", ""];
         };
         
+        "pulseaudio" = {
+          format = "{volume}% {icon}";
+          format-icons = {
+            default = ["", "", ""];
+          };
+          on-click = "pavucontrol";
+        };
+
+        "network" = {
+          format-wifi = " ";
+          format-ethernet = "󰈀 ";
+          format-disconnected = "󰖪";
+          on-click = "nm-connection-editor";
+        };
+
         "custom/powermenu" = {
           exec = "echo '⏻'";
           format = "{output}";
-          on-click = "bash -c '$HOME/.config/waybar/power-menu.sh'";
+          on-click = "${powerMenu}/bin/power-menu";
         };
       };
     };

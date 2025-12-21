@@ -1,66 +1,73 @@
-/*
-    Waybar is a GTK based application.
-    Only GTK CSS properties are supported.
-    More info: https://docs.gtk.org/gtk3/css-properties.html
-*/
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-weight: bold;
+    min-height: 0;
+    font-size: 16px;
+    font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"';
+}
 
-#waybar {
-    background: rgba(30, 30, 46, 0.95);
-    color: #cdd6f4;
-    font-family: "JetBrains Mono", "Fira Code", monospace;
-    font-size: 14px;
-    border-radius: 8px;
-    border: 1px solid #45475a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+window#waybar {
+    background: transparent;
+}
+
+.modules-left,
+.modules-center,
+.modules-right {
+    background-color: #1e1e2e;
+    border: 1px solid #b4befe;
+    border-radius: 12px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#workspaces,
+#clock,
+#battery,
+#pulseaudio,
+#network,
+#custom-powermenu,
+#tray {
+    padding: 0.2em 0.5em;
 }
 
 #workspaces button {
-    background: transparent;
-    color: #cdd6f4;
-    border: none;
-    padding: 0 8px;
-    margin: 0 2px;
-    border-radius: 6px;
+    padding: 0.2em 0.5em;
+    color: #b4befe;
+    border-radius: 12px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 #workspaces button.active {
-    background: #89b4fa;
+    background-color: #b4befe;
     color: #1e1e2e;
 }
 
-#workspaces button.active {
-    padding: 4px 10px;
-    margin: 0 4px;
-    font-weight: 700;
-    border-radius: 6px;
+#clock {
+    color: #f5e0dc;
 }
 
-/* Power menu button */
-#custom-powermenu {
-    padding: 0 10px;
-    margin: 0 6px;
-    border-radius: 6px;
-}
-
-#clock,
-#battery,
-#tray {
-    padding: 0 12px;
-    margin: 0 4px;
-    border-radius: 6px;
+#battery {
+    color: #b4befe;
 }
 
 #battery.charging {
     color: #a6e3a1;
 }
 
-#battery.critical {
-    color: #f38ba8;
+#battery.warning:not(.charging) {
+    color: #fab387;
 }
 
-#clock {
-    border: 2pt solid #585858;
-    color: #fff4d2;
-    background-color: #333333;
-    padding-right: 4.5pt;
+#pulseaudio {
+    color: #89b4fa;
+}
+
+#network {
+    color: #f9e2af;
+}
+
+#custom-powermenu {
+    color: #f38ba8;
+    margin-right: 5px;
 }
