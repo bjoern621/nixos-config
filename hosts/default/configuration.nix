@@ -80,7 +80,15 @@
   nixpkgs.config.allowUnfree = true;
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh.enable = true; # TODO
+
+  # Enable Wayland support for Electron/Chromium apps and related clients.
+  environment.variables = {
+    ELECTRON_ENABLE_WAYLAND = "1";
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+    OZONE_PLATFORM = "wayland";
+    MOZ_ENABLE_WAYLAND = "1";
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
