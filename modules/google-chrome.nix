@@ -36,9 +36,13 @@
     };
 
     PromotionalTabsEnabled = false;
+    PromotionsEnabled = false;
     WelcomePageOnOSUpgradeEnabled = false;
     DefaultBrowserSettingEnabled = false;
 
     PasswordManagerEnabled = false;
+
+    TranslateEnabled = false;
+    LiveTranslateEnabled = false;
   };
 }
