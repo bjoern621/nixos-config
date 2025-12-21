@@ -7,7 +7,7 @@ let
     # set -o pipefail: a pipeline fails if any command in it fails
     set -euo pipefail
 
-    SOURCE_REPO="/root/nixos-config"
+    SOURCE_REPO="/etc/nixos/nixos-config"
     NIXOS_CONFIG_ROOT="/etc/nixos"
     NIXOS_CONFIG="$NIXOS_CONFIG_ROOT/nixosconfig"
 
