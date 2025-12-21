@@ -37,6 +37,15 @@ let
     sudo cp -a "$SOURCE_REPO/." "$NIXOS_CONFIG/" # cp -a: archive mode (preserves permissions/ownership/timestamps and copies directories recursively)
     sudo rm -rf "$NIXOS_CONFIG/.git"
 
+    if [[ ! -f "$NIXOS_CONFIG_ROOT/haconf.nix" ]]; then
+      echo "Missing $NIXOS_CONFIG_ROOT/haconf.nix" >&2
+      exit 1
+    fi
+
+    echo "Copying $NIXOS_CONFIG_ROOT/haconf.nix -> $NIXOS_CONFIG/hosts/default/hardware-configuration.nix..."
+    sudo mkdir -p "$NIXOS_CONFIG/hosts/default"
+    sudo cp -f "$NIXOS_CONFIG_ROOT/haconf.nix" "$NIXOS_CONFIG/hosts/default/hardware-configuration.nix"
+
     echo "Rebuilding NixOS from $NIXOS_CONFIG..."
     sudo nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
 
