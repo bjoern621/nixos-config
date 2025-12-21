@@ -22,6 +22,6 @@ in
   # https://wiki.hypr.land/Configuring/Variables/#misc
   wayland.windowManager.hyprland.settings.misc = {
     disable_splash_rendering = true;
-    disable_hyprland_logo = true
+    disable_hyprland_logo = true;
   };
 }
