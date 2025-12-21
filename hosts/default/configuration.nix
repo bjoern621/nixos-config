@@ -94,4 +94,7 @@
   networking.firewall.allowedUDPPorts = [ 5353 ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ]; # Enable Flakes
+
+  services.hardware.bolt.enable = true;
+
 }
