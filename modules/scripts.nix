@@ -29,7 +29,6 @@ let
 
     echo "Pulling latest changes in $SOURCE_REPO..."
     cd "$SOURCE_REPO"
-    pwd
     sudo git pull --ff-only
 
     echo "Syncing $SOURCE_REPO -> $NIXOS_CONFIG..."
