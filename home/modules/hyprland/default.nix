@@ -34,7 +34,7 @@
         
         touchpad = {
           natural_scroll = true; # true: Swipe down -> content moves down
-          scroll_factor = 0.5;
+          scroll_factor = 0.1;
         };
       };
 
