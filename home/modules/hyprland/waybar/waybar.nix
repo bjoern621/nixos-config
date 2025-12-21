@@ -22,13 +22,13 @@ in
 
         "battery" = {
           format = "{capacity}% {icon}";
-          format-icons = ["", "", "", "", ""];
+          format-icons = ["" "" "" "" ""];
         };
         
         "pulseaudio" = {
           format = "{volume}% {icon}";
           format-icons = {
-            default = ["", "", ""];
+            default = ["" "" ""];
           };
           on-click = "pavucontrol";
         };
