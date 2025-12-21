@@ -22,10 +22,6 @@
     color: #1e1e2e;
 }
 
-/* Show only the active workspace number */
-#workspaces button {
-    display: none;
-}
 #workspaces button.active {
     display: inline-block;
     padding: 4px 10px;
@@ -67,4 +63,11 @@
 
 #battery.critical {
     color: #f38ba8;
+}
+
+#clock {
+    border: 2pt solid #585858;
+    color: #fff4d2;
+    background-color: #333333;
+    padding-right: 4.5pt;
 }
