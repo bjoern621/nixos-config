@@ -22,6 +22,37 @@
     color: #1e1e2e;
 }
 
+/* Show only the active workspace number */
+#workspaces button {
+    display: none;
+}
+#workspaces button.active {
+    display: inline-block;
+    padding: 4px 10px;
+    margin: 0 4px;
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+/* Center area: date + clock alignment */
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.center > * {
+    padding: 0 6px;
+}
+
+/* Power menu button */
+#custom-powermenu {
+    padding: 0 10px;
+    margin: 0 6px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
 #clock,
 #battery,
 #tray {
