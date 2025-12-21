@@ -38,5 +38,7 @@
     PromotionalTabsEnabled = false;
     WelcomePageOnOSUpgradeEnabled = false;
     DefaultBrowserSettingEnabled = false;
+
+    PasswordManagerEnabled = false;
   };
 }
