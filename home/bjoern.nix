@@ -24,10 +24,13 @@
   };
 
   # User packages
-  home.packages = with pkgs; [
-    firefox
-    git
-  ];
+    home.packages = with pkgs; [
+      firefox
+      git
+      vscode
+      notepad-plus-plus
+      vlc
+    ];
 
   home.stateVersion = "25.11";
 
