@@ -7,7 +7,6 @@ let
     # set -o pipefail: a pipeline fails if any command in it fails
     set -euo pipefail
 
-    SOURCE_REPO="/etc/nixos/nixos-config"
     NIXOS_CONFIG_ROOT="/etc/nixos"
     NIXOS_CONFIG="$NIXOS_CONFIG_ROOT/nixos-config"
 
@@ -27,24 +26,18 @@ let
       exit 1
     fi
 
-    echo "Pulling latest changes in $SOURCE_REPO..."
-    cd "$SOURCE_REPO"
+    echo "Pulling latest changes in $NIXOS_CONFIG..."
+    cd "$NIXOS_CONFIG"
     sudo git pull --ff-only
 
-    echo "Syncing $SOURCE_REPO -> $NIXOS_CONFIG..."
-    sudo rm -rf "$NIXOS_CONFIG"
-    sudo mkdir -p "$NIXOS_CONFIG"
-    sudo cp -a "$SOURCE_REPO/." "$NIXOS_CONFIG/" # cp -a: archive mode (preserves permissions/ownership/timestamps and copies directories recursively)
-    sudo rm -rf "$NIXOS_CONFIG/.git"
-
-    if [[ ! -f "$NIXOS_CONFIG_ROOT/haconf.nix" ]]; then
-      echo "Missing $NIXOS_CONFIG_ROOT/haconf.nix" >&2
+    if [[ ! -f "$NIXOS_CONFIG_ROOT/hardware-configuration.nix" ]]; then
+      echo "Missing $NIXOS_CONFIG_ROOT/hardware-configuration.nix" >&2
       exit 1
     fi
 
-    echo "Copying $NIXOS_CONFIG_ROOT/haconf.nix -> $NIXOS_CONFIG/hosts/default/hardware-configuration.nix..."
+    echo "Copying $NIXOS_CONFIG_ROOT/hardware-configuration.nix -> $NIXOS_CONFIG/hosts/default/hardware-configuration.nix..."
     sudo mkdir -p "$NIXOS_CONFIG/hosts/default"
-    sudo cp -f "$NIXOS_CONFIG_ROOT/haconf.nix" "$NIXOS_CONFIG/hosts/default/hardware-configuration.nix"
+    sudo cp -f "$NIXOS_CONFIG_ROOT/hardware-configuration.nix" "$NIXOS_CONFIG/hosts/default/hardware-configuration.nix"
 
     echo "Rebuilding NixOS from $NIXOS_CONFIG..."
     sudo nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
