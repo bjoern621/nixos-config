@@ -19,5 +19,5 @@
     };
   };
 
-  wayland.windowManager.hyprland.exec-once = [ "waybar" ];
+  wayland.windowManager.hyprland.settings.exec-once = [ "waybar" ];
 }
