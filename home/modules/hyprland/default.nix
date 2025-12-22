@@ -10,6 +10,11 @@
     ./clipboard-history.nix
   ];
 
+  
+  environment.systemPackages = [
+    pkgs.hyprlandPlugins.hyprbars
+  ];
+
   wayland.windowManager.hyprland = {
     enable = true;
     settings = {
@@ -59,5 +64,6 @@
         };
       };
     };
+
   };
 }
