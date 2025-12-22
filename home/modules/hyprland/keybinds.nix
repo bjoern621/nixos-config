@@ -6,7 +6,6 @@
     "$mainMod" = "SUPER";
     "$terminal" = "kitty";
     "$fileManager" = "nautilus";
-    "$menu" = "rofi";
 
     # See https://wiki.hypr.land/Configuring/Binds/
     # Follows scheme: bind = MODS, key, dispatcher, params
@@ -45,11 +44,6 @@
       "$mainMod SHIFT, 8, movetoworkspace, 8"
       "$mainMod SHIFT, 9, movetoworkspace, 9"
       "$mainMod SHIFT, 0, movetoworkspace, 10"
-    ];
-
-    # SUPER key alone opens/closes fuzzel (bindr = bind on key release)
-    bindr = [
-      "SUPER, Super_L, exec, pkill $menu || $menu -show drun"
     ];
 
     # Allow moving windows with the left mouse button
