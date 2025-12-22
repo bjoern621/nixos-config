@@ -3,10 +3,11 @@
 {
   imports = [
     ./hyprpaper.nix
-    ./fuzzel.nix
+    ./app-launcher.nix
     ./keybinds.nix
     ./animations.nix
     ./waybar/waybar.nix
+    ./clipboard-history.nix
   ];
 
   wayland.windowManager.hyprland = {
