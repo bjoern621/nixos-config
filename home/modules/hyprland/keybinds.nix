@@ -58,7 +58,7 @@
     # RMB -> 273
     # MMB -> 274
 
-    binds.drag_threshold = 10 # Fire a drag event only after dragging for more than 10px
+    binds.drag_threshold = 10; # Fire a drag event only after dragging for more than 10px
 
     # bindm = bind mouse
     bindm = [
