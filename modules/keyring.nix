@@ -9,5 +9,9 @@
   services.gnome.gnome-keyring.enable = true; 
 
   # Enable GUI for showing stored secrets.
-  programs.seahorse.enable = true; 
+  programs.seahorse.enable = true;
+
+  # pam_gnome_keyring will attempt to automatically unlock the user’s default Gnome keyring upon login.
+  # Using services.>gdm<.enableGnomeKeyring because GDM is the current display manager.
+  security.pam.services.gdm.enableGnomeKeyring = true;
 }
