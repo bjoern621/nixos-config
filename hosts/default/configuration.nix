@@ -12,6 +12,7 @@
     ../../modules/pipewire.nix
     ../../modules/scripts.nix
     ../../modules/quiet-boot.nix
+    ../../modules/keyring.nix
   ];
 
   # Bootloader.
