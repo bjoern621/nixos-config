@@ -47,7 +47,7 @@
         shadow = {
           enabled = true;
           range = 10;
-          color_inactive = 0x00000000;
+          color_inactive = "0x00000000";
         };
 
         blur = {
