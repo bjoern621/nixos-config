@@ -15,7 +15,6 @@
       "$mainMod, Q, exec, $terminal"
       "$mainMod, W, killactive,"
       "$mainMod, M, exit,"
-      "$mainMod, V, togglefloating,"
 
       # Move focus with mainMod + arrow keys
       "$mainMod, left, movefocus, l"
