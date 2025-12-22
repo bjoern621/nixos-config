@@ -11,8 +11,8 @@
   ];
 
   
-  environment.systemPackages = [
-    pkgs.hyprlandPlugins.hyprbars
+  home.packages = with pkgs; [
+    hyprlandPlugins.hyprbars
   ];
 
   wayland.windowManager.hyprland = {
