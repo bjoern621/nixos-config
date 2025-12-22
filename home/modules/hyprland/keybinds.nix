@@ -9,6 +9,7 @@
     "$menu" = "fuzzel";
 
     # See https://wiki.hypr.land/Configuring/Binds/
+    # Follows scheme: bind = MODS, key, dispatcher, params
     bind = [
       # Application shortcuts
       "$mainMod, Q, exec, $terminal"
@@ -50,6 +51,24 @@
     # SUPER key alone opens/closes fuzzel (bindr = bind on key release)
     bindr = [
       "SUPER, Super_L, exec, pkill fuzzel || fuzzel"
+    ];
+
+    # Allow moving windows with the left mouse button
+    # LMB -> 272
+    # RMB -> 273
+    # MMB -> 274
+
+    binds.drag_threshold = 10 # Fire a drag event only after dragging for more than 10px
+
+    # bindm = bind mouse
+    bindm = [
+      "SUPER, mouse:272, movewindow"
+      "SUPER, mouse:273, resizewindow"
+    ];
+
+    # bindc = bind mouse click (clicked (pressed and released) without dragging beyond the drag threshold)
+    bindc = [
+      "SUPER, mouse:272, togglefloating"
     ];
   };
 }
