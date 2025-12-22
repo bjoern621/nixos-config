@@ -48,7 +48,7 @@
           enabled = true;
           range = 10;
           render_power = 1;
-          color_inactive = "0x43ff6400";
+          color_inactive = "0x00ff6400";
         };
 
         blur = {
