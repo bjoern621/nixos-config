@@ -63,6 +63,10 @@
       layerrule = [
         "noanim, ^(fuzzel)$"
       ];
+
+      exec-once = [
+        "hyprctl plugin load \"$HYPR_PLUGIN_DIR/lib/libhyprexpo.so\""
+      ];
     };
 
     plugins = [
