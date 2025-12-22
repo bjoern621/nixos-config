@@ -64,5 +64,9 @@
         "noanim, ^(fuzzel)$"
       ];
     };
+
+    plugins = [
+      inputs.hyprland-plugins.packages.${pkgs.system}.hyprbars
+    ];
   };
 }
