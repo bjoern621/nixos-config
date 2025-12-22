@@ -2,7 +2,7 @@
 
 {
   programs.vscode.enable = true;
-/*
+
   xdg.desktopEntries."code" = {
     name = "Visual Studio Code";
     genericName = "Text Editor";
@@ -15,5 +15,5 @@
       "IDE"
     ];
     type = "Application";
-  };*/
+  };
 }
