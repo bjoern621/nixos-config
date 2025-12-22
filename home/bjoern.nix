@@ -5,7 +5,7 @@
     ./modules/spotify.nix
     ./modules/discord.nix
     ./modules/hyprland
-    ./modules/terminals.nix
+    ./modules/terminal.nix
     ./modules/vscode.nix
   ];
 
