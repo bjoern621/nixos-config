@@ -13,6 +13,8 @@
     ../../modules/scripts.nix
     ../../modules/quiet-boot.nix
     ../../modules/keyring.nix
+    ../../modules/rmv-nixosmanual.nix
+    ../../modules/rmv-xterm.nix
   ];
 
   # Bootloader.
