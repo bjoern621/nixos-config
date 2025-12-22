@@ -23,6 +23,8 @@
         border_size = 0;
       };
 
+      plugin = [ "hyprbars" ];
+
       # Cursor variables:
       # - XCURSOR_* is the standard Xcursor interface (used by XWayland and many toolkits).
       # - HYPRCURSOR_* is Hyprland's cursor backend (used by Hyprland-native cursor handling).
