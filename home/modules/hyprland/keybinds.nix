@@ -57,6 +57,7 @@
     # LMB -> 272
     # RMB -> 273
     # MMB -> 274
+    # Extra MB -> 275, 276, ...
 
     binds.drag_threshold = 10; # Fire a drag event only after dragging for more than 10px
 
@@ -64,12 +65,14 @@
     bindm = [
       "SUPER, mouse:272, movewindow"
       "SUPER, mouse:273, resizewindow"
-      ", mouse:275, movewindow" # Extra mouse button
+      ", mouse:276, movewindow"
+      ", mouse:275, resizewindow"
     ];
 
     # bindc = bind mouse click (clicked (pressed and released) without dragging beyond the drag threshold)
     bindc = [
       "SUPER, mouse:272, togglefloating"
+      ", mouse:276, togglefloating"
     ];
   };
 }
