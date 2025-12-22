@@ -7,6 +7,7 @@
     ./modules/hyprland
     ./modules/terminal.nix
     ./modules/vscode.nix
+    ./modules/bitwarden.nix
   ];
 
   home.username = "bjoern";
