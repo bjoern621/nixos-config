@@ -64,6 +64,7 @@
     bindm = [
       "SUPER, mouse:272, movewindow"
       "SUPER, mouse:273, resizewindow"
+      ", mouse:275, movewindow" # Extra mouse button
     ];
 
     # bindc = bind mouse click (clicked (pressed and released) without dragging beyond the drag threshold)
