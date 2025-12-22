@@ -46,7 +46,7 @@
 
         shadow = {
           enabled = true;
-          range = 20;
+          range = 10;
           render_power = 1;
           color_inactive = "0x43ff6400";
         };
