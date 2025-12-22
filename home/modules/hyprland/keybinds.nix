@@ -4,7 +4,7 @@
   wayland.windowManager.hyprland.settings = {
     # Variables
     "$mainMod" = "SUPER";
-    "$terminal" = "kitty";
+    "$terminal" = "alacritty";
     "$fileManager" = "nautilus";
 
     # See https://wiki.hypr.land/Configuring/Binds/
