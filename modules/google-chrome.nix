@@ -22,8 +22,8 @@
         update_url = "https://clients2.google.com/service/update2/crx";
       };
 
-      # uBlock Origin
-      "cjpalhdlnbpafiamejdnhcphjbkeiagm" = {
+      # uBlock Origin Lite
+      "ddkjiahejlhfcafbddmgiahcphecmpfh" = {
         installation_mode = "force_installed";
         update_url = "https://clients2.google.com/service/update2/crx";
       };
