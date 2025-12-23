@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -10,7 +11,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, home-manager, ... } @ inputs:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -29,6 +30,8 @@
             home-manager.users.bjoern = import ./home/bjoern.nix; # User-specific Home Manager configuration
           }
         ];
+
+        specialArgs = { inherit inputs; }; # https://wiki.hypr.land/0.41.2/Nix/Hyprland-on-NixOS/
       };
     };
 }
