@@ -17,13 +17,18 @@
 
   wayland.windowManager.hyprland = {
     enable = true;
+
+    plugins = [
+      pkgs.hyprlandPlugins.legacyPackages.x86_64-linux.hyprlandPlugins.hyprbars
+    ];
+
     settings = {
       # https://wiki.hypr.land/Configuring/Variables/#general
       general = {
         border_size = 0;
       };
 
-      plugin = [ "hyprbars" ];
+      # plugin = [ "hyprbars" ];
 
       # Cursor variables:
       # - XCURSOR_* is the standard Xcursor interface (used by XWayland and many toolkits).
