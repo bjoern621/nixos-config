@@ -18,9 +18,9 @@
   wayland.windowManager.hyprland = {
     enable = true;
 
-    plugins = [
-      pkgs.hyprlandPlugins.legacyPackages.x86_64-linux.hyprlandPlugins.hyprbars
-    ];
+    #plugins = [
+    #  pkgs.hyprlandPlugins.legacyPackages.x86_64-linux.hyprlandPlugins.hyprbars
+    #];
 
     settings = {
       # https://wiki.hypr.land/Configuring/Variables/#general
