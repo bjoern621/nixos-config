@@ -17,6 +17,9 @@
   wayland.windowManager.hyprland = {
     enable = true;
 
+    # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
+    systemd.enable = false;
+
     #plugins = [
     #  pkgs.hyprlandPlugins.legacyPackages.x86_64-linux.hyprlandPlugins.hyprbars
     #];
