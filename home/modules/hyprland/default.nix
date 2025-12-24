@@ -67,11 +67,7 @@
           color_inactive = "0x221a1a1a";
         };
 
-        blur = {
-          enabled = true;
-          size = 8;
-          passes = 1;
-        };
+        blur.enabled = false;
       };
     };
 
