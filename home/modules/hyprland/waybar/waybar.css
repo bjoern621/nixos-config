@@ -17,4 +17,5 @@ window#waybar {
     font-family: "JetBrainsMono Nerd Font";
     color: #ffffff;
     font-weight: semi-bold;
+    margin: 0;
 }
