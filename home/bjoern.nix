@@ -8,6 +8,7 @@
     ./modules/terminal.nix
     ./modules/vscode.nix
     ./modules/bitwarden.nix
+    ./modules/task-manager.nix
   ];
 
   home.username = "bjoern";
