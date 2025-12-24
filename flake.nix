@@ -16,7 +16,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, inputs, ... } @ inputs:
+  outputs = { self, nixpkgs, home-manager, hyprland-plugins, ... } @ inputs:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
