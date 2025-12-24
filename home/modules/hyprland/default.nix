@@ -9,10 +9,6 @@
     ./waybar/waybar.nix
     ./clipboard-history.nix
   ];
-  
-  home.packages = with pkgs; [
-    hyprlandPlugins.hyprbars
-  ];
 
   wayland.windowManager.hyprland = {
     enable = true;
@@ -20,17 +16,16 @@
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     systemd.enable = false;
 
-    #plugins = [
-    #  pkgs.hyprlandPlugins.legacyPackages.x86_64-linux.hyprlandPlugins.hyprbars
-    #];
+    plugins = [
+      inputs.hyprland-plugins.packages.${pkgs.stdenv.hostPlatform.system}.hyprbars
+      #pkgs.hyprlandPlugins.legacyPackages.x86_64-linux.hyprlandPlugins.hyprbars
+    ];
 
     settings = {
       # https://wiki.hypr.land/Configuring/Variables/#general
       general = {
         border_size = 0;
       };
-
-      # plugin = [ "hyprbars" ];
 
       # Cursor variables:
       # - XCURSOR_* is the standard Xcursor interface (used by XWayland and many toolkits).
