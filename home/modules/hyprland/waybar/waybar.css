@@ -4,6 +4,7 @@
 
 window#waybar {
     background: transparent;
+    padding: 0 10px;
 
     margin: 4px;
 }
