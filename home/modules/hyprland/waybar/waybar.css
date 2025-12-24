@@ -9,8 +9,7 @@ window#waybar {
 .modules-left,
 .modules-center,
 .modules-right {
-    background: #323232;
-    border: 1px solid #212121;
+    background: #212121;
     border-radius: 8px;
 }
 
