@@ -1,73 +1,24 @@
-* {
-    font-family: "JetBrainsMono Nerd Font";
-    font-weight: bold;
-    min-height: 0;
-    font-size: 16px;
-    font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"';
-}
+/*  https://github.com/Alexays/Waybar/wiki/Styling 
+    Supported properties: https://docs.gtk.org/gtk3/css-properties.html
+*/
 
-window#waybar {
-    background: transparent;
+window,
+#waybar {
+    background: #000;
+    border: 4px solid #444;
+    color: #fff;
 }
 
 .modules-left,
 .modules-center,
 .modules-right {
-    background-color: #1e1e2e;
-    border: 1px solid #b4befe;
-    border-radius: 12px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    background: #323232;
+    border: 4px solid #212121;
+    border-radius: 8px;
+    margin: 4px;
+    padding: 0 8px;
 }
 
-#workspaces,
-#clock,
-#battery,
-#pulseaudio,
-#network,
-#custom-powermenu,
-#tray {
-    padding: 0.2em 0.5em;
-}
-
-#workspaces button {
-    padding: 0.2em 0.5em;
-    color: #b4befe;
-    border-radius: 12px;
-    margin-left: 5px;
-    margin-right: 5px;
-}
-
-#workspaces button.active {
-    background-color: #b4befe;
-    color: #1e1e2e;
-}
-
-#clock {
-    color: #f5e0dc;
-}
-
-#battery {
-    color: #b4befe;
-}
-
-#battery.charging {
-    color: #a6e3a1;
-}
-
-#battery.warning:not(.charging) {
-    color: #fab387;
-}
-
-#pulseaudio {
-    color: #89b4fa;
-}
-
-#network {
-    color: #f9e2af;
-}
-
-#custom-powermenu {
-    color: #f38ba8;
-    margin-right: 5px;
+* {
+    box-shadow: none !important;
 }
