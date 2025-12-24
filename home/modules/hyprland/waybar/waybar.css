@@ -2,6 +2,10 @@
     Supported properties: https://docs.gtk.org/gtk3/css-properties.html
 */
 
+window#waybar {
+    background: transparent;
+}
+
 .modules-left,
 .modules-center,
 .modules-right {
