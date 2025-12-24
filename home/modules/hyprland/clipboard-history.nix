@@ -5,11 +5,13 @@
 
   home.packages = with pkgs; [
     cliphist
+    wl-clipboard
   ];
 
-  wayland.windowManager.hyprland.settings.exec-once = [ 
-    "wl-paste --type text --watch cliphist store"
-    "wl-paste --type image --watch cliphist store"
+  # Watch for new clipboard content and store it in the history
+  wayland.windowManager.hyprland.settings.exec-once = [
+    "wl-paste -t text --watch cliphist store"
+    "wl-paste -t image --watch cliphist store"
   ];
 
   # Bind SUPER + V to clipboard history (shown in rofi)
