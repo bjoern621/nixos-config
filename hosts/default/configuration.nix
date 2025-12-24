@@ -45,21 +45,6 @@
     LC_TIME = "de_DE.UTF-8";
   };
 
-  # Required for display manager (gdm).
-  services.xserver.enable = true;
-
-  # Enable the GNOME Display Manager (Login Screen).
-  services.displayManager.gdm = {
-    enable = true;
-    wayland = true;
-  };
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "de";
-    variant = "";
-  };
-
   # Configure console keymap
   console.keyMap = "de";
 
