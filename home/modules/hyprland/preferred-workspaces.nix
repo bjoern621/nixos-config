@@ -8,8 +8,8 @@
 {
   wayland.windowManager.hyprland.settings = {
     windowrule = [
-      "workspace 1, class:^(google-chrome)$"
-      "workspace 2, class:^(code)$"
+      "workspace 1, ^(google-chrome)$"
+      "workspace 2, ^(code)$"
     ];
   };
 }
