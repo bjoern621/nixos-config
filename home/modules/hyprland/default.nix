@@ -10,6 +10,9 @@
     ./clipboard-history.nix
   ];
 
+  # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
+  systemd.enable = false;
+
   
   home.packages = with pkgs; [
     hyprlandPlugins.hyprbars
