@@ -15,6 +15,7 @@
     ../../modules/keyring.nix
     ../../modules/rmv-nixosmanual.nix
     ../../modules/rmv-xterm.nix
+    ../../modules/login-screen.nix
   ];
 
   # Bootloader.
