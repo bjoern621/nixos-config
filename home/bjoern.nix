@@ -4,7 +4,7 @@
   imports = [
     ./modules/spotify.nix
     ./modules/discord.nix
-    (import ./modules/hyprland { inherit inputs; })
+    (import ./modules/hyprland { inherit inputs pkgs; })
     ./modules/terminal.nix
     ./modules/vscode.nix
     ./modules/bitwarden.nix
