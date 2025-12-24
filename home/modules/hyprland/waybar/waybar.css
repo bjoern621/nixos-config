@@ -4,6 +4,8 @@
 
 window#waybar {
     background: transparent;
+
+    padding: 4px;
 }
 
 .modules-left,
