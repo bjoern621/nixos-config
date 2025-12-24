@@ -16,6 +16,7 @@
     ../../modules/rmv-nixosmanual.nix
     ../../modules/rmv-xterm.nix
     ../../modules/login-screen.nix
+    ../../modules/task-manager.nix
   ];
 
   # Bootloader.
