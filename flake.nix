@@ -33,6 +33,7 @@
             home-manager.useUserPackages = true; # Install user packages to /etc/profiles instead of ~/.nix-profile
             home-manager.backupFileExtension = "backup"; # Rename existing files (like ~/.config/hypr/hyprland.conf) to *.backup instead of failing
             home-manager.users.bjoern = import ./home/bjoern.nix; # User-specific Home Manager configuration
+            home-manager.extraSpecialArgs = { inherit inputs; }; # Pass flake inputs to home-manager modules
           }
         ];
 
