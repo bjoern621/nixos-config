@@ -2,19 +2,14 @@
     Supported properties: https://docs.gtk.org/gtk3/css-properties.html
 */
 
-window,
-#waybar {
-    background: #000;
-    border: 4px solid #444;
-    color: #fff;
-}
-
 .modules-left,
 .modules-center,
 .modules-right {
     background: #323232;
-    border: 4px solid #212121;
+    border: 2px solid #212121;
     border-radius: 8px;
-    margin: 4px;
-    padding: 0 8px;
+}
+
+* {
+    font-family: "JetBrainsMono Nerd Font";
 }
