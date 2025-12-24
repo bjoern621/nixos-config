@@ -20,4 +20,6 @@ window#waybar {
     color: #ffffff;
     font-weight: 600;
     margin: 0;
+
+    font-size: 16px;
 }
