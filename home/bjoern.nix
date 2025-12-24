@@ -1,10 +1,10 @@
-{ config, pkgs, ... }:
+{ inputs, config, pkgs, ... }:
 
 {
   imports = [
     ./modules/spotify.nix
     ./modules/discord.nix
-    ./modules/hyprland
+    (import ./modules/hyprland { inherit inputs; })
     ./modules/terminal.nix
     ./modules/vscode.nix
     ./modules/bitwarden.nix
