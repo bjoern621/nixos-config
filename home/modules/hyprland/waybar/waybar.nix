@@ -15,6 +15,6 @@ in
   fonts.fontconfig.enable = true;
 
   home.packages = with pkgs; [
-    font-awesome // Icons
+    font-awesome # Icons
   ];
 }
