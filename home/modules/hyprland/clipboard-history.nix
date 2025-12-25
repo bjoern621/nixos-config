@@ -18,7 +18,16 @@
   # Bind SUPER + V to clipboard history (shown in rofi)
   # Selecting an entry copies it again to the clipboard and pastes it at the cursor using Ctrl+Shift+V (works in most applications and terminals)
   # wtype: -M key holds the modifier, -m key releases it. So -M ctrl -M shift v -m shift -m ctrl simulates Ctrl+Shift+V.
+  # Define command parts for readability
+  let
+    listHistory = "cliphist list";
+    showMenu = "rofi -dmenu -display-columns 2";
+    decodeEntry = "cliphist decode";
+    copyToClipboard = "wl-copy";
+    pasteKeys = "wtype -M ctrl -M shift v -m shift -m ctrl";
+    clipboardCmd = "pkill rofi || (${listHistory} | ${showMenu} | ${decodeEntry} | ${copyToClipboard} && ${pasteKeys})";
+  in
   wayland.windowManager.hyprland.settings.bind = [
-    "SUPER, V, exec, cliphist list | rofi -dmenu -display-columns 2 | cliphist decode | wl-copy && wtype -M ctrl -M shift v -m shift -m ctrl"
+    "SUPER, V, exec, ${clipboardCmd}"
   ];
 }
