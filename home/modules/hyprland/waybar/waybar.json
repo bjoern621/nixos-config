@@ -4,11 +4,27 @@
         "position": "top",
         "height": 30,
 
-        "modules-left": ["sway/workspaces"],
+        "modules-left": ["hyprland/workspaces"],
 
         "modules-center": ["clock"],
 
         "modules-right": ["pulseaudio", "network", "battery", "tray"],
+
+        "hyprland/workspaces": {
+            "format": "{icon}",
+            "on-click": "activate",
+            "format-icons": {
+                "1": "",
+                "2": "",
+                "3": "",
+                "4": "",
+                "5": "",
+                "urgent": "",
+                "active": "",
+                "default": ""
+            },
+            "sort-by-number": true
+        },
 
         "tray": {
             "spacing": 10
