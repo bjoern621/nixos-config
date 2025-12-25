@@ -4,7 +4,7 @@ let
   powerMenu = pkgs.writeShellScriptBin "power-menu" (builtins.readFile ./power-menu.sh);
 
   # Read the user's JSON config
-  waybarConfig = (pkgs.formats.jsonc {}).fromFile ./waybar.json;
+  waybarConfig = builtins.fromJSON (builtins.readFile ./waybar.json);
 in
 {
   # Just enable the waybar program and service
