@@ -17,8 +17,7 @@ window#waybar {
 }
 
 * {
-    font-family: "SF Pro Display", "Font Awesome 6 Free Solid",
-        "JetBrainsMono Nerd Font Proto";
+    font-family: "SF Pro Display", "Font Awesome 6 Free Solid";
     color: #ffffff;
     font-weight: 600;
 
