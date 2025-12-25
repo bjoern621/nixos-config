@@ -9,7 +9,7 @@ in
     style = builtins.readFile ./waybar.css;
   };
 
-  xdg.configFile.waybar.settings = ./waybar.json
+  xdg.configFile.waybar.settings = ./waybar.json;
 
   wayland.windowManager.hyprland.settings.exec-once = [ "waybar" ];
 }
