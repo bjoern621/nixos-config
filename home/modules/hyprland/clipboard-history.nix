@@ -1,5 +1,15 @@
 { config, pkgs, ... }:
 
+let
+  # Define command parts for readability
+  listHistory = "cliphist list";
+  showMenu = "rofi -dmenu -display-columns 2";
+  decodeEntry = "cliphist decode";
+  copyToClipboard = "wl-copy";
+  pasteCurrentClipboard = "wtype -M ctrl -M shift v -m shift -m ctrl";
+  closeMenu = "pkill rofi";
+  clipboardCmd = "${closeMenu} || (${listHistory} | ${showMenu} | ${decodeEntry} | ${copyToClipboard} && ${pasteCurrentClipboard})";
+in
 {
   # See also: https://wiki.hypr.land/Useful-Utilities/Clipboard-Managers/
 
@@ -18,15 +28,6 @@
   # Bind SUPER + V to clipboard history (shown in rofi)
   # Selecting an entry copies it again to the clipboard and pastes it at the cursor using Ctrl+Shift+V (works in most applications and terminals)
   # wtype: -M key holds the modifier, -m key releases it. So -M ctrl -M shift v -m shift -m ctrl simulates Ctrl+Shift+V.
-  # Define command parts for readability
-  let
-    listHistory = "cliphist list";
-    showMenu = "rofi -dmenu -display-columns 2";
-    decodeEntry = "cliphist decode";
-    copyToClipboard = "wl-copy";
-    pasteKeys = "wtype -M ctrl -M shift v -m shift -m ctrl";
-    clipboardCmd = "pkill rofi || (${listHistory} | ${showMenu} | ${decodeEntry} | ${copyToClipboard} && ${pasteKeys})";
-  in
   wayland.windowManager.hyprland.settings.bind = [
     "SUPER, V, exec, ${clipboardCmd}"
   ];
