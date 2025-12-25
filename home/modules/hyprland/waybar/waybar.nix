@@ -7,7 +7,7 @@ in
   programs.waybar = {
     enable = true;
     style = builtins.readFile ./waybar.css;
-    programs.waybar.settings = lib.importJSON ./waybar.json;
+    settings = lib.importJSON ./waybar.json;
   };
 
   wayland.windowManager.hyprland.settings.exec-once = [ "waybar" ];
