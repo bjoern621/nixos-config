@@ -45,8 +45,8 @@
       "$mainMod SHIFT, 9, movetoworkspace, 9"
       "$mainMod SHIFT, 0, movetoworkspace, 10"
 
-      # Screenshot shortcuts
-      "CTRL_SHIFT, S, exec, grim -g \"$(slurp)\" - | swappy -f -"
+      # Screenshot
+      "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | swappy -f -"
     ];
 
     # Allow moving windows with the left mouse button
