@@ -17,10 +17,13 @@ window#waybar {
 }
 
 * {
-    font-family: "JetBrainsMono Nerd Font";
+    font-family: "SF Pro Display";
     color: #ffffff;
     font-weight: 600;
-    margin: 0;
 
     font-size: 1rem;
+
+    min-height: 0;
+    margin: 0;
+    padding: 0;
 }
