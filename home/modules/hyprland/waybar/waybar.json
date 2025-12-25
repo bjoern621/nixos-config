@@ -29,7 +29,6 @@
         "clock": {
             "locale": "de_DE.UTF-8",
             "format": " {:%a %d %b %H:%M}",
-            "format-alt": "{:%A, %B %d, %Y (%R)}  ",
             "tooltip-format": "<tt><small>{calendar}</small></tt>",
             "calendar": {
                 "mode": "year",
@@ -58,11 +57,9 @@
                 "warning": 30,
                 "critical": 15
             },
-            "format": "{capacity}% {icon}",
-            "format-full": "{capacity}% {icon}",
+            "format": "{icon} {capacity}%",
+            "format-full": "{icon} {capacity}%",
             "format-charging": "{capacity}% ",
-            "format-plugged": "{capacity}% ",
-            "format-alt": "{time} {icon}",
             "format-icons": ["", "", "", "", ""]
         },
 
@@ -71,8 +68,7 @@
             "format-ethernet": "{ipaddr}/{cidr} ",
             "tooltip-format": "{ifname} via {gwaddr} ",
             "format-linked": "{ifname} (No IP) ",
-            "format-disconnected": "Disconnected ⚠",
-            "format-alt": "{ifname}: {ipaddr}/{cidr}"
+            "format-disconnected": "Disconnected ⚠"
         },
 
         "pulseaudio": {
