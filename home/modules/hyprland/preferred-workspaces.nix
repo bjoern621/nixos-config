@@ -7,9 +7,11 @@
 # The class names must match the actual application window class (use `hyprctl clients` to check).
 {
   wayland.windowManager.hyprland.settings = {
-    windowrulev2 = [
-      "workspace 1, class:^(Google-chrome)$"
-      "workspace 2, class:^(code)$"
+    windowrule = [
+      "match:class google-chrome, workspace 1"
+      "match:class code, workspace 2"
+      "match:class spotify, workspace 3"
+      "match:class discord, workspace 3"
     ];
   };
 }
