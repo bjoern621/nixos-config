@@ -7,7 +7,7 @@ in
   programs.waybar = {
     enable = true;
     style = builtins.readFile ./waybar.css;
-    settings = builtins.fromJSON (builtins.readFile ./waybar.jsonc) // {
+    settings = (pkgs.formats.jsonc {}).fromFile ./waybar.jsonc // {
       mainBar."custom/powermenu"."on-click" = "${powerMenu}/bin/power-menu";
     };
   };
