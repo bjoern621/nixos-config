@@ -36,7 +36,7 @@ window#waybar {
     border: 1px solid #5c6370;
 
     border-radius: 100px;
-    padding: 8px;
+    padding: 8px 4px;
     margin-right: 8px;
 }
 
@@ -64,9 +64,5 @@ window#waybar {
 
 #workspaces button.active {
     color: #e5c07b;
-    background-color: #abb2bf;
-}
-
-#workspaces {
-    margin: 0 2px;
+    background-color: #5c6370;
 }
