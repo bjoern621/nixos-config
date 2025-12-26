@@ -19,6 +19,7 @@
     ../../modules/task-manager.nix
     ../../modules/power-management.nix
     ../../modules/screenshot.nix
+    ../../modules/fancy-boot.nix
   ];
 
   # Bootloader.
