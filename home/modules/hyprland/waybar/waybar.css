@@ -11,6 +11,7 @@ window#waybar {
     background: #e5c07b;
     background: #e06c75;
     background: transparent;
+    margin: 30px;
 }
 
 .modules-left,
@@ -38,6 +39,10 @@ window#waybar {
     border-radius: 100px;
     padding: 4px 8px;
     margin-right: 8px;
+}
+
+#workspaces {
+    margin-left: 8px;
 }
 
 #pulseaudio {
