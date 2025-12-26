@@ -21,7 +21,7 @@ window#waybar {
 }
 
 * {
-    font-family: "SF Pro Display", "Font Awesome 7 Free Solid";
+    font-family: "Fira Code", "Font Awesome 7 Free Solid";
     font-size: 13px;
 
     min-height: 0;
@@ -38,10 +38,6 @@ window#waybar {
     margin-right: 8px;
 }
 
-.module button:hover {
-    box-shadow: inset 0 -3px #ffffff;
-}
-
 #pulseaudio {
     color: #61afef;
 }
@@ -54,12 +50,8 @@ window#waybar {
     color: #e5c07b;
 }
 
-#workspaces {
-    color: aquamarine;
-}
-
 #workspaces button {
-    color: #2752a3;
+    color: white;
 }
 
 #workspaces button.active {
