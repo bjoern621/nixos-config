@@ -71,6 +71,7 @@ window#waybar {
 }
 
 #workspaces button.active {
-    color: #e5c07b;
-    background-color: #5c6370;
+    color: #2c313c;
+    background-color: #61afef;
+    padding: 0 4px;
 }
