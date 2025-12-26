@@ -41,6 +41,10 @@ window#waybar {
     margin-right: 8px;
 }
 
+.module:first-child {
+    margin-left: 8px;
+}
+
 #workspaces {
     margin-left: 8px;
 }
