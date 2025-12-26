@@ -7,23 +7,32 @@ window#waybar {
     padding: 0 10px;
 
     margin: 4px;
-}
 
-.modules-left,
-.modules-center,
-.modules-right {
-    background: #212121;
-    border-radius: 8px;
+    background: #abb2bf;
+    background: #2c313c;
+    background: #5c6370;
+    background: #61afef;
+    background: #98c379;
+    background: #e5c07b;
+    background: #e06c75;
+    background: unset;
 }
 
 * {
-    font-family: "SF Pro Display", "Font Awesome 6 Free Solid";
-    color: #ffffff;
-    font-weight: 600;
-
-    font-size: 1rem;
+    font-family: "SF Pro Display", "FontAwesome";
+    font-size: 13px;
 
     min-height: 0;
     margin: 0;
     padding: 0;
+}
+
+.module {
+    background: #2c313c;
+    border-radius: 8px;
+    padding: 0 12px;
+}
+
+.module button:hover {
+    box-shadow: inset 0 -3px #ffffff;
 }
