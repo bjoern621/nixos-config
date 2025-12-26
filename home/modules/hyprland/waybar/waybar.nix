@@ -16,5 +16,6 @@ in
 
   home.packages = with pkgs; [
     font-awesome # Icons
+    fira-code # Text
   ];
 }
