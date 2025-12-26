@@ -22,13 +22,17 @@ window#waybar {
 }
 
 * {
-    font-family: "Inter", "Font Awesome 7 Free Solid";
+    font-family: "Inter";
     font-size: 13px;
     font-weight: bold;
 
     min-height: 0;
     margin: 0;
     padding: 0;
+}
+
+.icon {
+    font-family: "Font Awesome 7 Free Solid";
 }
 
 .module {
