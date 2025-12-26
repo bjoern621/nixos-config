@@ -24,6 +24,7 @@ window#waybar {
     font-family: monospace, "CaskaydiaCove Nerd Font", "Fira Code",
         "Font Awesome 7 Free Solid";
     font-size: 13px;
+    font-weight: bold;
 
     min-height: 0;
     margin: 0;
