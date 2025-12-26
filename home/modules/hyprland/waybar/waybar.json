@@ -16,12 +16,12 @@
         ],
 
         "hyprland/workspaces": {
-            "format": "{icon}",
+            "format": "<span class=\"icon\">{icon}</span>",
             "on-click": "activate",
             "format-icons": {
                 "1": "",
                 "2": "",
-                "3": "<span class=\"icon\"></span>"
+                "3": ""
             },
             "sort-by-number": true
         },
