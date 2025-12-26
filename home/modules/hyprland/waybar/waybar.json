@@ -19,9 +19,9 @@
             "format": "{icon}",
             "on-click": "activate",
             "format-icons": {
-                "1": "",
-                "2": "",
-                "3": ""
+                "1": "<span class='fa-solid'></span>",
+                "2": "<span class='fa-solid'></span>",
+                "3": "<span class='fa-solid'></span>"
             },
             "sort-by-number": true
         },
@@ -32,7 +32,7 @@
 
         "clock": {
             "locale": "de_DE.UTF-8",
-            "format": " {:L%a, %d %b, %H:%M}",
+            "format": "<span class='fa-solid'></span> {:L%a, %d %b, %H:%M}",
             "tooltip-format": "<tt><small>{calendar}</small></tt>",
             "calendar": {
                 "mode": "year",
@@ -60,22 +60,32 @@
             },
             "format": "{icon} {capacity}%",
             "format-full": "{icon} Voll",
-            "format-charging": " {capacity}%",
-            "format-icons": ["", "", "", "", ""]
+            "format-charging": "<span class='fa-solid'></span> {capacity}%",
+            "format-icons": [
+                "<span class='fa-solid'></span>",
+                "<span class='fa-solid'></span>",
+                "<span class='fa-solid'></span>",
+                "<span class='fa-solid'></span>",
+                "<span class='fa-solid'></span>"
+            ]
         },
 
         "network": {
-            "format-wifi": "",
-            "format-ethernet": "",
-            "format-disconnected": " Nicht verbunden",
+            "format-wifi": "<span class='fa-solid'></span>",
+            "format-ethernet": "<span class='fa-solid'></span>",
+            "format-disconnected": "<span class='fa-solid'></span> Nicht verbunden",
             "tooltip": false
         },
 
         "pulseaudio": {
             "format": "{icon} {volume}%",
-            "format-muted": " Stumm",
+            "format-muted": "<span class='fa-solid'></span> Stumm",
             "format-icons": {
-                "default": ["", "", ""]
+                "default": [
+                    "<span class='fa-solid'></span>",
+                    "<span class='fa-solid'></span>",
+                    "<span class='fa-solid'></span>"
+                ]
             },
             "on-click": "pavucontrol"
         },
