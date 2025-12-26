@@ -3,11 +3,6 @@
 */
 
 window#waybar {
-    background: transparent;
-    padding: 0 10px;
-
-    margin: 4px;
-
     background: #abb2bf;
     background: #2c313c;
     background: #5c6370;
@@ -15,7 +10,7 @@ window#waybar {
     background: #98c379;
     background: #e5c07b;
     background: #e06c75;
-    background: unset;
+    background: transparent;
 }
 
 * {
