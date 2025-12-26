@@ -31,10 +31,6 @@ window#waybar {
     padding: 0;
 }
 
-.icon {
-    font-family: "Font Awesome 7 Free Solid";
-}
-
 .module {
     background: #2c313c;
     border: 1px solid #5c6370;

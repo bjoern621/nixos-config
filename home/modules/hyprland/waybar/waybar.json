@@ -16,7 +16,7 @@
         ],
 
         "hyprland/workspaces": {
-            "format": "<span class=\"icon\">{icon}</span>",
+            "format": "<span font_family=\"Font Awesome 7 Free Solid\">{icon}</span>",
             "on-click": "activate",
             "format-icons": {
                 "1": "",
