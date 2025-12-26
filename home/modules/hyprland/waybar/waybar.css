@@ -11,6 +11,7 @@ window#waybar {
     background: #e5c07b;
     background: #e06c75;
     background: transparent;
+    color: #ffffff;
 }
 
 .modules-left,
@@ -32,15 +33,23 @@ window#waybar {
     background: #2c313c;
     border: 1px solid #5c6370;
 
-    border-radius: 8px;
-    padding: 4px 12px;
+    border-radius: 100px;
+    padding: 4px 8px;
 }
 
 .module button:hover {
     box-shadow: inset 0 -3px #ffffff;
 }
 
-#clock {
+#pulseaudio {
     color: #61afef;
     margin: 6px 3px;
+}
+
+#battery.critical {
+    color: #e06c75;
+}
+
+#battery.warning {
+    color: #e5c07b;
 }
