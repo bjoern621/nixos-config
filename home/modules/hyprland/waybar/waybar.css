@@ -41,10 +41,6 @@ window#waybar {
     margin-right: 8px;
 }
 
-.module:first-child {
-    margin-left: 8px;
-}
-
 #workspaces {
     margin-left: 8px;
 }
@@ -68,7 +64,6 @@ window#waybar {
 #workspaces button {
     color: white;
     border-radius: 100px;
-    padding: 2px;
 }
 
 #workspaces button.active {
