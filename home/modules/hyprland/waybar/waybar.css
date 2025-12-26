@@ -34,7 +34,7 @@ window#waybar {
 
 .module {
     background: #2c313c;
-    box-shadow: 0 0 3px #5c6370, 0 8px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 3px #5c6370, 0 8px 4px rgba(0, 0, 0, 0.9);
 
     border-radius: 100px;
     padding: 4px 8px;
