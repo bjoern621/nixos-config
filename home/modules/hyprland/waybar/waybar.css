@@ -17,7 +17,6 @@ window#waybar {
 .modules-center,
 .modules-right {
     background: transparent;
-    gap: 8px;
 }
 
 * {
