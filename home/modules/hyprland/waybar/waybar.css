@@ -29,8 +29,10 @@ window#waybar {
 
 .module {
     background: #2c313c;
+    border: 1px solid #5c6370;
+
     border-radius: 8px;
-    padding: 0 12px;
+    padding: 4px 12px;
 }
 
 .module button:hover {
