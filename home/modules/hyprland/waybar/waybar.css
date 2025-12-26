@@ -42,6 +42,10 @@ window#waybar {
     color: #61afef;
 }
 
+#battery {
+    color: #98c379;
+}
+
 #battery.critical {
     color: #e06c75;
 }
@@ -52,8 +56,10 @@ window#waybar {
 
 #workspaces button {
     color: white;
+    border-radius: 100px;
+    padding: 2px;
 }
 
 #workspaces button.active {
-    color: #98c379;
+    background-color: #98c379;
 }
