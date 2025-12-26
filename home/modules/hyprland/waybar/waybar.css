@@ -22,12 +22,18 @@ window#waybar {
 }
 
 * {
-    font-family: "Inter Bold", "Font Awesome 7 Free Solid";
+    font-family: "Inter", "Font Awesome 7 Free Solid";
     font-size: 13px;
+    font-weight: bold;
 
     min-height: 0;
     margin: 0;
     padding: 0;
+}
+
+.fawe-icon,
+.fa-solid {
+    font-weight: normal;
 }
 
 .module {
