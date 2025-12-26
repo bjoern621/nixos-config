@@ -11,13 +11,13 @@ window#waybar {
     background: #e5c07b;
     background: #e06c75;
     background: transparent;
-    color: #ffffff;
 }
 
 .modules-left,
 .modules-center,
 .modules-right {
     background: transparent;
+    color: #ffffff;
 }
 
 * {
