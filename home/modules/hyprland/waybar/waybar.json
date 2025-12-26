@@ -63,11 +63,10 @@
         },
 
         "network": {
-            "format-wifi": "{essid} ({signalStrength}%) ",
-            "format-ethernet": "{ipaddr}/{cidr} ",
-            "tooltip-format": "{ifname} via {gwaddr} ",
-            "format-linked": "{ifname} (No IP) ",
-            "format-disconnected": "Disconnected ⚠"
+            "format-wifi": "{icon}",
+            "format-ethernet": "",
+            "format-disconnected": " Nicht verbunden",
+            "format-icons": ["", "", ""]
         },
 
         "pulseaudio": {
