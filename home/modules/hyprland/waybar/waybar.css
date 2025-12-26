@@ -34,7 +34,9 @@ window#waybar {
     border: 1px solid #5c6370;
 
     border-radius: 100px;
-    padding: 4px 8px;
+    padding: 8px 4px;
+    margin-left: 8px;
+    margin-right: 8px;
 }
 
 .module button:hover {
@@ -43,7 +45,6 @@ window#waybar {
 
 #pulseaudio {
     color: #61afef;
-    margin: 6px 3px;
 }
 
 #battery.critical {
