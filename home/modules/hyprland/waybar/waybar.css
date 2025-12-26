@@ -13,6 +13,13 @@ window#waybar {
     background: transparent;
 }
 
+.modules-left,
+.modules-center,
+.modules-right {
+    background: transparent;
+    gap: 8px;
+}
+
 * {
     font-family: "SF Pro Display", "FontAwesome";
     font-size: 13px;
