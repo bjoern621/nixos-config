@@ -21,7 +21,8 @@ window#waybar {
 }
 
 * {
-    font-family: "Fira Code", "Font Awesome 7 Free Solid";
+    font-family: monospace, "CaskaydiaCove Nerd Font", "Fira Code",
+        "Font Awesome 7 Free Solid";
     font-size: 13px;
 
     min-height: 0;
@@ -61,5 +62,10 @@ window#waybar {
 }
 
 #workspaces button.active {
-    background-color: #98c379;
+    color: #e5c07b;
+    background-color: #abb2bf;
+}
+
+#workspaces {
+    margin: 0 2px;
 }
