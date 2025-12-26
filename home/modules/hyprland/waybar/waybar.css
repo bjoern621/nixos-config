@@ -35,7 +35,7 @@ window#waybar {
 
     border-radius: 100px;
     padding: 6px;
-    margin: 8px;
+    margin-right: 8px;
 }
 
 .module button:hover {
