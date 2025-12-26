@@ -53,3 +53,7 @@ window#waybar {
 #battery.warning {
     color: #e5c07b;
 }
+
+#workspaces {
+    color: #98c379;
+}
