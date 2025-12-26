@@ -54,6 +54,14 @@ window#waybar {
     color: #e5c07b;
 }
 
+#workspaces {
+    color: aquamarine;
+}
+
+#workspaces button {
+    color: #2752a3;
+}
+
 #workspaces button.active {
     color: #98c379;
 }
