@@ -29,6 +29,12 @@
 
           home-manager.nixosModules.home-manager
           {
+            nix.settings = {
+              substituters = ["https://hyprland.cachix.org"];
+              trusted-substituters = ["https://hyprland.cachix.org"];
+              trusted-public-keys = ["hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="];
+            };
+
             home-manager.useGlobalPkgs = true; # Use the same nixpkgs instance as the system (avoids duplicate packages)
             home-manager.useUserPackages = true; # Install user packages to /etc/profiles instead of ~/.nix-profile
             home-manager.backupFileExtension = "backup"; # Rename existing files (like ~/.config/hypr/hyprland.conf) to *.backup instead of failing
