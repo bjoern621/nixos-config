@@ -41,6 +41,7 @@ window#waybar {
     margin-right: 8px;
 
     margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 #workspaces {
