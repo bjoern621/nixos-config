@@ -29,6 +29,7 @@
 
           home-manager.nixosModules.home-manager
           {
+            # https://wiki.hypr.land/Nix/Cachix/
             nix.settings = {
               substituters = ["https://hyprland.cachix.org"];
               trusted-substituters = ["https://hyprland.cachix.org"];
