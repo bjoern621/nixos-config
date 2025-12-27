@@ -24,7 +24,9 @@
     settings = {
       # https://wiki.hypr.land/Configuring/Variables/#general
       general = {
-        border_size = 0;
+        border_size = 1;
+        gaps_out = 12;
+        gaps_in = 4;
       };
 
       # Cursor variables:
