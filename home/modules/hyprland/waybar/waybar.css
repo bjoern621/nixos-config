@@ -42,15 +42,15 @@ window#waybar {
     box-shadow: 0 3px 2px -1px rgba(0, 0, 0, 0.2);
 
     border-radius: 100px;
-    padding: 4px 12px;
-    margin-right: 8px;
+    padding: 4px 8px;
+    margin-right: 4px;
 
-    margin-top: 8px;
-    margin-bottom: 8px;
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 
 #workspaces {
-    margin-left: 8px;
+    margin-left: 12px;
 }
 
 #pulseaudio {
@@ -59,6 +59,7 @@ window#waybar {
 
 #battery {
     color: #98c379;
+    margin-right: 12px;
 }
 
 #battery.critical {
