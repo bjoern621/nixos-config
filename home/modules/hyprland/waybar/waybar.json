@@ -21,8 +21,7 @@
             "format-icons": {
                 "1": "",
                 "2": "",
-                "3": "",
-                "default": "<b>{name}</b>"
+                "3": ""
             },
             "sort-by-number": true
         },
