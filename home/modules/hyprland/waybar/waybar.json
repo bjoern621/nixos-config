@@ -19,9 +19,9 @@
             "format": "{icon}",
             "on-click": "activate",
             "format-icons": {
-                "1": "<b></b>",
-                "2": "<b></b>",
-                "3": "<b></b>"
+                "1": "",
+                "2": "",
+                "3": ""
             },
             "sort-by-number": true
         },
@@ -32,7 +32,7 @@
 
         "clock": {
             "locale": "de_DE.UTF-8",
-            "format": " {:L%a, %d %b, %H:%M}",
+            "format": " <b>{:L%a, %d %b, %H:%M}</b>",
             "tooltip-format": "<tt><small>{calendar}</small></tt>",
             "calendar": {
                 "mode": "year",
@@ -58,22 +58,22 @@
                 "warning": 30,
                 "critical": 15
             },
-            "format": "{icon} {capacity}%",
-            "format-full": "{icon} Voll",
-            "format-charging": " {capacity}%",
+            "format": "{icon} <b>{capacity}%</b>",
+            "format-full": "{icon} <b>Voll</b>",
+            "format-charging": " <b>{capacity}%</b>",
             "format-icons": ["", "", "", "", ""]
         },
 
         "network": {
             "format-wifi": "",
             "format-ethernet": "",
-            "format-disconnected": " Nicht verbunden",
+            "format-disconnected": " <b>Nicht verbunden</b>",
             "tooltip": false
         },
 
         "pulseaudio": {
-            "format": "{icon} {volume}%",
-            "format-muted": " Stumm",
+            "format": "{icon} <b>{volume}%</b>",
+            "format-muted": " <b>Stumm</b>",
             "format-icons": {
                 "default": ["", "", ""]
             },
