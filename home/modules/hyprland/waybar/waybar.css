@@ -81,11 +81,11 @@ button {
     border-radius: 100px;
     margin: 4px;
     padding: 2px;
-    font-size: 20px;
+    font-size: 40px;
 }
 
 #workspaces button.active {
     color: #1b1d1f;
     background-color: #61afef;
-    padding: 0 16px;
+    padding: 2px 16px;
 }
