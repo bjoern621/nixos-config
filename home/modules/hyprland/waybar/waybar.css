@@ -39,7 +39,7 @@ window#waybar {
 .module {
     background: #1b1d1f;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 16px 0px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 16px 0px rgba(0, 0, 0, 0.05); /* TODO ??? */
 
     border-radius: 100px;
     padding: 4px 8px;
@@ -51,6 +51,7 @@ window#waybar {
 
 #workspaces {
     margin-left: 12px;
+    padding: 4px;
 }
 
 #pulseaudio {
@@ -73,6 +74,7 @@ window#waybar {
 #workspaces button {
     color: white;
     border-radius: 100px;
+    margin: 4px;
 }
 
 #workspaces button.active {
