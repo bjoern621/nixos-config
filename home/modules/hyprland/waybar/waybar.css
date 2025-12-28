@@ -31,12 +31,6 @@ window#waybar {
     font-family: "Inter", "Font Awesome 7 Free Solid";
     font-size: 13px;
     font-weight: normal;
-
-    cursor: default;
-}
-
-button {
-    cursor: pointer;
 }
 
 .fawe-icon,
