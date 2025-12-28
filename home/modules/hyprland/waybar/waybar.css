@@ -1,5 +1,6 @@
-/*  https://github.com/Alexays/Waybar/wiki/Styling 
-    Supported properties: https://docs.gtk.org/gtk3/css-properties.html
+/*  
+    https://github.com/Alexays/Waybar/wiki/Styling 
+    Supported properties GTK 3.0: https://docs.gtk.org/gtk3/css-properties.html
 */
 
 window#waybar {
@@ -87,7 +88,7 @@ button {
 
     /*line-height: 40px;*/
     /*display: inline-flex;*/
-    align-items: center;
+    /* align-items: center; */
     vertical-align: middle;
 }
 
