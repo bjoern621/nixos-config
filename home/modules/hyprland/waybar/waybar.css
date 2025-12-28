@@ -73,13 +73,13 @@ window#waybar {
 
 #workspaces button {
     color: white;
-    background-color: #1b1d1f;
+    background-color: #abb2bf;
     border-radius: 100px;
     margin: 4px;
 }
 
 #workspaces button.active {
-    color: #5c6370;
+    color: #1b1d1f;
     background-color: #61afef;
     padding: 0 16px;
 }
