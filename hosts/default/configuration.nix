@@ -92,5 +92,5 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ]; # Enable Flakes
 
   # Polkit (https://wiki.nixos.org/wiki/Polkit)
-  security.polkit.enable;
+  security.polkit.enable = true;
 }
