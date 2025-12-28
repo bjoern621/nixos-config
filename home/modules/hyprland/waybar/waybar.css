@@ -71,12 +71,17 @@ window#waybar {
     color: #e5c07b;
 }
 
-#workspaces button {
+button {
     all: unset;
+}
+
+#workspaces button {
     color: white;
     background-color: #5c6370;
     border-radius: 100px;
     margin: 4px;
+    padding: 2px;
+    font-size: 20px;
 }
 
 #workspaces button.active {
