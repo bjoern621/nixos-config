@@ -22,13 +22,21 @@ window#waybar {
 }
 
 * {
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+window#waybar {
     font-family: "Inter", "Font Awesome 7 Free Solid";
     font-size: 13px;
     font-weight: normal;
 
-    min-height: 0;
-    margin: 0;
-    padding: 0;
+    cursor: default;
+}
+
+button {
+    cursor: pointer;
 }
 
 .fawe-icon,
