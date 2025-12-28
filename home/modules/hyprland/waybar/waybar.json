@@ -23,9 +23,7 @@
                 "2": "",
                 "3": ""
             },
-            "sort-by-number": true,
-            "halign": "start",
-            "valign": "start"
+            "sort-by-number": true
         },
 
         "tray": {
