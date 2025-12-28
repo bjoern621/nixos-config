@@ -72,6 +72,7 @@ window#waybar {
 }
 
 #workspaces button {
+    all: unset;
     color: white;
     background-color: #5c6370;
     border-radius: 100px;
