@@ -24,8 +24,8 @@
                 "3": ""
             },
             "sort-by-number": true,
-            "halign": "center",
-            "valign": "center"
+            "halign": "start",
+            "valign": "start"
         },
 
         "tray": {
