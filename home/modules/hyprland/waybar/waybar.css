@@ -89,7 +89,7 @@ button {
     /*line-height: 40px;*/
     /*display: inline-flex;*/
     /* align-items: center; */
-    vertical-align: middle;
+    /* vertical-align: middle; */
 }
 
 #workspaces button.active {
