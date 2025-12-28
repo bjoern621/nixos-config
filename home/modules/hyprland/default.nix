@@ -27,7 +27,7 @@
         border_size = 1;
         gaps_out = "0,12,12,12";
         gaps_in = 4;
-        col.active_border = "rgba(255,255,255,0.1)"
+        col.active_border = "rgba(255,255,255,0.1)";
       };
 
       # Cursor variables:
