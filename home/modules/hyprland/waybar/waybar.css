@@ -87,5 +87,5 @@ button {
 #workspaces button.active {
     color: #1b1d1f;
     background-color: #61afef;
-    padding: 2px 16px;
+    padding: 0px 16px;
 }
