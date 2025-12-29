@@ -95,6 +95,7 @@
     wdisplays
     wlr-randr
     usbutils
+    ddccontrol # brightness control
   ];
   services.hardware.bolt.enable = true;
 }
