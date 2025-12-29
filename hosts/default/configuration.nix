@@ -59,9 +59,6 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.bjoern = {
     isNormalUser = true;
@@ -90,4 +87,10 @@
 
   # Polkit (https://wiki.nixos.org/wiki/Polkit)
   security.polkit.enable = true;
+
+  # https://nixos.wiki/wiki/Thunderbolt
+  environment.systemPackages = with pkgs; [
+    plasma5Packages.plasma-thunderbolt
+  ];
+  services.hardware.bolt.enable = true;
 }
