@@ -31,7 +31,7 @@
       firefox
       git
       kdePackages.kate
-      vlc
+      mpv
     ];
 
   home.stateVersion = "25.11";
