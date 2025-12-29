@@ -94,6 +94,7 @@
     kdePackages.plasma-thunderbolt
     wdisplays
     wlr-randr
+    usbutils
   ];
   services.hardware.bolt.enable = true;
 }
