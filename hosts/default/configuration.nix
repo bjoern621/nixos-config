@@ -88,9 +88,12 @@
   # Polkit (https://wiki.nixos.org/wiki/Polkit)
   security.polkit.enable = true;
 
+  # TODO TB5/USB Tests
   # https://nixos.wiki/wiki/Thunderbolt
   environment.systemPackages = with pkgs; [
-    plasma5Packages.plasma-thunderbolt
+    kdePackages.plasma-thunderbolt
+    wdisplays
+    wlr-randr
   ];
   services.hardware.bolt.enable = true;
 }
