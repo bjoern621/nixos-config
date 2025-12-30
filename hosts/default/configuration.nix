@@ -20,7 +20,6 @@
     ../../modules/screenshot.nix
     ../../modules/fancy-boot/fancy-boot.nix
     ../../modules/file-manager.nix
-    ../../modules/monitors.nix
   ];
 
   # Bootloader.

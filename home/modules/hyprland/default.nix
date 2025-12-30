@@ -10,6 +10,7 @@
     ./clipboard-history.nix
     ./preferred-workspaces.nix
     ./hyprpolkit.nix
+    ./monitors.nix
   ];
 
   wayland.windowManager.hyprland = {
