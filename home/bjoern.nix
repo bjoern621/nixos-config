@@ -51,7 +51,6 @@
   # User packages
   home.packages = with pkgs; [
     firefox
-    git
     kdePackages.kate
     mpv
   ];
