@@ -5,7 +5,6 @@
     # Variables
     "$mainMod" = "SUPER";
     "$terminal" = "alacritty";
-    "$fileManager" = "nautilus";
 
     # See https://wiki.hypr.land/Configuring/Binds/
     # Follows scheme: bind = MODS, key, dispatcher, params
