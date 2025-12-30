@@ -20,5 +20,5 @@
       # It will just not appear on screen unless a key is pressed
       # Instantly select latest NixOS profile
       loader.timeout = 0;
-    }
+    };
 }
