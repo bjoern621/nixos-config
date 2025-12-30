@@ -9,6 +9,7 @@
     ./modules/vscode.nix
     ./modules/bitwarden.nix
     ./modules/task-manager.nix
+    ./modules/git.nix
   ];
 
   home.username = "bjoern";
