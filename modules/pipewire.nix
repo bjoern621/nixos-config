@@ -6,10 +6,10 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    alsa-utils
-    easyeffects
-    pavucontrol
-    pwvucontrol
+    alsa-utils # ALSA, the Advanced Linux Sound Architecture utils
+    easyeffects # Audio effects
+    pwvucontrol # Pipewire Volume Control
+    coppwr # Low level control GUI for the PipeWire multimedia server
   ];
 
   # Enable sound with pipewire.
