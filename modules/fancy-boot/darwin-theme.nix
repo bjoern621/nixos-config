@@ -23,6 +23,9 @@ stdenv.mkDerivation rec {
   installPhase = ''
     mkdir -p $out/share/plymouth/themes/darwin
     cp -r * $out/share/plymouth/themes/darwin/
+    
+    substituteInPlace $out/share/plymouth/themes/darwin/darwin.plymouth \
+      --replace-fail /usr/share/plymouth/themes/darwin $out/share/plymouth/themes/darwin
   '';
 
   meta = with lib; {
