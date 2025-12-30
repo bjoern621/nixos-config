@@ -11,7 +11,6 @@
     ../../modules/google-chrome.nix
     ../../modules/pipewire.nix
     ../../modules/scripts.nix
-    ../../modules/quiet-boot.nix
     ../../modules/keyring.nix
     ../../modules/rmv-nixosmanual.nix
     ../../modules/rmv-xterm.nix
