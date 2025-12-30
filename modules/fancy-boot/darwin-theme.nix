@@ -10,7 +10,7 @@
 #   Add this package to boot.plymouth.themePackages and set
 #   boot.plymouth.theme = "darwin"
 
-{ stdenv, fetchurl }:
+{ stdenv, lib }:
 
 stdenv.mkDerivation rec {
   pname = "darwin-plymouth";
@@ -25,7 +25,7 @@ stdenv.mkDerivation rec {
     cp -r * $out/share/plymouth/themes/darwin/
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A sophisticated and minimalist Plymouth theme inspired by macOS";
     homepage = "https://github.com/libredeb/darwin-plymouth";
     license = licenses.unfree;
