@@ -17,6 +17,5 @@ in
   home.packages = with pkgs; [
     font-awesome # Icons
     inter # Text
-    bibata-cursors # Cursor theme
   ];
 }
