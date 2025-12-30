@@ -13,9 +13,6 @@
     withUWSM = true;
 
   };
-  
-  # https://wiki.hypr.land/Nix/Hyprland-on-Home-Manager/#nixos-uwsm
-  xdg.configFile."uwsm/env".source = "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh"; 
 
   # Hint electron apps to use wayland
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
