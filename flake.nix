@@ -27,7 +27,6 @@
         modules = [
           ./hosts/default/configuration.nix
 
-          home-manager.nixosModules.home-manager
           {
             # https://wiki.hypr.land/Nix/Cachix/
             nix.settings = {
@@ -35,7 +34,10 @@
               trusted-substituters = ["https://hyprland.cachix.org"];
               trusted-public-keys = ["hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="];
             };
+          }
 
+          home-manager.nixosModules.home-manager
+          {
             home-manager.useGlobalPkgs = true; # Use the same nixpkgs instance as the system (avoids duplicate packages)
             home-manager.useUserPackages = true; # Install user packages to /etc/profiles instead of ~/.nix-profile
             home-manager.backupFileExtension = "backup"; # Rename existing files (like ~/.config/hypr/hyprland.conf) to *.backup instead of failing
