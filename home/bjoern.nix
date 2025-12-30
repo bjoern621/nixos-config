@@ -14,6 +14,8 @@
   home.username = "bjoern";
   home.homeDirectory = "/home/bjoern";
 
+  # https://wiki.hypr.land/Nix/Hyprland-on-Home-Manager/#fixing-problems-with-themes
+
   home.pointerCursor = {
     name = "Bibata-Modern-Ice";
     package = pkgs.bibata-cursors;
@@ -26,13 +28,32 @@
     x11.enable = true;
   };
 
+  gtk = {
+    enable = true;
+
+    theme = {
+      package = pkgs.flat-remix-gtk;
+      name = "Flat-Remix-GTK-Grey-Darkest";
+    };
+
+    iconTheme = {
+      package = pkgs.adwaita-icon-theme;
+      name = "Adwaita";
+    };
+
+    font = {
+      name = "Inter";
+      size = 11;
+    };
+  };
+
   # User packages
-    home.packages = with pkgs; [
-      firefox
-      git
-      kdePackages.kate
-      mpv
-    ];
+  home.packages = with pkgs; [
+    firefox
+    git
+    kdePackages.kate
+    mpv
+  ];
 
   home.stateVersion = "25.11";
 
