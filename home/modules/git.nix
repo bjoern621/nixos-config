@@ -21,7 +21,8 @@
 
     # Configure git-credential-helper with libsecret
     # Allows storing the git password and not needing to retype it over and over again
-    config = {
+    # https://github.com/NixOS/nixpkgs/pull/236850#issuecomment-2398121923
+    extraConfig = {
       credential.helper = "${pkgs.git-credential-manager}/bin/git-credential-manger";
     };
   };
