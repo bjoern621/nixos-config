@@ -85,9 +85,6 @@
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ]; # Enable Flakes
 
-  # Polkit (https://wiki.nixos.org/wiki/Polkit)
-  security.polkit.enable = true;
-
   # TODO TB5/USB Tests
   # https://nixos.wiki/wiki/Thunderbolt
   environment.systemPackages = with pkgs; [

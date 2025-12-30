@@ -11,9 +11,16 @@
 
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     withUWSM = true;
-
   };
 
   # Hint electron apps to use wayland
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
+  # https://wiki.hypr.land/Hypr-Ecosystem/hyprpolkitagent/
+  environment.systemPackages = [
+    pkgs.hyprpolkitagent
+  ];
+  wayland.windowManager.hyprland.settings.exec-once = [
+    "systemctl --user start hyprpolkitagent"
+  ];
 }
