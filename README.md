@@ -222,3 +222,7 @@ If the display manager does not start:
 ## License
 
 MIT
+
+### Note on Non-Free Assets
+
+The fancy-boot module includes a Plymouth theme that uses a logo image with a non-free license (the Tux mascot from Wikipedia). This file is excluded from the repository via `.gitignore`. See `modules/fancy-boot/README.md` for instructions on obtaining the logo.

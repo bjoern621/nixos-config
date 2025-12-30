@@ -6,6 +6,10 @@
 # that mimics the macOS boot experience. All theme assets are
 # installed to /usr/share/plymouth/themes/darwin/
 #
+# IMPORTANT: The correct logo.png file has a non-free license and is not included
+# in this repository.
+# See ../README.md for detailed instructions on obtaining the logo.
+#
 # Usage:
 #   Add this package to boot.plymouth.themePackages and set
 #   boot.plymouth.theme = "darwin"
