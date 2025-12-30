@@ -10,6 +10,7 @@
     ./modules/bitwarden.nix
     ./modules/task-manager.nix
     ./modules/git.nix
+    ./user-packages.nix
   ];
 
   home.username = "bjoern";
@@ -47,13 +48,6 @@
       size = 11;
     };
   };
-
-  # User packages
-  home.packages = with pkgs; [
-    firefox
-    kdePackages.kate
-    mpv
-  ];
 
   home.stateVersion = "25.11";
 
