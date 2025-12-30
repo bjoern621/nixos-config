@@ -1,8 +1,14 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
     boot = {
-      plymouth.enable = true;
+      plymouth = {
+        enable = true;
+        theme = "darwin";
+        themePackages = [
+          (pkgs.callPackage ./darwin-theme.nix { })
+        ];
+      };
 
       # Enable "Silent boot"
       consoleLogLevel = 3;
