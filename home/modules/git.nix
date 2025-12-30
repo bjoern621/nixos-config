@@ -2,7 +2,7 @@
 
 {
   # https://nixos.wiki/wiki/Git
-  
+
   programs.git = {
     enable = true;
 
@@ -15,6 +15,7 @@
     };
 
     # Configure git-credential-helper with libsecret
+    # Allows storing the git password and not needing to retype it over and over again
     config = {
       credential.helper = "${
           pkgs.git.override { withLibsecret = true; }
