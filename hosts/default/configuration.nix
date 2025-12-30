@@ -18,7 +18,7 @@
     ../../modules/task-manager.nix
     ../../modules/power-management.nix
     ../../modules/screenshot.nix
-    ../../modules/fancy-boot.nix
+    ../../modules/fancy-boot/fancy-boot.nix
     ../../modules/file-manager.nix
   ];
 
