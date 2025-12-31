@@ -10,7 +10,7 @@
     ../../modules/hyprland.nix
     ../../modules/google-chrome.nix
     ../../modules/pipewire.nix
-    ../../modules/scripts.nix
+    ../../modules/scripts/default.nix
     ../../modules/keyring.nix
     ../../modules/rmv-nixosmanual.nix
     ../../modules/rmv-xterm.nix
