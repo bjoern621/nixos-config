@@ -14,7 +14,6 @@
     ../../modules/keyring.nix
     ../../modules/rmv-nixosmanual.nix
     ../../modules/rmv-xterm.nix
-    ../../modules/login-screen.nix
     ../../modules/task-manager.nix
     ../../modules/power-management.nix
     ../../modules/screenshot.nix
