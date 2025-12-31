@@ -8,10 +8,10 @@
 {
   wayland.windowManager.hyprland.settings = {
     windowrule = [
-      "match:class google-chrome, rounding 1"
-      "match:class code, rounding 2"
-      "match:class spotify, rounding 3"
-      "match:class discord, rounding 3"
+      "match:class google-chrome, workspace 1"
+      "match:class code, workspace 2"
+      "match:class spotify, workspace 3"
+      "match:class discord, workspace 3"
     ];
 
     workspace = [
