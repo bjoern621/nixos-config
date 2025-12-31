@@ -12,7 +12,7 @@
       "match:class code, workspace 2"
       "match:class spotify, workspace 3"
       "match:class discord, workspace 3"
-      "match:class mpv, float on
+      "match:class mpv, float on"
     ];
 
     workspace = [
