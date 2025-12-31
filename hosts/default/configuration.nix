@@ -28,6 +28,15 @@
   # Latest Linux kernel
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  # Add kernel modules
+  boot.kernelModules = [ 
+    "thunderbolt"
+    "nvme"
+    "xhci_pci"
+    "usb_storage"
+    "sd_mod"
+  ];
+
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
