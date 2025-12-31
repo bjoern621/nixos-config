@@ -44,7 +44,7 @@
     };
 
     font = {
-      name = "Inter Bold";
+      name = "Inter";
       size = 11;
     };
   };
