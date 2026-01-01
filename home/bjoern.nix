@@ -11,6 +11,7 @@
     ./modules/task-manager.nix
     ./modules/git.nix
     ./user-packages.nix
+    ./modules/nix-search-tv.nix
   ];
 
   home.username = "bjoern";
