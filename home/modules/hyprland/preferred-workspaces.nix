@@ -12,7 +12,6 @@
       "workspace 2,class:code"
       "workspace 3,class:spotify"
       "workspace 3,class:discord"
-      "float,class:mpv"
     ];
 
     workspace = [
