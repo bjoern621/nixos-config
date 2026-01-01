@@ -21,8 +21,8 @@
       "$mainMod, down, movefocus, d"
 
       # Move current workspace to another monitor with CTRL + SUPER + arrow keys
-      "$mainMod CTRL, left, moveworkspacetomonitor, l"
-      "$mainMod CTRL, right, moveworkspacetomonitor, r"
+      "$mainMod CTRL, Y, moveworkspacetomonitor, l"
+      "$mainMod CTRL, X, moveworkspacetomonitor, r"
 
       # Switch workspaces with mainMod + [0-9]
       "$mainMod, 1, workspace, 1"
