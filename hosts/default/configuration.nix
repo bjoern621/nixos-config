@@ -19,6 +19,8 @@
     ../../modules/screenshot.nix
     ../../modules/fancy-boot/fancy-boot.nix
     ../../modules/file-manager.nix
+    ../../modules/cleanup.nix
+    ../../modules/autologin.nix
   ];
 
   # Bootloader.
@@ -29,12 +31,21 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Add kernel modules
-  boot.kernelModules = [ 
+  # TODO
+  boot.kernelModules = [
     "thunderbolt"
     "nvme"
     "xhci_pci"
+    "xhci_hcd"
     "usb_storage"
     "sd_mod"
+  ];
+
+  # AMDGPU kernel parameters for DisplayPort MST over Thunderbolt/USB4
+  # TODO
+  boot.kernelParams = [
+    "amdgpu.mst=1"
+    "amdgpu.dcdebugmask=0x460"
   ];
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -103,4 +114,5 @@
     brightnessctl
   ];
   services.hardware.bolt.enable = true;
+  services.fwupd.enable = true;
 }

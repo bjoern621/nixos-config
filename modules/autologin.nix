@@ -1,0 +1,5 @@
+{ ... }:
+
+{
+    services.getty.autologinUser = "bjoern";
+}
