@@ -1,0 +1,5 @@
+# Hardware configuration (machine-specific)
+hosts/*/hardware-configuration.nix
+
+# Non-free assets
+modules/fancy-boot/darwin/logo.png
