@@ -4,6 +4,7 @@
   imports = [
     ./modules/spotify.nix
     ./modules/discord.nix
+    ./modules/autostart.nix
     ./modules/hyprland/default.nix
     ./modules/terminal.nix
     ./modules/vscode.nix
