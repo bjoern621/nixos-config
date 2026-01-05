@@ -12,6 +12,7 @@
     ./modules/task-manager.nix
     ./modules/git.nix
     ./user-packages.nix
+    ./modules/ags/default.nix
   ];
 
   home.username = "bjoern";
