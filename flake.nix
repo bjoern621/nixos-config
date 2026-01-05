@@ -14,9 +14,14 @@
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
+
+    nix-search-tv = {
+      url = "github:3timeslazy/nix-search-tv";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, hyprland-plugins, ... } @ inputs: {
+  outputs = { self, nixpkgs, home-manager, hyprland-plugins, nix-search-tv, ... } @ inputs: {
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
 

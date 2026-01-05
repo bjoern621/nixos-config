@@ -28,7 +28,7 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Latest Linux kernel
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_12;
 
   # Add kernel modules
   # TODO
