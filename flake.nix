@@ -19,6 +19,8 @@
       url = "github:3timeslazy/nix-search-tv";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    ags.url = "github:aylur/ags"; 
   };
 
   outputs = { self, nixpkgs, home-manager, hyprland-plugins, nix-search-tv, ... } @ inputs: {
@@ -47,7 +49,7 @@
           }
         ];
 
-        specialArgs = { inherit inputs; }; # https://wiki.hypr.land/0.41.2/Nix/Hyprland-on-NixOS/
+        specialArgs = { inherit inputs; }; # https://wiki.hypr.land/Nix/Hyprland-on-NixOS/, https://aylur.github.io/ags/guide/nix.html#using-home-manager
       };
     };
 }
