@@ -21,6 +21,7 @@
     ../../modules/file-manager.nix
     ../../modules/cleanup.nix
     ../../modules/autologin.nix
+    ../../modules/nix-search-tv.nix
   ];
 
   # Bootloader.

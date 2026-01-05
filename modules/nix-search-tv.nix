@@ -6,5 +6,5 @@ let
   '';
 in
 {
-  environment.systemPackages = [ ns ];
+  environment.systemPackages = [ pkgs.nix-search-tv pkgs.fzf ns ];
 }
