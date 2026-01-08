@@ -10,7 +10,7 @@
     enable = true;
 
     # symlink to ~/.config/ags
-    configDir = ../ags;
+    configDir = ./.;
 
     # additional packages and executables to add to gjs's runtime
       #inputs.astal.packages.${pkgs.system}.battery
