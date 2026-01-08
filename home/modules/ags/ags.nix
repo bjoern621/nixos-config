@@ -14,8 +14,15 @@
 
     # additional packages and executables to add to gjs's runtime
     extraPackages = with pkgs; [
-      inputs.astal.packages.${pkgs.system}.battery
+      astal.battery
+      astal.powerprofiles
+      astal.wireplumber
+      astal.network
+      astal.tray
+      astal.mpris
+      astal.apps
       fzf
+      networkmanager
     ];
   };
 }
