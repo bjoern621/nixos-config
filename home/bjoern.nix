@@ -10,6 +10,7 @@
     ./modules/vscode.nix
     ./modules/bitwarden.nix
     ./modules/git.nix
+    ./modules/mission-center.nix
     ./user-packages.nix
     ./modules/ags/default.nix
   ];
