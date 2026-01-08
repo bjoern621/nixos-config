@@ -13,8 +13,8 @@
     configDir = ../ags;
 
     # additional packages and executables to add to gjs's runtime
-      #inputs.astal.packages.${pkgs.system}.battery
     extraPackages = with pkgs; [
+      inputs.astal.packages.${pkgs.system}.battery
       fzf
     ];
   };
