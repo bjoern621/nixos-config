@@ -3,6 +3,7 @@
 {
   wayland.windowManager.hyprland.settings = {
     exec = [
+      "ags"
     ];
   };
 }
