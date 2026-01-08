@@ -27,8 +27,8 @@
   # Latest Linux kernel
   boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_12;
 
-  # Add kernel modules
-  # TODO
+  # Add kernel modules (thunderbolt early for proper USB4 initialization)
+  boot.initrd.kernelModules = [ "thunderbolt" ];
   boot.kernelModules = [
     "thunderbolt"
     "nvme"
@@ -38,11 +38,24 @@
     "sd_mod"
   ];
 
-  # AMDGPU kernel parameters for DisplayPort MST over Thunderbolt/USB4
-  # TODO
+  # USB4/Thunderbolt and AMDGPU kernel parameters for DisplayPort tunneling
+  # 
+  # thunderbolt.bw_alloc_mode=1    - Enable USB4 bandwidth allocation mode
+  # thunderbolt.asym_threshold=0   - Disable asymmetric threshold (try full lanes)
+  # thunderbolt.dprx_timeout=-1    - Wait indefinitely for DP RX capability read
+  # amdgpu.mst=1                   - Enable DisplayPort MST
+  # amdgpu.dcdebugmask=0x10        - Workaround for flip_done timeout issues
+  # pci=hpbussize=0x33,hpmemsize=256M - Increase hot-plug bus/memory size for USB4
   boot.kernelParams = [
+    # USB4/Thunderbolt parameters
+    "thunderbolt.bw_alloc_mode=1"
+    "thunderbolt.asym_threshold=0"
+    "thunderbolt.dprx_timeout=-1"
+    # AMDGPU DisplayPort parameters
     "amdgpu.mst=1"
-    "amdgpu.dcdebugmask=0x460"
+    "amdgpu.dcdebugmask=0x10"
+    # PCIe hot-plug sizing for USB4 devices
+    "pci=hpbussize=0x33,hpmemsize=256M"
   ];
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -109,6 +122,7 @@
     wlr-randr
     usbutils
     brightnessctl
+    tldr
   ];
   services.hardware.bolt.enable = true;
   services.fwupd.enable = true;
