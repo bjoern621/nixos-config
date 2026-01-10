@@ -14,12 +14,9 @@ export default function Wireless() {
     };
 
     async function connect(ap: AstalNetwork.AccessPoint) {
-        // connecting to ap is not yet supported
-        // https://github.com/Aylur/astal/pull/13
         try {
             await execAsync(`nmcli d wifi connect ${ap.bssid}`);
         } catch (error) {
-            // you can implement a popup asking for password here
             console.error(error);
         }
     }
@@ -34,7 +31,10 @@ export default function Wireless() {
                                 iconName={createBinding(wifi, "iconName")}
                             />
                             <Gtk.Popover>
-                                <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
+                                <Gtk.Box
+                                    orientation={Gtk.Orientation.VERTICAL}
+                                    cssClasses={["wireless-menu"]}
+                                >
                                     <For
                                         each={createBinding(
                                             wifi,

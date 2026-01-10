@@ -4,11 +4,8 @@ import Gdk from "gi://Gdk?version=4.0";
 import Gtk from "gi://Gtk?version=4.0";
 import { onCleanup } from "ags";
 
-import Mpris from "./Mpris";
 import Tray from "./Tray";
 import Wireless from "./Wireless";
-import AudioOutput from "./AudioOutput";
-import Battery from "./Battery";
 import Clock from "./Clock";
 
 export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
@@ -16,9 +13,6 @@ export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
     const { TOP, LEFT, RIGHT } = Astal.WindowAnchor;
 
     onCleanup(() => {
-        // Root components (windows) are not automatically destroyed.
-        // When the monitor is disconnected from the system, this callback
-        // is run from the parent <For> which allows us to destroy the window
         win.destroy();
     });
 
@@ -26,23 +20,26 @@ export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
         <Astal.Window
             $={(self) => (win = self)}
             visible
-            namespace="my-bar"
+            namespace="bar"
             name={`bar-${gdkmonitor.connector}`}
             gdkmonitor={gdkmonitor}
             exclusivity={Astal.Exclusivity.EXCLUSIVE}
             anchor={TOP | LEFT | RIGHT}
             application={app}
+            cssClasses={["bar"]}
+            overflow={Gtk.Overflow.VISIBLE}
         >
             <Gtk.CenterBox>
-                <Gtk.Box $type="start">
-                    <Clock />
-                    <Mpris />
-                </Gtk.Box>
-                <Gtk.Box $type="end">
+                <Gtk.Box $type="start" cssClasses={["bordered"]}>
                     <Tray />
+                </Gtk.Box>
+
+                <Gtk.Box $type="center" cssClasses={["bordered"]}>
+                    <Clock />
+                </Gtk.Box>
+
+                <Gtk.Box $type="end" cssClasses={["bordered"]}>
                     <Wireless />
-                    <AudioOutput />
-                    <Battery />
                 </Gtk.Box>
             </Gtk.CenterBox>
         </Astal.Window>
