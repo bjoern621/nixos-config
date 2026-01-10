@@ -23,6 +23,7 @@
       astal.apps
       fzf
       networkmanager
+      astal.hyprland
     ];
   };
 

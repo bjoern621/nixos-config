@@ -7,6 +7,8 @@ import { onCleanup } from "ags";
 import Tray from "./Tray";
 import Wireless from "./Wireless";
 import Clock from "./Clock";
+import Battery from "./Battery";
+import Workspaces from "./Workspaces";
 
 export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
     let win: Astal.Window;
@@ -31,7 +33,7 @@ export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
         >
             <Gtk.CenterBox>
                 <Gtk.Box $type="start" cssClasses={["bordered"]}>
-                    <Tray />
+                    <Workspaces />
                 </Gtk.Box>
 
                 <Gtk.Box $type="center" cssClasses={["bordered"]}>
@@ -39,7 +41,9 @@ export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
                 </Gtk.Box>
 
                 <Gtk.Box $type="end" cssClasses={["bordered"]}>
+                    <Tray />
                     <Wireless />
+                    <Battery />
                 </Gtk.Box>
             </Gtk.CenterBox>
         </Astal.Window>
