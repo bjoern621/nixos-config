@@ -28,3 +28,23 @@ label {
 .clock-button > .toggle {
     padding: 4px 8px;
 }
+
+.year-calendar {
+    padding: 8px;
+
+    .other-month {
+        opacity: 0;
+    }
+
+    .week-number {
+        color: #179299;
+    }
+
+    .today {
+        color: #d20f39;
+    }
+
+    .day-name {
+        color: #df8e1d;
+    }
+}
