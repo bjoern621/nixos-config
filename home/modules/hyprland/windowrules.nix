@@ -3,8 +3,8 @@
 {
   wayland.windowManager.hyprland.settings = {
     windowrule = [
-      "float,match:class mpv"
-      "float,match:title Bitwarden"
+      "float on, match:class mpv"
+      "float on, match:title Bitwarden"
     ];
   };
 }
