@@ -75,7 +75,7 @@
 
       # https://wiki.hypr.land/Configuring/Variables/#decoration
       decoration = {
-        rounding = 10;
+        rounding = 12;
 
         shadow = {
           enabled = true;

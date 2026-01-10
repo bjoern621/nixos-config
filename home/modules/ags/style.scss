@@ -1,5 +1,10 @@
+* {
+    all: unset;
+}
+
 .bar {
     font-size: 16px;
+    line-height: 1;
 
     margin: 12px;
 }
@@ -10,8 +15,14 @@
     box-shadow: 4px 4px black;
     background-color: #eceff4;
     color: #2e3440;
+
+    padding: 4px 8px;
 }
 
 .bordered:hover {
     background-color: #d8dee9;
+}
+
+label {
+    font-weight: bold;
 }
