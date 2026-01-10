@@ -25,4 +25,13 @@
       networkmanager
     ];
   };
+
+  wayland.windowManager.hyprland.settings.exec-once = [ "ags" ];
+
+  fonts.fontconfig.enable = true;
+
+  home.packages = with pkgs; [
+    font-awesome # Icons
+    inter # Text
+  ];
 }
