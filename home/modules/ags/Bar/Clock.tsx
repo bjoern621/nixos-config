@@ -8,11 +8,11 @@ export default function Clock({ format = "%H:%M" }) {
     });
 
     return (
-        <menubutton>
-            <label label={time} />
-            <popover>
+        <Gtk.MenuButton>
+            <Gtk.Label label={time} />
+            <Gtk.Popover>
                 <Gtk.Calendar />
-            </popover>
-        </menubutton>
+            </Gtk.Popover>
+        </Gtk.MenuButton>
     );
 }

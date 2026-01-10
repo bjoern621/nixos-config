@@ -17,20 +17,20 @@ export default function Battery() {
     };
 
     return (
-        <menubutton visible={createBinding(battery, "isPresent")}>
-            <box>
-                <image iconName={createBinding(battery, "iconName")} />
-                <label label={percent} />
-            </box>
-            <popover>
-                <box orientation={Gtk.Orientation.VERTICAL}>
+        <Gtk.MenuButton visible={createBinding(battery, "isPresent")}>
+            <Gtk.Box>
+                <Gtk.Image iconName={createBinding(battery, "iconName")} />
+                <Gtk.Label label={percent} />
+            </Gtk.Box>
+            <Gtk.Popover>
+                <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
                     {powerprofiles.get_profiles().map(({ profile }) => (
-                        <button onClicked={() => setProfile(profile)}>
-                            <label label={profile} xalign={0} />
-                        </button>
+                        <Gtk.Button onClicked={() => setProfile(profile)}>
+                            <Gtk.Label label={profile} xalign={0} />
+                        </Gtk.Button>
                     ))}
-                </box>
-            </popover>
-        </menubutton>
+                </Gtk.Box>
+            </Gtk.Popover>
+        </Gtk.MenuButton>
     );
 }

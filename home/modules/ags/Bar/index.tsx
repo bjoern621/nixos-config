@@ -1,6 +1,7 @@
 import app from "ags/gtk4/app";
 import Astal from "gi://Astal?version=4.0";
 import Gdk from "gi://Gdk?version=4.0";
+import Gtk from "gi://Gtk?version=4.0";
 import { onCleanup } from "ags";
 
 import Mpris from "./Mpris";
@@ -22,7 +23,7 @@ export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
     });
 
     return (
-        <window
+        <Astal.Window
             $={(self) => (win = self)}
             visible
             namespace="my-bar"
@@ -32,18 +33,18 @@ export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
             anchor={TOP | LEFT | RIGHT}
             application={app}
         >
-            <centerbox>
-                <box $type="start">
+            <Gtk.CenterBox>
+                <Gtk.Box $type="start">
                     <Clock />
                     <Mpris />
-                </box>
-                <box $type="end">
+                </Gtk.Box>
+                <Gtk.Box $type="end">
                     <Tray />
                     <Wireless />
                     <AudioOutput />
                     <Battery />
-                </box>
-            </centerbox>
-        </window>
+                </Gtk.Box>
+            </Gtk.CenterBox>
+        </Astal.Window>
     );
 }

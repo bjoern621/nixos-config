@@ -9,66 +9,66 @@ export default function Mpris() {
     const players = createBinding(mpris, "players");
 
     return (
-        <menubutton>
-            <box>
+        <Gtk.MenuButton>
+            <Gtk.Box>
                 <For each={players}>
                     {(player) => {
                         const [app] = apps.exact_query(player.entry);
                         return (
-                            <image
+                            <Gtk.Image
                                 visible={!!app.iconName}
                                 iconName={app?.iconName}
                             />
                         );
                     }}
                 </For>
-            </box>
-            <popover>
-                <box spacing={4} orientation={Gtk.Orientation.VERTICAL}>
+            </Gtk.Box>
+            <Gtk.Popover>
+                <Gtk.Box spacing={4} orientation={Gtk.Orientation.VERTICAL}>
                     <For each={players}>
                         {(player) => (
-                            <box spacing={4} widthRequest={200}>
-                                <box
+                            <Gtk.Box spacing={4} widthRequest={200}>
+                                <Gtk.Box
                                     overflow={Gtk.Overflow.HIDDEN}
                                     css="border-radius: 8px;"
                                 >
-                                    <image
+                                    <Gtk.Image
                                         pixelSize={64}
                                         file={createBinding(player, "coverArt")}
                                     />
-                                </box>
-                                <box
+                                </Gtk.Box>
+                                <Gtk.Box
                                     valign={Gtk.Align.CENTER}
                                     orientation={Gtk.Orientation.VERTICAL}
                                 >
-                                    <label
+                                    <Gtk.Label
                                         xalign={0}
                                         label={createBinding(player, "title")}
                                     />
-                                    <label
+                                    <Gtk.Label
                                         xalign={0}
                                         label={createBinding(player, "artist")}
                                     />
-                                </box>
-                                <box hexpand halign={Gtk.Align.END}>
-                                    <button
+                                </Gtk.Box>
+                                <Gtk.Box hexpand halign={Gtk.Align.END}>
+                                    <Gtk.Button
                                         onClicked={() => player.previous()}
                                         visible={createBinding(
                                             player,
                                             "canGoPrevious"
                                         )}
                                     >
-                                        <image iconName="media-seek-backward-symbolic" />
-                                    </button>
-                                    <button
+                                        <Gtk.Image iconName="media-seek-backward-symbolic" />
+                                    </Gtk.Button>
+                                    <Gtk.Button
                                         onClicked={() => player.play_pause()}
                                         visible={createBinding(
                                             player,
                                             "canControl"
                                         )}
                                     >
-                                        <box>
-                                            <image
+                                        <Gtk.Box>
+                                            <Gtk.Image
                                                 iconName="media-playback-start-symbolic"
                                                 visible={createBinding(
                                                     player,
@@ -81,7 +81,7 @@ export default function Mpris() {
                                                             .PLAYING
                                                 )}
                                             />
-                                            <image
+                                            <Gtk.Image
                                                 iconName="media-playback-pause-symbolic"
                                                 visible={createBinding(
                                                     player,
@@ -94,23 +94,23 @@ export default function Mpris() {
                                                             .PLAYING
                                                 )}
                                             />
-                                        </box>
-                                    </button>
-                                    <button
+                                        </Gtk.Box>
+                                    </Gtk.Button>
+                                    <Gtk.Button
                                         onClicked={() => player.next()}
                                         visible={createBinding(
                                             player,
                                             "canGoNext"
                                         )}
                                     >
-                                        <image iconName="media-seek-forward-symbolic" />
-                                    </button>
-                                </box>
-                            </box>
+                                        <Gtk.Image iconName="media-seek-forward-symbolic" />
+                                    </Gtk.Button>
+                                </Gtk.Box>
+                            </Gtk.Box>
                         )}
                     </For>
-                </box>
-            </popover>
-        </menubutton>
+                </Gtk.Box>
+            </Gtk.Popover>
+        </Gtk.MenuButton>
     );
 }
