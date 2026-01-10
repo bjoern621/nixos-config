@@ -12,6 +12,7 @@
     ./hyprpolkit.nix
     ./monitors.nix
     ./no_update_notice.nix
+    ./windowrules.nix
   ];
 
   # Auto-start Hyprland uwsm after login
