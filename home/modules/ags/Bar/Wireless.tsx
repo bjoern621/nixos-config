@@ -25,14 +25,16 @@ export default function Wireless() {
     }
 
     return (
-        <box visible={wifi(Boolean)}>
+        <Gtk.Box visible={wifi(Boolean)}>
             <With value={wifi}>
                 {(wifi) =>
                     wifi && (
-                        <menubutton>
-                            <image iconName={createBinding(wifi, "iconName")} />
-                            <popover>
-                                <box orientation={Gtk.Orientation.VERTICAL}>
+                        <Gtk.MenuButton>
+                            <Gtk.Image
+                                iconName={createBinding(wifi, "iconName")}
+                            />
+                            <Gtk.Popover>
+                                <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
                                     <For
                                         each={createBinding(
                                             wifi,
@@ -40,23 +42,23 @@ export default function Wireless() {
                                         )(sorted)}
                                     >
                                         {(ap: AstalNetwork.AccessPoint) => (
-                                            <button
+                                            <Gtk.Button
                                                 onClicked={() => connect(ap)}
                                             >
-                                                <box spacing={4}>
-                                                    <image
+                                                <Gtk.Box spacing={4}>
+                                                    <Gtk.Image
                                                         iconName={createBinding(
                                                             ap,
                                                             "iconName"
                                                         )}
                                                     />
-                                                    <label
+                                                    <Gtk.Label
                                                         label={createBinding(
                                                             ap,
                                                             "ssid"
                                                         )}
                                                     />
-                                                    <image
+                                                    <Gtk.Image
                                                         iconName="object-select-symbolic"
                                                         visible={createBinding(
                                                             wifi,
@@ -66,16 +68,16 @@ export default function Wireless() {
                                                                 active === ap
                                                         )}
                                                     />
-                                                </box>
-                                            </button>
+                                                </Gtk.Box>
+                                            </Gtk.Button>
                                         )}
                                     </For>
-                                </box>
-                            </popover>
-                        </menubutton>
+                                </Gtk.Box>
+                            </Gtk.Popover>
+                        </Gtk.MenuButton>
                     )
                 }
             </With>
-        </box>
+        </Gtk.Box>
     );
 }

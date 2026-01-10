@@ -15,14 +15,14 @@ export default function Tray() {
     };
 
     return (
-        <box>
+        <Gtk.Box>
             <For each={items}>
                 {(item) => (
-                    <menubutton $={(self) => init(self, item)}>
-                        <image gicon={createBinding(item, "gicon")} />
-                    </menubutton>
+                    <Gtk.MenuButton $={(self) => init(self, item)}>
+                        <Gtk.Image gicon={createBinding(item, "gicon")} />
+                    </Gtk.MenuButton>
                 )}
             </For>
-        </box>
+        </Gtk.Box>
     );
 }
