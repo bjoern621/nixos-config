@@ -10,7 +10,7 @@ export default function Clock() {
     });
 
     return (
-        <Gtk.MenuButton>
+        <Gtk.MenuButton cssClasses={["clock-button"]}>
             <Gtk.Label label={time} />
             <Gtk.Popover>
                 <Gtk.Calendar />

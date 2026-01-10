@@ -15,8 +15,6 @@
     box-shadow: 4px 4px black;
     background-color: #eceff4;
     color: #2e3440;
-
-    padding: 4px 8px;
 }
 
 .bordered:hover {
@@ -25,4 +23,8 @@
 
 label {
     font-weight: bold;
+}
+
+.clock-button {
+    padding: 4px 8px;
 }
