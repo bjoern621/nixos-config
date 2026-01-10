@@ -26,7 +26,7 @@
     ];
   };
 
-  wayland.windowManager.hyprland.settings.exec-once = [ "ags" ];
+  wayland.windowManager.hyprland.settings.exec-once = [ "ags run" ];
 
   fonts.fontconfig.enable = true;
 
