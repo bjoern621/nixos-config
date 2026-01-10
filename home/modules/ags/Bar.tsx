@@ -130,7 +130,7 @@ function Tray() {
     const tray = AstalTray.get_default();
     const items = createBinding(tray, "items");
 
-    const init = (btn /*: Gtk.MenuButton*/, item /*: AstalTray.TrayItem*/) => {
+    const init = (btn: Gtk.MenuButton, item: AstalTray.TrayItem) => {
         btn.menuModel = item.menuModel;
         btn.insert_action_group("dbusmenu", item.actionGroup);
         item.connect("notify::action-group", () => {
@@ -155,13 +155,13 @@ function Wireless() {
     const network = AstalNetwork.get_default();
     const wifi = createBinding(network, "wifi");
 
-    const sorted = (arr /*: Array<AstalNetwork.AccessPoint>*/) => {
+    const sorted = (arr: Array<AstalNetwork.AccessPoint>) => {
         return arr
             .filter((ap) => !!ap.ssid)
             .sort((a, b) => b.strength - a.strength);
     };
 
-    async function connect(ap /*: AstalNetwork.AccessPoint*/) {
+    async function connect(ap: AstalNetwork.AccessPoint) {
         // connecting to ap is not yet supported
         // https://github.com/Aylur/astal/pull/13
         try {
@@ -187,9 +187,7 @@ function Wireless() {
                                             "accessPoints"
                                         )(sorted)}
                                     >
-                                        {(
-                                            ap /*: AstalNetwork.AccessPoint*/
-                                        ) => (
+                                        {(ap: AstalNetwork.AccessPoint) => (
                                             <button
                                                 onClicked={() => connect(ap)}
                                             >
@@ -231,7 +229,7 @@ function Wireless() {
 }
 
 function AudioOutput() {
-    const { defaultSpeaker: speaker } = AstalWp.get_default();
+    const { defaultSpeaker: speaker } = AstalWp.get_default()!;
 
     return (
         <menubutton>
@@ -258,7 +256,7 @@ function Battery() {
         "percentage"
     )((p) => `${Math.floor(p * 100)}%`);
 
-    const setProfile = (profile) => {
+    const setProfile = (profile: string) => {
         powerprofiles.set_active_profile(profile);
     };
 
@@ -283,7 +281,7 @@ function Battery() {
 
 function Clock({ format = "%H:%M" }) {
     const time = createPoll("", 1000, () => {
-        return GLib.DateTime.new_now_local().format(format);
+        return GLib.DateTime.new_now_local().format(format)!;
     });
 
     return (
@@ -296,8 +294,8 @@ function Clock({ format = "%H:%M" }) {
     );
 }
 
-export default function Bar({ gdkmonitor }) {
-    let win; //: Astal.Window
+export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
+    let win: Astal.Window;
     const { TOP, LEFT, RIGHT } = Astal.WindowAnchor;
 
     onCleanup(() => {
