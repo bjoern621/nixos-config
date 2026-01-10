@@ -13,7 +13,7 @@ export default function Workspaces() {
     const focusedWorkspace = createBinding(hyprland, "focusedWorkspace");
 
     return (
-        <Gtk.Box cssClasses={["workspaces"]}>
+        <Gtk.Box cssClasses={["workspaces"]} spacing={8}>
             <For each={workspaces}>
                 {(ws: AstalHyprland.Workspace) => (
                     <Gtk.Button

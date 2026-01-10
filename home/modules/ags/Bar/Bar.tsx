@@ -40,7 +40,7 @@ export default function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
                     <Clock />
                 </Gtk.Box>
 
-                <Gtk.Box $type="end" cssClasses={["bordered"]}>
+                <Gtk.Box $type="end" cssClasses={["bordered"]} spacing={8}>
                     <Tray />
                     <Wireless />
                     <Battery />

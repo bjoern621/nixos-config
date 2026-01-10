@@ -7,20 +7,20 @@ export default function Battery() {
     const battery = AstalBattery.get_default();
     const powerprofiles = AstalPowerProfiles.get_default();
 
-    const percent = createBinding(
+    const percentage = createBinding(
         battery,
         "percentage"
-    )((p) => `${Math.floor(p * 100)}%`);
+    )((p) => `${Math.floor(p * 100)} %`);
 
     const setProfile = (profile: string) => {
         powerprofiles.set_active_profile(profile);
     };
 
     return (
-        <Gtk.MenuButton visible={createBinding(battery, "isPresent")}>
+        <Gtk.MenuButton>
             <Gtk.Box>
                 <Gtk.Image iconName={createBinding(battery, "iconName")} />
-                <Gtk.Label label={percent} />
+                <Gtk.Label label={percentage} />
             </Gtk.Box>
             <Gtk.Popover>
                 <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
