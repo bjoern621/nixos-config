@@ -46,7 +46,7 @@
         border_size = 1;
         gaps_out = "0,12,12,12";
         gaps_in = 4;
-        "col.active_border" = "rgba(235, 203, 139, 1)"; # "col.active_border" (with dot) so that Nix does not convert it to a subcategory
+        "col.active_border" = "rgba(235,203,139,1)"; # "col.active_border" (with dot) so that Nix does not convert it to a subcategory
         "col.inactive_border" = "rgba(255,255,255,0)";
         resize_on_border = true;
       };
