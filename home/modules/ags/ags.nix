@@ -26,7 +26,8 @@
     ];
   };
 
-  wayland.windowManager.hyprland.settings.exec-once = [ "ags run" ];
+  # Restart AGS on Hyprland reload to apply config changes
+  wayland.windowManager.hyprland.settings.exec = [ "ags quit; ags run" ];
 
   fonts.fontconfig.enable = true;
 
