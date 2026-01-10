@@ -1,14 +1,22 @@
+// This shows how to use the GTK theme colors in CSS
+// I don't use these variables directly, but they might be usefule in the future for reference.
 // https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gtk/theme/Adwaita/_colors-public.scss
-$fg-color: #{"@theme_fg_color"};
-$bg-color: #{"@theme_bg_color"};
+// $fg-color: #{"@theme_fg_color"};
+// $bg-color: #{"@theme_bg_color"};
+// window#bar {
+//     color: $fg-color;
+//     > box {
+//         background: $bg-color;
+//     }
+// }
 
 window#bar {
     background: transparent;
-    color: $fg-color;
+    color: #9d2323;
     font-weight: bold;
 
     > box {
-        background: $bg-color;
+        background: #ae7878;
         border-radius: 10px;
         margin: 8px;
     }
