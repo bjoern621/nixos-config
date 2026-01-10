@@ -12,7 +12,7 @@
     ./modules/git.nix
     ./modules/mission-center.nix
     ./user-packages.nix
-    ./modules/ags/default.nix
+    ./modules/ags/ags.nix
   ];
 
   home.username = "bjoern";
