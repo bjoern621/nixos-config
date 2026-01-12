@@ -6,5 +6,9 @@
     kdePackages.kate
     mpv
     gimp
+    go
+    go-task
+    buf
+    gcc
   ];
 }
