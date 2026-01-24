@@ -5,6 +5,7 @@
     pkgs.playerctl
   ];
 
+  # https://wiki.hypr.land/Configuring/Binds/#media
   wayland.windowManager.hyprland.settings = {
     # l -> do stuff even when locked
     # e -> repeats when key is held
