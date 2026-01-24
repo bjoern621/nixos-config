@@ -17,7 +17,7 @@
     ./modules/git.nix
     ./modules/mission-center.nix
     ./user-packages.nix
-    ./modules/ags/ags.nix
+    # ./modules/ags/ags.nix # TODO
     ./modules/quickshell/quickshell.nix
   ];
 
