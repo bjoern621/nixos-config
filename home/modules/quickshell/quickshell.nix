@@ -9,6 +9,8 @@
   xdg.configFile."quickshell" = {
     source = ./config;
     recursive = true;
+    # Allow overwriting existing files (e.g., .qmlls.ini) during activation
+    force = true;
   };
 
   # Autostart quickshell
