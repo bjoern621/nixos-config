@@ -1,4 +1,9 @@
-{ inputs, config, pkgs, ... }:
+{
+  inputs,
+  config,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -13,6 +18,7 @@
     ./modules/mission-center.nix
     ./user-packages.nix
     ./modules/ags/ags.nix
+    ./modules/quickshell/quickshell.nix
   ];
 
   home.username = "bjoern";

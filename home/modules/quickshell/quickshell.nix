@@ -1,7 +1,7 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
-    programs.quickshell = {
-    enable = true;
-  };
+  home.packages = [
+    inputs.quickshell.packages.${pkgs.system}.default
+  ];
 }

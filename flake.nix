@@ -20,10 +20,24 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    ags.url = "github:aylur/ags"; 
+    ags.url = "github:aylur/ags";
+
+    quickshell = {
+      url = "github:quickshell-mirror/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, hyprland-plugins, nix-search-tv, ... } @ inputs: {
+  outputs =
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      hyprland-plugins,
+      nix-search-tv,
+      ...
+    }@inputs:
+    {
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
 
@@ -33,9 +47,11 @@
           {
             # https://wiki.hypr.land/Nix/Cachix/
             nix.settings = {
-              extra-substituters = ["https://hyprland.cachix.org"];
-              extra-trusted-substituters = ["https://hyprland.cachix.org"];
-              extra-trusted-public-keys = ["hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="];
+              extra-substituters = [ "https://hyprland.cachix.org" ];
+              extra-trusted-substituters = [ "https://hyprland.cachix.org" ];
+              extra-trusted-public-keys = [
+                "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+              ];
             };
           }
 
