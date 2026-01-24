@@ -16,6 +16,7 @@
     ./modules/bitwarden.nix
     ./modules/git.nix
     ./modules/mission-center.nix
+    ./modules/google-chrome.nix
     ./user-packages.nix
     # ./modules/ags/ags.nix # TODO
     ./modules/quickshell/quickshell.nix
