@@ -10,5 +10,6 @@
     go-task
     buf
     gcc
+    nixfmt
   ];
 }
