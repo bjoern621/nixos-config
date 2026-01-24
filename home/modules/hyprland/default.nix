@@ -1,4 +1,9 @@
-{ inputs, config, pkgs, ... }:
+{
+  inputs,
+  config,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -6,7 +11,6 @@
     ./app-launcher.nix
     ./keybinds.nix
     ./animations.nix
-    ./waybar/waybar.nix
     ./clipboard-history.nix
     ./preferred-workspaces.nix
     ./hyprpolkit.nix
@@ -29,7 +33,8 @@
   };
 
   # https://wiki.hypr.land/Nix/Hyprland-on-Home-Manager/#nixos-uwsm
-  xdg.configFile."uwsm/env".source = "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
+  xdg.configFile."uwsm/env".source =
+    "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
   wayland.windowManager.hyprland = {
     enable = true;
@@ -67,7 +72,7 @@
       input = {
         kb_layout = "de";
         accel_profile = "flat"; # Disable mouse acceleration
-        
+
         touchpad = {
           natural_scroll = true; # true: Swipe down -> content moves down
           scroll_factor = 0.2;

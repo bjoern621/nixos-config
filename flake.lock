@@ -73,6 +73,52 @@
         "type": "github"
       }
     },
+    "caelestia-cli": {
+      "inputs": {
+        "caelestia-shell": [
+          "caelestia-shell"
+        ],
+        "nixpkgs": [
+          "caelestia-shell",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1768655473,
+        "narHash": "sha256-iWnILPS2mP9ubbjRAhNv6Fqg1J/upxmD9OQTZQR4O2w=",
+        "owner": "caelestia-dots",
+        "repo": "cli",
+        "rev": "7de6c6063119a7cef27c6bd4c88f2c5ac4cbc064",
+        "type": "github"
+      },
+      "original": {
+        "owner": "caelestia-dots",
+        "repo": "cli",
+        "type": "github"
+      }
+    },
+    "caelestia-shell": {
+      "inputs": {
+        "caelestia-cli": "caelestia-cli",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "quickshell": "quickshell"
+      },
+      "locked": {
+        "lastModified": 1769226446,
+        "narHash": "sha256-YasBiXBgCkJ5oE6r9UtWXShD3OGtdRlioFErX5A1Z1Q=",
+        "owner": "caelestia-dots",
+        "repo": "shell",
+        "rev": "8430fa572500382e187a49f1ac677bfdeb7edca2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "caelestia-dots",
+        "repo": "shell",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -593,6 +639,27 @@
     "quickshell": {
       "inputs": {
         "nixpkgs": [
+          "caelestia-shell",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1768689040,
+        "narHash": "sha256-Tlnr5BulJcMers/cb+YvmBQW4nKHjdKo9loInJkyO2k=",
+        "ref": "refs/heads/master",
+        "rev": "7a427ce1979ce7447e885c4f30129b40f3d466f5",
+        "revCount": 729,
+        "type": "git",
+        "url": "https://git.outfoxxed.me/outfoxxed/quickshell"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.outfoxxed.me/outfoxxed/quickshell"
+      }
+    },
+    "quickshell_2": {
+      "inputs": {
+        "nixpkgs": [
           "nixpkgs"
         ]
       },
@@ -613,12 +680,13 @@
     "root": {
       "inputs": {
         "ags": "ags",
+        "caelestia-shell": "caelestia-shell",
         "home-manager": "home-manager",
         "hyprland": "hyprland",
         "hyprland-plugins": "hyprland-plugins",
         "nix-search-tv": "nix-search-tv",
         "nixpkgs": "nixpkgs_3",
-        "quickshell": "quickshell"
+        "quickshell": "quickshell_2"
       }
     },
     "systems": {
