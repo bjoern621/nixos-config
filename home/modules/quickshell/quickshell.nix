@@ -2,7 +2,7 @@
 
 {
   home.packages = [
-    inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default
+    # inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default
     inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
@@ -16,7 +16,7 @@
 
   # Autostart quickshell
   wayland.windowManager.hyprland.settings.exec-once = [
-    "quickshell"
+    # "quickshell"
     "caelestia-shell"
   ];
 }
