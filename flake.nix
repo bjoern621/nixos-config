@@ -45,7 +45,6 @@
     {
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         modules = [
-          #{ nixpkgs.hostPlatform = "x86_64-linux"; } # TODO: needed?
           ./hosts/default/configuration.nix
 
           {
