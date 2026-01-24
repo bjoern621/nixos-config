@@ -13,6 +13,7 @@
     ./monitors.nix
     ./no_update_notice.nix
     ./windowrules.nix
+    ./disable_middle_click_paste.nix
   ];
 
   # Auto-start Hyprland uwsm after login
