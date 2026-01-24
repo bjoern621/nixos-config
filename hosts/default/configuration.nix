@@ -38,8 +38,10 @@
     "sd_mod"
   ];
 
+  # TODO: xwayland for vscode, discord, spotify notworking
+
   # USB4/Thunderbolt and AMDGPU kernel parameters for DisplayPort tunneling
-  # 
+  #
   # thunderbolt.bw_alloc_mode=1    - Enable USB4 bandwidth allocation mode
   # thunderbolt.asym_threshold=0   - Disable asymmetric threshold (try full lanes)
   # thunderbolt.dprx_timeout=-1    - Wait indefinitely for DP RX capability read
@@ -92,7 +94,7 @@
   users.users.bjoern = {
     isNormalUser = true;
     description = "Björn";
-    extraGroups = [ 
+    extraGroups = [
       "networkmanager"
       "wheel" # Root access
     ];
@@ -112,7 +114,10 @@
   # Enable Spotify Connect discovery
   networking.firewall.allowedUDPPorts = [ 5353 ];
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ]; # Enable Flakes
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ]; # Enable Flakes
 
   # TODO TB5/USB Tests
   # https://nixos.wiki/wiki/Thunderbolt
@@ -126,4 +131,6 @@
   ];
   services.hardware.bolt.enable = true;
   services.fwupd.enable = true;
+
+  hardware.bluetooth.enable = true;
 }
