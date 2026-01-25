@@ -11,5 +11,6 @@
     buf
     gcc
     nixfmt
+    obsidian
   ];
 }
