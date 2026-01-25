@@ -12,7 +12,12 @@
     in
     {
       devShells.x86_64-linux.default = pkgs.mkShell {
-        buildInputs = [ pkgs.jdk ];
+        buildInputs = with pkgs; [
+          jdk
+          maven
+          gradle
+          nodejs
+        ];
       };
     };
 }

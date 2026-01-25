@@ -96,7 +96,8 @@
     description = "Björn";
     extraGroups = [
       "networkmanager"
-      "wheel" # Root access
+      "wheel" # Root access via sudo
+      "docker" # Docker access, effectively equivalent to being root (https://github.com/moby/moby/issues/9976)
     ];
   };
 
@@ -134,4 +135,6 @@
 
   hardware.bluetooth.enable = true;
   services.blueman.enable = true;
+
+  virtualisation.docker.enable = true;
 }
