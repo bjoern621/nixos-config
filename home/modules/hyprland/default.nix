@@ -73,12 +73,18 @@
       # https://wiki.hypr.land/Configuring/Variables/#input
       input = {
         kb_layout = "de";
-        accel_profile = "flat"; # Disable mouse acceleration
+        accel_profile = "flat"; # Disable mouse acceleration globally
 
         touchpad = {
           natural_scroll = true; # true: Swipe down -> content moves down
           scroll_factor = 0.2;
         };
+      };
+
+      # Keep acceleration enabled for touchpad
+      # https://wiki.hypr.land/Configuring/Keywords/#per-device-input-configs
+      "device[syna2ba6:00-06cb:cf00-touchpad]" = {
+        accel_profile = "adaptive";
       };
 
       # https://wiki.hypr.land/Configuring/Variables/#decoration
