@@ -3,7 +3,7 @@
 let
   # Nix path to wallpaper file, copied to /nix/store at build time.
   # Use ${wallpaper} to interpolate the absolute store path into configs.
-  wallpaper = ../../wallpapers/Ashes.jpg;
+  wallpaper = ../../wallpapers/Zelda.no.Densetsu.full.3709265.jpg;
 in
 {
   home.packages = with pkgs; [
@@ -18,7 +18,6 @@ in
     wallpaper = ,${wallpaper}
   '';
 
-  
   # https://wiki.hypr.land/Configuring/Variables/#misc
   wayland.windowManager.hyprland.settings.misc = {
     disable_splash_rendering = true;
