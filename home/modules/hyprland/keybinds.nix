@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  home.packages = with pkgs; [
+    wtype
+  ];
+
   wayland.windowManager.hyprland.settings = {
     # Variables
     "$mainMod" = "SUPER";
@@ -50,6 +54,10 @@
 
       # Screenshot
       "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | swappy -f -"
+
+      # Alt + Arrow keys -> Home/End
+      "ALT, left, exec, wtype -k Home"
+      "ALT, right, exec, wtype -k End"
     ];
 
     # Allow moving windows with the left mouse button
