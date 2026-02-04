@@ -6,5 +6,6 @@
     ./sysconf-update.nix
     ./sysconf-reload.nix
     ./sysconf-help.nix
+    ./sysconf-audio-fix.nix
   ];
 }
