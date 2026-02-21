@@ -11,10 +11,10 @@
 
 import Quickshell
 import Quickshell.Io
+import Quickshell.Networking
 import Quickshell.Services.Pipewire
 import Quickshell.Services.SystemTray
 import Quickshell.Services.Mpris
-import Quickshell.Services.Network
 import QtQuick
 import "components" as Components
 
@@ -31,21 +31,6 @@ ShellRoot {
         precision: SystemClock.Seconds
     }
     
-    // System tray
-    SystemTray {
-        id: systemTray
-    }
-    
-    // Network service
-    NetworkService {
-        id: networkService
-    }
-    
-    // Track default audio sink for volume control
-    PwObjectTracker {
-        objects: [Pipewire.defaultAudioSink]
-    }
-    
     // ========================================================================
     // GLOBAL STATE
     // ========================================================================
@@ -54,10 +39,17 @@ ShellRoot {
     property real volume: Pipewire.defaultAudioSink?.audio?.volume ?? 0.5
     property bool muted: Pipewire.defaultAudioSink?.audio?.muted ?? false
     
-    // Network state
-    property string wifiSsid: ""
-    property bool wifiConnected: false
-    property var wifiNetworks: []
+    // Network state - using native Quickshell.Networking API
+    property var wifiDevice: {
+        const devices = Networking.devices.values;
+        for (const dev of devices) {
+            if (dev.type === DeviceType.Wifi) return dev;
+        }
+        return null;
+    }
+    property string wifiSsid: wifiDevice?.activeConnection?.ssid ?? ""
+    property bool wifiConnected: wifiDevice?.state === DeviceConnectionState.Connected
+    property var wifiNetworks: wifiDevice?.networks.values ?? []
     
     // Active MPRIS player
     property var activePlayer: {
@@ -67,59 +59,6 @@ ShellRoot {
             if (p.playbackState === MprisPlaybackState.Playing) return p;
         }
         return players[0];
-    }
-    
-    // ========================================================================
-    // NETWORK MONITORING
-    // ========================================================================
-    
-    Process {
-        id: wifiScanner
-        command: ["nmcli", "-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list"]
-        running: true
-        
-        stdout: SplitParser {
-            onRead: data => {
-                const lines = data.trim().split("\n");
-                const networks = [];
-                let currentSsid = "";
-                
-                for (const line of lines) {
-                    const parts = line.split(":");
-                    if (parts.length >= 4) {
-                        const isActive = parts[0] === "yes";
-                        const ssid = parts[1];
-                        const signal = parseInt(parts[2]) || 0;
-                        const security = parts[3] || "";
-                        
-                        if (ssid && ssid !== "--") {
-                            networks.push({
-                                ssid: ssid,
-                                signal: signal,
-                                security: security,
-                                connected: isActive
-                            });
-                            
-                            if (isActive) {
-                                currentSsid = ssid;
-                            }
-                        }
-                    }
-                }
-                
-                root.wifiNetworks = networks;
-                root.wifiSsid = currentSsid;
-                root.wifiConnected = currentSsid !== "";
-            }
-        }
-        
-        // Rescan every 10 seconds
-        Timer {
-            running: true
-            interval: 10000
-            repeat: true
-            onTriggered: wifiScanner.running = true
-        }
     }
     
     // ========================================================================

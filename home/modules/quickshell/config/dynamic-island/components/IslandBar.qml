@@ -4,10 +4,12 @@
 // ============================================================================
 
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Networking
 import QtQuick
 import QtQuick.Layouts
-import "../"
+import ".."
 
 Scope {
     id: root
@@ -20,6 +22,18 @@ Scope {
     property var panelWindowRef: null
     property var audioIndicatorRef: null
     property var wifiIndicatorRef: null
+    
+    // Network state - using native Quickshell.Networking API
+    property var wifiDevice: {
+        const devices = Networking.devices.values;
+        for (const dev of devices) {
+            if (dev.type === DeviceType.Wifi) return dev;
+        }
+        return null;
+    }
+    property var availableNetworks: wifiDevice?.networks?.values ?? []
+    property bool wifiConnected: wifiDevice?.state === DeviceConnectionState.Connected
+    property string wifiSsid: wifiDevice?.activeConnection?.ssid ?? ""
     
     Variants {
         model: Quickshell.screens
@@ -612,7 +626,7 @@ Scope {
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.iconSizeMedium
                             
-                            property bool spinning: wifiScanner.running
+                            property bool spinning: root.wifiDevice?.scannerEnabled ?? false
                             
                             RotationAnimation on rotation {
                                 running: refreshIcon.spinning
@@ -630,7 +644,7 @@ Scope {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: wifiScanner.running = true
+                            onClicked: { if (root.wifiDevice) root.wifiDevice.scannerEnabled = true }
                         }
                     }
                 }
@@ -691,7 +705,7 @@ Scope {
                     color: Theme.textSecondary
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
-                    visible: availableNetworks.count > 0
+                    visible: root.availableNetworks.length > 0
                 }
                 
                 // Network list
@@ -701,7 +715,7 @@ Scope {
                     spacing: Theme.spacingSmall
                     
                     Repeater {
-                        model: availableNetworks
+                        model: root.availableNetworks
                         
                         Rectangle {
                             width: parent.width
@@ -760,11 +774,11 @@ Scope {
                 // Empty state
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: wifiScanner.running ? "Scanning..." : "No networks found"
+                    text: (root.wifiDevice?.scannerEnabled ?? false) ? "Scanning..." : "No networks found"
                     color: Theme.textSecondary
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMedium
-                    visible: availableNetworks.count === 0
+                    visible: root.availableNetworks.length === 0
                 }
             }
         }

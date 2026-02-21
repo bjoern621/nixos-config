@@ -7,7 +7,7 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
-import "../Theme.js" as Theme
+import ".."
 
 PopupWindow {
     id: audioPopup

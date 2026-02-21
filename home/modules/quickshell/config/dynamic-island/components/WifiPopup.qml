@@ -6,7 +6,7 @@
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import "../Theme.js" as Theme
+import ".."
 
 PopupWindow {
     id: wifiPopup
@@ -54,7 +54,9 @@ PopupWindow {
     }
     
     function refreshNetworks() {
-        wifiScanner.running = true
+        if (wifiDevice) {
+            wifiDevice.scannerEnabled = true
+        }
     }
     
     Rectangle {
@@ -114,7 +116,7 @@ PopupWindow {
                         
                         // Spinning animation when refreshing
                         RotationAnimation on rotation {
-                            running: wifiScanner.running
+                            running: wifiDevice?.scannerEnabled ?? false
                             from: 0
                             to: 360
                             duration: 1000
@@ -279,7 +281,7 @@ PopupWindow {
                 // Empty state
                 Text {
                     anchors.centerIn: parent
-                    text: wifiScanner.running ? "Scanning..." : "No networks found"
+                    text: (wifiDevice?.scannerEnabled ?? false) ? "Scanning..." : "No networks found"
                     color: Theme.textSecondary
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMedium

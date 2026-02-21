@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
-import Quickshell.Services.Upower
+import Quickshell.Services.UPower
 
 ShellRoot {
     SystemClock {
@@ -11,13 +11,8 @@ ShellRoot {
         precision: SystemClock.Seconds
     }
 
-    SystemTray {
-        id: systemTray
-    }
-
-    UPower {
-        id: upower
-    }
+    // Note: SystemTray and UPower are singletons, accessed directly
+    // e.g., SystemTray.items, UPower.displayDevice
 
     PanelWindow {
         anchors {
