@@ -16,8 +16,9 @@
     ../../modules/fancy-boot/fancy-boot.nix
     ../../modules/file-manager.nix
     ../../modules/cleanup.nix
-    ../../modules/autologin.nix
+    # ../../modules/autologin.nix
     ../../modules/nix-search-tv.nix
+    ../../modules/display-manager.nix
   ];
 
   # Bootloader.
@@ -25,7 +26,8 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Latest Linux kernel
-  boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_6;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_6;
 
   # Add kernel modules (thunderbolt early for proper USB4 initialization)
   boot.initrd.kernelModules = [ "thunderbolt" ];
