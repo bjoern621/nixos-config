@@ -9,10 +9,10 @@ PanelWindow {
     }
 
     margins {
-        top: 10
+        top: 8
     }
 
-    exclusiveZone: 0
+    exclusiveZone: 34
     color: "transparent"
 
     implicitWidth: pill.implicitWidth
@@ -35,7 +35,7 @@ PanelWindow {
             text: "Dynamic Island"
             color: "#ffffff"
             font.pixelSize: 13
-            font.weight: Font.Medium
+            font.weight: Font.DemiBold
             renderType: Text.NativeRendering
         }
     }
