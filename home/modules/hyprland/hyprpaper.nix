@@ -1,28 +1,24 @@
-{ config, pkgs, ... }:
+{ config, ... }:
 
 let
-  # Nix path to wallpaper file, copied to /nix/store at build time.
-  # Use ${wallpaper} to interpolate the absolute store path into configs.
-  wallpaper = ../../wallpapers/Zelda.no.Densetsu.full.3709265.jpg;
+  wallpaper = "${config.home.homeDirectory}/.local/share/wallpapers/Zelda.no.Densetsu.full.3709265.jpg";
 in
 {
-  home.packages = with pkgs; [
-    hyprpaper
-  ];
+  # Copy the entire wallpapers directory.
+  home.file.".local/share/wallpapers".source = ../../wallpapers;
 
-  # Create config file hyprpaper.conf
-  # XDG = Cross-Desktop Group (https://www.freedesktop.org/wiki/)
-  # specification that standardizes where apps should store files on Linux
-  xdg.configFile."hypr/hyprpaper.conf".text = ''
-    preload = ${wallpaper}
-    wallpaper = ,${wallpaper}
-  '';
+  # https://nix-community.github.io/home-manager/options.xhtml#opt-services.hyprpaper.enable
+  services.hyprpaper = {
+    enable = true;
+    settings = {
+      preload = [ wallpaper ];
+      wallpaper = [ ",${wallpaper}" ];
+    };
+  };
 
   # https://wiki.hypr.land/Configuring/Variables/#misc
   wayland.windowManager.hyprland.settings.misc = {
     disable_splash_rendering = true;
     disable_hyprland_logo = true;
   };
-
-  wayland.windowManager.hyprland.settings.exec-once = [ "hyprpaper" ];
 }
