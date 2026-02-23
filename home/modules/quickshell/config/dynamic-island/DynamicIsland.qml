@@ -10,6 +10,7 @@ PanelWindow {
 
     margins {
         top: 8
+        bottom: 8
     }
 
     exclusiveZone: 34
@@ -32,7 +33,7 @@ PanelWindow {
             id: label
             anchors.centerIn: parent
 
-            text: "Dynamic Island"
+            text: "Dynamic Island2"
             color: "#ffffff"
             font.pixelSize: 13
             font.weight: Font.DemiBold
