@@ -10,7 +10,6 @@ PanelWindow {
 
     margins {
         top: 8
-        bottom: 8
     }
 
     exclusiveZone: 34
@@ -23,21 +22,15 @@ PanelWindow {
         id: pill
         anchors.centerIn: parent
 
-        implicitWidth: label.implicitWidth + 48
+        implicitWidth: clock.implicitWidth + 48
         implicitHeight: 34
 
         radius: implicitHeight / 2
         color: "#111111"
 
-        Text {
-            id: label
+        DateTime {
+            id: clock
             anchors.centerIn: parent
-
-            text: "Dynamic Island2"
-            color: "#ffffff"
-            font.pixelSize: 13
-            font.weight: Font.DemiBold
-            renderType: Text.NativeRendering
         }
     }
 }

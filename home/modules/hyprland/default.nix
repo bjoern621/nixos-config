@@ -53,7 +53,7 @@
       # https://wiki.hypr.land/Configuring/Variables/#general
       general = {
         border_size = 3;
-        gaps_out = "0,12,12,12";
+        gaps_out = "8,12,12,12";
         gaps_in = 4;
         "col.active_border" = "rgba(94,129,172,1)"; # "col.active_border" (with dot) so that Nix does not convert it to a subcategory
         "col.inactive_border" = "rgba(94,129,172,0)";
