@@ -10,12 +10,16 @@ in
   # https://nix-community.github.io/home-manager/options.xhtml#opt-services.hyprpaper.enable
   services.hyprpaper = {
     enable = true;
-    settings.wallpaper = [
-      {
-        monitor = "";
-        path = "${config.home.homeDirectory}/${wallpaper_rel_path}/Honor.jpg";
-      }
-    ];
+    settings = {
+      splash = false;
+
+      wallpaper = [
+        {
+          monitor = "";
+          path = "${config.home.homeDirectory}/${wallpaper_rel_path}/Honor.jpg";
+        }
+      ];
+    };
   };
 
   # https://wiki.hypr.land/Configuring/Variables/#misc
