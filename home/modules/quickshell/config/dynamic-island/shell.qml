@@ -157,20 +157,29 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                Text {
+                    text: "\uf017"
+                    font.family: "Font Awesome 7 Free Solid"
+                    font.pixelSize: 13
+                    color: "#ffffff"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
                 // DateTime inline
                 Text {
                     id: clock
-                    text: Qt.formatDateTime(new Date(), "ddd MMM d  h:mm AP")
+                    text: Qt.formatDateTime(new Date(), "ddd MMM d  hh:mm AP")
                     font.family: "Inter"
-                    font.pixelSize: 13
-                    color: "#ffffff"
+                        font.pixelSize: 13
+                        font.weight: Font.Bold
+                        color: "#ffffff"
                     anchors.verticalCenter: parent.verticalCenter
 
                     Timer {
                         interval: 1000
                         repeat: true
                         running: true
-                        onTriggered: clock.text = Qt.formatDateTime(new Date(), "ddd MMM d  h:mm AP")
+                        onTriggered: clock.text = Qt.formatDateTime(new Date(), "ddd MMM d  hh:mm AP")
                     }
                 }
             }
