@@ -1,5 +1,6 @@
 import Quickshell
 import QtQuick
+import "../"
 
 Row {
     id: root
@@ -11,19 +12,14 @@ Row {
 
     Text {
         text: ""
-        color: "#ffffff"
-        font.pixelSize: 13
         font.family: "Font Awesome 7 Free Solid"
         anchors.verticalCenter: parent.verticalCenter
     }
 
     Text {
         text: Qt.formatDateTime(new Date(), root.timeFormat)
-        color: "#ffffff"
-        font.pixelSize: 13
-        font.weight: Font.DemiBold
-        renderType: Text.NativeRendering
-        anchors.verticalCenter: parent.verticalCenter
+        font.family: Style.fontFamily
+        font.weight: Font.Bold
     }
 
     SystemClock {

@@ -1,5 +1,6 @@
 import Quickshell
 import QtQuick
+import "../"
 
 PanelWindow {
     id: root
@@ -26,7 +27,9 @@ PanelWindow {
         implicitHeight: 34
 
         radius: implicitHeight / 2
-        color: "#111111"
+        color: Style.backgroundColor
+
+        border.color: "red"
 
         DateTime {
             id: clock
