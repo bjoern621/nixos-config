@@ -19,6 +19,7 @@
     # ../../modules/autologin.nix
     ../../modules/nix-search-tv.nix
     ../../modules/display-manager.nix
+    ../../modules/wireguard.nix
   ];
 
   # Bootloader.
