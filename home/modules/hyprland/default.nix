@@ -54,7 +54,7 @@
       general = {
         border_size = 3;
         gaps_out = "8,8,8,8";
-        gaps_in = 4;
+        gaps_in = 2;
         "col.active_border" = "rgba(94,129,172,1)"; # "col.active_border" (with dot) so that Nix does not convert it to a subcategory
         "col.inactive_border" = "rgba(94,129,172,0)";
         resize_on_border = true;
