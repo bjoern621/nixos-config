@@ -66,7 +66,7 @@
           }
         ];
 
-        specialArgs = { inherit inputs; }; # https://wiki.hypr.land/Nix/Hyprland-on-NixOS/, https://aylur.github.io/ags/guide/nix.html#using-home-manager
+        specialArgs = { inherit inputs; }; # https://wiki.hypr.land/Nix/Hyprland-on-NixOS/
       };
     };
 }
