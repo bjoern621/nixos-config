@@ -5,4 +5,5 @@ hosts/*/hardware-configuration.nix
 modules/fancy-boot/darwin/logo.png
 
 # Secrets
-modules/secrets/
+modules/secrets/*
+!modules/secrets/*.example
