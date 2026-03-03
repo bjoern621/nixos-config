@@ -168,7 +168,8 @@ ShellRoot {
                 // DateTime inline
                 Text {
                     id: clock
-                    text: Qt.formatDateTime(new Date(), "ddd MMM d  hh:mm AP")
+                    property var germanLocale: Qt.locale("de_DE")
+                    text: germanLocale.formatDateTime(new Date(), Locale.ShortFormat)
                     font.family: "Inter"
                         font.pixelSize: 13
                         font.weight: Font.Bold
@@ -179,7 +180,7 @@ ShellRoot {
                         interval: 1000
                         repeat: true
                         running: true
-                        onTriggered: clock.text = Qt.formatDateTime(new Date(), "ddd MMM d  hh:mm AP")
+                        onTriggered: clock.text = clock.germanLocale.formatDateTime(new Date(), Locale.ShortFormat)
                     }
                 }
             }
