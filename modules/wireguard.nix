@@ -29,7 +29,6 @@
   # networkmanager is enabled in hosts/default/configuration.nix
   environment.systemPackages = with pkgs; [
     wireguard-tools # wg, wg-quick
-    networkmanagerapplet # nm-applet (tray)
-    nm-connection-editor # (GUI)
+    networkmanagerapplet # nm-applet (tray) + nm-connection-editor (GUI)
   ];
 }
