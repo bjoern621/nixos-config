@@ -1,24 +1,35 @@
 { pkgs, ... }:
 
 /*
-  Uses wg-quick via configFile — the conf path is resolved at service start,
-  not at eval time, so pure flake evaluation is not violated.
+  NetworkManager manages all network connections in one place — wifi, ethernet,
+  and VPN (including WireGuard). Benefits over wg-quick on a desktop:
+    - Single tray applet (nm-applet) to toggle any connection
+    - Integrates with the system keyring for credential storage
+    - Handles DNS, routing, and interface lifecycle centrally
+    - Per-connection profiles survive reboots without manual systemctl
+
+  WireGuard setup (one-time, after first rebuild):
+    sudo nmcli connection import type wireguard file /etc/wireguard/wg-hamburg.conf
 
   The conf file lives at /etc/wireguard/wg-hamburg.conf (outside the git repo).
   See modules/wireguard.conf.example for the template.
 
-  Setup:
-    sudo mkdir -p /etc/wireguard
-    sudo cp modules/wireguard.conf.example /etc/wireguard/wg-hamburg.conf
-    sudo chmod 600 /etc/wireguard/wg-hamburg.conf
-    # edit the file and fill in real keys
+  Manage via tray:
+    nm-applet runs on login (see home/modules/autostart.nix)
+    Right-click tray icon -> VPN connections -> wg-hamburg
 
-  Manage:
-    systemctl start|stop|status wg-quick-wg-hamburg
+  Manage via CLI:
+    nmcli connection up   wg-hamburg
+    nmcli connection down wg-hamburg
+    nmcli connection show wg-hamburg
     wg show
 */
 
 {
-  networking.wg-quick.interfaces.wg-hamburg.configFile = "/etc/wireguard/wg-hamburg.conf";
-  environment.systemPackages = [ pkgs.wireguard-tools ]; # provides wg and wg-quick
+  # networkmanager is enabled in hosts/default/configuration.nix
+  environment.systemPackages = with pkgs; [
+    wireguard-tools # wg, wg-quick
+    networkmanagerapplet # nm-applet (tray)
+    nm-connection-editor # (GUI)
+  ];
 }

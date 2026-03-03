@@ -1,8 +1,11 @@
 # WireGuard conf template — copy to /etc/wireguard/wg-<name>.conf and fill in real values.
 #
-# sudo mkdir -p /etc/wireguard
-# sudo cp modules/wireguard.conf.example /etc/wireguard/wg-hamburg.conf
-# sudo chmod 600 /etc/wireguard/wg-hamburg.conf
+# Setup:
+#   sudo mkdir -p /etc/wireguard
+#   sudo cp modules/wireguard.conf.example /etc/wireguard/wg-hamburg.conf
+#   sudo chmod 600 /etc/wireguard/wg-hamburg.conf
+#   # fill in real keys, then import into NetworkManager (one-time):
+#   sudo nmcli connection import type wireguard file /etc/wireguard/wg-hamburg.conf
 #
 # Generate a keypair:  wg genkey | tee private.key | wg pubkey
 # Generate a PSK:      wg genpsk
