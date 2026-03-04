@@ -200,6 +200,7 @@ ShellRoot {
                     return "\uf240"                    
                 }
 
+                // Battery status
                 Text {
                     text: contentRow.batteryIcon + " " + UPower.displayDevice.percentage * 100 + " %"
                     font.family: "Inter"
