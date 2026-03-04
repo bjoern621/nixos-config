@@ -17,7 +17,7 @@ ShellRoot {
         exclusiveZone: 0
         color: "transparent"
 
-        implicitHeight: 48
+        implicitHeight: 36
 
         property bool isHovered: false
 
@@ -192,7 +192,7 @@ ShellRoot {
 
                 Text {
                     // text: Math.round(UPower.displayDevice.percentage) + " %"
-                    text: UPower.displayDevice.type + " " + Math.round(UPower.displayDevice.percentage) + " %"
+                    text: UPower.displayDevice.model + " " + Math.round(UPower.displayDevice.percentage) + " %"
                     font.family: "Inter"
                     font.pixelSize: 13
                     color: "#ffffff"
