@@ -190,19 +190,23 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // Battery icon based on percentage
-                property string batteryIcon: {
-                    const pct = UPower.displayDevice.percentage 
-                    if (pct <= 0.05) return "\uf244"      
-                    if (pct <= 0.25) return "\uf243"     
-                    if (pct <= 0.5) return "\uf242"    
-                    if (pct <= 0.75) return "\uf241"   
-                    return "\uf240"                    
-                }
-
                 // Battery status
                 Text {
-                    text: contentRow.batteryIcon + " " + UPower.displayDevice.percentage * 100 + " %"
+                    // Battery icon based on percentage
+                    property string batteryIcon: {
+                        const pct = UPower.displayDevice.percentage 
+                        if (pct <= 0.05) return "\uf244"      
+                        if (pct <= 0.25) return "\uf243"     
+                        if (pct <= 0.5) return "\uf242"    
+                        if (pct <= 0.75) return "\uf241"   
+                        return "\uf240"                    
+                    }
+
+                    property var charging: UPower.displayDevice.state === UPowerDeviceState.Charging
+
+                    property var chargeRate: Math.round(UPower.displayDevice.changeRate)
+
+                    text: batteryIcon + " " + Math.round(UPower.displayDevice.percentage * 100) + " %" + (charging ? " (" + chargeRate + " W)" : "")
                     font.family: "Inter"
                     font.pixelSize: 13
                     color: "#ffffff"
