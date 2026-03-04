@@ -196,9 +196,9 @@ ShellRoot {
                     property string batteryIcon: {
                         const pct = UPower.displayDevice.percentage 
                         if (pct <= 0.05) return "\uf244"      
-                        if (pct <= 0.25) return "\uf243"     
-                        if (pct <= 0.5) return "\uf242"    
-                        if (pct <= 0.75) return "\uf241"   
+                        if (pct <= 0.35) return "\uf243"     
+                        if (pct <= 0.60) return "\uf242"    
+                        if (pct <= 0.85) return "\uf241"   
                         return "\uf240"                    
                     }
 
