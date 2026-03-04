@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import QtQuick
+import Quickshell.Services.UPower
 
 ShellRoot {
     PanelWindow {
@@ -157,19 +158,13 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Text {
-                    text: "\uf017"
-                    font.family: "Font Awesome 7 Free Solid"
-                    font.pixelSize: 13
-                    color: "#ffffff"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
 
                 // DateTime inline
                 Text {
                     id: clock
                     property var germanLocale: Qt.locale("de_DE")
-                    text: germanLocale.formatDateTime(new Date(), Locale.ShortFormat)
+                    property var currentDate: new Date()
+                    text: "\uf133 " + germanLocale.dayName(currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(currentDate, "dd.MM.yyyy \uf017 HH:mm")
                     font.family: "Inter"
                         font.pixelSize: 13
                         font.weight: Font.Bold
@@ -180,9 +175,31 @@ ShellRoot {
                         interval: 1000
                         repeat: true
                         running: true
-                        onTriggered: clock.text = clock.germanLocale.formatDateTime(new Date(), Locale.ShortFormat)
+                        onTriggered: {
+                            clock.currentDate = new Date()
+                            clock.text = germanLocale.dayName(clock.currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(clock.currentDate, "\uf133 dd.MM.yyyy \uf017 HH:mm")
+                        }
                     }
                 }
+
+                // Separator
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Qt.rgba(1, 1, 1, 0.2)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    // text: Math.round(UPower.displayDevice.percentage) + " %"
+                    text: UPower.displayDevice.type + " " + Math.round(UPower.displayDevice.percentage) + " %"
+                    font.family: "Inter"
+                    font.pixelSize: 13
+                    color: "#ffffff"
+                    font.weight: Font.Bold
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
             }
         }
     }

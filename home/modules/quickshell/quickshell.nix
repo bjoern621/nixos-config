@@ -6,6 +6,10 @@
 }:
 
 {
+  # User-level quickshell configuration.
+  # NOTE: This module is paired with modules/quickshell.nix
+  # which contains system-level dependencies like UPower.
+
   home.packages = with pkgs; [
     inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default
     # inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
