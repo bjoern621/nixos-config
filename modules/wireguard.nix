@@ -9,19 +9,19 @@
     - Per-connection profiles survive reboots without manual systemctl
 
   WireGuard setup (one-time, after first rebuild):
-    sudo nmcli connection import type wireguard file /etc/wireguard/wg-hamburg.conf
+    sudo nmcli connection import type wireguard file /etc/wireguard/xyz.conf
 
-  The conf file lives at /etc/wireguard/wg-hamburg.conf (outside the git repo).
+  The conf file lives at /etc/wireguard/xyz.conf (outside the git repo).
   See modules/wireguard.conf.example for the template.
 
   Manage via tray:
     nm-applet runs on login (see home/modules/autostart.nix)
-    Right-click tray icon -> VPN connections -> wg-hamburg
+    Right-click tray icon -> VPN connections -> xyz
 
   Manage via CLI:
-    nmcli connection up   wg-hamburg
-    nmcli connection down wg-hamburg
-    nmcli connection show wg-hamburg
+    nmcli connection up   xyz
+    nmcli connection down xyz
+    nmcli connection show xyz
     wg show
 */
 
