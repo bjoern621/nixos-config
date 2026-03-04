@@ -177,7 +177,7 @@ ShellRoot {
                         running: true
                         onTriggered: {
                             clock.currentDate = new Date()
-                            clock.text = germanLocale.dayName(clock.currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(clock.currentDate, "\uf133 dd.MM.yyyy \uf017 HH:mm")
+                            clock.text = "\uf133 " + clock.germanLocale.dayName(clock.currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(clock.currentDate, "dd.MM.yyyy \uf017 HH:mm")
                         }
                     }
                 }
@@ -190,8 +190,18 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                // Battery icon based on percentage
+                property string batteryIcon: {
+                    const pct = UPower.displayDevice.percentage 
+                    if (pct <= 0.05) return "\uf244"      
+                    if (pct <= 0.25) return "\uf243"     
+                    if (pct <= 0.5) return "\uf242"    
+                    if (pct <= 0.75) return "\uf241"   
+                    return "\uf240"                    
+                }
+
                 Text {
-                    text: Math.round(UPower.displayDevice.percentage) + " %"
+                    text: contentRow.batteryIcon + " " + UPower.displayDevice.percentage * 100 + " %"
                     font.family: "Inter"
                     font.pixelSize: 13
                     color: "#ffffff"
