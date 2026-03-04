@@ -191,8 +191,7 @@ ShellRoot {
                 }
 
                 Text {
-                    // text: Math.round(UPower.displayDevice.percentage) + " %"
-                    text: UPower.displayDevice.model + " " + Math.round(UPower.displayDevice.percentage) + " %"
+                    text: Math.round(UPower.displayDevice.percentage) + " %"
                     font.family: "Inter"
                     font.pixelSize: 13
                     color: "#ffffff"
