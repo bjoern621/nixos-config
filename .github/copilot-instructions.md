@@ -28,3 +28,12 @@ Follow the rules in [CONTRIBUTING.md](../CONTRIBUTING.md).
 - Prefer attribute set arguments over positional arguments in module functions.
 - Use `mkEnableOption` / `mkOption` for module options.
 - Keep modules self-contained; avoid cross-module dependencies unless necessary.
+
+## Hyprland Rules
+
+The authoritative reference for window rules and layer rules (props, effects, syntax) is:
+https://wiki.hypr.land/Configuring/Window-Rules/
+
+Key layer rule effects: `blur on`, `ignore_alpha <float>`, `blur_popups on`, `xray on`, `dim_around on`.
+Anonymous syntax: `layerrule = <effect>, match:namespace <regex>`
+Named syntax uses a block: `layerrule { name = …; <effect> = …; match:namespace = …; }`
