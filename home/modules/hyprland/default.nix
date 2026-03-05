@@ -100,7 +100,14 @@
           color_inactive = "0x221a1a1a";
         };
 
-        blur.enabled = false;
+        blur = {
+          enabled = true;
+          size = 8;
+          passes = 2;
+          noise = 0.02;
+          contrast = 1.0;
+          brightness = 1.0;
+        };
       };
     };
 

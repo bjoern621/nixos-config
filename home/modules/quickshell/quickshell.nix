@@ -28,5 +28,10 @@
     # "caelestia-shell"
   ];
 
+  # Hyprland layerrule for quickshell blur effect
+  wayland.windowManager.hyprland.settings.layerrule = [
+    "blur on, match:namespace quickshell"
+  ];
+
   fonts.fontconfig.enable = true;
 }
