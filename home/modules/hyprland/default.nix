@@ -102,9 +102,8 @@
 
         blur = {
           enabled = true;
-          size = 8;
+          size = 2;
           passes = 2;
-          noise = 0.02;
           contrast = 1.0;
           brightness = 1.0;
         };

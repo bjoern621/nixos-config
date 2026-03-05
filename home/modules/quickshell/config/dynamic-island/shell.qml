@@ -65,10 +65,12 @@ ShellRoot {
             implicitHeight: 32
 
             radius: implicitHeight / 2
-            color: Qt.rgba(0.07, 0.07, 0.07, 0.7)
+            // color: Qt.rgba(0.07, 0.07, 0.07, 0.7)
+            // color: "transparent"
+            color: Qt.rgba(0.3, 0.3, 0.3, 0.1)
 
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.1)
+            border.color: Qt.rgba(1, 1, 1, 0.2)
 
             Row {
                 id: contentRow
