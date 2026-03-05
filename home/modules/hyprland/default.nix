@@ -52,11 +52,11 @@
     settings = {
       # https://wiki.hypr.land/Configuring/Variables/#general
       general = {
-        border_size = 3;
+        border_size = 1;
         gaps_out = "8,8,8,8";
         gaps_in = 2;
-        "col.active_border" = "rgba(94,129,172,1)"; # "col.active_border" (with dot) so that Nix does not convert it to a subcategory
-        "col.inactive_border" = "rgba(94,129,172,0)";
+        "col.active_border" = "rgba(255,255,255,0.2)"; # "col.active_border" (with dot) so that Nix does not convert it to a subcategory
+        "col.inactive_border" = "rgba(255,255,255,0)";
         resize_on_border = true;
       };
 
@@ -93,7 +93,7 @@
         rounding = 12;
 
         shadow = {
-          enabled = true;
+          enabled = false;
           range = 10;
           render_power = 2;
           color = "0xee1a1a1a";
@@ -102,8 +102,8 @@
 
         blur = {
           enabled = true;
-          size = 2;
-          passes = 2;
+          size = 6;
+          passes = 3;
           contrast = 1.0;
           brightness = 1.0;
         };
