@@ -208,7 +208,7 @@ ShellRoot {
 
                     property var chargeRate: Math.round(UPower.displayDevice.changeRate)
 
-                    text: batteryIcon + " " + Math.round(UPower.displayDevice.percentage * 100) + " %" + (charging ? " (" + chargeRate + " W)" : "")
+                    text: batteryIcon + " " + Math.round(UPower.displayDevice.percentage * 100) + " %" + (charging ? " (+" + chargeRate + " W)" : "")
                     font.family: "Inter"
                     font.pixelSize: 13
                     color: "#ffffff"
