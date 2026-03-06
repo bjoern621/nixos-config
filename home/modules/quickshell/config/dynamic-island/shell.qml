@@ -25,6 +25,7 @@ ShellRoot {
             id: hoverArea
             anchors.fill: parent
             hoverEnabled: true
+            acceptedButtons: Qt.NoButton
             onContainsMouseChanged: {
                 if (containsMouse) {
                     root.isHovered = true
@@ -67,15 +68,15 @@ ShellRoot {
             radius: implicitHeight / 2
             // color: Qt.rgba(0.07, 0.07, 0.07, 0.7)
             // color: "transparent"
-            color: Qt.rgba(0.3, 0.3, 0.3, 0.1)
+            color: Colors.pillBackground
 
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.2)
+            border.color: Colors.pillBorder
 
             Row {
                 id: contentRow
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: 8
 
                 // Workspace indicator
                 Row {
@@ -84,13 +85,13 @@ ShellRoot {
 
                     Text {
                         text: "\uf108"
-                        font.family: "Font Awesome 7 Free Solid"
-                        font.pixelSize: 13
-                        color: "#ffffff"
+                        font.family: Typography.iconFontFamily
+                        font.pixelSize: Typography.fontSize14
+                        color: Colors.textColor
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Text {
+                    Label {
                         text: {
                             var monitor = Hyprland.focusedMonitor
                             if (monitor && monitor.activeWorkspace) {
@@ -98,10 +99,6 @@ ShellRoot {
                             }
                             return 1
                         }
-                        font.family: "Inter"
-                        font.pixelSize: 13
-                        font.weight: Font.Bold
-                        color: "#ffffff"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -110,7 +107,7 @@ ShellRoot {
                 Rectangle {
                     width: 1
                     height: 16
-                    color: Qt.rgba(1, 1, 1, 0.2)
+                    color: Colors.separatorColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -156,21 +153,17 @@ ShellRoot {
                 Rectangle {
                     width: 1
                     height: 16
-                    color: Qt.rgba(1, 1, 1, 0.2)
+                    color: Colors.separatorColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
 
                 // DateTime inline
-                Text {
+                Label {
                     id: clock
                     property var germanLocale: Qt.locale("de_DE")
                     property var currentDate: new Date()
                     text: "\uf133 " + germanLocale.dayName(currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(currentDate, "dd.MM.yyyy \uf017 HH:mm")
-                    font.family: "Inter"
-                        font.pixelSize: 13
-                        font.weight: Font.Bold
-                        color: "#ffffff"
                     anchors.verticalCenter: parent.verticalCenter
 
                     Timer {
@@ -188,7 +181,7 @@ ShellRoot {
                 Rectangle {
                     width: 1
                     height: 16
-                    color: Qt.rgba(1, 1, 1, 0.2)
+                    color: Colors.separatorColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -209,14 +202,13 @@ ShellRoot {
                     property var chargeRate: Math.round(UPower.displayDevice.changeRate)
 
                     text: batteryIcon + " " + Math.round(UPower.displayDevice.percentage * 100) + " %" + (charging ? " (+" + chargeRate + " W)" : "")
-                    font.family: "Inter"
-                    font.pixelSize: 13
-                    color: "#ffffff"
-                    font.weight: Font.Bold
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
             }
         }
     }
+
+    VolumeOsd {}
+    BrightnessOsd {}
 }

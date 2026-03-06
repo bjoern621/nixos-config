@@ -1,0 +1,7 @@
+singleton Colors 1.0 Colors.qml
+singleton Typography 1.0 Typography.qml
+singleton Spacing 1.0 Spacing.qml
+Label 1.0 Label.qml
+OsdWindow 1.0 OsdWindow.qml
+VolumeOsd 1.0 VolumeOsd.qml
+BrightnessOsd 1.0 BrightnessOsd.qml
