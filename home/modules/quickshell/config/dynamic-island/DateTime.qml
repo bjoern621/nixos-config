@@ -1,19 +1,45 @@
 import QtQuick
 
-Label {
-    id: clock
+Row {
+    id: datetime
     property var germanLocale: Qt.locale("de_DE")
     property var currentDate: new Date()
-    text: "\uf133 " + germanLocale.dayName(currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(currentDate, "dd.MM.yyyy \uf017 HH:mm")
-    anchors.verticalCenter: parent.verticalCenter
 
-    Timer {
-        interval: 1000
-        repeat: true
-        running: true
-        onTriggered: {
-            clock.currentDate = new Date()
-            clock.text = "\uf133 " + clock.germanLocale.dayName(clock.currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(clock.currentDate, "dd.MM.yyyy \uf017 HH:mm")
-        }
+    anchors.verticalCenter: parent.verticalCenter
+    spacing: Spacing.spacing8
+
+    Row {
+        spacing: Spacing.spacing4
+
+    Icon {
+        text: "\uf133"
+        anchors.verticalCenter: parent.verticalCenter
     }
+
+    Label {
+        text: germanLocale.dayName(datetime.currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(datetime.currentDate, "dd.MM.yyyy")
+        anchors.verticalCenter: parent.verticalCenter
+    }
+    }
+
+    Label {
+        text: "\u00b7"
+    }
+
+    Row {
+        spacing: Spacing.spacing4
+
+
+    Icon {
+        text: "\uf017"
+        anchors.verticalCenter: parent.verticalCenter
+    }
+
+    Label {
+        text: Qt.formatDateTime(datetime.currentDate, "HH:mm")
+        anchors.verticalCenter: parent.verticalCenter
+    }
+
+    }
+
 }

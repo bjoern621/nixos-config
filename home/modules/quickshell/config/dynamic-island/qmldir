@@ -9,3 +9,4 @@ WorkspaceIndicator 1.0 WorkspaceIndicator.qml
 SystemTray 1.0 SystemTray.qml
 DateTime 1.0 DateTime.qml
 Battery 1.0 Battery.qml
+Icon 1.0 Icon.qml
