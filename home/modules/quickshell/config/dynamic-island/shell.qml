@@ -20,7 +20,11 @@ ShellRoot {
 
         MouseArea {
             id: hoverArea
-            anchors.fill: parent
+            // Position hover area centered over the pill
+            width: pill.implicitWidth + 24
+            x: (root.width - width) / 2
+            height: root.isHovered ? pill.height + 8 : 1
+            anchors.top: parent.top
             hoverEnabled: true
             acceptedButtons: Qt.NoButton
             onContainsMouseChanged: {
