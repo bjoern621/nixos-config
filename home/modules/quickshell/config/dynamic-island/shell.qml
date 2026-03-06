@@ -100,6 +100,15 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                VolumeIcon {}
+
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Colors.separatorColor
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
                 Battery {}
 
             }

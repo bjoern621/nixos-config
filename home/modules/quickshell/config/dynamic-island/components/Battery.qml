@@ -1,5 +1,6 @@
 import Quickshell.Services.UPower
 import QtQuick
+import "../"
 
 Row {
     anchors.verticalCenter: parent.verticalCenter

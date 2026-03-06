@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
+import "../"
 
 Row {
     spacing: Spacing.spacing4

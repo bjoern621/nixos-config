@@ -5,8 +5,9 @@ Label 1.0 Label.qml
 OsdWindow 1.0 OsdWindow.qml
 VolumeOsd 1.0 VolumeOsd.qml
 BrightnessOsd 1.0 BrightnessOsd.qml
-WorkspaceIndicator 1.0 WorkspaceIndicator.qml
-SystemTray 1.0 SystemTray.qml
-DateTime 1.0 DateTime.qml
-Battery 1.0 Battery.qml
 Icon 1.0 Icon.qml
+Battery 1.0 components/Battery.qml
+VolumeIcon 1.0 components/VolumeIcon.qml
+DateTime 1.0 components/DateTime.qml
+WorkspaceIndicator 1.0 components/WorkspaceIndicator.qml
+SystemTray 1.0 components/SystemTray.qml
