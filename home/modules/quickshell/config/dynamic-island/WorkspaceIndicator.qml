@@ -3,7 +3,7 @@ import Quickshell.Hyprland
 import QtQuick
 
 Row {
-    spacing: 4
+    spacing: Spacing.spacing4
     anchors.verticalCenter: parent.verticalCenter
 
     Text {
