@@ -8,20 +8,24 @@
     - Handles DNS, routing, and interface lifecycle centrally
     - Per-connection profiles survive reboots without manual systemctl
 
-  WireGuard setup (one-time, after first rebuild):
-    sudo nmcli connection import type wireguard file /etc/wireguard/xyz.conf
+  Adding a new WireGuard connection:
+    1. Place the conf file at /etc/wireguard/<name>.conf (outside the git repo)
+    2. Import into NetworkManager:
+         sudo nmcli connection import type wireguard file /etc/wireguard/<name>.conf
+    3. Disable autoconnect (VPN should not start on boot):
+         sudo nmcli connection modify <name> connection.autoconnect no
 
-  The conf file lives at /etc/wireguard/xyz.conf (outside the git repo).
-  See modules/wireguard.conf.example for the template.
+  Multiple conf files can coexist in /etc/wireguard/, one per VPN endpoint.
+  Repeat the import steps for each new connection.
 
   Manage via tray:
-    nm-applet runs on login (see home/modules/autostart.nix)
-    Right-click tray icon -> VPN connections -> xyz
+    nm-applet runs on login (see home/modules/networkmanager.nix)
+    Right-click tray icon -> VPN connections -> <name>
 
   Manage via CLI:
-    nmcli connection up   xyz
-    nmcli connection down xyz
-    nmcli connection show xyz
+    nmcli connection up   <name>
+    nmcli connection down <name>
+    nmcli connection show <name>
     wg show
 */
 

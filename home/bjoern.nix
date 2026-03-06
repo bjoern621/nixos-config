@@ -10,6 +10,7 @@
     ./modules/spotify.nix
     ./modules/discord.nix
     ./modules/autostart.nix
+    ./modules/networkmanager.nix
     ./modules/hyprland/default.nix
     ./modules/terminal.nix
     ./modules/vscode.nix

@@ -3,7 +3,8 @@
 {
   wayland.windowManager.hyprland.settings = {
     exec = [
-      "nm-applet --indicator" # NetworkManager tray applet
+      # Add autostart entries in their respective feature modules
+      # (e.g., nm-applet is in networkmanager.nix)
     ];
   };
 }
