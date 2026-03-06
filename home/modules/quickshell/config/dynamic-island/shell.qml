@@ -1,8 +1,5 @@
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.Services.SystemTray
 import QtQuick
-import Quickshell.Services.UPower
 
 ShellRoot {
     PanelWindow {
@@ -66,8 +63,6 @@ ShellRoot {
             implicitHeight: 32
 
             radius: implicitHeight / 2
-            // color: Qt.rgba(0.07, 0.07, 0.07, 0.7)
-            // color: "transparent"
             color: Colors.pillBackground
 
             border.width: 1
@@ -78,32 +73,8 @@ ShellRoot {
                 anchors.centerIn: parent
                 spacing: 8
 
-                // Workspace indicator
-                Row {
-                    spacing: 4
-                    anchors.verticalCenter: parent.verticalCenter
+                WorkspaceIndicator {}
 
-                    Text {
-                        text: "\uf108"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize14
-                        color: Colors.textColor
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Label {
-                        text: {
-                            var monitor = Hyprland.focusedMonitor
-                            if (monitor && monitor.activeWorkspace) {
-                                return monitor.activeWorkspace.id
-                            }
-                            return 1
-                        }
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                // Separator
                 Rectangle {
                     width: 1
                     height: 16
@@ -111,45 +82,8 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // Tray icons - SystemTray is a singleton, access via SystemTray.items
-                Row {
-                    spacing: 8
-                    anchors.verticalCenter: parent.verticalCenter
+                SystemTray {}
 
-                    Repeater {
-                        model: SystemTray.items
-
-                        Rectangle {
-                            width: 20
-                            height: 20
-                            color: "transparent"
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            Image {
-                                source: modelData.icon
-                                width: 16
-                                height: 16
-                                anchors.centerIn: parent
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                onClicked: function(mouse) {
-                                    if (mouse.button === Qt.LeftButton) {
-                                        modelData.activate()
-                                    } else {
-                                        modelData.showMenu()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Separator
                 Rectangle {
                     width: 1
                     height: 16
@@ -157,27 +91,8 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                DateTime {}
 
-                // DateTime inline
-                Label {
-                    id: clock
-                    property var germanLocale: Qt.locale("de_DE")
-                    property var currentDate: new Date()
-                    text: "\uf133 " + germanLocale.dayName(currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(currentDate, "dd.MM.yyyy \uf017 HH:mm")
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Timer {
-                        interval: 1000
-                        repeat: true
-                        running: true
-                        onTriggered: {
-                            clock.currentDate = new Date()
-                            clock.text = "\uf133 " + clock.germanLocale.dayName(clock.currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(clock.currentDate, "dd.MM.yyyy \uf017 HH:mm")
-                        }
-                    }
-                }
-
-                // Separator
                 Rectangle {
                     width: 1
                     height: 16
@@ -185,25 +100,7 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // Battery status
-                Text {
-                    // Battery icon based on percentage
-                    property string batteryIcon: {
-                        const pct = UPower.displayDevice.percentage 
-                        if (pct <= 0.05) return "\uf244"      
-                        if (pct <= 0.35) return "\uf243"     
-                        if (pct <= 0.60) return "\uf242"    
-                        if (pct <= 0.85) return "\uf241"   
-                        return "\uf240"                    
-                    }
-
-                    property var charging: UPower.displayDevice.state === UPowerDeviceState.Charging
-
-                    property var chargeRate: Math.round(UPower.displayDevice.changeRate)
-
-                    text: batteryIcon + " " + Math.round(UPower.displayDevice.percentage * 100) + " %" + (charging ? " (+" + chargeRate + " W)" : "")
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+                Battery {}
 
             }
         }
