@@ -30,7 +30,7 @@
 
   # Hyprland layerrule for quickshell blur effect.
   # ignore_alpha 0.1 skips blur on pixels with alpha <= 0.1, so the transparent
-  # PanelWindow background is not blurred, only the pill (alpha 0.7) is.
+  # PanelWindow background is not blurred, only the pill (alpha 0.7, at the time of writing) is.
   # When the pill is slid off-screen it is clipped, leaving only the transparent
   # background, so blur disappears without any extra logic.
   wayland.windowManager.hyprland.settings.layerrule = [
