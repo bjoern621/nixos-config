@@ -144,10 +144,10 @@ Scope {
 
                     Row {
                         width: parent.width
-                        spacing: 3
+                        spacing: volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0
 
                         Rectangle {
-                            width: Math.max(0, (parent.width - 3) * volumeScope.osdValue / 100)
+                            width: Math.max(0, (parent.width - (volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0)) * volumeScope.osdValue / 100)
                             height: 6
                             radius: 3
                             color: volumeScope.isMuted ? Colors.progressMuted : Colors.accentColor
@@ -158,7 +158,7 @@ Scope {
                         }
 
                         Rectangle {
-                            width: Math.max(0, (parent.width - 3) * (100 - volumeScope.osdValue) / 100)
+                            width: Math.max(0, (parent.width - (volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0)) * (100 - volumeScope.osdValue) / 100)
                             height: 6
                             radius: 3
                             color: Colors.progressBackground
