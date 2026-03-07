@@ -20,22 +20,31 @@ ShellRoot {
 
         property bool isHovered: false
 
-        MouseArea {
-            id: hoverArea
-            // Position hover area centered over the pill
+        // Mask to make only the pill and hover area interactive
+        mask: Region {
+            item: hoverTrigger
+        }
+
+        // Invisible hover trigger area at top of screen
+        Item {
+            id: hoverTrigger
             width: pill.implicitWidth + 24
             x: (root.width - width) / 2
-            height: root.isHovered ? pill.height + 8 : 1
+            height: root.isHovered ? pill.height + 12 : 8
             anchors.top: parent.top
-            hoverEnabled: true
-            acceptedButtons: Qt.NoButton
-            onContainsMouseChanged: {
-                if (containsMouse) {
-                    root.isHovered = true
-                    slideIn.start()
-                } else {
-                    root.isHovered = false
-                    slideOut.start()
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
+                onContainsMouseChanged: {
+                    if (containsMouse) {
+                        root.isHovered = true
+                        slideIn.start()
+                    } else {
+                        root.isHovered = false
+                        slideOut.start()
+                    }
                 }
             }
         }
