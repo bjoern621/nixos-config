@@ -46,7 +46,6 @@ Scope {
     Timer {
         id: osdHideTimer
         interval: 2000
-        running: false  // DEBUG: disable auto-hide
         onTriggered: hideAnim.start()
     }
 
@@ -79,8 +78,8 @@ Scope {
         Rectangle {
             id: osdPill
             x: (osdWindow.width - implicitWidth) / 2
-            y: osdWindow.finalY  // DEBUG: start visible
-            opacity: 1  // DEBUG: start visible
+            y: osdWindow.finalY - osdWindow.animOffset
+            opacity: 0
 
             property var marginTopBottom: 8
             property var marginLeftRight: 12
