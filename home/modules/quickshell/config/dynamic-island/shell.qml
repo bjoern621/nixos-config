@@ -2,6 +2,8 @@ import Quickshell
 import QtQuick
 
 ShellRoot {
+    ScreenCorners {}
+
     PanelWindow {
         id: root
 
