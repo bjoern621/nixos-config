@@ -16,7 +16,7 @@ in
       wallpaper = [
         {
           monitor = "";
-          path = "${config.home.homeDirectory}/${wallpaper_rel_path}/Honor.jpg";
+          path = "${config.home.homeDirectory}/${wallpaper_rel_path}/Bloom.jpg";
         }
       ];
     };

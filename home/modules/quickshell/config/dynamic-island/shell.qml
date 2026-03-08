@@ -16,36 +16,115 @@ ShellRoot {
         exclusiveZone: 0
         color: "transparent"
 
-        implicitHeight: 36
-
         property bool isHovered: false
+        property real menuHeight: 0
 
-        // Mask to make only the pill and hover area interactive
+        implicitHeight: 44 + menuHeight
+
         mask: Region {
-            item: hoverTrigger
+            item: interactionZone
         }
 
-        // Invisible hover trigger area at top of screen
         Item {
-            id: hoverTrigger
+            id: interactionZone
             width: pill.implicitWidth + 24
             x: (root.width - width) / 2
-            height: root.isHovered ? pill.height + 12 : 8
+            height: root.isHovered ? 44 + root.menuHeight : 8
             anchors.top: parent.top
 
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.NoButton
-                onContainsMouseChanged: {
-                    if (containsMouse) {
-                        root.isHovered = true
-                        slideIn.start()
+            HoverHandler {
+                id: zoneHover
+                onHoveredChanged: {
+                    if (hovered) {
+                        hideTimer.stop()
+                        if (!root.isHovered) {
+                            root.isHovered = true
+                            slideOut.stop()
+                            slideIn.start()
+                        }
                     } else {
-                        root.isHovered = false
-                        slideOut.start()
+                        hideTimer.restart()
                     }
                 }
+            }
+
+            Rectangle {
+                id: pill
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: -implicitHeight - 8
+
+                implicitWidth: contentRow.implicitWidth + 24
+                implicitHeight: 32
+
+                radius: implicitHeight / 2
+                color: Colors.pillBackground
+
+                border.width: 1
+                border.color: Colors.pillBorder
+
+                Row {
+                    id: contentRow
+                    anchors.centerIn: parent
+                    spacing: 8
+
+                    HoverItem {
+                        WorkspaceIndicator {}
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    HoverItem {
+                        SystemTray {}
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    HoverItem {
+                        DateTime {}
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    HoverItem {
+                        VolumeIcon {}
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    HoverItem {
+                        Battery {}
+                    }
+
+                }
+            }
+        }
+        Timer {
+            id: hideTimer
+            interval: 100
+            onTriggered: {
+                root.isHovered = false
+                slideIn.stop()
+                slideOut.start()
             }
         }
 
@@ -53,7 +132,6 @@ ShellRoot {
             id: slideIn
             target: pill
             property: "y"
-            from: -pill.implicitHeight - 8
             to: 4
             duration: 200
             easing.type: Easing.OutCubic
@@ -63,70 +141,9 @@ ShellRoot {
             id: slideOut
             target: pill
             property: "y"
-            from: 4
             to: -pill.implicitHeight - 8
             duration: 200
             easing.type: Easing.OutCubic
-        }
-
-        Rectangle {
-            id: pill
-            x: (root.width - implicitWidth) / 2
-            y: -implicitHeight - 8
-
-            implicitWidth: contentRow.implicitWidth + 24
-            implicitHeight: 32
-
-            radius: implicitHeight / 2
-            color: Colors.pillBackground
-
-            border.width: 1
-            border.color: Colors.pillBorder
-
-            Row {
-                id: contentRow
-                anchors.centerIn: parent
-                spacing: 8
-
-                WorkspaceIndicator {}
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Colors.separatorColor
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                SystemTray {}
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Colors.separatorColor
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                DateTime {}
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Colors.separatorColor
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                VolumeIcon {}
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Colors.separatorColor
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Battery {}
-
-            }
         }
     }
 
