@@ -19,7 +19,23 @@ ShellRoot {
         property bool isHovered: false
         property real menuHeight: 0
 
-        implicitHeight: 44 + menuHeight
+        implicitHeight: 96
+
+        property bool volumeMenuOpen: false
+        property bool sliderShouldShow: volumeHoverItem.hovered || volumeSliderMenu.keepOpen
+
+        onSliderShouldShowChanged: {
+            if (sliderShouldShow) {
+                sliderHideTimer.stop()
+                if (!volumeMenuOpen) {
+                    volumeMenuOpen = true
+                    menuHeight = volumeSliderMenu.implicitHeight + 8
+                    volumeSliderMenu.show()
+                }
+            } else {
+                sliderHideTimer.restart()
+            }
+        }
 
         mask: Region {
             item: interactionZone
@@ -101,6 +117,7 @@ ShellRoot {
                     }
 
                     HoverItem {
+                        id: volumeHoverItem
                         VolumeIcon {}
                     }
 
@@ -117,14 +134,47 @@ ShellRoot {
 
                 }
             }
+
+            Item {
+                id: volumeAnchor
+                width: 0; height: 0
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + volumeHoverItem.x + volumeHoverItem.width / 2
+                y: pill.y + pill.implicitHeight + 4
+            }
+
+            VolumeSliderMenu {
+                id: volumeSliderMenu
+                width: 200
+                anchors.top: volumeAnchor.top
+                anchors.horizontalCenter: volumeAnchor.horizontalCenter
+            }
         }
         Timer {
             id: hideTimer
             interval: 100
             onTriggered: {
+                if (root.volumeMenuOpen || volumeSliderMenu.sliderActive) return
                 root.isHovered = false
                 slideIn.stop()
                 slideOut.start()
+            }
+        }
+
+        Timer {
+            id: sliderHideTimer
+            interval: 200
+            onTriggered: {
+                root.volumeMenuOpen = false
+                volumeSliderMenu.hide()
+            }
+        }
+
+        Connections {
+            target: volumeSliderMenu
+            function onHidden() {
+                root.menuHeight = 0
+                if (!zoneHover.hovered)
+                    hideTimer.restart()
             }
         }
 
