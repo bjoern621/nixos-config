@@ -64,7 +64,7 @@ Item {
                 rightMargin: 10
                 verticalCenter: parent.verticalCenter
             }
-            value: sliderMenu.audioNode?.volume ?? 0
+            externalValue: sliderMenu.audioNode?.volume ?? 0
             stepSize: 0.05
             isMuted: sliderMenu.isMuted
 

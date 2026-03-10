@@ -17,6 +17,16 @@ Item {
 
     readonly property bool pressed: sliderArea.pressed
 
+    property real externalValue: 0
+
+    Binding {
+        target: root
+        property: "value"
+        value: root.externalValue
+        when: !root.pressed
+        restoreMode: Binding.RestoreBinding
+    }
+
     Rectangle {
         anchors.fill: parent
         radius: 3
