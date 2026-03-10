@@ -29,14 +29,14 @@ ShellRoot {
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
-                hideTimer.stop()
+                pillHideTimer.stop()
                 if (!isHovered) {
                     isHovered = true
                     slideOut.stop()
                     slideIn.start()
                 }
             } else {
-                hideTimer.restart()
+                pillHideTimer.restart()
             }
         }
 
@@ -153,7 +153,7 @@ ShellRoot {
             }
         }
         Timer {
-            id: hideTimer
+            id: pillHideTimer
             interval: 100
             onTriggered: {
                 root.isHovered = false
