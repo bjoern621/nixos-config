@@ -45,10 +45,6 @@
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     systemd.enable = false;
 
-    plugins = [
-      inputs.hyprland-plugins.packages.${pkgs.stdenv.hostPlatform.system}.hyprbars
-    ];
-
     settings = {
       # https://wiki.hypr.land/Configuring/Variables/#general
       general = {
