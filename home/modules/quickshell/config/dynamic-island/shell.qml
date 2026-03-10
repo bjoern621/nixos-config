@@ -25,6 +25,21 @@ ShellRoot {
             item: interactionZone
         }
 
+        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen
+
+        onShouldShowPillChanged: {
+            if (shouldShowPill) {
+                hideTimer.stop()
+                if (!isHovered) {
+                    isHovered = true
+                    slideOut.stop()
+                    slideIn.start()
+                }
+            } else {
+                hideTimer.restart()
+            }
+        }
+
         Item {
             id: interactionZone
             width: pill.implicitWidth + 24
@@ -34,18 +49,6 @@ ShellRoot {
 
             HoverHandler {
                 id: zoneHover
-                onHoveredChanged: {
-                    if (hovered) {
-                        hideTimer.stop()
-                        if (!root.isHovered) {
-                            root.isHovered = true
-                            slideOut.stop()
-                            slideIn.start()
-                        }
-                    } else {
-                        hideTimer.restart()
-                    }
-                }
             }
 
             Rectangle {
@@ -153,18 +156,9 @@ ShellRoot {
             id: hideTimer
             interval: 100
             onTriggered: {
-                if (volumeHoverItem.menuOpen) return
                 root.isHovered = false
                 slideIn.stop()
                 slideOut.start()
-            }
-        }
-
-        Connections {
-            target: volumeHoverItem
-            function onMenuClosed() {
-                if (!zoneHover.hovered)
-                    hideTimer.restart()
             }
         }
 
