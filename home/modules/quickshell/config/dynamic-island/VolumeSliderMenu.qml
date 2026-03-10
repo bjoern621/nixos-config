@@ -36,7 +36,8 @@ Item {
         radius: height / 2
         color: Colors.pillBackground
         border.width: 1
-        border.color: Colors.pillBorder
+        // border.color: Colors.pillBorder
+        border.color: "Blue"
 
         Text {
             id: volIcon
