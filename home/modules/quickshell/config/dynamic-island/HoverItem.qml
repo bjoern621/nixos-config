@@ -29,13 +29,22 @@ Item {
             if (shouldShow) {
                 menuHideTimer.stop()
                 if (!menuOpen) {
-                    menuOpen = true
-                    effectiveMenuHeight = root.menu ? root.menu.implicitHeight : 0
-                    root.menu.show()
+                    menuShowTimer.restart()
                 }
             } else {
+                menuShowTimer.stop()
                 menuHideTimer.restart()
             }
+        }
+    }
+
+    Timer {
+        id: menuShowTimer
+        interval: 250
+        onTriggered: {
+            internal.menuOpen = true
+            internal.effectiveMenuHeight = root.menu ? root.menu.implicitHeight : 0
+            root.menu.show()
         }
     }
 
