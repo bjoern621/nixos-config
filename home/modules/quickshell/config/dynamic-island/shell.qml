@@ -123,7 +123,6 @@ ShellRoot {
                             id: volumeIcon
                         }
                         onClicked: {
-                            console.log("Volume icon clicked");
                             const sink = Pipewire.defaultAudioSink;
                             if (sink) {
                                 sink.audio.muted = !sink.audio.muted;
