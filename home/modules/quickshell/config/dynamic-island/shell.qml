@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Services.Pipewire
 import QtQuick
 
 ShellRoot {
@@ -118,7 +119,16 @@ ShellRoot {
 
                     HoverItem {
                         id: volumeHoverItem
-                        VolumeIcon {}
+                        VolumeIcon {
+                            id: volumeIcon
+                        }
+                        onClicked: {
+                            console.log("Volume icon clicked");
+                            const sink = Pipewire.defaultAudioSink;
+                            if (sink) {
+                                sink.audio.muted = !sink.audio.muted;
+                            }
+                        }
                     }
 
                     Rectangle {
