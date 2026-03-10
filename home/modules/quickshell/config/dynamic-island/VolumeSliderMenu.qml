@@ -4,15 +4,9 @@ import QtQuick
 Item {
     id: sliderMenu
 
-    readonly property bool menuHovered: hoverHandler.hovered
     readonly property bool sliderActive: sliderArea.pressed
-    readonly property bool keepOpen: menuHovered || sliderActive
-
-    signal hidden()
 
     implicitHeight: 40
-    opacity: 0
-    visible: opacity > 0
 
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink]
@@ -27,17 +21,12 @@ Item {
         return "\uf028"
     }
 
-    HoverHandler {
-        id: hoverHandler
-    }
-
     Rectangle {
         anchors.fill: parent
         radius: height / 2
         color: Colors.pillBackground
         border.width: 1
-        // border.color: Colors.pillBorder
-        border.color: "Blue"
+        border.color: Colors.pillBorder
 
         Text {
             id: volIcon
@@ -132,34 +121,5 @@ Item {
                 }
             }
         }
-    }
-
-    NumberAnimation {
-        id: showAnim
-        target: sliderMenu
-        property: "opacity"
-        to: 1
-        duration: 150
-        easing.type: Easing.OutCubic
-    }
-
-    NumberAnimation {
-        id: hideAnim
-        target: sliderMenu
-        property: "opacity"
-        to: 0
-        duration: 150
-        easing.type: Easing.InCubic
-        onStopped: sliderMenu.hidden()
-    }
-
-    function show() {
-        hideAnim.stop()
-        showAnim.start()
-    }
-
-    function hide() {
-        showAnim.stop()
-        hideAnim.start()
     }
 }

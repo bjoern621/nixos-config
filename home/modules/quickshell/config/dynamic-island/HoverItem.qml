@@ -4,16 +4,58 @@ Item {
     id: root
 
     default property alias content: contentContainer.data
+    property HoverMenu menu: null
 
     readonly property bool hovered: hoverHandler.hovered
     readonly property bool pressed: tapHandler.pressed
+    readonly property bool menuOpen: internal.menuOpen
+    readonly property real menuHeight: internal.effectiveMenuHeight
 
     signal clicked()
+    signal menuClosed()
 
     implicitWidth: contentContainer.childrenRect.width + Spacing.spacing12
     implicitHeight: 28
 
     anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+
+    QtObject {
+        id: internal
+        property bool menuOpen: false
+        property real effectiveMenuHeight: 0
+        readonly property bool shouldShow: root.menu !== null && (root.hovered || (root.menu && root.menu.keepOpen))
+
+        onShouldShowChanged: {
+            if (shouldShow) {
+                menuHideTimer.stop()
+                if (!menuOpen) {
+                    menuOpen = true
+                    effectiveMenuHeight = root.menu ? root.menu.implicitHeight : 0
+                    root.menu.show()
+                }
+            } else {
+                menuHideTimer.restart()
+            }
+        }
+    }
+
+    Timer {
+        id: menuHideTimer
+        interval: 200
+        onTriggered: {
+            internal.menuOpen = false
+            if (root.menu) root.menu.hide()
+        }
+    }
+
+    Connections {
+        target: root.menu
+        enabled: root.menu !== null
+        function onHidden() {
+            internal.effectiveMenuHeight = 0
+            root.menuClosed()
+        }
+    }
 
     Rectangle {
         id: background

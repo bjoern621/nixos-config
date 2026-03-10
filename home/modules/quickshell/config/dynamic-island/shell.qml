@@ -18,25 +18,8 @@ ShellRoot {
         color: "transparent"
 
         property bool isHovered: false
-        property real menuHeight: 0
 
         implicitHeight: 96
-
-        property bool volumeMenuOpen: false
-        property bool sliderShouldShow: volumeHoverItem.hovered || volumeSliderMenu.keepOpen
-
-        onSliderShouldShowChanged: {
-            if (sliderShouldShow) {
-                sliderHideTimer.stop()
-                if (!volumeMenuOpen) {
-                    volumeMenuOpen = true
-                    menuHeight = volumeSliderMenu.implicitHeight + 8
-                    volumeSliderMenu.show()
-                }
-            } else {
-                sliderHideTimer.restart()
-            }
-        }
 
         mask: Region {
             item: interactionZone
@@ -46,7 +29,7 @@ ShellRoot {
             id: interactionZone
             width: pill.implicitWidth + 24
             x: (root.width - width) / 2
-            height: root.isHovered ? 44 + root.menuHeight : 8
+            height: root.isHovered ? 44 + volumeHoverItem.menuHeight + (volumeHoverItem.menuOpen ? 8 : 0) : 8
             anchors.top: parent.top
 
             HoverHandler {
@@ -119,6 +102,7 @@ ShellRoot {
 
                     HoverItem {
                         id: volumeHoverItem
+                        menu: volumeMenu
                         VolumeIcon {
                             id: volumeIcon
                         }
@@ -148,40 +132,37 @@ ShellRoot {
                 id: volumeAnchor
                 width: 0; height: 0
                 x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + volumeHoverItem.x + volumeHoverItem.width / 2
-                y: pill.y + pill.implicitHeight + 4
+                y: pill.y + pill.implicitHeight
             }
 
-            VolumeSliderMenu {
-                id: volumeSliderMenu
+            HoverMenu {
+                id: volumeMenu
                 width: 200
                 anchors.top: volumeAnchor.top
                 anchors.horizontalCenter: volumeAnchor.horizontalCenter
+                contentInteracting: volumeSlider.sliderActive
+
+                VolumeSliderMenu {
+                    id: volumeSlider
+                    width: parent ? parent.width : 0
+                    height: implicitHeight
+                }
             }
         }
         Timer {
             id: hideTimer
             interval: 100
             onTriggered: {
-                if (root.volumeMenuOpen || volumeSliderMenu.sliderActive) return
+                if (volumeHoverItem.menuOpen) return
                 root.isHovered = false
                 slideIn.stop()
                 slideOut.start()
             }
         }
 
-        Timer {
-            id: sliderHideTimer
-            interval: 200
-            onTriggered: {
-                root.volumeMenuOpen = false
-                volumeSliderMenu.hide()
-            }
-        }
-
         Connections {
-            target: volumeSliderMenu
-            function onHidden() {
-                root.menuHeight = 0
+            target: volumeHoverItem
+            function onMenuClosed() {
                 if (!zoneHover.hovered)
                     hideTimer.restart()
             }
