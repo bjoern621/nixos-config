@@ -53,6 +53,13 @@ Item {
         }
     }
 
+    function updateValue(mouseX) {
+        var rawFraction = Math.max(0, Math.min(1, mouseX / root.width))
+        var steppedValue = Math.round(rawFraction / root.stepSize) * root.stepSize
+        root.value = steppedValue
+        root.moved(steppedValue)
+    }
+
     MouseArea {
         id: sliderArea
         anchors {
@@ -64,13 +71,6 @@ Item {
         onPressed: (mouse) => root.updateValue(mouse.x)
         onPositionChanged: (mouse) => {
             if (pressed) root.updateValue(mouse.x)
-        }
-
-        function updateValue(mouseX) {
-            var rawFraction = Math.max(0, Math.min(1, mouseX / root.width))
-            var steppedValue = Math.round(rawFraction / root.stepSize) * root.stepSize
-            root.value = steppedValue
-            root.moved(steppedValue)
         }
     }
 }
