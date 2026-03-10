@@ -187,6 +187,8 @@ ShellRoot {
         }
     }
 
-    VolumeOsd {}
+    VolumeOsd {
+        suppressOsd: volumeHoverItem.menuOpen
+    }
     BrightnessOsd {}
 }

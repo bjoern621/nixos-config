@@ -8,6 +8,8 @@ import QtQuick
 Scope {
     id: volumeScope
 
+    property bool suppressOsd: false
+
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink]
     }
@@ -16,12 +18,12 @@ Scope {
         target: Pipewire.defaultAudioSink?.audio
 
         function onVolumeChanged() {
-            console.log("[VolumeOSD] volume changed:", Pipewire.defaultAudioSink.audio.volume)
+            // console.log("[VolumeOSD] volume changed:", Pipewire.defaultAudioSink.audio.volume)
             volumeScope.triggerShow()
         }
 
         function onMutedChanged() {
-            console.log("[VolumeOSD] muted changed:", Pipewire.defaultAudioSink.audio.muted)
+            // console.log("[VolumeOSD] muted changed:", Pipewire.defaultAudioSink.audio.muted)
             volumeScope.triggerShow()
         }
     }
@@ -38,6 +40,7 @@ Scope {
     }
 
     function triggerShow() {
+        if (suppressOsd) return
         osdHideTimer.restart()
         hideAnim.stop()
         showAnim.start()
