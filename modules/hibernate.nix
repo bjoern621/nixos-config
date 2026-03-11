@@ -14,9 +14,14 @@ in
 
     swapFile = {
       path = lib.mkOption {
-        type = lib.types.path;
+        type = lib.types.str;
         default = "/swapfile";
         description = "Path to the swap file for hibernation";
+      };
+
+      resumeDevice = lib.mkOption {
+        type = lib.types.str;
+        description = "Block device containing the swap file (e.g. /dev/disk/by-uuid/XXXX)";
       };
 
       size = lib.mkOption {
@@ -42,14 +47,13 @@ in
       }
     ];
 
-    # Add resume kernel parameter
+    # Add resume kernel parameters
     boot.kernelParams = lib.optionals (cfg.swapFile.resumeOffset != null) [
-      "resume=${cfg.swapFile.path}"
       "resume_offset=${toString cfg.swapFile.resumeOffset}"
     ];
 
-    # Add resume hook to initrd
-    boot.resumeDevice = lib.mkIf (cfg.swapFile.resumeOffset != null) cfg.swapFile.path;
+    # Set resume device (generates the resume= kernel parameter)
+    boot.resumeDevice = lib.mkIf (cfg.swapFile.resumeOffset != null) cfg.swapFile.resumeDevice;
 
     # Hibernate on lid close
     services.logind = {
