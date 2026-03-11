@@ -28,7 +28,7 @@ in
       resumeOffset = lib.mkOption {
         type = lib.types.nullOr lib.types.int;
         default = null;
-        description = "Resume offset for the swap file (get with: bmap #{cfg.swapFile.path})";
+        description = "Resume offset for the swap file (get with: filefrag -v /swapfile)";
       };
     };
   };
@@ -58,7 +58,5 @@ in
       lidSwitchExternalPower = "hibernate";
     };
 
-    # Ensure bmap tool is available for finding resume offset
-    environment.systemPackages = [ pkgs.bmap ];
   };
 }

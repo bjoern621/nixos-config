@@ -148,7 +148,7 @@
     swapFile = {
       path = "/swapfile";
       size = 32;
-      resumeOffset = 12345;
+      resumeOffset = 100587520;
     };
   };
 }
