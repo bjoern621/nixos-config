@@ -143,4 +143,12 @@
 
   virtualisation.docker.enable = true;
 
+  system.hibernate = {
+    enable = true;
+    swapFile = {
+      path = "/swapfile";
+      size = 32;
+      resumeOffset = 12345;
+    };
+  };
 }
