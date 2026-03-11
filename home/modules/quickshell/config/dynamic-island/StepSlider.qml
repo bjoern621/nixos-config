@@ -5,11 +5,12 @@ Item {
 
     property real value: 0
     property real stepSize: 0.05
-    property bool isMuted: false
+    property bool isMuted: false // grays out the fill color
     property color accentColor: Colors.accentColor
     property color mutedColor: Colors.progressMuted
     property color trackColor: Colors.progressBackground
     property int handleVerticalSize: 20
+    property int trackPadding: 4 // insets handle range so tracks stay visible at 0% and 100%
 
     signal moved(real newValue)
 
@@ -55,8 +56,7 @@ Item {
 
     Rectangle {
         id: handle
-        x: Math.max(0, Math.min(root.width - width,
-            root.width * Math.min(1, root.value) - width / 2))
+        x: root.trackPadding + (root.width - 2 * root.trackPadding - width) * Math.max(0, Math.min(1, root.value))
         y: (root.height - height) / 2
         width: 4
         height: root.handleVerticalSize
@@ -90,7 +90,8 @@ Item {
     }
 
     function updateValue(mouseX) {
-        var rawFraction = Math.max(0, Math.min(1, mouseX / root.width))
+        var usable = root.width - 2 * root.trackPadding
+        var rawFraction = Math.max(0, Math.min(1, (mouseX - root.trackPadding) / usable))
         var steppedValue = Math.round(rawFraction / root.stepSize) * root.stepSize
         root.value = steppedValue
         root.moved(steppedValue)
