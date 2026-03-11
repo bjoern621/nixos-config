@@ -9,15 +9,17 @@ Item {
     property color accentColor: Colors.accentColor
     property color mutedColor: Colors.progressMuted
     property color trackColor: Colors.progressBackground
-    property int handleSize: 14
+    property int handleVerticalSize: 20
 
     signal moved(real newValue)
 
-    implicitHeight: 6
+    implicitHeight: 8
 
     readonly property bool pressed: sliderArea.pressed
 
     property real externalValue: 0
+
+    readonly property color fillColor: root.isMuted ? root.mutedColor : root.accentColor
 
     Binding {
         target: root
@@ -27,17 +29,23 @@ Item {
         restoreMode: Binding.RestoreBinding
     }
 
-    Rectangle {
-        anchors.fill: parent
-        radius: 3
-        color: root.trackColor
-    }
+    Item {
+        id: fillTrack
+        anchors {
+            left: parent.left
+            right: handle.horizontalCenter
+            rightMargin: Spacing.spacing6
+            verticalCenter: parent.verticalCenter
+        }
+        height: 8
+        clip: true
 
-    Rectangle {
-        width: Math.max(6, parent.width * Math.min(1, root.value))
-        height: 6
-        radius: 3
-        color: root.isMuted ? root.mutedColor : root.accentColor
+        Rectangle {
+            width: fillTrack.width + 4
+            height: 8
+            radius: 4
+            color: root.fillColor
+        }
 
         Behavior on width {
             enabled: !sliderArea.pressed
@@ -50,16 +58,34 @@ Item {
         x: Math.max(0, Math.min(root.width - width,
             root.width * Math.min(1, root.value) - width / 2))
         y: (root.height - height) / 2
-        width: root.handleSize
-        height: root.handleSize
-        radius: root.handleSize / 2
-        color: "#ffffff"
-        border.width: 2
-        border.color: root.isMuted ? root.mutedColor : root.accentColor
+        width: 4
+        height: root.handleVerticalSize
+        radius: root.handleVerticalSize / 2
+        color: root.fillColor
 
         Behavior on x {
             enabled: !sliderArea.pressed
             NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+        }
+    }
+
+    Item {
+        id: emptyTrack
+        anchors {
+            left: handle.horizontalCenter
+            leftMargin: Spacing.spacing6
+            right: parent.right
+            verticalCenter: parent.verticalCenter
+        }
+        height: 8
+        clip: true
+
+        Rectangle {
+            x: -4
+            width: emptyTrack.width + 4
+            height: 8
+            radius: 4
+            color: root.trackColor
         }
     }
 
@@ -74,8 +100,8 @@ Item {
         id: sliderArea
         anchors {
             fill: parent
-            topMargin: -root.handleSize
-            bottomMargin: -root.handleSize
+            topMargin: -root.handleVerticalSize
+            bottomMargin: -root.handleVerticalSize
         }
 
         onPressed: (mouse) => root.updateValue(mouse.x)
