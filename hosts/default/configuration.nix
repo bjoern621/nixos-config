@@ -21,6 +21,7 @@
     ../../modules/display-manager.nix
     ../../modules/wireguard.nix
     ../../modules/quickshell.nix
+    ../../modules/hibernate.nix
   ];
 
   # Bootloader.
@@ -141,4 +142,5 @@
   services.blueman.enable = true;
 
   virtualisation.docker.enable = true;
+
 }
