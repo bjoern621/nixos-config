@@ -97,6 +97,9 @@ Item {
         root.moved(steppedValue)
     }
 
+    property real scrollAccumulator: 0
+    property int scrollThreshold: 50
+
     MouseArea {
         id: sliderArea
         anchors {
@@ -108,6 +111,16 @@ Item {
         onPressed: (mouse) => root.updateValue(mouse.x)
         onPositionChanged: (mouse) => {
             if (pressed) root.updateValue(mouse.x)
+        }
+        onWheel: (wheel) => {
+            root.scrollAccumulator += wheel.angleDelta.y
+            while (Math.abs(root.scrollAccumulator) >= root.scrollThreshold) {
+                var direction = root.scrollAccumulator > 0 ? 1 : -1
+                root.scrollAccumulator -= direction * root.scrollThreshold
+                var steppedValue = Math.max(0, Math.min(1, root.value + direction * root.stepSize))
+                root.value = steppedValue
+                root.moved(steppedValue)
+            }
         }
     }
 }
