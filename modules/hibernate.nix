@@ -56,11 +56,10 @@ in
     boot.resumeDevice = lib.mkIf (cfg.swapFile.resumeOffset != null) cfg.swapFile.resumeDevice;
 
     # Hibernate on lid close
-    services.logind = {
-      lidSwitch = "hibernate";
-      lidSwitchDocked = "hibernate";
-      lidSwitchExternalPower = "hibernate";
+    services.logind.settings.Login = {
+      HandleLidSwitch = "hibernate";
+      HandleLidSwitchDocked = "hibernate";
+      HandleLidSwitchExternalPower = "hibernate";
     };
-
   };
 }
