@@ -19,13 +19,13 @@ ShellRoot {
 
         property bool isHovered: false
 
-        implicitHeight: 96
+        implicitHeight: 1000
 
         mask: Region {
             item: interactionZone
         }
 
-        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen
+        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
@@ -42,9 +42,9 @@ ShellRoot {
 
         Item {
             id: interactionZone
-            width: pill.implicitWidth + 24
+            width: Math.max(pill.implicitWidth + 24, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 48 : 0)
             x: (root.width - width) / 2
-            height: root.isHovered ? 44 + volumeHoverItem.menuHeight + (volumeHoverItem.menuOpen ? 8 : 0) : 8
+            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen) ? 8 : 0) : 8
             anchors.top: parent.top
 
             HoverHandler {
@@ -93,6 +93,8 @@ ShellRoot {
                     }
 
                     HoverItem {
+                        id: calendarHoverItem
+                        menu: calendarMenu
                         DateTime {}
                     }
 
@@ -148,6 +150,26 @@ ShellRoot {
                 VolumeSliderMenu {
                     id: volumeSlider
                     width: parent ? parent.width : 0
+                    height: implicitHeight
+                }
+            }
+
+            Item {
+                id: calendarAnchor
+                width: 0; height: 0
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + calendarHoverItem.x + calendarHoverItem.width / 2
+                y: pill.y + pill.implicitHeight
+            }
+
+            HoverMenu {
+                id: calendarMenu
+                width: calendarView.implicitWidth
+                anchors.top: calendarAnchor.top
+                anchors.horizontalCenter: calendarAnchor.horizontalCenter
+
+                CalendarMenu {
+                    id: calendarView
+                    width: implicitWidth
                     height: implicitHeight
                 }
             }

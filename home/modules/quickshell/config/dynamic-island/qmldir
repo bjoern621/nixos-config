@@ -9,6 +9,7 @@ Icon 1.0 Icon.qml
 HoverItem 1.0 HoverItem.qml
 HoverMenu 1.0 HoverMenu.qml
 VolumeSliderMenu 1.0 VolumeSliderMenu.qml
+CalendarMenu 1.0 CalendarMenu.qml
 StepSlider 1.0 StepSlider.qml
 ScreenCorners 1.0 ScreenCorners.qml
 Battery 1.0 components/Battery.qml
