@@ -7,7 +7,7 @@ Item {
     implicitWidth: row.implicitWidth + 2 * contentPadding
     implicitHeight: row.implicitHeight + 2 * contentPadding
 
-    readonly property int contentPadding: 16
+    readonly property int contentPadding: Spacing.spacing12
     readonly property int buttonSize: 64
     readonly property int iconSize: 20
 
@@ -32,7 +32,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 12
+        radius: Spacing.spacing8
         color: Colors.pillBackground
         border.width: 1
         border.color: Colors.pillBorder
@@ -41,7 +41,7 @@ Item {
             id: row
             x: root.contentPadding
             y: root.contentPadding
-            spacing: root.contentPadding
+            spacing: Spacing.spacing8
 
             Repeater {
                 model: [

@@ -39,7 +39,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 12
+        radius: Spacing.spacing8
         color: Colors.pillBackground
         border.width: 1
         border.color: Colors.pillBorder
