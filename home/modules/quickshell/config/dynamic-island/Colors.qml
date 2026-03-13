@@ -8,7 +8,7 @@ QtObject {
 
     // Background colors
     readonly property color backgroundColor: "#111111"
-    readonly property color pillBackground: Qt.rgba(0.3, 0.3, 0.3, 0.1)
+    readonly property color pillBackground: Qt.rgba(0.3, 0.3, 0.3, 0.5)
     readonly property color pillBorder: Qt.rgba(1, 1, 1, 0.2)
     readonly property color separatorColor: Qt.rgba(1, 1, 1, 0.2)
     readonly property color hoverItemHovered: Qt.rgba(1, 1, 1, 0.08)
