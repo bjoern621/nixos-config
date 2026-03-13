@@ -54,16 +54,33 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: Spacing.spacing16
 
-                Text {
-                    text: "\uf053"
-                    font.family: Typography.iconFontFamily
-                    font.pixelSize: Typography.fontSize14
-                    color: Colors.textColor
+                Item {
+                    width: 28
+                    height: 28
                     anchors.verticalCenter: parent.verticalCenter
 
+                    property bool hovered: prevYearMouse.containsMouse
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: parent.hovered ? Colors.hoverItemHovered : "transparent"
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "\uf053"
+                        font.family: Typography.iconFontFamily
+                        font.pixelSize: Typography.fontSize14
+                        color: Colors.textColor
+                    }
+
                     MouseArea {
+                        id: prevYearMouse
                         anchors.fill: parent
-                        anchors.margins: -6
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.displayYear--
                     }
@@ -72,18 +89,36 @@ Item {
                 Label {
                     text: root.displayYear
                     font.pixelSize: Typography.fontSize16
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Text {
-                    text: "\uf054"
-                    font.family: Typography.iconFontFamily
-                    font.pixelSize: Typography.fontSize14
-                    color: Colors.textColor
+                Item {
+                    width: 28
+                    height: 28
                     anchors.verticalCenter: parent.verticalCenter
 
+                    property bool hovered: nextYearMouse.containsMouse
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: parent.hovered ? Colors.hoverItemHovered : "transparent"
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "\uf054"
+                        font.family: Typography.iconFontFamily
+                        font.pixelSize: Typography.fontSize14
+                        color: Colors.textColor
+                    }
+
                     MouseArea {
+                        id: nextYearMouse
                         anchors.fill: parent
-                        anchors.margins: -6
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.displayYear++
                     }
@@ -200,6 +235,16 @@ Item {
                                         width: root.dayCellSize
                                         height: root.dayCellSize
 
+                                        property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
+
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            width: root.dayCellSize - 2
+                                            height: root.dayCellSize - 2
+                                            radius: (root.dayCellSize - 2) / 2
+                                            color: dayCell.hovered ? Colors.hoverItemHovered : "transparent"
+                                        }
+
                                         Text {
                                             anchors.centerIn: parent
                                             text: dayCell.isValidDay ? dayCell.dayNumber : ""
@@ -212,8 +257,9 @@ Item {
                                         }
 
                                         MouseArea {
+                                            id: dayCellMouse
                                             anchors.fill: parent
-                                            enabled: dayCell.isValidDay
+                                            hoverEnabled: true
                                             cursorShape: dayCell.isValidDay ? Qt.PointingHandCursor : Qt.ArrowCursor
                                             onClicked: console.log("Calendar: clicked " + dayCell.dayNumber + "." + (mCol.monthIndex + 1) + "." + root.displayYear)
                                         }
