@@ -23,7 +23,6 @@
     ../../modules/quickshell.nix
     ../../modules/hibernate.nix
     ../../modules/nix-ld.nix
-    ../../modules/xdg-desktop-portal.nix
   ];
 
   # Bootloader.
