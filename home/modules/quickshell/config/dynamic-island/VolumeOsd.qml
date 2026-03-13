@@ -9,6 +9,13 @@ Scope {
     id: volumeScope
 
     property bool suppressOsd: false
+    property bool _startupDone: false
+
+    Timer {
+        interval: 1000
+        running: true
+        onTriggered: volumeScope._startupDone = true
+    }
 
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink]
@@ -18,12 +25,10 @@ Scope {
         target: Pipewire.defaultAudioSink?.audio
 
         function onVolumeChanged() {
-            // console.log("[VolumeOSD] volume changed:", Pipewire.defaultAudioSink.audio.volume)
             volumeScope.triggerShow()
         }
 
         function onMutedChanged() {
-            // console.log("[VolumeOSD] muted changed:", Pipewire.defaultAudioSink.audio.muted)
             volumeScope.triggerShow()
         }
     }
@@ -40,7 +45,7 @@ Scope {
     }
 
     function triggerShow() {
-        if (suppressOsd) return
+        if (suppressOsd || !_startupDone) return
         osdHideTimer.restart()
         hideAnim.stop()
         showAnim.start()
