@@ -4,12 +4,13 @@ import Quickshell
 Item {
     id: root
 
-    implicitWidth: row.implicitWidth + 2 * contentPadding
-    implicitHeight: row.implicitHeight + 2 * contentPadding
+    implicitWidth: col.implicitWidth + 2 * contentPadding
+    implicitHeight: col.implicitHeight + 2 * contentPadding
 
     readonly property int contentPadding: Spacing.spacing12
-    readonly property int buttonSize: 64
-    readonly property int iconSize: 20
+    readonly property int buttonWidth: 140
+    readonly property int buttonHeight: 36
+    readonly property int iconSize: 18
 
     function triggerAction(action) {
         Qt.callLater(() => {
@@ -37,11 +38,11 @@ Item {
         border.width: 1
         border.color: Colors.pillBorder
 
-        Row {
-            id: row
+        Column {
+            id: col
             x: root.contentPadding
             y: root.contentPadding
-            spacing: Spacing.spacing8
+            spacing: Spacing.spacing4
 
             Repeater {
                 model: [
@@ -52,8 +53,8 @@ Item {
                 ]
 
                 Item {
-                    width: root.buttonSize
-                    height: root.buttonSize
+                    width: root.buttonWidth
+                    height: root.buttonHeight
 
                     Rectangle {
                         anchors.fill: parent
@@ -77,16 +78,18 @@ Item {
                         onTapped: root.triggerAction(modelData.action)
                     }
 
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 6
+                    Row {
+                        id: rowLayout
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: Spacing.spacing12
+                        spacing: Spacing.spacing8
 
                         Text {
                             text: modelData.icon
                             font.family: Typography.iconFontFamily
                             font.pixelSize: root.iconSize
                             color: Colors.textColor
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Text {
@@ -95,7 +98,7 @@ Item {
                             font.weight: Font.Bold
                             font.pixelSize: Typography.fontSize12
                             color: Colors.textColor
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }
