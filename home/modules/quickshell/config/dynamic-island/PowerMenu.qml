@@ -64,7 +64,7 @@ Item {
                              : "transparent"
 
                         Behavior on color {
-                            ColorAnimation { duration: 120 }
+                            ColorAnimation { duration: 100 }
                         }
                     }
 
