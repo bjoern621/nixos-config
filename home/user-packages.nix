@@ -12,5 +12,6 @@
     gcc
     nixfmt
     obsidian
+    python3
   ];
 }
