@@ -3,6 +3,10 @@
 {
   programs.vscode.enable = true;
 
+  programs.vscode.profiles.default.extensions = with pkgs.vscode-extensions; [
+    anthropic.claude-code
+  ];
+
   xdg.desktopEntries."code" = {
     name = "Visual Studio Code";
     genericName = "Text Editor";
