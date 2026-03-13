@@ -57,7 +57,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 8
+                        radius: Spacing.spacing8
                         color: buttonHoverHandler.hovered ? Colors.hoverItemHovered
                              : buttonTapHandler.pressed ? Colors.hoverItemPressed
                              : "transparent"
@@ -69,6 +69,7 @@ Item {
 
                     HoverHandler {
                         id: buttonHoverHandler
+                        cursorShape: Qt.PointingHandCursor
                     }
 
                     TapHandler {
