@@ -13,6 +13,7 @@
       "$mainMod, Q, exec, $terminal"
       "$mainMod, W, killactive,"
       "$mainMod, M, exit,"
+      "$mainMod, F, fullscreen,"
 
       # Move focus with mainMod + arrow keys
       "$mainMod, left, movefocus, l"
