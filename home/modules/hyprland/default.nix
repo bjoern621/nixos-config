@@ -20,6 +20,7 @@
     ./disable_middle_click_paste.nix
     ./media-keys.nix
     ./brightness-keys.nix
+    ./standard-apps.nix
   ];
 
   # Auto-start Hyprland uwsm after login
