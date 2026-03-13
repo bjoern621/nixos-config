@@ -15,10 +15,10 @@ Item {
         Qt.callLater(() => {
             switch (action) {
                 case "shutdown":
-                    Quickshell.execDetached(["shutdown", "now"])
+                    Quickshell.execDetached(["systemctl", "poweroff"])
                     break
                 case "reboot":
-                    Quickshell.execDetached(["reboot"])
+                    Quickshell.execDetached(["systemctl", "reboot"])
                     break
                 case "lock":
                     Quickshell.execDetached(["loginctl", "lock-session"])
