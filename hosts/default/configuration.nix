@@ -22,6 +22,7 @@
     ../../modules/wireguard.nix
     ../../modules/quickshell.nix
     ../../modules/hibernate.nix
+    ../../modules/nix-ld.nix
   ];
 
   # Bootloader.
