@@ -22,10 +22,8 @@
     ./brightness-keys.nix
     ./standard-apps.nix
     ./mouse-cursor.nix
-    ./settings/decoration.nix
-    ./settings/general.nix
+    ./settings/default.nix
     ./mouse-accel.nix
-    ./settings/input.nix
   ];
 
   # Auto-start Hyprland uwsm after login
