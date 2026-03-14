@@ -21,6 +21,11 @@
     ./media-keys.nix
     ./brightness-keys.nix
     ./standard-apps.nix
+    ./mouse-cursor.nix
+    ./settings/decoration.nix
+    ./settings/general.nix
+    ./mouse-accel.nix
+    ./settings/input.nix
   ];
 
   # Auto-start Hyprland uwsm after login
@@ -45,67 +50,5 @@
 
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     systemd.enable = false;
-
-    settings = {
-      # https://wiki.hypr.land/Configuring/Variables/#general
-      general = {
-        border_size = 1;
-        gaps_out = "8,8,8,8";
-        gaps_in = 2;
-        "col.active_border" = "rgba(255,255,255,0.2)"; # "col.active_border" (with dot) so that Nix does not convert it to a subcategory
-        "col.inactive_border" = "rgba(255,255,255,0)";
-        resize_on_border = true;
-      };
-
-      # Cursor variables:
-      # - XCURSOR_* is the standard Xcursor interface (used by XWayland and many toolkits).
-      # - HYPRCURSOR_* is Hyprland's cursor backend (used by Hyprland-native cursor handling).
-      # Setting both keeps cursor theme consistent across Wayland-native and XWayland apps.
-      env = [
-        "XCURSOR_THEME,Bibata-Modern-Ice" # https://www.gnome-look.org/p/1197198
-        "XCURSOR_SIZE,24"
-        "HYPRCURSOR_THEME,Bibata-Modern-Ice"
-        "HYPRCURSOR_SIZE,24"
-      ];
-
-      # https://wiki.hypr.land/Configuring/Variables/#input
-      input = {
-        kb_layout = "de";
-        accel_profile = "flat"; # Disable mouse acceleration globally
-
-        touchpad = {
-          natural_scroll = true; # true: Swipe down -> content moves down
-          scroll_factor = 0.2;
-        };
-      };
-
-      # Keep acceleration enabled for touchpad
-      # https://wiki.hypr.land/Configuring/Keywords/#per-device-input-configs
-      "device[syna2ba6:00-06cb:cf00-touchpad]" = {
-        accel_profile = "adaptive";
-      };
-
-      # https://wiki.hypr.land/Configuring/Variables/#decoration
-      decoration = {
-        rounding = 12;
-
-        shadow = {
-          enabled = false;
-          range = 10;
-          render_power = 2;
-          color = "0xee1a1a1a";
-          color_inactive = "0x221a1a1a";
-        };
-
-        blur = {
-          enabled = true;
-          size = 6;
-          passes = 3;
-          contrast = 1.0;
-          brightness = 1.0;
-        };
-      };
-    };
-
   };
 }
