@@ -44,8 +44,6 @@
     "sd_mod"
   ];
 
-  # TODO: xwayland for vscode, discord, spotify notworking
-
   # USB4/Thunderbolt and AMDGPU kernel parameters for DisplayPort tunneling
   #
   # thunderbolt.bw_alloc_mode=1    - Enable USB4 bandwidth allocation mode
