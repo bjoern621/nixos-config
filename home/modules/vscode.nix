@@ -25,8 +25,16 @@ in
     fi
 
     # Exclude update.mode from Settings Sync so it stays machine-local
-    if ! ${pkgs.gnugrep}/bin/grep -q '"settingsSync.ignoredSettings"' "$settings"; then
-      ${pkgs.gnused}/bin/sed -i 's/}$/    "settingsSync.ignoredSettings": ["update.mode"]\n}/' "$settings"
+    if ! ${pkgs.gnused}/bin/sed -n '/"settingsSync.ignoredSettings"/,/]/p' "$settings" | ${pkgs.gnugrep}/bin/grep -q '"update.mode"'; then
+      if ${pkgs.gnugrep}/bin/grep -q '"settingsSync.ignoredSettings"' "$settings"; then
+        # Array exists — append entry before the closing bracket
+        ${pkgs.gnused}/bin/sed -i '/"settingsSync.ignoredSettings"/,/]/{
+          s/]/        "update.mode"\n    ]/
+        }' "$settings"
+      else
+        # Array doesn't exist — create it
+        ${pkgs.gnused}/bin/sed -i 's/}$/    "settingsSync.ignoredSettings": ["update.mode"]\n}/' "$settings"
+      fi
     fi
   '';
 
