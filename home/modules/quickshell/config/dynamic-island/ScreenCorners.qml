@@ -1,94 +1,102 @@
 import Quickshell
 import QtQuick
 
-PanelWindow {
-    id: root
+Scope {
+    Variants {
+        model: Quickshell.screens
 
-    anchors {
-        top: true
-        left: true
-        right: true
-        bottom: true
-    }
+        PanelWindow {
+            id: root
+            required property var modelData
+            screen: modelData
 
-    exclusiveZone: 0
-    color: "transparent"
-    mask: Region {}
+            anchors {
+                top: true
+                left: true
+                right: true
+                bottom: true
+            }
 
-    property int cornerRadius: 20
+            exclusiveZone: 0
+            color: "transparent"
+            mask: Region {}
 
-    component CornerMask: Item {
-        property int radius: 20 // 12px inner radius with 8px offset keeps inner and outer arcs concentric, so outer radius is 20px
-        // 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right
-        property int corner: 0
+            property int cornerRadius: 20
 
-        width: radius
-        height: radius
+            component CornerMask: Item {
+                property int radius: 20 // 12px inner radius with 8px offset keeps inner and outer arcs concentric, so outer radius is 20px
+                // 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right
+                property int corner: 0
 
-        Canvas {
-            anchors.fill: parent
-            antialiasing: true
+                width: radius
+                height: radius
 
-            onPaint: {
-                var context = getContext("2d")
-                context.reset()
+                Canvas {
+                    anchors.fill: parent
+                    antialiasing: true
 
-                context.fillStyle = "#000000"
-                context.fillRect(0, 0, width, height)
+                    onPaint: {
+                        var context = getContext("2d")
+                        context.reset()
 
-                context.globalCompositeOperation = "destination-out"
-                context.beginPath()
+                        context.fillStyle = "#000000"
+                        context.fillRect(0, 0, width, height)
 
-                if (parent.corner === 0) {
-                    context.moveTo(width, height)
-                    context.arc(width, height, width, Math.PI, 1.5 * Math.PI, false)
-                } else if (parent.corner === 1) {
-                    context.moveTo(0, height)
-                    context.arc(0, height, width, 1.5 * Math.PI, 2 * Math.PI, false)
-                } else if (parent.corner === 2) {
-                    context.moveTo(width, 0)
-                    context.arc(width, 0, width, 0.5 * Math.PI, Math.PI, false)
-                } else {
-                    context.moveTo(0, 0)
-                    context.arc(0, 0, width, 0, 0.5 * Math.PI, false)
+                        context.globalCompositeOperation = "destination-out"
+                        context.beginPath()
+
+                        if (parent.corner === 0) {
+                            context.moveTo(width, height)
+                            context.arc(width, height, width, Math.PI, 1.5 * Math.PI, false)
+                        } else if (parent.corner === 1) {
+                            context.moveTo(0, height)
+                            context.arc(0, height, width, 1.5 * Math.PI, 2 * Math.PI, false)
+                        } else if (parent.corner === 2) {
+                            context.moveTo(width, 0)
+                            context.arc(width, 0, width, 0.5 * Math.PI, Math.PI, false)
+                        } else {
+                            context.moveTo(0, 0)
+                            context.arc(0, 0, width, 0, 0.5 * Math.PI, false)
+                        }
+
+                        context.closePath()
+                        context.fill()
+                    }
                 }
 
-                context.closePath()
-                context.fill()
+                onRadiusChanged: children[0].requestPaint()
+                onCornerChanged: children[0].requestPaint()
+                onWidthChanged: children[0].requestPaint()
+                onHeightChanged: children[0].requestPaint()
+            }
+
+            CornerMask {
+                radius: root.cornerRadius
+                corner: 0
+                x: 0
+                y: 0
+            }
+
+            CornerMask {
+                radius: root.cornerRadius
+                corner: 1
+                x: root.width - width
+                y: 0
+            }
+
+            CornerMask {
+                radius: root.cornerRadius
+                corner: 2
+                x: 0
+                y: root.height - height
+            }
+
+            CornerMask {
+                radius: root.cornerRadius
+                corner: 3
+                x: root.width - width
+                y: root.height - height
             }
         }
-
-        onRadiusChanged: children[0].requestPaint()
-        onCornerChanged: children[0].requestPaint()
-        onWidthChanged: children[0].requestPaint()
-        onHeightChanged: children[0].requestPaint()
-    }
-
-    CornerMask {
-        radius: root.cornerRadius
-        corner: 0
-        x: 0
-        y: 0
-    }
-
-    CornerMask {
-        radius: root.cornerRadius
-        corner: 1
-        x: root.width - width
-        y: 0
-    }
-
-    CornerMask {
-        radius: root.cornerRadius
-        corner: 2
-        x: 0
-        y: root.height - height
-    }
-
-    CornerMask {
-        radius: root.cornerRadius
-        corner: 3
-        x: root.width - width
-        y: root.height - height
     }
 }

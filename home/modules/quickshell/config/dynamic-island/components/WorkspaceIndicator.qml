@@ -7,6 +7,8 @@ Row {
     spacing: Spacing.spacing4
     anchors.verticalCenter: parent.verticalCenter
 
+    property string monitorName: ""
+
     Text {
         text: "\uf108"
         font.family: Typography.iconFontFamily
@@ -17,6 +19,13 @@ Row {
 
     Label {
         text: {
+            var monitors = Hyprland.monitors.values
+            for (var i = 0; i < monitors.length; i++) {
+                if (monitors[i].name === monitorName && monitors[i].activeWorkspace) {
+                    return monitors[i].activeWorkspace.id
+                }
+            }
+            // Fallback to focused monitor
             var monitor = Hyprland.focusedMonitor
             if (monitor && monitor.activeWorkspace) {
                 return monitor.activeWorkspace.id
