@@ -3,6 +3,10 @@
 {
   programs.vscode.enable = true;
 
+  programs.vscode.userSettings = {
+    "update.mode" = "none";
+  };
+
   xdg.desktopEntries."code" = {
     name = "Visual Studio Code";
     genericName = "Text Editor";
