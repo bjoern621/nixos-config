@@ -62,10 +62,6 @@ Item {
                         color: buttonHoverHandler.hovered ? Colors.hoverItemHovered
                              : buttonTapHandler.pressed ? Colors.hoverItemPressed
                              : "transparent"
-
-                        Behavior on color {
-                            ColorAnimation { duration: 100 }
-                        }
                     }
 
                     HoverHandler {
