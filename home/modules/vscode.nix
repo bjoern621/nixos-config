@@ -1,11 +1,29 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
+let
+  settingsFile = "$HOME/.config/Code/User/settings.json";
+in
 {
   programs.vscode.enable = true;
 
-  programs.vscode.userSettings = {
-    "update.mode" = "none";
-  };
+  home.activation.vscodeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    settings="${settingsFile}"
+
+    if [ -L "$settings" ]; then
+      rm "$settings"
+    fi
+
+    mkdir -p "$(dirname "$settings")"
+
+    if [ ! -f "$settings" ]; then
+      echo '{}' > "$settings"
+    fi
+
+    # Ensure "update.mode" is present; if not, inject before closing brace
+    if ! ${pkgs.gnugrep}/bin/grep -q '"update.mode"' "$settings"; then
+      ${pkgs.gnused}/bin/sed -i 's/}$/    "update.mode": "none"\n}/' "$settings"
+    fi
+  '';
 
   xdg.desktopEntries."code" = {
     name = "Visual Studio Code";
