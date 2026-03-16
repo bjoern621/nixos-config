@@ -23,6 +23,11 @@ in
     if ! ${pkgs.gnugrep}/bin/grep -q '"update.mode"' "$settings"; then
       ${pkgs.gnused}/bin/sed -i 's/}$/    "update.mode": "none"\n}/' "$settings"
     fi
+
+    # Exclude update.mode from Settings Sync so it stays machine-local
+    if ! ${pkgs.gnugrep}/bin/grep -q '"settingsSync.ignoredSettings"' "$settings"; then
+      ${pkgs.gnused}/bin/sed -i 's/}$/    "settingsSync.ignoredSettings": ["update.mode"]\n}/' "$settings"
+    fi
   '';
 
   xdg.desktopEntries."code" = {
