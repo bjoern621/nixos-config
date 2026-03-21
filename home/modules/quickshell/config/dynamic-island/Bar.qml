@@ -27,7 +27,7 @@ Variants {
             item: interactionZone
         }
 
-        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen
+        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || systemTray.menuVisible
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
@@ -44,9 +44,9 @@ Variants {
 
         Item {
             id: interactionZone
-            width: Math.max(pill.implicitWidth + 24, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 48 : 0)
+            width: Math.max(pill.implicitWidth + 24, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 48 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 48 : 0)
             x: (root.width - width) / 2
-            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen) ? 8 : 0) : 8
+            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + 12 : 0) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || systemTray.menuVisible) ? 8 : 0) : 8
             anchors.top: parent.top
 
             HoverHandler {
@@ -72,10 +72,8 @@ Variants {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    HoverItem {
-                        WorkspaceIndicator {
-                            monitorName: root.modelData.name
-                        }
+                    WorkspaceIndicator {
+                        monitorName: root.modelData.name
                     }
 
                     Rectangle {
@@ -85,8 +83,11 @@ Variants {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    HoverItem {
-                        SystemTray {}
+                    SystemTray {
+                        id: systemTray
+                        panelWindow: root
+                        menuParent: interactionZone
+                        menuTopY: pill.y + pill.implicitHeight + 4
                     }
 
                     Rectangle {
@@ -133,9 +134,7 @@ Variants {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    HoverItem {
-                        Battery {}
-                    }
+                    Battery {}
                 }
             }
 
@@ -185,6 +184,7 @@ Variants {
             id: pillHideTimer
             interval: 100
             onTriggered: {
+                if (root.shouldShowPill) return
                 root.isHovered = false
                 slideIn.stop()
                 slideOut.start()

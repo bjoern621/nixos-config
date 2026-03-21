@@ -13,6 +13,7 @@ VolumeSliderMenu 1.0 VolumeSliderMenu.qml
 CalendarMenu 1.0 CalendarMenu.qml
 PowerMenu 1.0 PowerMenu.qml
 StepSlider 1.0 StepSlider.qml
+TrayContextMenu 1.0 TrayContextMenu.qml
 ScreenCorners 1.0 ScreenCorners.qml
 Bar 1.0 Bar.qml
 PowerCorner 1.0 PowerCorner.qml
