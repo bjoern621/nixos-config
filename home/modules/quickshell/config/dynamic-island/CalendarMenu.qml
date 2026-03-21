@@ -243,6 +243,7 @@ Item {
                                             height: root.dayCellSize
                                             radius: (root.dayCellSize) / 2
                                             color: dayCell.isToday ? '#d5071b' : dayCell.hovered ? Colors.hoverItemHovered : "transparent"
+                                            border.color: dayCell.hovered ? Colors.pillBorder : "transparent"
                                         }
 
                                         Label {
