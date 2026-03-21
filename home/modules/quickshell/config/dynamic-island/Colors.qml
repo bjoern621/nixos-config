@@ -17,6 +17,7 @@ QtObject {
     readonly property color osdPillBorder: Qt.rgba(1, 1, 1, 0.18)
 
     // Accent / progress colors
+    readonly property color calendarToday: "#d5071b"
     readonly property color accentColor: "#45aaf2"
     readonly property color progressBackground: Qt.rgba(1, 1, 1, 0.12)
     readonly property color progressMuted: "#666666"

@@ -41,7 +41,7 @@ Item {
 
     Row {
         id: iconRow
-        spacing: 2
+        spacing: Spacing.spacing2
         anchors.verticalCenter: parent.verticalCenter
 
         HoverHandler {
@@ -128,10 +128,10 @@ Item {
                     visible: iconItem.showTooltip && !internal.menuOpen
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.bottom
-                    anchors.topMargin: 4
-                    width: tooltipText.implicitWidth + 12
-                    height: tooltipText.implicitHeight + 8
-                    radius: 6
+                    anchors.topMargin: Spacing.spacing4
+                    width: tooltipText.implicitWidth + Spacing.spacing12
+                    height: tooltipText.implicitHeight + Spacing.spacing8
+                    radius: Spacing.spacing6
                     color: Colors.osdPillBackground
                     border.width: 1
                     border.color: Colors.osdPillBorder
@@ -142,7 +142,7 @@ Item {
                         anchors.centerIn: parent
                         text: iconItem.modelData.tooltipTitle
                         color: Colors.textColor
-                        font.pixelSize: 11
+                        font.pixelSize: Typography.fontSize12
                     }
                 }
             }
@@ -160,8 +160,13 @@ Item {
         height: trayMenuContent.implicitHeight
         visible: false
         opacity: 0
-        scale: 0.92
-        transformOrigin: Item.Top
+
+        readonly property real _slideOffset: Spacing.spacing8
+
+        transform: Translate {
+            id: menuSlideTransform
+            y: -trayMenuContainer._slideOffset
+        }
 
         TrayContextMenu {
             id: trayMenuContent
@@ -182,12 +187,12 @@ Item {
                 property: "opacity"
                 from: 0; to: 1
                 duration: 200
-                easing.type: Easing.OutQuad
+                easing.type: Easing.OutCubic
             }
             NumberAnimation {
-                target: trayMenuContainer
-                property: "scale"
-                from: 0.92; to: 1
+                target: menuSlideTransform
+                property: "y"
+                from: -trayMenuContainer._slideOffset; to: 0
                 duration: 200
                 easing.type: Easing.OutCubic
             }
@@ -206,14 +211,14 @@ Item {
                 property: "opacity"
                 to: 0
                 duration: 120
-                easing.type: Easing.InQuad
+                easing.type: Easing.InCubic
             }
             NumberAnimation {
-                target: trayMenuContainer
-                property: "scale"
-                to: 0.92
+                target: menuSlideTransform
+                property: "y"
+                to: -trayMenuContainer._slideOffset
                 duration: 120
-                easing.type: Easing.InQuad
+                easing.type: Easing.InCubic
             }
         }
     }

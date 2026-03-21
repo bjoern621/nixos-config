@@ -10,8 +10,6 @@ Item {
     readonly property int contentPadding: Spacing.spacing8
     readonly property int buttonWidth: 140
     readonly property int buttonHeight: 36
-    readonly property int iconSize: 18
-
     function triggerAction(action) {
         Qt.callLater(() => {
             switch (action) {
@@ -59,8 +57,8 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: Spacing.spacing8
-                        color: buttonHoverHandler.hovered ? Colors.hoverItemHovered
-                             : buttonTapHandler.pressed ? Colors.hoverItemPressed
+                        color: buttonTapHandler.pressed ? Colors.hoverItemPressed
+                             : buttonHoverHandler.hovered ? Colors.hoverItemHovered
                              : "transparent"
                         border.color: buttonHoverHandler.hovered || buttonTapHandler.pressed ? Colors.pillBorder : "transparent"
                     }
@@ -84,7 +82,7 @@ Item {
                         Text {
                             text: modelData.icon
                             font.family: Typography.iconFontFamily
-                            font.pixelSize: root.iconSize
+                            font.pixelSize: Typography.fontSize16
                             color: Colors.textColor
                             anchors.verticalCenter: parent.verticalCenter
                         }

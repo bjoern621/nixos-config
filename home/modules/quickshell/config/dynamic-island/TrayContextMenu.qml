@@ -85,7 +85,7 @@ Item {
                                     ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF")
                                     : " "
                             color: Colors.textColor
-                            font.pixelSize: 11
+                            font.pixelSize: Typography.fontSize12
                             width: visible ? 16 : 0
                             anchors.left: parent.left
                             anchors.leftMargin: Spacing.spacing8
@@ -111,7 +111,7 @@ Item {
                             text: modelData.text ?? ""
                             color: modelData.enabled
                                      ? Colors.textColor : Colors.textColorMuted
-                            font.pixelSize: 13
+                            font.pixelSize: Typography.fontSize12
                             elide: Text.ElideRight
                             anchors.left: mainItemIcon.visible ? mainItemIcon.right : mainCheckMark.right
                             anchors.leftMargin: Spacing.spacing6
@@ -125,7 +125,7 @@ Item {
                             visible: modelData.hasChildren
                             text: "\u203A"
                             color: Colors.textColorMuted
-                            font.pixelSize: 16
+                            font.pixelSize: Typography.fontSize16
                             anchors.right: parent.right
                             anchors.rightMargin: Spacing.spacing8
                             anchors.verticalCenter: parent.verticalCenter
@@ -234,7 +234,7 @@ Item {
                                     ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF")
                                     : " "
                             color: Colors.textColor
-                            font.pixelSize: 11
+                            font.pixelSize: Typography.fontSize12
                             width: visible ? 16 : 0
                             anchors.left: parent.left
                             anchors.leftMargin: Spacing.spacing8
@@ -260,7 +260,7 @@ Item {
                             text: modelData.text ?? ""
                             color: modelData.enabled
                                      ? Colors.textColor : Colors.textColorMuted
-                            font.pixelSize: 13
+                            font.pixelSize: Typography.fontSize12
                             elide: Text.ElideRight
                             anchors.left: subItemIcon.visible ? subItemIcon.right : subCheckMark.right
                             anchors.leftMargin: Spacing.spacing6
@@ -274,7 +274,7 @@ Item {
                             visible: modelData.hasChildren
                             text: "\u203A"
                             color: Colors.textColorMuted
-                            font.pixelSize: 16
+                            font.pixelSize: Typography.fontSize16
                             anchors.right: parent.right
                             anchors.rightMargin: Spacing.spacing8
                             anchors.verticalCenter: parent.verticalCenter

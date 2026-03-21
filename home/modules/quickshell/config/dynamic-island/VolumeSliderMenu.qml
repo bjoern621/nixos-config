@@ -36,7 +36,7 @@ Item {
             color: Colors.textColor
             anchors {
                 left: parent.left
-                leftMargin: 16
+                leftMargin: Spacing.spacing16
                 verticalCenter: parent.verticalCenter
             }
             width: 16
@@ -48,7 +48,7 @@ Item {
             text: sliderMenu.currentVolume + "%"
             anchors {
                 right: parent.right
-                rightMargin: 16
+                rightMargin: Spacing.spacing16
                 verticalCenter: parent.verticalCenter
             }
             width: 40
@@ -59,9 +59,9 @@ Item {
             id: stepSlider
             anchors {
                 left: volIcon.right
-                leftMargin: 10
+                leftMargin: Spacing.spacing8
                 right: pctLabel.left
-                rightMargin: 10
+                rightMargin: Spacing.spacing8
                 verticalCenter: parent.verticalCenter
             }
             externalValue: sliderMenu.audioNode?.volume ?? 0

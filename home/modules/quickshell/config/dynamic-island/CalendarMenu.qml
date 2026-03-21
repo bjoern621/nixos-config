@@ -196,14 +196,14 @@ Item {
                             property: "opacity"
                             to: 0
                             duration: 120
-                            easing.type: Easing.InQuad
+                            easing.type: Easing.InCubic
                         }
                         NumberAnimation {
                             target: monthGrid
                             property: "x"
                             to: -root._pendingDirection * (root._slideOffset / 2)
                             duration: 120
-                            easing.type: Easing.InQuad
+                            easing.type: Easing.InCubic
                         }
                         onFinished: root._applyYearChange()
                     }
@@ -222,7 +222,7 @@ Item {
                             property: "opacity"
                             to: 1
                             duration: 200
-                            easing.type: Easing.OutQuad
+                            easing.type: Easing.OutCubic
                         }
                     }
 
@@ -238,7 +238,7 @@ Item {
                         property int firstDayOffset: root.getFirstDayOffset(root.displayYear, monthIndex)
 
                         width: root.monthWidth
-                        spacing: 2
+                        spacing: Spacing.spacing2
 
                         Label {
                             text: root.germanLocale.monthName(mCol.monthIndex, Locale.LongFormat)
@@ -338,7 +338,7 @@ Item {
                                             width: root.dayCellSize
                                             height: root.dayCellSize
                                             radius: (root.dayCellSize) / 2
-                                            color: dayCell.isToday ? '#d5071b' : dayCell.hovered ? Colors.hoverItemHovered : "transparent"
+                                            color: dayCell.isToday ? Colors.calendarToday : dayCell.hovered ? Colors.hoverItemHovered : "transparent"
                                             border.color: dayCell.hovered ? Colors.pillBorder : "transparent"
                                         }
 

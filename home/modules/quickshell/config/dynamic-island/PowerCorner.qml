@@ -17,8 +17,8 @@ Variants {
         exclusiveZone: 0
         color: "transparent"
 
-        implicitWidth: powerMenuView.implicitWidth + 24
-        implicitHeight: powerMenuView.implicitHeight + 24
+        implicitWidth: powerMenuView.implicitWidth + Spacing.spacing24
+        implicitHeight: powerMenuView.implicitHeight + Spacing.spacing24
 
         mask: Region {
             item: powerInteractionZone
@@ -39,14 +39,14 @@ Variants {
             id: powerInteractionZone
             anchors.top: parent.top
             anchors.right: parent.right
-            width: powerMenuWrapper.visible ? powerMenuView.implicitWidth + 16 : 8
-            height: powerMenuWrapper.visible ? powerMenuView.implicitHeight + 16 : 8
+            width: powerMenuWrapper.visible ? powerMenuView.implicitWidth + Spacing.spacing16 : Spacing.spacing8
+            height: powerMenuWrapper.visible ? powerMenuView.implicitHeight + Spacing.spacing16 : Spacing.spacing8
         }
 
         Item {
             id: cornerTrigger
-            width: 8
-            height: 8
+            width: Spacing.spacing8
+            height: Spacing.spacing8
             anchors.top: parent.top
             anchors.right: parent.right
 
@@ -60,8 +60,8 @@ Variants {
             width: powerMenuView.implicitWidth
             anchors.top: parent.top
             anchors.right: parent.right
-            anchors.topMargin: 8
-            anchors.rightMargin: 8
+            anchors.topMargin: Spacing.spacing8
+            anchors.rightMargin: Spacing.spacing8
 
             PowerMenu {
                 id: powerMenuView

@@ -80,8 +80,8 @@ Scope {
             y: osdWindow.finalY - osdWindow.animOffset
             opacity: 0
 
-            property var marginTopBottom: 8
-            property var marginLeftRight: 12
+            property int marginTopBottom: Spacing.spacing8
+            property int marginLeftRight: Spacing.spacing12
 
             implicitWidth: 200
             implicitHeight: contentRow.implicitHeight + 2*marginTopBottom
@@ -100,7 +100,7 @@ Scope {
                     topMargin: osdPill.marginTopBottom
                     bottomMargin: osdPill.marginTopBottom
                 }
-                spacing: 8
+                spacing: Spacing.spacing8
 
                 Item {
                     width: 24
@@ -118,7 +118,7 @@ Scope {
                 }
 
                 Column {
-                    spacing: 4
+                    spacing: Spacing.spacing4
                     width: parent.width - 24 - parent.spacing
                     anchors.verticalCenter: parent.verticalCenter
 

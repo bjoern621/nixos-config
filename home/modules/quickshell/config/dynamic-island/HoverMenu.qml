@@ -12,9 +12,16 @@ Item {
 
     signal hidden()
 
+    readonly property real _slideOffset: Spacing.spacing8
+
     implicitHeight: contentArea.childrenRect.height + gapHeight
     opacity: 0
     visible: opacity > 0
+
+    transform: Translate {
+        id: slideTransform
+        y: -menuWrapper._slideOffset
+    }
 
     HoverHandler {
         id: hoverHandler
@@ -27,22 +34,16 @@ Item {
         height: childrenRect.height
     }
 
-    NumberAnimation {
+    ParallelAnimation {
         id: showAnim
-        target: menuWrapper
-        property: "opacity"
-        to: 1
-        duration: 150
-        easing.type: Easing.OutCubic
+        NumberAnimation { target: menuWrapper; property: "opacity"; to: 1; duration: 150; easing.type: Easing.OutCubic }
+        NumberAnimation { target: slideTransform; property: "y"; to: 0; duration: 150; easing.type: Easing.OutCubic }
     }
 
-    NumberAnimation {
+    ParallelAnimation {
         id: hideAnim
-        target: menuWrapper
-        property: "opacity"
-        to: 0
-        duration: 150
-        easing.type: Easing.InCubic
+        NumberAnimation { target: menuWrapper; property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
+        NumberAnimation { target: slideTransform; property: "y"; to: -menuWrapper._slideOffset; duration: 150; easing.type: Easing.InCubic }
         onStopped: menuWrapper.hidden()
     }
 

@@ -9,7 +9,7 @@ Item {
     readonly property bool isDischarging: dev.state === UPowerDeviceState.Discharging
     readonly property bool isFullyCharged: dev.state === UPowerDeviceState.FullyCharged
 
-    readonly property int contentPadding: 12
+    readonly property int contentPadding: Spacing.spacing12
 
     implicitWidth: 200
     implicitHeight: layout.height + 2 * contentPadding

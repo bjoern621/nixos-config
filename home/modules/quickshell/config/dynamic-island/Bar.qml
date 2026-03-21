@@ -44,9 +44,9 @@ Variants {
 
         Item {
             id: interactionZone
-            width: Math.max(pill.implicitWidth + 24, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 48 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 48 : 0)
+            width: Math.max(pill.implicitWidth + Spacing.spacing24, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 2 * Spacing.spacing24 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 2 * Spacing.spacing24 : 0)
             x: (root.width - width) / 2
-            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, batteryHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + 12 : 0) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible) ? 8 : 0) : 8
+            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, batteryHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + Spacing.spacing12 : 0) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible) ? Spacing.spacing8 : 0) : Spacing.spacing8
             anchors.top: parent.top
 
             HoverHandler {
@@ -56,9 +56,9 @@ Variants {
             Rectangle {
                 id: pill
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: -implicitHeight - 8
+                y: -implicitHeight - Spacing.spacing8
 
-                implicitWidth: contentRow.implicitWidth + 24
+                implicitWidth: contentRow.implicitWidth + Spacing.spacing24
                 implicitHeight: 32
 
                 radius: implicitHeight / 2
@@ -70,7 +70,7 @@ Variants {
                 Row {
                     id: contentRow
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Spacing.spacing8
 
                     WorkspaceIndicator {
                         monitorName: root.modelData.name
@@ -78,7 +78,7 @@ Variants {
 
                     Rectangle {
                         width: 1
-                        height: 16
+                        height: Spacing.spacing16
                         color: Colors.separatorColor
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -87,12 +87,12 @@ Variants {
                         id: systemTray
                         panelWindow: root
                         menuParent: interactionZone
-                        menuTopY: pill.y + pill.implicitHeight + 4
+                        menuTopY: pill.y + pill.implicitHeight + Spacing.spacing4
                     }
 
                     Rectangle {
                         width: 1
-                        height: 16
+                        height: Spacing.spacing16
                         color: Colors.separatorColor
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -105,7 +105,7 @@ Variants {
 
                     Rectangle {
                         width: 1
-                        height: 16
+                        height: Spacing.spacing16
                         color: Colors.separatorColor
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -129,7 +129,7 @@ Variants {
 
                     Rectangle {
                         width: 1
-                        height: 16
+                        height: Spacing.spacing16
                         color: Colors.separatorColor
                         anchors.verticalCenter: parent.verticalCenter
                     }
