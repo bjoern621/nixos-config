@@ -10,10 +10,10 @@
       ",preferred,auto,1"
     ];
 
-    # Lid switch - disable internal display when closed, re-enable when opened
+    # Disable internal display when lid closed, re-enable when opened
     bindl = [
-      "switch:on:Lid Switch, , exec, hyprctl keyword monitor eDP-1, disable"
-      "switch:off:Lid Switch, , exec, hyprctl keyword monitor eDP-1, 2944x1840@90, 0x0, 2"
+      ", switch:on:Lid Switch, exec, hyprctl keyword monitor eDP-1, disable"
+      ", switch:off:Lid Switch, exec, hyprctl keyword monitor eDP-1, 2944x1840@90, 0x0, 2"
     ];
   };
 }
