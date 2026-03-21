@@ -54,3 +54,66 @@ https://wiki.hypr.land/Configuring/Window-Rules/
 - Key layer rule effects: `blur on`, `ignore_alpha <float>`, `blur_popups on`, `xray on`, `dim_around on`.
 - Anonymous syntax: `layerrule = <effect>, match:namespace <regex>`
 - Named syntax uses a block: `layerrule { name = …; <effect> = …; match:namespace = …; }`
+
+## Quickshell (QML Shell UI)
+
+Quickshell QML files live in `home/modules/quickshell/config/`. All components use shared singletons for consistent styling: `Colors.qml`, `Typography.qml`, `Spacing.qml`.
+
+### Spacing
+
+Use `Spacing.*` constants. Preferred values are **4**, **8**, and **12**. Other values (`2`, `6`, `16`, `24`, `40`) exist but should be used sparingly and with good reason.
+
+### Colors
+
+Always use `Colors.*` properties — never hardcode color values. Key tokens:
+
+- `hoverItemHovered` / `hoverItemPressed` for interactive state backgrounds
+- `pillBorder` for hover borders
+- `textColor` / `textColorMuted` for primary/secondary text
+- `accentColor` for progress fills, sliders, active indicators
+
+### Typography
+
+Always use `Typography.*` font size constants (`fontSize12`, `fontSize14`, `fontSize16`, etc.) — never use literal font size numbers. Default label style is `fontSize14` bold (set in `Label.qml`). Use `Font.Normal` weight explicitly for secondary/muted text.
+
+### Hover Effects
+
+Interactive items should change both **background** and **border** on hover. The standard pattern (see `HoverItem.qml`):
+
+- Default: transparent background, transparent border
+- Hovered: `Colors.hoverItemHovered` background, `Colors.pillBorder` border
+- Pressed: `Colors.hoverItemPressed` background, `Colors.pillBorder` border
+- Always set `cursorShape: Qt.PointingHandCursor` on interactive areas.
+
+### Border Radius
+
+- For pills and circles, prefer the **calculated** approach: `radius: height / 2` (not a hardcoded value).
+- For rounded rectangles (menu items, panels), use spacing constants: `Spacing.spacing4` or `Spacing.spacing8`.
+- When nesting rounded containers (inner + outer border), adjust the inner radius to account for the spacing/thickness between them so the corner curvature looks uniform (e.g. `outerRadius - borderWidth`).
+
+### Animations
+
+The primary animation pattern is **fade + slight position change** (slide), as used in the calendar year transition and OSD popups. Use this pattern everywhere a show/hide or content transition fits.
+
+**Easing**: Use `Easing.OutCubic` for enter/show animations and `Easing.InCubic` for exit/hide animations.
+
+**Duration ranges**:
+
+- **80–120ms**: Micro-interactions (slider feedback, small state changes)
+- **150–200ms**: Menu show/hide, hover menus
+- **200–300ms**: Content transitions (slide-in after fade-out, OSD popups)
+
+**Standard show/hide combo** (OSD example):
+
+- Show: slide up ~16px + fade in, `OutCubic`, 180–220ms
+- Hide: slide down ~16px + fade out, `InCubic`, 180–220ms
+
+**Menu timing**: 250ms delay before showing, 200ms delay before hiding (prevents flicker on brief mouse passes).
+
+### Component Patterns
+
+- **Singletons** (`Colors`, `Typography`, `Spacing`) for all design tokens.
+- **`HoverItem`** as the base for any interactive pill/button with hover state.
+- **`HoverMenu`** as the animated wrapper for dropdown content.
+- **`Scope`** wrapper for self-contained OSD/overlay features.
+- **`Variants`** with `Quickshell.screens` model for per-screen windows.
