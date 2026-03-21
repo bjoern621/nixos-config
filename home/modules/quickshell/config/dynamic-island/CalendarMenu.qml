@@ -67,6 +67,7 @@ Item {
                         height: 24
                         radius: 12
                         color: parent.hovered ? Colors.hoverItemHovered : "transparent"
+                        border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
 
                     Text {
@@ -105,6 +106,7 @@ Item {
                         height: 24
                         radius: 12
                         color: parent.hovered ? Colors.hoverItemHovered : "transparent"
+                        border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
 
                     Text {
