@@ -11,10 +11,10 @@ Item {
     readonly property int todayDay: today.getDate()
     readonly property var germanLocale: Qt.locale("de_DE")
 
-    readonly property int dayCellSize: 18
+    readonly property int dayCellSize: 24
     readonly property int weekNumberColumnWidth: 24
     readonly property int monthWidth: weekNumberColumnWidth + 7 * dayCellSize
-    readonly property int monthHorizontalGap: 10
+    readonly property int monthHorizontalGap: 12
     readonly property int monthVerticalGap: 12
     readonly property int contentPadding: 12
 
@@ -239,21 +239,17 @@ Item {
 
                                         Rectangle {
                                             anchors.centerIn: parent
-                                            width: root.dayCellSize - 2
-                                            height: root.dayCellSize - 2
-                                            radius: (root.dayCellSize - 2) / 2
-                                            color: dayCell.hovered ? Colors.hoverItemHovered : "transparent"
+                                            width: root.dayCellSize
+                                            height: root.dayCellSize
+                                            radius: (root.dayCellSize) / 2
+                                            color: dayCell.isToday ? '#d5071b' : dayCell.hovered ? Colors.hoverItemHovered : "transparent"
                                         }
 
-                                        Text {
-                                            anchors.centerIn: parent
+                                        Label {
+                                            anchors.fill: parent
                                             text: dayCell.isValidDay ? dayCell.dayNumber : ""
-                                            font {
-                                                family: Typography.fontFamily
-                                                pixelSize: Typography.fontSize14
-                                                weight: dayCell.isToday ? Font.Bold : Font.Normal
-                                            }
-                                            color: dayCell.isToday ? "#cc0000" : Colors.textColor
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
                                         }
 
                                         MouseArea {
