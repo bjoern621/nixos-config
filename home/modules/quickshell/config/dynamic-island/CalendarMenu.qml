@@ -106,10 +106,41 @@ Item {
                     }
                 }
 
-                Label {
-                    text: root.displayYear
-                    font.pixelSize: Typography.fontSize16
+                Item {
                     anchors.verticalCenter: parent.verticalCenter
+                    width: yearLabel.implicitWidth + 12
+                    height: 24
+
+                    property bool canNavigate: root.displayYear !== root.todayYear
+                    property bool hovered: yearMouse.containsMouse && canNavigate
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width
+                        height: parent.height
+                        radius: 12
+                        color: parent.hovered ? Colors.hoverItemHovered : "transparent"
+                        border.color: parent.hovered ? Colors.pillBorder : "transparent"
+                    }
+
+                    Label {
+                        id: yearLabel
+                        anchors.centerIn: parent
+                        text: root.displayYear
+                        font.pixelSize: Typography.fontSize16
+                    }
+
+                    MouseArea {
+                        id: yearMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: parent.canNavigate ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: {
+                            if (parent.canNavigate) {
+                                root.navigateYear(root.todayYear - root.displayYear)
+                            }
+                        }
+                    }
                 }
 
                 Item {
