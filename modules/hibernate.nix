@@ -55,10 +55,10 @@ in
     # Set resume device (generates the resume= kernel parameter)
     boot.resumeDevice = lib.mkIf (cfg.swapFile.resumeOffset != null) cfg.swapFile.resumeDevice;
 
-    # Hibernate on lid close
+    # Hibernate on lid close (ignore when docked to keep external monitors on)
     services.logind.settings.Login = {
       HandleLidSwitch = "hibernate";
-      HandleLidSwitchDocked = "hibernate";
+      HandleLidSwitchDocked = "ignore";
       HandleLidSwitchExternalPower = "hibernate";
     };
   };
