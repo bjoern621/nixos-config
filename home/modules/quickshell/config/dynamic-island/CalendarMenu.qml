@@ -82,9 +82,9 @@ Item {
 
                     Rectangle {
                         anchors.centerIn: parent
-                        width: 24
-                        height: 24
-                        radius: 12
+                        width: parent.width
+                        height: parent.height
+                        radius: height / 2
                         color: parent.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
@@ -108,8 +108,8 @@ Item {
 
                 Item {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: yearLabel.implicitWidth + 12
-                    height: 24
+                    width: yearLabel.implicitWidth + 24
+                    height: 28
 
                     property bool canNavigate: root.displayYear !== root.todayYear
                     property bool hovered: yearMouse.containsMouse && canNavigate
@@ -118,7 +118,7 @@ Item {
                         anchors.centerIn: parent
                         width: parent.width
                         height: parent.height
-                        radius: 12
+                        radius: height / 2
                         color: parent.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
@@ -152,9 +152,9 @@ Item {
 
                     Rectangle {
                         anchors.centerIn: parent
-                        width: 24
-                        height: 24
-                        radius: 12
+                        width: parent.width
+                        height: parent.height
+                        radius: height / 2
                         color: parent.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
