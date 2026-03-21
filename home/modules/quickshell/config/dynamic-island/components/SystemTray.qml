@@ -66,6 +66,8 @@ Item {
                              ? Colors.hoverItemPressed
                              : iconMouse.containsMouse ? Colors.hoverItemHovered
                              : "transparent"
+                    border.color: iconMouse.pressed || iconMouse.containsMouse
+                             ? Colors.pillBorder : "transparent"
                 }
 
                 Image {

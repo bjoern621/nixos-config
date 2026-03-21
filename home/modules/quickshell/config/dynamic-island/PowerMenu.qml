@@ -62,6 +62,7 @@ Item {
                         color: buttonHoverHandler.hovered ? Colors.hoverItemHovered
                              : buttonTapHandler.pressed ? Colors.hoverItemPressed
                              : "transparent"
+                        border.color: buttonHoverHandler.hovered || buttonTapHandler.pressed ? Colors.pillBorder : "transparent"
                     }
 
                     HoverHandler {

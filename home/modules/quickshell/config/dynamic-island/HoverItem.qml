@@ -73,10 +73,7 @@ Item {
         color: root.pressed ? Colors.hoverItemPressed
              : root.hovered ? Colors.hoverItemHovered
              : "transparent"
-
-        // DEBUG
-        // border.width: 1
-        // border.color: "red"
+        border.color: root.hovered || root.pressed ? Colors.pillBorder : "transparent"
     }
 
     Item {

@@ -75,6 +75,8 @@ Item {
                         radius: Spacing.spacing4
                         color: mainItemMouse.containsMouse && modelData.enabled
                                  ? Colors.hoverItemHovered : "transparent"
+                        border.color: mainItemMouse.containsMouse && modelData.enabled
+                                 ? Colors.pillBorder : "transparent"
 
                         Text {
                             id: mainCheckMark
@@ -222,6 +224,8 @@ Item {
                         radius: Spacing.spacing4
                         color: subItemMouse.containsMouse && modelData.enabled
                                  ? Colors.hoverItemHovered : "transparent"
+                        border.color: subItemMouse.containsMouse && modelData.enabled
+                                 ? Colors.pillBorder : "transparent"
 
                         Text {
                             id: subCheckMark
