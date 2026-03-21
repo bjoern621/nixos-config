@@ -98,7 +98,8 @@ Item {
     }
 
     property real scrollAccumulator: 0
-    property int scrollThreshold: 50
+    property int touchpadThreshold: 50
+    property int mouseThreshold: 120
 
     MouseArea {
         id: sliderArea
@@ -113,10 +114,12 @@ Item {
             if (pressed) root.updateValue(mouse.x)
         }
         onWheel: (wheel) => {
-            root.scrollAccumulator += wheel.angleDelta.y
-            while (Math.abs(root.scrollAccumulator) >= root.scrollThreshold) {
+            var delta = wheel.angleDelta.y
+            var threshold = Math.abs(delta) >= root.mouseThreshold ? root.mouseThreshold : root.touchpadThreshold
+            root.scrollAccumulator += delta
+            while (Math.abs(root.scrollAccumulator) >= threshold) {
                 var direction = root.scrollAccumulator > 0 ? 1 : -1
-                root.scrollAccumulator -= direction * root.scrollThreshold
+                root.scrollAccumulator -= direction * threshold
                 var steppedValue = Math.max(0, Math.min(1, root.value + direction * root.stepSize))
                 root.value = steppedValue
                 root.moved(steppedValue)
