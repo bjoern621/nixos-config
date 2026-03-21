@@ -58,7 +58,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Spacing.spacing8
+        radius: Spacing.spacing12
         color: Colors.pillBackground
         border.width: 1
         border.color: Colors.pillBorder
