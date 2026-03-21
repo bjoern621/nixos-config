@@ -77,10 +77,6 @@ Item {
         // DEBUG
         // border.width: 1
         // border.color: "red"
-
-        Behavior on color {
-            ColorAnimation { duration: 120 }
-        }
     }
 
     Item {
