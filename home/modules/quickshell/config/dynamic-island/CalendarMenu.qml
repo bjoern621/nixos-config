@@ -4,6 +4,15 @@ Item {
     id: root
 
     property int displayYear: new Date().getFullYear()
+    readonly property int _slideOffset: 40
+
+    function navigateYear(direction) {
+        slideInAnimation.stop()
+        root.displayYear += direction
+        monthGrid.x = direction * root._slideOffset
+        monthGrid.opacity = 0
+        slideInAnimation.start()
+    }
 
     readonly property var today: new Date()
     readonly property int todayYear: today.getFullYear()
@@ -83,7 +92,7 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.displayYear--
+                        onClicked: root.navigateYear(-1)
                     }
                 }
 
@@ -122,15 +131,40 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.displayYear++
+                        onClicked: root.navigateYear(1)
                     }
                 }
             }
 
-            Grid {
-                columns: 4
-                columnSpacing: root.monthHorizontalGap
-                rowSpacing: root.monthVerticalGap
+            Item {
+                id: gridClip
+                clip: true
+                width: monthGrid.implicitWidth
+                height: monthGrid.implicitHeight
+
+                Grid {
+                    id: monthGrid
+                    columns: 4
+                    columnSpacing: root.monthHorizontalGap
+                    rowSpacing: root.monthVerticalGap
+
+                    ParallelAnimation {
+                        id: slideInAnimation
+                        NumberAnimation {
+                            target: monthGrid
+                            property: "x"
+                            to: 0
+                            duration: 300
+                            easing.type: Easing.OutCubic
+                        }
+                        NumberAnimation {
+                            target: monthGrid
+                            property: "opacity"
+                            to: 1
+                            duration: 200
+                            easing.type: Easing.OutQuad
+                        }
+                    }
 
                 Repeater {
                     model: 12
@@ -267,6 +301,7 @@ Item {
                             }
                         }
                     }
+                }
                 }
             }
         }
