@@ -6,11 +6,21 @@ Item {
     property int displayYear: new Date().getFullYear()
     readonly property int _slideOffset: 40
 
+    property int _pendingDirection: 0
+
     function navigateYear(direction) {
+        // If fade-in is running, cancel it and apply immediately
         slideInAnimation.stop()
-        root.displayYear += direction
-        monthGrid.x = direction * root._slideOffset
-        monthGrid.opacity = 0
+        // If fade-out is running, cancel it
+        fadeOutAnimation.stop()
+
+        root._pendingDirection = direction
+        fadeOutAnimation.start()
+    }
+
+    function _applyYearChange() {
+        root.displayYear += root._pendingDirection
+        monthGrid.x = root._pendingDirection * root._slideOffset
         slideInAnimation.start()
     }
 
@@ -147,6 +157,25 @@ Item {
                     columns: 4
                     columnSpacing: root.monthHorizontalGap
                     rowSpacing: root.monthVerticalGap
+
+                    ParallelAnimation {
+                        id: fadeOutAnimation
+                        NumberAnimation {
+                            target: monthGrid
+                            property: "opacity"
+                            to: 0
+                            duration: 120
+                            easing.type: Easing.InQuad
+                        }
+                        NumberAnimation {
+                            target: monthGrid
+                            property: "x"
+                            to: -root._pendingDirection * (root._slideOffset / 2)
+                            duration: 120
+                            easing.type: Easing.InQuad
+                        }
+                        onFinished: root._applyYearChange()
+                    }
 
                     ParallelAnimation {
                         id: slideInAnimation
