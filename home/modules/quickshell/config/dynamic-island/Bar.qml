@@ -27,7 +27,7 @@ Variants {
             item: interactionZone
         }
 
-        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || systemTray.menuVisible
+        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
@@ -46,7 +46,7 @@ Variants {
             id: interactionZone
             width: Math.max(pill.implicitWidth + 24, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 48 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 48 : 0)
             x: (root.width - width) / 2
-            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + 12 : 0) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || systemTray.menuVisible) ? 8 : 0) : 8
+            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, batteryHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + 12 : 0) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible) ? 8 : 0) : 8
             anchors.top: parent.top
 
             HoverHandler {
@@ -134,7 +134,11 @@ Variants {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Battery {}
+                    HoverItem {
+                        id: batteryHoverItem
+                        menu: batteryMenu
+                        Battery {}
+                    }
                 }
             }
 
@@ -174,6 +178,26 @@ Variants {
 
                 CalendarMenu {
                     id: calendarView
+                    width: implicitWidth
+                    height: implicitHeight
+                }
+            }
+
+            Item {
+                id: batteryAnchor
+                width: 0; height: 0
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + batteryHoverItem.x + batteryHoverItem.width / 2
+                y: pill.y + pill.implicitHeight
+            }
+
+            HoverMenu {
+                id: batteryMenu
+                width: batteryView.implicitWidth
+                anchors.top: batteryAnchor.top
+                anchors.horizontalCenter: batteryAnchor.horizontalCenter
+
+                BatteryMenu {
+                    id: batteryView
                     width: implicitWidth
                     height: implicitHeight
                 }

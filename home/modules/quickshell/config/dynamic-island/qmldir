@@ -11,6 +11,7 @@ HoverItem 1.0 HoverItem.qml
 HoverMenu 1.0 HoverMenu.qml
 VolumeSliderMenu 1.0 VolumeSliderMenu.qml
 CalendarMenu 1.0 CalendarMenu.qml
+BatteryMenu 1.0 BatteryMenu.qml
 PowerMenu 1.0 PowerMenu.qml
 StepSlider 1.0 StepSlider.qml
 TrayContextMenu 1.0 TrayContextMenu.qml
