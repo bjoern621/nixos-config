@@ -24,6 +24,7 @@
     ./mouse-cursor.nix
     ./settings/default.nix
     ./mouse-accel.nix
+    ./screenshot.nix
   ];
 
   # Auto-start Hyprland uwsm after login

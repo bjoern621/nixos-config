@@ -48,9 +48,6 @@
       "$mainMod SHIFT, 9, movetoworkspace, 9"
       "$mainMod SHIFT, 0, movetoworkspace, 10"
 
-      # Screenshot
-      "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | swappy -f -"
-
       # Alt + Arrow keys -> Home/End/PageUp/PageDown
       "ALT, left, sendshortcut, , home,"
       "ALT, right, sendshortcut, , end,"
