@@ -13,7 +13,7 @@
       # Screenshot
       "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | swappy -f -"
       # Screenshot with frozen screen (Windows-style)
-      "$mainMod CTRL SHIFT, S, exec, FILE=/tmp/frozen-screenshot.png; wayfreeze & PID=$!; sleep .1; grim -g \"$(slurp)\" \"$FILE\"; kill $PID; swappy -f \"$FILE\"; rm \"$FILE\""
+      "$mainMod CTRL SHIFT, S, exec, FILE=/tmp/frozen-screenshot.png; wayfreeze --hide-cursor & PID=$!; sleep .1; grim -g \"$(slurp)\" \"$FILE\"; kill $PID; swappy -f \"$FILE\"; rm \"$FILE\""
     ];
   };
 }
