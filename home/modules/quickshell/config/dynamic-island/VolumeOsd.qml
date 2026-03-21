@@ -8,8 +8,7 @@ import QtQuick
 Scope {
     id: volumeScope
 
-    // TODO: suppressOsd is no longer wired up since volumeHoverItem is scoped inside Variants and not accessible from shell.qml
-    property bool suppressOsd: false
+    property bool suppressOsd: Globals.volumeSliderOpen
     property bool _startupDone: false
 
     Timer {

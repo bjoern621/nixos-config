@@ -112,6 +112,9 @@ Variants {
                     HoverItem {
                         id: volumeHoverItem
                         menu: volumeMenu
+                        onMenuOpenChanged: {
+                            Globals.volumeSliderOpen = menuOpen
+                        }
                         VolumeIcon {
                             id: volumeIcon
                         }

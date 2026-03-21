@@ -1,3 +1,4 @@
+singleton Globals 1.0 Globals.qml
 singleton Colors 1.0 Colors.qml
 singleton Typography 1.0 Typography.qml
 singleton Spacing 1.0 Spacing.qml
