@@ -35,7 +35,7 @@
   # background, so blur disappears without any extra logic.
   wayland.windowManager.hyprland.settings.layerrule = [
     "blur on, match:namespace quickshell"
-    "ignore_alpha 0.1, match:namespace quickshell"
+    "ignore_alpha 0.01, match:namespace quickshell"
   ];
 
   fonts.fontconfig.enable = true;
