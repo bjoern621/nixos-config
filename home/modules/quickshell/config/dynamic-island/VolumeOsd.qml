@@ -21,23 +21,14 @@ Scope {
         objects: [Pipewire.defaultAudioSink]
     }
 
-    Connections {
-        target: Pipewire.defaultAudioSink?.audio
-
-        function onVolumeChanged() {
-            volumeScope.triggerShow()
-        }
-
-        function onMutedChanged() {
-            volumeScope.triggerShow()
-        }
-    }
-
     // Actual volume percentage (can exceed 100 with software boost)
     readonly property int actualVolume: Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100)
     // Capped value for progress bar (max 100)
     readonly property int osdValue: Math.min(100, actualVolume)
     readonly property bool isMuted: Pipewire.defaultAudioSink?.audio.muted ?? false
+
+    onActualVolumeChanged: triggerShow()
+    onIsMutedChanged: triggerShow()
     readonly property string osdIcon: {
         if (isMuted || osdValue === 0) return "\uf026"
         if (osdValue < 50) return "\uf027"
