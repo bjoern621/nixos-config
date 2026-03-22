@@ -27,7 +27,6 @@ Variants {
         readonly property bool shouldShowMenu: cornerHover.hovered || powerMenuWrapper.keepOpen
 
         onShouldShowMenuChanged: {
-            console.log("shouldShowMenu changed:", shouldShowMenu)
             if (shouldShowMenu) {
                 powerMenuWrapper.show()
             } else {
