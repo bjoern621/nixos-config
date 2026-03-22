@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
 import QtQuick
+import QtQuick.Controls
 
 Scope {
     id: launcherScope
@@ -244,6 +245,17 @@ Scope {
                         currentIndex: 0
                         model: launcherWindow.filteredApps
                         boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.vertical: ScrollBar {
+                            policy: resultsList.contentHeight > resultsList.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+                            contentItem: Rectangle {
+                                implicitWidth: 4
+                                radius: width / 2
+                                color: Colors.textColorMuted
+                                opacity: parent.active ? 0.6 : 0.3
+                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                            }
+                        }
 
                         delegate: Item {
                             required property var modelData
