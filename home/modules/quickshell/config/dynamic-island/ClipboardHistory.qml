@@ -11,6 +11,8 @@ Scope {
     property bool clipVisible: false
     property var allEntries: []
     property var filteredEntries: []
+    property var imageDecodeQueue: []
+    property int decodedCount: 0
 
     Process {
         id: fzfProc
@@ -62,7 +64,35 @@ Scope {
     function selectEntry(entry) {
         clipScope.clipVisible = false
         decodeProc.entry = entry.raw
+        decodeProc.isImage = entry.isImage
         decodeProc.running = true
+    }
+
+    function decodeNextImage() {
+        if (imageDecodeQueue.length === 0) return
+        const entry = imageDecodeQueue.shift()
+        imageDecodeProc.entry = entry
+        imageDecodeProc.environment = {
+            CLIP_ENTRY: entry.raw,
+            OUT_PATH: entry.imagePath
+        }
+        imageDecodeProc.running = true
+    }
+
+    Process {
+        id: imageDecodeProc
+        property var entry: null
+        command: ["bash", "-c", "printf '%s' \"$CLIP_ENTRY\" | cliphist decode > \"$OUT_PATH\""]
+        environment: ({ CLIP_ENTRY: "", OUT_PATH: "" })
+        running: false
+
+        onExited: (code, status) => {
+            if (code === 0 && imageDecodeProc.entry) {
+                // Bump decodedCount to trigger image reloads
+                clipScope.decodedCount++
+            }
+            clipScope.decodeNextImage()
+        }
     }
 
     // Fetch clipboard history
@@ -77,7 +107,13 @@ Scope {
                 if (tabIdx >= 0) {
                     const display = data.substring(tabIdx + 1).trim()
                     if (display.length > 0) {
-                        clipScope.allEntries = [...clipScope.allEntries, { raw: data, display: display }]
+                        const isImage = display.startsWith("[[ binary data")
+                        const entry = { raw: data, display: display, isImage: isImage, imagePath: "" }
+                        if (isImage) {
+                            const clipId = data.substring(0, tabIdx).trim()
+                            entry.imagePath = "/tmp/cliphist_preview_" + clipId + ".png"
+                        }
+                        clipScope.allEntries = [...clipScope.allEntries, entry]
                     }
                 }
             }
@@ -85,6 +121,15 @@ Scope {
 
         onExited: (code, status) => {
             clipScope.filteredEntries = clipScope.allEntries
+            // Queue image entries for decoding
+            let queue = []
+            for (let i = 0; i < clipScope.allEntries.length; i++) {
+                if (clipScope.allEntries[i].isImage) {
+                    queue.push(clipScope.allEntries[i])
+                }
+            }
+            clipScope.imageDecodeQueue = queue
+            clipScope.decodeNextImage()
         }
     }
 
@@ -92,7 +137,11 @@ Scope {
     Process {
         id: decodeProc
         property string entry: ""
-        command: ["bash", "-c", "printf '%s' \"$CLIP_ENTRY\" | cliphist decode | wl-copy"]
+        property bool isImage: false
+        command: ["bash", "-c", isImage
+            ? "printf '%s' \"$CLIP_ENTRY\" | cliphist decode | wl-copy --type image/png"
+            : "printf '%s' \"$CLIP_ENTRY\" | cliphist decode | wl-copy"
+        ]
         environment: ({ CLIP_ENTRY: entry })
         running: false
 
@@ -264,7 +313,7 @@ Scope {
                             required property var modelData
                             required property int index
                             width: clipList.width
-                            height: 40
+                            height: modelData.isImage ? 100 : 40
 
                             Rectangle {
                                 anchors.fill: parent
@@ -275,7 +324,21 @@ Scope {
                                 border.color: clipList.currentIndex === index || clipDelegateHover.hovered || clipDelegateTap.pressed ? Colors.pillBorder : "transparent"
                             }
 
+                            Image {
+                                visible: modelData.isImage
+                                anchors {
+                                    fill: parent
+                                    margins: Spacing.spacing4
+                                }
+                                // Use decodedCount to refresh after decode completes
+                                source: modelData.isImage && clipScope.decodedCount >= 0 ? "file://" + modelData.imagePath : ""
+                                fillMode: Image.PreserveAspectFit
+                                asynchronous: true
+                                cache: false
+                            }
+
                             Text {
+                                visible: !modelData.isImage
                                 anchors {
                                     fill: parent
                                     leftMargin: Spacing.spacing12
@@ -333,6 +396,8 @@ Scope {
                     clipSearch.text = ""
                     clipScope.allEntries = []
                     clipScope.filteredEntries = []
+                    clipScope.imageDecodeQueue = []
+                    clipScope.decodedCount = 0
                     listProc.running = true
                     clipList.currentIndex = 0
                     focusTimer.restart()
