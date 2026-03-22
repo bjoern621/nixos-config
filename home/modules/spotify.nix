@@ -8,7 +8,7 @@
     (pkgs.spotify.overrideAttrs (old: {
       postInstall = (old.postInstall or "") + ''
         wrapProgram $out/bin/spotify \
-          --add-flags "--force-device-scale-factor=1.105"
+          --add-flags "--force-device-scale-factor=0.895"
       '';
     }))
   ];
