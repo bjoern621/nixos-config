@@ -11,8 +11,8 @@
 
   # Watch for new clipboard content and store it in the history
   wayland.windowManager.hyprland.settings.exec-once = [
-    "wl-paste -t text --watch cliphist store"
-    "wl-paste -t image --watch cliphist store"
+    "wl-paste -t text --watch cliphist store -max-items 100"
+    "wl-paste -t image --watch cliphist store -max-items 100"
   ];
 
   # Bind SUPER + V to clipboard history (shown in quickshell)
