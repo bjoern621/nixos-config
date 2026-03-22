@@ -1,10 +1,10 @@
 { ... }:
 
 {
-  dconf.settings = { # TODO: test/fix
+  dconf.settings = {
     "io/missioncenter/MissionCenter" = {
-      smooth-graphs = true;
-      smooth-graphs-glide = true;
+      performance-smooth-graphs = true;
+      performance-sliding-graphs = true;
     };
   };
 }
