@@ -15,6 +15,7 @@
     # inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
     font-awesome # Icons
     inter # Text
+    imagemagick # WallpaperAccent color extraction
   ];
 
   # Link quickshell config to ~/.config/quickshell via an out-of-store symlink

@@ -1,123 +1,105 @@
-// WallpaperAccent - Extracts a vibrant accent color from the current wallpaper.
-//
-// This singleton samples the wallpaper image and identifies the most prominent
-// saturated hue using a hue-bucketing algorithm. The extracted color is stored
-// in Globals.accentColor for use throughout the UI (progress bars, sliders,
-// active indicators, etc.).
-//
-// Algorithm:
-// 1. Load wallpaper into a hidden Canvas element
-// 2. Sample pixels and bucket them by hue (12 buckets of 30 degrees each)
-// 3. Filter out grays, near-black/white, and desaturated colors
-// 4. Weight remaining pixels by saturation squared (vivid colors win)
-// 5. Select the most populated bucket and compute its average hue
-// 6. Output a hex color with boosted saturation (0.75) and fixed lightness (0.65)
+// WallpaperAccent - Extracts a vibrant accent color from the current wallpaper
+// using ImageMagick. Runs a Process to sample colors and pick the most vibrant
+// hue, then stores the result in Globals.accentColor.
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import "../"
 
-QtObject {
+Item {
     id: root
+    visible: false
 
-    readonly property int sampleSize: 64
+    // Re-extract when wallpaper changes
+    property url _wallpaper: Globals.wallpaperPath
+    on_WallpaperChanged: extractProc.running = true
 
-    property var hiddenWindow: Window {
-        width: root.sampleSize
-        height: root.sampleSize
-        visible: true
-        x: -1000
-        y: -1000
-        color: "transparent"
-        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint
+    Component.onCompleted: extractProc.running = true
 
-        Canvas {
-            id: canvas
-            width: root.sampleSize
-            height: root.sampleSize
-            visible: true
-
-            property string imagePath: Globals.wallpaperPath.toString().replace("file://", "")
-
-            Component.onCompleted: {
-                loadImage(imagePath)
+    // magick outputs histogram lines like:
+    //   12345: (R,G,B) #RRGGBB srgb(...)
+    // We resize to 64x64 for speed, quantize to 16 colors, then output the histogram.
+    Process {
+        id: extractProc
+        command: [
+            "bash", "-c",
+            "magick '" + Globals.wallpaperPath.toString().replace("file://", "") + "' " +
+            "-resize 64x64! -colors 16 -depth 8 -format '%c' histogram:info: | " +
+            "sort -rn"
+        ]
+        stdout: SplitParser {
+            onRead: data => {
+                root.parseLine(data)
             }
-
-            onImageLoaded: {
-                requestPaint()
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                console.log("[WallpaperAccent] magick failed with exit code", exitCode)
+                return
             }
-
-        onPaint: {
-            const ctx = getContext("2d")
-            const imagePath = Globals.wallpaperPath.toString().replace("file://", "")
-            ctx.drawImage(imagePath, 0, 0, width, height)
-            const imageData = ctx.getImageData(0, 0, width, height)
-            const pixels = imageData.data
-
-            const color = extractVibrantColor(pixels, width, height)
-            console.log("[WallpaperAccent] Extracted color:", color)
-            Globals.accentColor = color
+            root.pickBestColor()
         }
     }
+
+    // Accumulate histogram entries
+    property var _candidates: []
+
+    function parseLine(line) {
+        // Format: "  count: (R,G,B) #RRGGBB srgb(...)"
+        const rgbMatch = line.match(/\((\d+),(\d+),(\d+)\)/)
+        const countMatch = line.match(/^\s*(\d+):/)
+        if (!rgbMatch || !countMatch) return
+
+        const count = parseInt(countMatch[1])
+        const r = parseInt(rgbMatch[1]) / 255
+        const g = parseInt(rgbMatch[2]) / 255
+        const b = parseInt(rgbMatch[3]) / 255
+
+        // Convert to HSL
+        const max = Math.max(r, g, b)
+        const min = Math.min(r, g, b)
+        const l = (max + min) / 2
+        const d = max - min
+
+        if (d < 0.08) return // skip grays
+        if (l < 0.1 || l > 0.9) return // skip near-black/white
+
+        const s = d / (1 - Math.abs(2 * l - 1))
+        if (s < 0.15) return // skip desaturated
+
+        let h
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        else if (max === g) h = ((b - r) / d + 2) / 6
+        else h = ((r - g) / d + 4) / 6
+
+        _candidates.push({ count: count, h: h, s: s, l: l, weight: count * s * s })
     }
 
-    function extractVibrantColor(pixels, w, h) {
-        // Bucket hues into 12 segments of 30 degrees each
-        const bucketCount = 12
-        const buckets = []
-        for (let i = 0; i < bucketCount; i++) {
-            buckets.push({ count: 0, hueSum: 0, satSum: 0, lightSum: 0 })
+    function pickBestColor() {
+        if (_candidates.length === 0) {
+            console.log("[WallpaperAccent] No vibrant colors found, using fallback")
+            Globals.accentColor = "#f2ef45"
+            _candidates = []
+            return
         }
 
-        const total = w * h
-        for (let i = 0; i < total; i++) {
-            const idx = i * 4
-            const r = pixels[idx] / 255
-            const g = pixels[idx + 1] / 255
-            const b = pixels[idx + 2] / 255
-
-            const max = Math.max(r, g, b)
-            const min = Math.min(r, g, b)
-            const l = (max + min) / 2
-            const d = max - min
-
-            if (d < 0.08) continue // skip grays
-            if (l < 0.1 || l > 0.9) continue // skip near-black/white
-
-            const s = d / (1 - Math.abs(2 * l - 1))
-            if (s < 0.15) continue // skip desaturated
-
-            let h
-            if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6
-            else if (max === g) h = ((b - r) / d + 2) / 6
-            else h = ((r - g) / d + 4) / 6
-
-            const bi = Math.min(Math.floor(h * bucketCount), bucketCount - 1)
-            // Weight by saturation so vivid pixels win
-            const weight = s * s
-            buckets[bi].count += weight
-            buckets[bi].hueSum += h * weight
-            buckets[bi].satSum += s * weight
-            buckets[bi].lightSum += l * weight
+        // Pick candidate with highest weight (count * saturation^2)
+        let best = _candidates[0]
+        for (let i = 1; i < _candidates.length; i++) {
+            if (_candidates[i].weight > best.weight) {
+                best = _candidates[i]
+            }
         }
 
-        // Find the most populated bucket
-        let best = 0
-        for (let i = 1; i < bucketCount; i++) {
-            if (buckets[i].count > buckets[best].count) best = i
-        }
-
-        const b = buckets[best]
-        if (b.count === 0) {
-            return "#f2ef45" // fallback
-        }
-
-        const avgHue = b.hueSum / b.count
-        // Boost saturation and pick a pleasant lightness for accent use
-        const accentSat = Math.min(0.75, (b.satSum / b.count) * 1.3)
+        // Boost saturation and fix lightness for accent use
+        const accentSat = Math.min(0.75, best.s * 1.3)
         const accentLight = 0.65
+        const color = hslToHex(best.h, accentSat, accentLight)
 
-        return hslToHex(avgHue, accentSat, accentLight)
+        console.log("[WallpaperAccent] Extracted color:", color)
+        Globals.accentColor = color
+        _candidates = []
     }
 
     function hslToHex(h, s, l) {
