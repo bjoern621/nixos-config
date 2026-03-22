@@ -45,7 +45,7 @@ Item {
 
         Label {
             id: pctLabel
-            text: sliderMenu.currentVolume + "%"
+            text: sliderMenu.currentVolume + " %"
             anchors {
                 right: parent.right
                 rightMargin: Spacing.spacing16
