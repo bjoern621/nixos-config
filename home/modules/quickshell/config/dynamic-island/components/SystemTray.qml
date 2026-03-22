@@ -122,19 +122,43 @@ Item {
                 }
 
                 // Tooltip
-                property bool showTooltip: iconMouse.containsMouse && iconItem.modelData.tooltipTitle !== ""
+                property bool wantTooltip: iconMouse.containsMouse && iconItem.modelData.tooltipTitle !== "" && !internal.menuOpen
+                property bool tooltipVisible: false
+
+                onWantTooltipChanged: {
+                    if (wantTooltip) {
+                        tooltipShowTimer.restart()
+                        tooltipHideTimer.stop()
+                    } else {
+                        tooltipShowTimer.stop()
+                        tooltipHideTimer.restart()
+                    }
+                }
+
+                Timer {
+                    id: tooltipShowTimer
+                    interval: 250
+                    onTriggered: iconItem.tooltipVisible = true
+                }
+
+                Timer {
+                    id: tooltipHideTimer
+                    interval: 200
+                    onTriggered: iconItem.tooltipVisible = false
+                }
 
                 Rectangle {
-                    visible: iconItem.showTooltip && !internal.menuOpen
+                    id: tooltipRect
+                    visible: iconItem.tooltipVisible
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.bottom
                     anchors.topMargin: Spacing.spacing4
-                    width: tooltipText.implicitWidth + Spacing.spacing12
+                    width: tooltipText.implicitWidth + Spacing.spacing16
                     height: tooltipText.implicitHeight + Spacing.spacing8
-                    radius: Spacing.spacing6
-                    color: Colors.osdPillBackground
+                    radius: height / 2
+                    color: Colors.pillBackground
                     border.width: 1
-                    border.color: Colors.osdPillBorder
+                    border.color: Colors.pillBorder
                     z: 100
 
                     Text {
