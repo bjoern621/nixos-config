@@ -18,7 +18,7 @@ let
       local used_workspaces
       used_workspaces=$(${hyprctl} clients -j | ${jq} -r '.[].workspace.id' | sort -un)
 
-      for i in 1 3 4 5 6 7 8 9 10; do
+      for i in 4 5 6 7 8 9 10; do
         if ! echo "$used_workspaces" | grep -qx "$i"; then
           echo "$i"
           return
