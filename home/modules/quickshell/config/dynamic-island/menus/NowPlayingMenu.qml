@@ -22,6 +22,14 @@ Item {
     // Local position cache, updated by timer
     property real currentPosition: root.hasPlayer ? root.player.position : 0
 
+    // Suppresses externalValue updates briefly after seeking to prevent snap-back
+    property bool seekInProgress: false
+    Timer {
+        id: seekGuardTimer
+        interval: 500
+        onTriggered: root.seekInProgress = false
+    }
+
     // Update position while playing
     Timer {
         id: positionTimer
@@ -31,7 +39,9 @@ Item {
         onTriggered: {
             if (root.hasPlayer && root.player.positionSupported) {
                 root.currentPosition = root.player.position;
-                positionSlider.externalValue = root.player.length > 0 ? root.player.position / root.player.length : 0;
+                if (!root.seekInProgress) {
+                    positionSlider.externalValue = root.player.length > 0 ? root.player.position / root.player.length : 0;
+                }
             }
         }
     }
@@ -213,6 +223,9 @@ Item {
                         if (root.hasPlayer && root.player.canSeek && root.player.length > 0) {
                             root.player.position = newValue * root.player.length;
                             root.currentPosition = newValue * root.player.length;
+                            positionSlider.externalValue = newValue;
+                            root.seekInProgress = true;
+                            seekGuardTimer.restart();
                         }
                     }
                 }
