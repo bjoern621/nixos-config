@@ -51,6 +51,8 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 The authoritative reference for window rules and layer rules is:
 https://wiki.hypr.land/Configuring/Window-Rules/
 
+**IMPORTANT**: The window/layer rule syntax changes frequently. Before writing or modifying any window rules or layer rules, **always fetch the latest syntax** from the wiki using `WebFetch` on https://wiki.hypr.land/Configuring/Window-Rules/. Do not rely on the examples below — they may be outdated.
+
 - Key layer rule effects: `blur on`, `ignore_alpha <float>`, `blur_popups on`, `xray on`, `dim_around on`.
 - Anonymous syntax: `layerrule = <effect>, match:namespace <regex>`
 - Named syntax uses a block: `layerrule { name = …; <effect> = …; match:namespace = …; }`
