@@ -18,15 +18,20 @@ Item {
     property int maxHistory: 8
     property bool queueExpanded: false
 
-    // Update position every second while playing
+    // Local position cache, updated by timer
+    property real currentPosition: root.hasPlayer ? root.player.position : 0
+
+    // Update position while playing
     Timer {
         id: positionTimer
-        interval: 1000
+        interval: 250
         repeat: true
         running: root.isPlaying
         onTriggered: {
-            if (root.hasPlayer && root.player.positionSupported)
-                positionSlider.externalValue = root.player.length > 0 ? root.player.position / root.player.length : 0
+            if (root.hasPlayer && root.player.positionSupported) {
+                root.currentPosition = root.player.position;
+                positionSlider.externalValue = root.player.length > 0 ? root.player.position / root.player.length : 0;
+            }
         }
     }
 
@@ -197,8 +202,10 @@ Item {
                     externalValue: root.hasPlayer && root.player.length > 0 ? root.player.position / root.player.length : 0
 
                     onMoved: (newValue) => {
-                        if (root.hasPlayer && root.player.canSeek && root.player.length > 0)
+                        if (root.hasPlayer && root.player.canSeek && root.player.length > 0) {
                             root.player.position = newValue * root.player.length;
+                            root.currentPosition = newValue * root.player.length;
+                        }
                     }
                 }
 
@@ -208,7 +215,7 @@ Item {
 
                     Label {
                         id: elapsedLabel
-                        text: root.hasPlayer ? root.formatTime(root.player.position) : "0:00"
+                        text: root.hasPlayer ? root.formatTime(root.currentPosition) : "0:00"
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -233,7 +240,7 @@ Item {
                 // Previous
                 Item {
                     id: prevBtn
-                    width: 32; height: 32
+                    width: 40; height: 40
 
                     property bool hovered: prevHover.hovered
                     property bool pressed: prevTap.pressed
@@ -244,21 +251,22 @@ Item {
                         color: prevBtn.pressed ? Colors.hoverItemPressed
                              : prevBtn.hovered ? Colors.hoverItemHovered
                              : "transparent"
+                        border.color: prevBtn.hovered || prevBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
                     Text {
                         anchors.centerIn: parent
                         text: "\uf048"
                         font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize14
+                        font.pixelSize: Typography.fontSize20
                         color: root.hasPlayer && root.player.canGoPrevious ? Colors.textColor : Colors.textColorMuted
                     }
 
                     HoverHandler { id: prevHover; cursorShape: Qt.PointingHandCursor }
                     TapHandler { id: prevTap; onTapped: { if (root.hasPlayer) root.player.previous() } }
 
-                    scale: prevTap.pressed ? 0.85 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                    scale: prevTap.pressed ? 0.82 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutBack } }
                 }
 
                 // Play/Pause
@@ -296,7 +304,7 @@ Item {
                 // Next
                 Item {
                     id: nextBtn
-                    width: 32; height: 32
+                    width: 40; height: 40
 
                     property bool hovered: nextHover.hovered
                     property bool pressed: nextTap.pressed
@@ -307,21 +315,22 @@ Item {
                         color: nextBtn.pressed ? Colors.hoverItemPressed
                              : nextBtn.hovered ? Colors.hoverItemHovered
                              : "transparent"
+                        border.color: nextBtn.hovered || nextBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
                     Text {
                         anchors.centerIn: parent
                         text: "\uf051"
                         font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize14
+                        font.pixelSize: Typography.fontSize20
                         color: root.hasPlayer && root.player.canGoNext ? Colors.textColor : Colors.textColorMuted
                     }
 
                     HoverHandler { id: nextHover; cursorShape: Qt.PointingHandCursor }
                     TapHandler { id: nextTap; onTapped: { if (root.hasPlayer) root.player.next() } }
 
-                    scale: nextTap.pressed ? 0.85 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                    scale: nextTap.pressed ? 0.82 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutBack } }
                 }
             }
 
