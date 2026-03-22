@@ -62,6 +62,7 @@ Variants {
             anchors.right: parent.right
             anchors.topMargin: Spacing.spacing8
             anchors.rightMargin: Spacing.spacing8
+            transformOriginValue: Item.TopRight
 
             PowerMenu {
                 id: powerMenuView

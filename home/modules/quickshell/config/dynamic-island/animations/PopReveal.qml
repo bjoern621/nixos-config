@@ -8,6 +8,7 @@ Item {
     property int showDuration: 150
     property int hideDuration: 150
     property bool showing: false
+    property int transformOriginValue: Item.Top
 
     signal shown()
     signal hidden()
@@ -15,7 +16,7 @@ Item {
     opacity: 0
     visible: opacity > 0
     scale: 0.96
-    transformOrigin: Item.Top
+    transformOrigin: root.transformOriginValue
 
     transform: Translate {
         id: slideTransform

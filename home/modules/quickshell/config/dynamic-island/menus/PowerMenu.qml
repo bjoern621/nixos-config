@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "../"
+import "../animations"
 
 Item {
     id: root
@@ -54,6 +55,9 @@ Item {
                 Item {
                     width: root.buttonWidth
                     height: root.buttonHeight
+                    scale: buttonTapHandler.pressed ? 0.96 : 1.0
+
+                    SquishBehavior on scale {}
 
                     Rectangle {
                         anchors.fill: parent
