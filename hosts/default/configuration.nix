@@ -22,6 +22,7 @@
     ../../modules/quickshell.nix
     ../../modules/hibernate.nix
     ../../modules/nix-ld.nix
+    ../../modules/auto-update.nix
   ];
 
   # Bootloader.
@@ -149,5 +150,13 @@
       size = 32;
       resumeOffset = 100587520;
     };
+  };
+
+  # Automatic weekly updates using 7-day delayed stable strategy
+  # Updates all flake inputs to revisions that have "baked" for at least a week
+  services.nixos-auto-update = {
+    enable = true; # Automatic weekly updates enabled
+    delayDays = 7; # Only apply updates that are 7+ days old
+    schedule = "Mon 03:00";
   };
 }
