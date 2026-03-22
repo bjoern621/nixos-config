@@ -37,6 +37,14 @@ let
       commits_json=$(curl -s \
         "https://api.github.com/repos/$owner_repo/commits?sha=$branch&until=$THRESHOLD_DATE&per_page=1")
 
+      # Check for API error (rate limit, etc.)
+      if echo "$commits_json" | ${pkgs.jq}/bin/jq -e '.message // empty' >/dev/null 2>&1; then
+        local api_message
+        api_message=$(echo "$commits_json" | ${pkgs.jq}/bin/jq -r '.message')
+        echo "  API error: $api_message" >&2
+        return 1
+      fi
+
       echo "$commits_json" | ${pkgs.jq}/bin/jq -r '.[0].sha // empty'
     }
 
@@ -54,6 +62,12 @@ let
       local sha="$2"
       local commits_json
       commits_json=$(curl -s "https://api.github.com/repos/$owner_repo/commits/$sha")
+
+      # Check for API error
+      if echo "$commits_json" | ${pkgs.jq}/bin/jq -e '.message // empty' >/dev/null 2>&1; then
+        return 1
+      fi
+
       echo "$commits_json" | ${pkgs.jq}/bin/jq -r '.commit.committer.date // empty' 2>/dev/null || true
     }
 
@@ -63,7 +77,7 @@ let
       ["home-manager"]="nix-community/home-manager:master"
       ["hyprland"]="hyprwm/Hyprland:main"
       ["quickshell"]="quickshell-mirror/quickshell:master"
-      ["nix-search-tv"]="3timeslazy/nix-search-tv:master"
+      ["nix-search-tv"]="3timeslazy/nix-search-tv:main"
       ["caelestia-shell"]="caelestia-dots/shell:main"
     )
 
@@ -76,11 +90,15 @@ let
 
       echo "Checking $input_name ($owner_repo @ $branch)..."
 
-      target_sha=$(get_delayed_revision "$owner_repo" "$branch")
+      target_sha=$(get_delayed_revision "$owner_repo" "$branch") || {
+        echo "  Skipping: failed to fetch revision"
+        SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+        continue
+      }
 
       if [[ -z "$target_sha" ]]; then
         echo "  Skipping: no suitable revision found"
-        ((SKIPPED_COUNT++))
+        SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
         continue
       fi
 
@@ -94,26 +112,26 @@ let
 
         if [[ "$current_sha" == "$target_sha" ]]; then
           echo "  Already at target revision: $target_sha_short"
-          ((SKIPPED_COUNT++))
+          SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
           continue
         fi
 
         # Compare commit dates to detect downgrade
-        current_date=$(get_commit_date "$owner_repo" "$current_sha")
-        target_date=$(get_commit_date "$owner_repo" "$target_sha")
+        current_date=$(get_commit_date "$owner_repo" "$current_sha") || true
+        target_date=$(get_commit_date "$owner_repo" "$target_sha") || true
 
         if [[ -n "$current_date" && -n "$target_date" ]]; then
           if [[ "$current_date" > "$target_date" ]]; then
             echo "  Warning: current revision ($current_sha_short from $current_date) is NEWER than target"
             echo "  Downgrading to $target_sha_short (from $target_date) for stability"
-            ((DOWNGRADE_COUNT++))
+            DOWNGRADE_COUNT=$((DOWNGRADE_COUNT + 1))
           fi
         fi
       fi
 
-      echo "  Updating to revision: $target_sha_short"
-      sudo nix flake update "$input_name" --revision "$target_sha"
-      ((UPDATED_COUNT++))
+      echo "  Updating to revision: $target_sha_short (from $target_date)"
+      sudo nix flake update --override-input "$input_name" "github:$owner_repo/$target_sha"
+      UPDATED_COUNT=$((UPDATED_COUNT + 1))
     done
 
     echo ""
