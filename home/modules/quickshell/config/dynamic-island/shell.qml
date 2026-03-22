@@ -2,6 +2,7 @@
 import Quickshell
 
 ShellRoot {
+    WallpaperAccent {}
     ScreenCorners {}
     Bar {}
     PowerCorner {}

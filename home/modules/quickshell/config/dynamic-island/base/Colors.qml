@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import "../"
 
 QtObject {
     // Text colors
@@ -15,7 +16,7 @@ QtObject {
 
     // Accent / progress colors
     readonly property color calendarToday: "#d5071b"
-    readonly property color accentColor: '#f2ef45'
+    readonly property color accentColor: Globals.accentColor
     readonly property color progressBackground: Qt.rgba(1, 1, 1, 0.12)
     readonly property color progressMuted: "#666666"
 }
