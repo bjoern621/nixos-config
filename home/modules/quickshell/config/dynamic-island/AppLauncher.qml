@@ -161,7 +161,7 @@ Scope {
                 Behavior on scale {
                     NumberAnimation { duration: 120; easing.type: launcherScope.launcherVisible ? Easing.OutCubic : Easing.InCubic }
                 }
-
+ 
                 Column {
                     id: contentColumn
                     anchors {
@@ -305,8 +305,12 @@ Scope {
                                     width: parent.width - Typography.fontSize24 - Spacing.spacing12 - 2 * Spacing.spacing12
                                     spacing: Spacing.spacing2
 
-                                    Label {
+                                    Text {
                                         text: modelData.name
+                                        font.family: Typography.fontFamily
+                                        font.pixelSize: Typography.fontSize14
+                                        font.weight: Font.Bold
+                                        color: Colors.textColor
                                         width: parent.width
                                         elide: Text.ElideRight
                                     }
