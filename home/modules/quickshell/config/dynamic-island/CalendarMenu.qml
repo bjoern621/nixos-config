@@ -65,6 +65,9 @@ Item {
 
                     property bool hovered: prevYearMouse.containsMouse
 
+                    scale: prevYearMouse.pressed ? 0.85 : 1.0
+                    SquishBehavior on scale {}
+
                     Rectangle {
                         anchors.centerIn: parent
                         width: parent.width
@@ -98,6 +101,9 @@ Item {
 
                     property bool canNavigate: root.displayYear !== root.todayYear
                     property bool hovered: yearMouse.containsMouse && canNavigate
+
+                    scale: yearMouse.pressed && canNavigate ? 0.85 : 1.0
+                    SquishBehavior on scale {}
 
                     Rectangle {
                         anchors.centerIn: parent
@@ -134,6 +140,9 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
 
                     property bool hovered: nextYearMouse.containsMouse
+
+                    scale: nextYearMouse.pressed ? 0.85 : 1.0
+                    SquishBehavior on scale {}
 
                     Rectangle {
                         anchors.centerIn: parent
@@ -282,6 +291,9 @@ Item {
                                         height: root.dayCellSize
 
                                         property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
+
+                                        scale: dayCellMouse.pressed && dayCell.isValidDay ? 0.85 : 1.0
+                                        SquishBehavior on scale {}
 
                                         Rectangle {
                                             anchors.centerIn: parent

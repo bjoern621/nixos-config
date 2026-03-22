@@ -97,6 +97,8 @@ Interactive items should change both **background** and **border** on hover. The
 
 All animations should feel **playful, squishy, and smooth**. The overall approach: hover feedback is instant, press/click feedback is squishy (scale down), and show/hide transitions use a coordinated fade + slide + scale pop.
 
+**Always use reusable animation components** (e.g. `SquishBehavior`, `PopReveal`) instead of writing inline `Behavior on <prop> { NumberAnimation { ... } }` blocks. If a reusable component exists for a pattern, use it.
+
 **Easing reference**:
 
 | Easing | Use for |
@@ -128,24 +130,24 @@ color: pressed ? Colors.hoverItemPressed
 
 #### Press/click: squishy scale-down
 
-Every clickable element should scale down on press for a tactile "squishy" feel. Use `Behavior on scale` with short duration:
+Every clickable element should scale down on press for a tactile "squishy" feel. Use the **`SquishBehavior`** reusable component — never write inline `Behavior on scale` with a raw `NumberAnimation`:
 
 ```qml
 scale: tapHandler.pressed ? 0.85 : 1.0
-Behavior on scale {
-    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
-}
+SquishBehavior on scale {}
+// For bouncy primary actions (play/pause):
+SquishBehavior on scale { bouncy: true; duration: 120 }
 ```
+
+`SquishBehavior` properties: `duration` (default 100ms), `bouncy` (default false — uses `OutBack` when true).
 
 **Scale values by element size** (smaller elements scale more):
 
-| Element | Pressed scale | Duration | Easing |
+| Element | Pressed scale | `bouncy` | `duration` |
 | --- | --- | --- | --- |
-| Small icon buttons (32px) | `0.85` | 100ms | `OutCubic` |
-| Medium buttons (40px), play/pause | `0.82` | 120ms | `OutBack` |
-| Large interactive items (list rows, toggles) | `0.96`–`0.97` | 100ms | `OutCubic` |
-
-Use `OutBack` for the primary action (play/pause) to give it extra bounciness. Use `OutCubic` for everything else.
+| Small icon buttons (32px) | `0.85` | `false` | 100ms (default) |
+| Medium buttons (40px), play/pause | `0.82` | `true` | 120ms |
+| Large interactive items (list rows, toggles) | `0.96`–`0.97` | `false` | 100ms (default) |
 
 #### Show/hide: fade + slide + scale pop
 

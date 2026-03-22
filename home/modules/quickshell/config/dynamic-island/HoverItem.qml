@@ -66,6 +66,9 @@ Item {
         }
     }
 
+    scale: tapHandler.pressed ? 0.85 : 1.0
+    SquishBehavior on scale {}
+
     Rectangle {
         id: background
         anchors.fill: parent
