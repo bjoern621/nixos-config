@@ -25,6 +25,7 @@
     ./settings/default.nix
     ./mouse-accel.nix
     ./screenshot.nix
+    ./exclusive-workspace.nix
   ];
 
   # Auto-start Hyprland uwsm after login
