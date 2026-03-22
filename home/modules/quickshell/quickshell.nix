@@ -22,11 +22,22 @@
   xdg.configFile."quickshell".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/nixos-config/home/modules/quickshell/config/dynamic-island";
 
-  # Autostart quickshell
-  wayland.windowManager.hyprland.settings.exec-once = [
-    "quickshell"
-    # "caelestia-shell"
-  ];
+  # Autostart quickshell as a systemd user service (UWSM-managed session)
+  systemd.user.services.quickshell = {
+    Unit = {
+      Description = "Quickshell";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/quickshell";
+      Restart = "on-failure";
+      RestartSec = 1;
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
 
   # Hyprland layerrule for quickshell blur effect.
   # ignore_alpha 0.1 skips blur on pixels with alpha <= 0.1, so the transparent
