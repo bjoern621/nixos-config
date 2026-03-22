@@ -7,7 +7,6 @@ QtObject {
     readonly property color textColorMuted: "#aaaaaa"
 
     // Background colors
-    readonly property color backgroundColor: "#111111"
     readonly property color pillBackground: Qt.rgba(0.3, 0.3, 0.3, 0.01)
     readonly property color pillBorder: Qt.rgba(1, 1, 1, 0.2)
     readonly property color separatorColor: Qt.rgba(1, 1, 1, 0.2)
