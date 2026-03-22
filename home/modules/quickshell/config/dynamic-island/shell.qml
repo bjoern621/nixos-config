@@ -7,4 +7,6 @@ ShellRoot {
     PowerCorner {}
     VolumeOsd {}
     BrightnessOsd {}
+    AppLauncher {}
+    ClipboardHistory {}
 }

@@ -1,15 +1,5 @@
 { config, pkgs, ... }:
 
-let
-  # Define command parts for readability
-  listHistory = "cliphist list";
-  showMenu = "rofi -dmenu -display-columns 2";
-  decodeEntry = "cliphist decode";
-  copyToClipboard = "wl-copy";
-  pasteCurrentClipboard = "wtype -M ctrl -M shift v -m shift -m ctrl";
-  closeMenu = "pkill rofi";
-  clipboardCmd = "${closeMenu} || (${listHistory} | ${showMenu} | ${decodeEntry} | ${copyToClipboard} && ${pasteCurrentClipboard})";
-in
 {
   # See also: https://wiki.hypr.land/Useful-Utilities/Clipboard-Managers/
 
@@ -25,10 +15,10 @@ in
     "wl-paste -t image --watch cliphist store"
   ];
 
-  # Bind SUPER + V to clipboard history (shown in rofi)
-  # Selecting an entry copies it again to the clipboard and pastes it at the cursor using Ctrl+Shift+V (works in most applications and terminals)
-  # wtype: -M key holds the modifier, -m key releases it. So -M ctrl -M shift v -m shift -m ctrl simulates Ctrl+Shift+V.
+  # Bind SUPER + V to clipboard history (shown in quickshell)
+  # The clipboard menu uses IPC to toggle visibility within the already-running quickshell process.
+  # Selecting an entry copies it again to the clipboard and pastes it at the cursor using Ctrl+Shift+V.
   wayland.windowManager.hyprland.settings.bind = [
-    "SUPER, V, exec, ${clipboardCmd}"
+    "SUPER, V, exec, qs ipc call clipboard toggle"
   ];
 }

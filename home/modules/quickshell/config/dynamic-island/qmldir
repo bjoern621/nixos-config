@@ -18,6 +18,8 @@ TrayContextMenu 1.0 TrayContextMenu.qml
 ScreenCorners 1.0 ScreenCorners.qml
 Bar 1.0 Bar.qml
 PowerCorner 1.0 PowerCorner.qml
+AppLauncher 1.0 AppLauncher.qml
+ClipboardHistory 1.0 ClipboardHistory.qml
 Battery 1.0 components/Battery.qml
 VolumeIcon 1.0 components/VolumeIcon.qml
 DateTime 1.0 components/DateTime.qml
