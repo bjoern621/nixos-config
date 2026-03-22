@@ -55,7 +55,7 @@ Scope {
         }
 
         onExited: (code, status) => {
-            clipScope.filteredEntries = clipScope.allEntries.slice(0, 50)
+            clipScope.filteredEntries = clipScope.allEntries
         }
     }
 
@@ -192,7 +192,7 @@ Scope {
                                 onTextChanged: {
                                     const query = text.toLowerCase()
                                     if (query === "") {
-                                        clipScope.filteredEntries = clipScope.allEntries.slice(0, 50)
+                                        clipScope.filteredEntries = clipScope.allEntries
                                     } else {
                                         let scored = []
                                         for (let i = 0; i < clipScope.allEntries.length; i++) {
@@ -202,7 +202,7 @@ Scope {
                                         }
                                         scored.sort((a, b) => b.score - a.score)
                                         let results = []
-                                        for (let i = 0; i < scored.length && i < 50; i++) results.push(scored[i].entry)
+                                        for (let i = 0; i < scored.length; i++) results.push(scored[i].entry)
                                         clipScope.filteredEntries = results
                                     }
                                     clipList.currentIndex = 0
