@@ -1,34 +1,39 @@
-singleton Globals 1.0 Globals.qml
-singleton Colors 1.0 Colors.qml
-singleton Typography 1.0 Typography.qml
-singleton Spacing 1.0 Spacing.qml
-Label 1.0 Label.qml
-PopReveal 1.0 PopReveal.qml
-SquishBehavior 1.0 SquishBehavior.qml
-ContentSlide 1.0 ContentSlide.qml
-ExpandSection 1.0 ExpandSection.qml
-OsdWindow 1.0 OsdWindow.qml
-VolumeOsd 1.0 VolumeOsd.qml
-BrightnessOsd 1.0 BrightnessOsd.qml
-Icon 1.0 Icon.qml
-HoverItem 1.0 HoverItem.qml
-HoverMenu 1.0 HoverMenu.qml
-VolumeSliderMenu 1.0 VolumeSliderMenu.qml
-CalendarMenu 1.0 CalendarMenu.qml
-BatteryMenu 1.0 BatteryMenu.qml
-NowPlayingMenu 1.0 NowPlayingMenu.qml
-PowerMenu 1.0 PowerMenu.qml
-StepSlider 1.0 StepSlider.qml
-TrayContextMenu 1.0 TrayContextMenu.qml
-ScreenCorners 1.0 ScreenCorners.qml
-Bar 1.0 Bar.qml
-PowerCorner 1.0 PowerCorner.qml
-AppLauncher 1.0 AppLauncher.qml
-ClipboardHistory 1.0 ClipboardHistory.qml
-Battery 1.0 components/Battery.qml
-VolumeIcon 1.0 components/VolumeIcon.qml
-DateTime 1.0 components/DateTime.qml
-WorkspaceIndicator 1.0 components/WorkspaceIndicator.qml
-SystemTray 1.0 components/SystemTray.qml
-NowPlaying 1.0 components/NowPlaying.qml
-MusicBars 1.0 components/MusicBars.qml
+singleton Globals 1.0 base/Globals.qml
+singleton Colors 1.0 base/Colors.qml
+singleton Typography 1.0 base/Typography.qml
+singleton Spacing 1.0 base/Spacing.qml
+Label 1.0 base/Label.qml
+Icon 1.0 base/Icon.qml
+
+PopReveal 1.0 animations/PopReveal.qml
+SquishBehavior 1.0 animations/SquishBehavior.qml
+ContentSlide 1.0 animations/ContentSlide.qml
+ExpandSection 1.0 animations/ExpandSection.qml
+
+HoverItem 1.0 widgets/HoverItem.qml
+HoverMenu 1.0 widgets/HoverMenu.qml
+StepSlider 1.0 widgets/StepSlider.qml
+
+VolumeSliderMenu 1.0 menus/VolumeSliderMenu.qml
+CalendarMenu 1.0 menus/CalendarMenu.qml
+BatteryMenu 1.0 menus/BatteryMenu.qml
+NowPlayingMenu 1.0 menus/NowPlayingMenu.qml
+PowerMenu 1.0 menus/PowerMenu.qml
+TrayContextMenu 1.0 menus/TrayContextMenu.qml
+
+VolumeOsd 1.0 osd/VolumeOsd.qml
+BrightnessOsd 1.0 osd/BrightnessOsd.qml
+
+Bar 1.0 windows/Bar.qml
+ScreenCorners 1.0 windows/ScreenCorners.qml
+PowerCorner 1.0 windows/PowerCorner.qml
+AppLauncher 1.0 windows/AppLauncher.qml
+ClipboardHistory 1.0 windows/ClipboardHistory.qml
+
+Battery 1.0 bar/Battery.qml
+VolumeIcon 1.0 bar/VolumeIcon.qml
+DateTime 1.0 bar/DateTime.qml
+WorkspaceIndicator 1.0 bar/WorkspaceIndicator.qml
+SystemTray 1.0 bar/SystemTray.qml
+NowPlaying 1.0 bar/NowPlaying.qml
+MusicBars 1.0 bar/MusicBars.qml

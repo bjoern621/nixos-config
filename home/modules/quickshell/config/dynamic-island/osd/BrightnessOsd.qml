@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
+import "../"
 
 // Brightness OSD – polls brightnessctl to detect changes.
 Scope {

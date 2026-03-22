@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import QtQuick
+import "../"
 
 // Volume OSD using Quickshell.Services.Pipewire.
 // PwObjectTracker keeps Pipewire.defaultAudioSink alive and data current.

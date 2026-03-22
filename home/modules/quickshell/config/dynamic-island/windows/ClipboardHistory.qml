@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import QtQuick.Controls
+import "../"
 
 Scope {
     id: clipScope

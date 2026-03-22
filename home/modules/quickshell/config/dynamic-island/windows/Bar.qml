@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import QtQuick
+import "../"
 
 Variants {
     model: Quickshell.screens

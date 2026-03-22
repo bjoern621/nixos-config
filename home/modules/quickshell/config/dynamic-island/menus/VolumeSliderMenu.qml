@@ -1,5 +1,6 @@
 import Quickshell.Services.Pipewire
 import QtQuick
+import "../"
 
 Item {
     id: sliderMenu
