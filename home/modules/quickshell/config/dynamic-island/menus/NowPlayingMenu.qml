@@ -38,8 +38,10 @@ Item {
         running: root.isPlaying
         onTriggered: {
             if (root.hasPlayer && root.player.positionSupported) {
-                root.currentPosition = root.player.position;
-                if (!root.seekInProgress) {
+                if (!positionSlider.pressed) {
+                    root.currentPosition = root.player.position;
+                }
+                if (!root.seekInProgress && !positionSlider.pressed) {
                     positionSlider.externalValue = root.player.length > 0 ? root.player.position / root.player.length : 0;
                 }
             }
@@ -212,6 +214,12 @@ Item {
                     liveUpdate: false
                     handleVerticalSize: Spacing.spacing12
                     externalValue: root.hasPlayer && root.player.length > 0 ? root.player.position / root.player.length : 0
+
+                    onPressedChanged: {
+                        if (pressed && root.hasPlayer && root.player.length > 0) {
+                            root.currentPosition = value * root.player.length;
+                        }
+                    }
 
                     onValueChanged: {
                         if (pressed && root.hasPlayer && root.player.length > 0) {
