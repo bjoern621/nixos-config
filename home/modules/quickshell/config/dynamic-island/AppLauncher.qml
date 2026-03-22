@@ -10,31 +10,29 @@ Scope {
 
     property bool launcherVisible: false
 
-    function fuzzyMatch(text, query) {
-        text = text.toLowerCase()
-        let qi = 0
-        for (let ti = 0; ti < text.length && qi < query.length; ti++) {
-            if (text[ti] === query[qi]) qi++
-        }
-        return qi === query.length
-    } 
+    property var appIndexMap: ({})
 
-    function fuzzyScore(text, query) {
-        text = text.toLowerCase()
-        let score = 0
-        let qi = 0
-        let lastMatchIdx = -1
-        for (let ti = 0; ti < text.length && qi < query.length; ti++) {
-            if (text[ti] === query[qi]) {
-                score += (lastMatchIdx === ti - 1) ? 10 : 1
-                if (ti === 0 || text[ti - 1] === ' ' || text[ti - 1] === '-') score += 5
-                lastMatchIdx = ti
-                qi++
+    Process {
+        id: fzfProc
+        command: ["bash", "-c", "printf '%s\\n' \"$APP_LIST\" | fzf --filter=\"$QUERY\""]
+        environment: ({ APP_LIST: "", QUERY: "" })
+        running: false
+
+        property var results: []
+
+        stdout: SplitParser {
+            onRead: data => {
+                const line = data.trim()
+                if (line.length > 0 && line in launcherScope.appIndexMap) {
+                    fzfProc.results.push(launcherScope.appIndexMap[line])
+                }
             }
         }
-        if (qi < query.length) return -1
-        if (text.startsWith(query)) score += 20
-        return score
+
+        onExited: (code, status) => {
+            launcherWindow.filteredApps = fzfProc.results.slice(0, 50)
+            resultsList.currentIndex = 0
+        }
     }
 
     IpcHandler {
@@ -95,24 +93,18 @@ Scope {
                 return
             }
 
-            let scored = []
+            let lines = []
+            let indexMap = {}
             for (let i = 0; i < allApps.length; i++) {
-                const app = allApps[i]
-                let best = launcherScope.fuzzyScore(app.name, query)
-                if (app.comment) best = Math.max(best, launcherScope.fuzzyScore(app.comment, query) * 0.5)
-                if (app.keywords) {
-                    for (let k = 0; k < app.keywords.length; k++) {
-                        best = Math.max(best, launcherScope.fuzzyScore(app.keywords[k], query) * 0.7)
-                    }
-                }
-                if (best > 0) scored.push({ app: app, score: best })
+                const name = allApps[i].name
+                lines.push(name)
+                indexMap[name] = allApps[i]
             }
+            launcherScope.appIndexMap = indexMap
 
-            scored.sort((a, b) => b.score - a.score)
-            let results = []
-            for (let i = 0; i < scored.length && i < 50; i++) results.push(scored[i].app)
-            filteredApps = results
-            resultsList.currentIndex = 0
+            fzfProc.results = []
+            fzfProc.environment = { APP_LIST: lines.join("\n"), QUERY: query }
+            fzfProc.running = true
         }
 
         function launchApp(app) {

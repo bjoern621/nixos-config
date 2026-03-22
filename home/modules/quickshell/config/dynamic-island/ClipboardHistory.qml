@@ -12,22 +12,51 @@ Scope {
     property var allEntries: []
     property var filteredEntries: []
 
-    function fuzzyScore(text, query) {
-        text = text.toLowerCase()
-        let score = 0
-        let qi = 0
-        let lastMatchIdx = -1
-        for (let ti = 0; ti < text.length && qi < query.length; ti++) {
-            if (text[ti] === query[qi]) {
-                score += (lastMatchIdx === ti - 1) ? 10 : 1
-                if (ti === 0 || text[ti - 1] === ' ' || text[ti - 1] === '-') score += 5
-                lastMatchIdx = ti
-                qi++
+    Process {
+        id: fzfProc
+        command: ["bash", "-c", "printf '%s\\n' \"$CLIP_LIST\" | fzf --filter=\"$QUERY\""]
+        environment: ({ CLIP_LIST: "", QUERY: "" })
+        running: false
+
+        property var results: []
+
+        stdout: SplitParser {
+            onRead: data => {
+                const line = data.trim()
+                if (line.length > 0 && line in clipScope.entryIndexMap) {
+                    fzfProc.results.push(clipScope.entryIndexMap[line])
+                }
             }
         }
-        if (qi < query.length) return -1
-        if (text.startsWith(query)) score += 20
-        return score
+
+        onExited: (code, status) => {
+            clipScope.filteredEntries = fzfProc.results
+            clipList.currentIndex = 0
+        }
+    }
+
+    property var entryIndexMap: ({})
+
+    function updateFilter() {
+        const query = clipSearch.text.toLowerCase()
+        if (query === "") {
+            filteredEntries = allEntries
+            clipList.currentIndex = 0
+            return
+        }
+
+        let lines = []
+        let indexMap = {}
+        for (let i = 0; i < allEntries.length; i++) {
+            const key = i + "\t" + allEntries[i].display
+            lines.push(key)
+            indexMap[key] = allEntries[i]
+        }
+        entryIndexMap = indexMap
+
+        fzfProc.results = []
+        fzfProc.environment = { CLIP_LIST: lines.join("\n"), QUERY: query }
+        fzfProc.running = true
     }
 
     function selectEntry(entry) {
@@ -189,24 +218,7 @@ Scope {
                                     verticalAlignment: Text.AlignVCenter
                                 }
 
-                                onTextChanged: {
-                                    const query = text.toLowerCase()
-                                    if (query === "") {
-                                        clipScope.filteredEntries = clipScope.allEntries
-                                    } else {
-                                        let scored = []
-                                        for (let i = 0; i < clipScope.allEntries.length; i++) {
-                                            const entry = clipScope.allEntries[i]
-                                            const s = clipScope.fuzzyScore(entry.display, query)
-                                            if (s > 0) scored.push({ entry: entry, score: s })
-                                        }
-                                        scored.sort((a, b) => b.score - a.score)
-                                        let results = []
-                                        for (let i = 0; i < scored.length; i++) results.push(scored[i].entry)
-                                        clipScope.filteredEntries = results
-                                    }
-                                    clipList.currentIndex = 0
-                                }
+                                onTextChanged: clipScope.updateFilter()
 
                                 Keys.onEscapePressed: clipScope.clipVisible = false
                                 Keys.onReturnPressed: {
