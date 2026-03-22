@@ -31,9 +31,14 @@
       After = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/quickshell";
+      ExecStart = "${
+        inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default
+      }/bin/quickshell";
       Restart = "on-failure";
       RestartSec = 1;
+      # Without a platform theme, Qt defaults to hicolor icons.
+      # gtk3 makes Qt read the icon theme from GTK settings (gtk.iconTheme).
+      Environment = [ "QT_QPA_PLATFORMTHEME=gtk3" ];
     };
     Install = {
       WantedBy = [ "graphical-session.target" ];

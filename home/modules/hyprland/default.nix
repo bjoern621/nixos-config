@@ -45,6 +45,14 @@
   xdg.configFile."uwsm/env".source =
     "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
+  # Hide uuctl (from uwsm, enabled in modules/hyprland.nix) from the app launcher
+  xdg.desktopEntries."uuctl" = {
+    name = "uuctl";
+    exec = "uuctl";
+    noDisplay = true;
+    type = "Application";
+  };
+
   wayland.windowManager.hyprland = {
     enable = true;
 
