@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Services.Pipewire
+import Quickshell.Services.Mpris
 import QtQuick
 
 Variants {
@@ -21,13 +22,28 @@ Variants {
 
         property bool isHovered: false
 
+        // MPRIS player lookup: prefer playing, fall back to paused
+        readonly property var mprisPlayer: {
+            const players = Mpris.players.values;
+            let paused = null;
+            for (let i = 0; i < players.length; i++) {
+                const p = players[i];
+                if (p.playbackState === MprisPlaybackState.Playing)
+                    return p;
+                if (!paused && p.playbackState === MprisPlaybackState.Paused)
+                    paused = p;
+            }
+            return paused;
+        }
+        readonly property bool hasMprisPlayer: mprisPlayer !== null
+
         implicitHeight: 1000
 
         mask: Region {
             item: interactionZone
         }
 
-        readonly property bool shouldShowPill: zoneHover.hovered || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible
+        readonly property bool shouldShowPill: zoneHover.hovered || nowPlayingHoverItem.menuOpen || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
@@ -44,9 +60,9 @@ Variants {
 
         Item {
             id: interactionZone
-            width: Math.max(pill.implicitWidth + Spacing.spacing24, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 2 * Spacing.spacing24 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 2 * Spacing.spacing24 : 0)
+            width: Math.max(pill.implicitWidth + Spacing.spacing24, nowPlayingHoverItem.menuOpen ? nowPlayingView.implicitWidth + 2 * Spacing.spacing24 : 0, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 2 * Spacing.spacing24 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 2 * Spacing.spacing24 : 0)
             x: (root.width - width) / 2
-            height: root.isHovered ? 44 + Math.max(volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, batteryHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + Spacing.spacing12 : 0) + ((volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible) ? Spacing.spacing8 : 0) : Spacing.spacing8
+            height: root.isHovered ? 44 + Math.max(nowPlayingHoverItem.menuHeight, volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, batteryHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + Spacing.spacing12 : 0) + ((nowPlayingHoverItem.menuOpen || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible) ? Spacing.spacing8 : 0) : Spacing.spacing8
             anchors.top: parent.top
 
             HoverHandler {
@@ -77,15 +93,25 @@ Variants {
                     }
 
                     Rectangle {
-                        visible: nowPlaying.visible
+                        visible: root.hasMprisPlayer
                         width: 1
                         height: Spacing.spacing16
                         color: Colors.separatorColor
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    NowPlaying {
-                        id: nowPlaying
+                    HoverItem {
+                        id: nowPlayingHoverItem
+                        visible: root.hasMprisPlayer
+                        menu: nowPlayingMenu
+                        onClicked: {
+                            if (root.mprisPlayer)
+                                root.mprisPlayer.togglePlaying();
+                        }
+                        NowPlaying {
+                            id: nowPlaying
+                            player: root.mprisPlayer
+                        }
                     }
 
                     Rectangle {
@@ -151,6 +177,27 @@ Variants {
                         menu: batteryMenu
                         Battery {}
                     }
+                }
+            }
+
+            Item {
+                id: nowPlayingAnchor
+                width: 0; height: 0
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + nowPlayingHoverItem.x + nowPlayingHoverItem.width / 2
+                y: pill.y + pill.implicitHeight
+            }
+
+            HoverMenu {
+                id: nowPlayingMenu
+                width: nowPlayingView.implicitWidth
+                anchors.top: nowPlayingAnchor.top
+                anchors.horizontalCenter: nowPlayingAnchor.horizontalCenter
+
+                NowPlayingMenu {
+                    id: nowPlayingView
+                    width: implicitWidth
+                    height: implicitHeight
+                    player: root.mprisPlayer
                 }
             }
 

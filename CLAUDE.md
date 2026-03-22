@@ -95,26 +95,113 @@ Interactive items should change both **background** and **border** on hover. The
 
 ### Animations
 
-The primary animation pattern is **fade + slight position change** (slide) **+ scale pop**, as used in menus, OSD popups, and tray menus. Use this pattern for all popup/menu show/hide transitions.
+All animations should feel **playful, squishy, and smooth**. The overall approach: hover feedback is instant, press/click feedback is squishy (scale down), and show/hide transitions use a coordinated fade + slide + scale pop.
 
-**Easing**: Use `Easing.OutCubic` for enter/show animations and `Easing.InCubic` for exit/hide animations. For the scale pop on show, use `Easing.OutBack` to create an overshoot "pop" feel.
+**Easing reference**:
+
+| Easing | Use for |
+| --- | --- |
+| `Easing.OutCubic` | Enter/show animations, general motion |
+| `Easing.InCubic` | Exit/hide animations |
+| `Easing.OutBack` | Scale "pop" on show (overshoots slightly for a bouncy feel) |
+| `Easing.OutQuad` / `InQuad` | Continuous oscillating motion (e.g. music visualizer bars) |
 
 **Duration ranges**:
 
-- **80–120ms**: Micro-interactions (slider feedback, small state changes)
-- **150–200ms**: Menu show/hide, hover menus
-- **200–300ms**: Content transitions (slide-in after fade-out, OSD popups)
+| Range | Use for |
+| --- | --- |
+| **80–120ms** | Micro-interactions: slider feedback, squishy press, small state changes |
+| **150–200ms** | Menu show/hide, panel transitions |
+| **200–300ms** | Content transitions (slide-in after fade-out, OSD popups), album art bounce |
+| **250–450ms** | Continuous looping animations (e.g. music visualizer bars) |
 
-**Standard show/hide combo** (popup/menu):
+#### Hover: always instant
 
-- Show: slide up ~8–16px + fade in (`OutCubic`, 150–220ms) + scale 0.96→1.0 (`OutBack`, 200–220ms)
-- Hide: slide down ~8–16px + fade out (`InCubic`, 120–180ms) + scale 1.0→0.96 (`InCubic`, 120–180ms)
+Hover state changes (background color, border) must be **instant** — no `Behavior on color`, no `ColorAnimation`. The color binding updates immediately via the ternary pattern:
+
+```qml
+color: pressed ? Colors.hoverItemPressed
+     : hovered ? Colors.hoverItemHovered
+     : "transparent"
+// NO Behavior on color — hover must be instant
+```
+
+#### Press/click: squishy scale-down
+
+Every clickable element should scale down on press for a tactile "squishy" feel. Use `Behavior on scale` with short duration:
+
+```qml
+scale: tapHandler.pressed ? 0.85 : 1.0
+Behavior on scale {
+    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+}
+```
+
+**Scale values by element size** (smaller elements scale more):
+
+| Element | Pressed scale | Duration | Easing |
+| --- | --- | --- | --- |
+| Small icon buttons (32px) | `0.85` | 100ms | `OutCubic` |
+| Medium buttons (40px), play/pause | `0.82` | 120ms | `OutBack` |
+| Large interactive items (list rows, toggles) | `0.96`–`0.97` | 100ms | `OutCubic` |
+
+Use `OutBack` for the primary action (play/pause) to give it extra bounciness. Use `OutCubic` for everything else.
+
+#### Show/hide: fade + slide + scale pop
+
+The standard pattern for popup/menu transitions (see `HoverMenu.qml`, `VolumeOsd.qml`, `SystemTray.qml`):
+
+- **Show**: slide up ~8–16px + fade in (`OutCubic`, 150–220ms) + scale 0.96→1.0 (`OutBack`, 200–220ms)
+- **Hide**: slide down ~8–16px + fade out (`InCubic`, 120–180ms) + scale 1.0→0.96 (`InCubic`, 120–180ms)
 - Set `transformOrigin: Item.Top` so scaling anchors to the bar/trigger
 - Initial state: `opacity: 0`, `scale: 0.96`
 
-**When NOT to use scale pop**: Content transitions *within* an already-visible container (e.g. calendar year switching) should use fade + slide only, not scale. The pop is for showing/hiding the container itself.
+**When NOT to use scale pop**: Content transitions *within* an already-visible container (e.g. calendar year switching, expanding a section) should use fade + slide only, not scale. Scale pop is for showing/hiding the container itself.
 
-**Menu timing**: 250ms delay before showing, 200ms delay before hiding (prevents flicker on brief mouse passes).
+#### Expandable sections: height + opacity
+
+For collapsible content (e.g. Wiedergabeliste):
+
+```qml
+height: expanded ? contentColumn.implicitHeight : 0
+clip: true
+Behavior on height {
+    NumberAnimation { duration: 250; easing.type: expanded ? Easing.OutBack : Easing.InCubic }
+}
+opacity: expanded ? 1 : 0
+Behavior on opacity {
+    NumberAnimation { duration: expanded ? 200 : 120; easing.type: expanded ? Easing.OutCubic : Easing.InCubic }
+}
+```
+
+Use `OutBack` on expand for a bouncy overshoot, `InCubic` on collapse for a quick tuck-away.
+
+#### Image/content loading: fade in
+
+Images loaded asynchronously should fade in on ready:
+
+```qml
+opacity: status === Image.Ready ? 1 : 0
+Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+```
+
+#### Progress bars and sliders
+
+Slider fill width and handle position animate at **80ms** with `OutCubic`, but only when NOT being dragged (disable animation during press):
+
+```qml
+Behavior on width {
+    enabled: !sliderArea.pressed
+    NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+}
+```
+
+OSD progress bars (volume, brightness) use **120ms** for a slightly smoother visual.
+
+#### Menu timing
+
+- **250ms** delay before showing a hover menu (prevents accidental triggers)
+- **200ms** delay before hiding (prevents flicker on brief mouse passes)
 
 ### Component Patterns
 
