@@ -18,7 +18,7 @@ let
 
     # Calculate the date threshold
     THRESHOLD_DATE=$(date -d "$DELAY_DAYS days ago" +%Y-%m-%dT00:00:00Z 2>/dev/null || \
-                     date -v-${DELAY_DAYS}d +%Y-%m-%dT00:00:00Z 2>/dev/null)
+                     date -v-''${DELAY_DAYS}d +%Y-%m-%dT00:00:00Z 2>/dev/null)
 
     if [[ -z "$THRESHOLD_DATE" ]]; then
       echo "Failed to calculate threshold date" >&2

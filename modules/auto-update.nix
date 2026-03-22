@@ -34,15 +34,12 @@ in
         User = "root";
         WorkingDirectory = "/etc/nixos/config";
       };
-      environment = {
-        NIX_PATH = "nixpkgs=/etc/nixos/config/nixpkgs";
-      };
-      path = with pkgs; [
-        nix
-        git
-        curl
-        jq
-        config.environment.systemPackages
+      path = [
+        pkgs.nix
+        pkgs.git
+        pkgs.curl
+        pkgs.jq
+        pkgs.coreutils
       ];
       script = ''
         set -euo pipefail
@@ -59,7 +56,7 @@ in
 
         # Calculate the date threshold
         THRESHOLD_DATE=$(date -d "$DELAY_DAYS days ago" +%Y-%m-%dT00:00:00Z 2>/dev/null || \
-                         date -v-${DELAY_DAYS}d +%Y-%m-%dT00:00:00Z 2>/dev/null)
+                         date -v-''${DELAY_DAYS}d +%Y-%m-%dT00:00:00Z 2>/dev/null)
 
         if [[ -z "$THRESHOLD_DATE" ]]; then
           echo "Failed to calculate threshold date" >&2
