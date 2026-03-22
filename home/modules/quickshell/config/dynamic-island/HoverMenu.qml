@@ -17,6 +17,8 @@ Item {
     implicitHeight: contentArea.childrenRect.height + gapHeight
     opacity: 0
     visible: opacity > 0
+    scale: 0.96
+    transformOrigin: Item.Top
 
     transform: Translate {
         id: slideTransform
@@ -38,12 +40,14 @@ Item {
         id: showAnim
         NumberAnimation { target: menuWrapper; property: "opacity"; to: 1; duration: 150; easing.type: Easing.OutCubic }
         NumberAnimation { target: slideTransform; property: "y"; to: 0; duration: 150; easing.type: Easing.OutCubic }
+        NumberAnimation { target: menuWrapper; property: "scale"; to: 1.0; duration: 200; easing.type: Easing.OutBack }
     }
 
     ParallelAnimation {
         id: hideAnim
         NumberAnimation { target: menuWrapper; property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
         NumberAnimation { target: slideTransform; property: "y"; to: -menuWrapper._slideOffset; duration: 150; easing.type: Easing.InCubic }
+        NumberAnimation { target: menuWrapper; property: "scale"; to: 0.96; duration: 150; easing.type: Easing.InCubic }
         onStopped: menuWrapper.hidden()
     }
 

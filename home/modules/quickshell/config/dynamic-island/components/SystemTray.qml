@@ -160,6 +160,8 @@ Item {
         height: trayMenuContent.implicitHeight
         visible: false
         opacity: 0
+        scale: 0.96
+        transformOrigin: Item.Top
 
         readonly property real _slideOffset: Spacing.spacing8
 
@@ -196,6 +198,13 @@ Item {
                 duration: 200
                 easing.type: Easing.OutCubic
             }
+            NumberAnimation {
+                target: trayMenuContainer
+                property: "scale"
+                to: 1.0
+                duration: 200
+                easing.type: Easing.OutBack
+            }
         }
 
         ParallelAnimation {
@@ -217,6 +226,13 @@ Item {
                 target: menuSlideTransform
                 property: "y"
                 to: -trayMenuContainer._slideOffset
+                duration: 120
+                easing.type: Easing.InCubic
+            }
+            NumberAnimation {
+                target: trayMenuContainer
+                property: "scale"
+                to: 0.96
                 duration: 120
                 easing.type: Easing.InCubic
             }

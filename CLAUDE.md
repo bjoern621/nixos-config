@@ -95,9 +95,9 @@ Interactive items should change both **background** and **border** on hover. The
 
 ### Animations
 
-The primary animation pattern is **fade + slight position change** (slide), as used in the calendar year transition and OSD popups. Use this pattern everywhere a show/hide or content transition fits.
+The primary animation pattern is **fade + slight position change** (slide) **+ scale pop**, as used in menus, OSD popups, and tray menus. Use this pattern for all popup/menu show/hide transitions.
 
-**Easing**: Use `Easing.OutCubic` for enter/show animations and `Easing.InCubic` for exit/hide animations.
+**Easing**: Use `Easing.OutCubic` for enter/show animations and `Easing.InCubic` for exit/hide animations. For the scale pop on show, use `Easing.OutBack` to create an overshoot "pop" feel.
 
 **Duration ranges**:
 
@@ -105,10 +105,14 @@ The primary animation pattern is **fade + slight position change** (slide), as u
 - **150–200ms**: Menu show/hide, hover menus
 - **200–300ms**: Content transitions (slide-in after fade-out, OSD popups)
 
-**Standard show/hide combo** (OSD example):
+**Standard show/hide combo** (popup/menu):
 
-- Show: slide up ~16px + fade in, `OutCubic`, 180–220ms
-- Hide: slide down ~16px + fade out, `InCubic`, 180–220ms
+- Show: slide up ~8–16px + fade in (`OutCubic`, 150–220ms) + scale 0.96→1.0 (`OutBack`, 200–220ms)
+- Hide: slide down ~8–16px + fade out (`InCubic`, 120–180ms) + scale 1.0→0.96 (`InCubic`, 120–180ms)
+- Set `transformOrigin: Item.Top` so scaling anchors to the bar/trigger
+- Initial state: `opacity: 0`, `scale: 0.96`
+
+**When NOT to use scale pop**: Content transitions *within* an already-visible container (e.g. calendar year switching) should use fade + slide only, not scale. The pop is for showing/hiding the container itself.
 
 **Menu timing**: 250ms delay before showing, 200ms delay before hiding (prevents flicker on brief mouse passes).
 

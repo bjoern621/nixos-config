@@ -78,12 +78,14 @@ Scope {
             id: showAnim
             NumberAnimation { target: osdPill; property: "y"; to: osdWindow.finalY; duration: 220; easing.type: Easing.OutCubic }
             NumberAnimation { target: osdPill; property: "opacity"; to: 1; duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { target: osdPill; property: "scale"; to: 1.0; duration: 220; easing.type: Easing.OutBack }
         }
 
         ParallelAnimation {
             id: hideAnim
             NumberAnimation { target: osdPill; property: "y"; to: osdWindow.finalY - 16; duration: 220; easing.type: Easing.InCubic }
             NumberAnimation { target: osdPill; property: "opacity"; to: 0; duration: 180; easing.type: Easing.InCubic }
+            NumberAnimation { target: osdPill; property: "scale"; to: 0.96; duration: 180; easing.type: Easing.InCubic }
         }
 
         Rectangle {
@@ -91,6 +93,8 @@ Scope {
             x: (osdWindow.width - implicitWidth) / 2
             y: osdWindow.finalY - osdWindow.animOffset
             opacity: 0
+            scale: 0.96
+            transformOrigin: Item.Top
 
             property int marginTopBottom: Spacing.spacing8
             property int marginLeftRight: Spacing.spacing12
