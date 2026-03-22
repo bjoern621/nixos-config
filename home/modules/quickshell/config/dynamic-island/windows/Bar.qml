@@ -138,6 +138,7 @@ Variants {
 
                     HoverItem {
                         id: calendarHoverItem
+                        clickable: false
                         menu: calendarMenu
                         DateTime {}
                     }
@@ -175,6 +176,7 @@ Variants {
 
                     HoverItem {
                         id: batteryHoverItem
+                        clickable: false
                         menu: batteryMenu
                         Battery {}
                     }

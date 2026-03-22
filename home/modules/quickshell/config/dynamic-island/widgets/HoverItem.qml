@@ -6,6 +6,7 @@ Item {
 
     default property alias content: contentContainer.data
     property HoverMenu menu: null
+    property bool clickable: true
 
     readonly property bool hovered: hoverHandler.hovered
     readonly property bool pressed: tapHandler.pressed
@@ -67,17 +68,17 @@ Item {
         }
     }
 
-    scale: tapHandler.pressed ? 0.85 : 1.0
+    scale: root.clickable && tapHandler.pressed ? 0.85 : 1.0
     SquishBehavior on scale {}
 
     Rectangle {
         id: background
         anchors.fill: parent
         radius: height / 2
-        color: root.pressed ? Colors.hoverItemPressed
+        color: root.clickable && root.pressed ? Colors.hoverItemPressed
              : root.hovered ? Colors.hoverItemHovered
              : "transparent"
-        border.color: root.hovered || root.pressed ? Colors.pillBorder : "transparent"
+        border.color: root.hovered || (root.clickable && root.pressed) ? Colors.pillBorder : "transparent"
     }
 
     Item {
@@ -97,11 +98,12 @@ Item {
 
     HoverHandler {
         id: hoverHandler
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: root.clickable ? Qt.PointingHandCursor : Qt.ArrowCursor
     }
 
     TapHandler {
         id: tapHandler
+        enabled: root.clickable
         onTapped: root.clicked()
     }
 }
