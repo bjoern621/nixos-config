@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
@@ -9,6 +10,19 @@ Scope {
     id: clipScope
 
     property bool clipVisible: false
+
+    function focusedScreen() {
+        const mon = Hyprland.focusedMonitor
+        if (mon) {
+            const screens = Quickshell.screens
+            for (let i = 0; i < screens.length; i++) {
+                if (screens[i].name === mon.name)
+                    return screens[i]
+            }
+        }
+        return null
+    }
+
     property var allEntries: []
     property var filteredEntries: []
     property var imageDecodeQueue: []
@@ -154,6 +168,10 @@ Scope {
         target: "clipboard"
 
         function toggle() {
+            if (!clipScope.clipVisible) {
+                const s = clipScope.focusedScreen()
+                if (s) clipWindow.screen = s
+            }
             clipScope.clipVisible = !clipScope.clipVisible
         }
     }

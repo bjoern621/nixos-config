@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
@@ -9,6 +10,18 @@ Scope {
     id: launcherScope
 
     property bool launcherVisible: false
+
+    function focusedScreen() {
+        const mon = Hyprland.focusedMonitor
+        if (mon) {
+            const screens = Quickshell.screens
+            for (let i = 0; i < screens.length; i++) {
+                if (screens[i].name === mon.name)
+                    return screens[i]
+            }
+        }
+        return null
+    }
 
     property var appIndexMap: ({})
 
@@ -39,6 +52,10 @@ Scope {
         target: "launcher"
 
         function toggle() {
+            if (!launcherScope.launcherVisible) {
+                const s = launcherScope.focusedScreen()
+                if (s) launcherWindow.screen = s
+            }
             launcherScope.launcherVisible = !launcherScope.launcherVisible
         }
     }

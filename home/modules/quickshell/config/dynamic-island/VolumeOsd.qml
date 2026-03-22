@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import QtQuick
 
@@ -35,8 +36,22 @@ Scope {
         return "\uf028"
     }
 
+    function focusedScreen() {
+        const mon = Hyprland.focusedMonitor
+        if (mon) {
+            const screens = Quickshell.screens
+            for (let i = 0; i < screens.length; i++) {
+                if (screens[i].name === mon.name)
+                    return screens[i]
+            }
+        }
+        return null
+    }
+
     function triggerShow() {
         if (suppressOsd || !_startupDone) return
+        const s = focusedScreen()
+        if (s) osdWindow.screen = s
         osdHideTimer.restart()
         hideAnim.stop()
         showAnim.start()

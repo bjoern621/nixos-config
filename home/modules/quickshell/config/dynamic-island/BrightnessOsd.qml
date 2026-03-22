@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
 
@@ -47,8 +48,22 @@ Scope {
         return "\uf185"
     }
 
+    function focusedScreen() {
+        const mon = Hyprland.focusedMonitor
+        if (mon) {
+            const screens = Quickshell.screens
+            for (let i = 0; i < screens.length; i++) {
+                if (screens[i].name === mon.name)
+                    return screens[i]
+            }
+        }
+        return null
+    }
+
     on_BrightnessChanged: {
         if (!_startupDone || _brightness < 0) return
+        const s = focusedScreen()
+        if (s) osdWindow.screen = s
         osdHideTimer.restart()
         hideAnim.stop()
         showAnim.start()
