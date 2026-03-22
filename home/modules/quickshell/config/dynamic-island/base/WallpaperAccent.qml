@@ -1,3 +1,18 @@
+// WallpaperAccent - Extracts a vibrant accent color from the current wallpaper.
+//
+// This singleton samples the wallpaper image and identifies the most prominent
+// saturated hue using a hue-bucketing algorithm. The extracted color is stored
+// in Globals.accentColor for use throughout the UI (progress bars, sliders,
+// active indicators, etc.).
+//
+// Algorithm:
+// 1. Load wallpaper into a hidden Canvas element
+// 2. Sample pixels and bucket them by hue (12 buckets of 30 degrees each)
+// 3. Filter out grays, near-black/white, and desaturated colors
+// 4. Weight remaining pixels by saturation squared (vivid colors win)
+// 5. Select the most populated bucket and compute its average hue
+// 6. Output a hex color with boosted saturation (0.75) and fixed lightness (0.65)
+
 import QtQuick
 import Quickshell
 import "../"
