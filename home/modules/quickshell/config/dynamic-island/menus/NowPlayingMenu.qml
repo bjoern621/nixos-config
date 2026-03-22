@@ -199,8 +199,15 @@ Item {
                     width: parent.width
                     height: Spacing.spacing8
                     stepSize: 0.005
+                    liveUpdate: false
                     handleVerticalSize: Spacing.spacing12
                     externalValue: root.hasPlayer && root.player.length > 0 ? root.player.position / root.player.length : 0
+
+                    onValueChanged: {
+                        if (pressed && root.hasPlayer && root.player.length > 0) {
+                            root.currentPosition = value * root.player.length;
+                        }
+                    }
 
                     onMoved: (newValue) => {
                         if (root.hasPlayer && root.player.canSeek && root.player.length > 0) {

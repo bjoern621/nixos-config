@@ -12,6 +12,7 @@ Item {
     property color trackColor: Colors.progressBackground
     property int handleVerticalSize: 20
     property int trackPadding: 4 // insets handle range so tracks stay visible at 0% and 100%
+    property bool liveUpdate: true // when false, moved() only fires on release (not during drag)
 
     signal moved(real newValue)
 
@@ -95,7 +96,7 @@ Item {
         var rawFraction = Math.max(0, Math.min(1, (mouseX - root.trackPadding) / usable))
         var steppedValue = Math.round(rawFraction / root.stepSize) * root.stepSize
         root.value = steppedValue
-        root.moved(steppedValue)
+        if (root.liveUpdate) root.moved(steppedValue)
     }
 
     property real scrollAccumulator: 0
@@ -113,6 +114,9 @@ Item {
         onPressed: (mouse) => root.updateValue(mouse.x)
         onPositionChanged: (mouse) => {
             if (pressed) root.updateValue(mouse.x)
+        }
+        onReleased: {
+            if (!root.liveUpdate) root.moved(root.value)
         }
         onWheel: (wheel) => {
             var delta = wheel.angleDelta.y
