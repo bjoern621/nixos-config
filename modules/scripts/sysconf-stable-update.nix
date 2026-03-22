@@ -84,6 +84,7 @@ let
     UPDATED_COUNT=0
     SKIPPED_COUNT=0
     DOWNGRADE_COUNT=0
+    OVERRIDE_ARGS=()
 
     for input_name in "''${!FLAKE_INPUTS[@]}"; do
       IFS=':' read -r owner_repo branch <<< "''${FLAKE_INPUTS[$input_name]}"
@@ -129,15 +130,22 @@ let
         fi
       fi
 
-      echo "  Updating to revision: $target_sha_short (from $target_date)"
-      sudo nix flake update --override-input "$input_name" "github:$owner_repo/$target_sha"
+      echo "  Will update to revision: $target_sha_short"
+      OVERRIDE_ARGS+=(--override-input "$input_name" "github:$owner_repo/$target_sha")
       UPDATED_COUNT=$((UPDATED_COUNT + 1))
     done
 
     echo ""
     echo "Updated: $UPDATED_COUNT, Skipped: $SKIPPED_COUNT, Downgraded: $DOWNGRADE_COUNT"
-    echo "Reloading system..."
-    sysconf-reload
+
+    if [[ ''${#OVERRIDE_ARGS[@]} -gt 0 ]]; then
+      echo "Applying all updates in a single operation..."
+      sudo nix flake update "''${OVERRIDE_ARGS[@]}"
+      echo "Reloading system..."
+      sysconf-reload
+    else
+      echo "Nothing to update."
+    fi
   '';
 in
 {
