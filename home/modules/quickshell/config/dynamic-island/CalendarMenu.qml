@@ -4,24 +4,9 @@ Item {
     id: root
 
     property int displayYear: new Date().getFullYear()
-    readonly property int _slideOffset: 40
-
-    property int _pendingDirection: 0
 
     function navigateYear(direction) {
-        // If fade-in is running, cancel it and apply immediately
-        slideInAnimation.stop()
-        // If fade-out is running, cancel it
-        fadeOutAnimation.stop()
-
-        root._pendingDirection = direction
-        fadeOutAnimation.start()
-    }
-
-    function _applyYearChange() {
-        root.displayYear += root._pendingDirection
-        monthGrid.x = root._pendingDirection * root._slideOffset
-        slideInAnimation.start()
+        gridSlide.transition(direction)
     }
 
     readonly property var today: new Date()
@@ -177,54 +162,19 @@ Item {
                 }
             }
 
-            Item {
-                id: gridClip
-                clip: true
-                width: monthGrid.implicitWidth
-                height: monthGrid.implicitHeight
+            ContentSlide {
+                id: gridSlide
+
+                onReadyToSwap: (direction) => {
+                    root.displayYear += direction
+                    gridSlide.completeTransition()
+                }
 
                 Grid {
                     id: monthGrid
                     columns: 4
                     columnSpacing: root.monthHorizontalGap
                     rowSpacing: root.monthVerticalGap
-
-                    ParallelAnimation {
-                        id: fadeOutAnimation
-                        NumberAnimation {
-                            target: monthGrid
-                            property: "opacity"
-                            to: 0
-                            duration: 120
-                            easing.type: Easing.InCubic
-                        }
-                        NumberAnimation {
-                            target: monthGrid
-                            property: "x"
-                            to: -root._pendingDirection * (root._slideOffset / 2)
-                            duration: 120
-                            easing.type: Easing.InCubic
-                        }
-                        onFinished: root._applyYearChange()
-                    }
-
-                    ParallelAnimation {
-                        id: slideInAnimation
-                        NumberAnimation {
-                            target: monthGrid
-                            property: "x"
-                            to: 0
-                            duration: 300
-                            easing.type: Easing.OutCubic
-                        }
-                        NumberAnimation {
-                            target: monthGrid
-                            property: "opacity"
-                            to: 1
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                    }
 
                 Repeater {
                     model: 12

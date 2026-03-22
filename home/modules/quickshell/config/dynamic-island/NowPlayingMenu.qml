@@ -266,7 +266,7 @@ Item {
                     TapHandler { id: prevTap; onTapped: { if (root.hasPlayer) root.player.previous() } }
 
                     scale: prevTap.pressed ? 0.82 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutBack } }
+                    SquishBehavior on scale { bouncy: true; duration: 120 }
                 }
 
                 // Play/Pause
@@ -298,7 +298,7 @@ Item {
                     TapHandler { id: playTap; onTapped: { if (root.hasPlayer) root.player.togglePlaying() } }
 
                     scale: playTap.pressed ? 0.82 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutBack } }
+                    SquishBehavior on scale { bouncy: true; duration: 120 }
                 }
 
                 // Next
@@ -330,7 +330,7 @@ Item {
                     TapHandler { id: nextTap; onTapped: { if (root.hasPlayer) root.player.next() } }
 
                     scale: nextTap.pressed ? 0.82 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutBack } }
+                    SquishBehavior on scale { bouncy: true; duration: 120 }
                 }
             }
 
@@ -393,32 +393,14 @@ Item {
                 }
 
                 scale: queueToggleTap.pressed ? 0.96 : 1.0
-                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                SquishBehavior on scale {}
             }
 
             // --- Expandable Track List ---
-            Item {
+            ExpandSection {
                 id: trackListWrapper
-                width: parent.width
-                height: root.queueExpanded ? trackListColumn.implicitHeight : 0
-                clip: true
+                expanded: root.queueExpanded
                 visible: root.trackHistory.length > 1
-
-                Behavior on height {
-                    NumberAnimation {
-                        duration: 250
-                        easing.type: root.queueExpanded ? Easing.OutBack : Easing.InCubic
-                    }
-                }
-
-                // Fade in/out content
-                opacity: root.queueExpanded ? 1 : 0
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.queueExpanded ? 200 : 120
-                        easing.type: root.queueExpanded ? Easing.OutCubic : Easing.InCubic
-                    }
-                }
 
                 Column {
                     id: trackListColumn
@@ -542,9 +524,7 @@ Item {
 
                             scale: trackDelegateTap.pressed ? 0.97 : 1.0
                             transformOrigin: Item.Center
-                            Behavior on scale {
-                                NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
-                            }
+                            SquishBehavior on scale {}
                         }
                     }
                 }

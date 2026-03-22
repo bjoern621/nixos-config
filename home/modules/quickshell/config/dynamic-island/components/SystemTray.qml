@@ -175,23 +175,21 @@ Item {
 
     // --- Menu popup (reparented to menuParent) ---
 
-    Item {
+    PopReveal {
         id: trayMenuContainer
         parent: trayRoot.menuParent ?? trayRoot
         x: trayRoot.menuParent ? trayRoot.mapToItem(trayRoot.menuParent, internal.menuAnchorX, 0).x - 100 : 0
         y: trayRoot.menuTopY
         width: trayMenuContent.implicitWidth
         height: trayMenuContent.implicitHeight
-        visible: false
-        opacity: 0
-        scale: 0.96
-        transformOrigin: Item.Top
+        showDuration: 200
+        hideDuration: 120
 
-        readonly property real _slideOffset: Spacing.spacing8
-
-        transform: Translate {
-            id: menuSlideTransform
-            y: -trayMenuContainer._slideOffset
+        onShown: internal.menuVisible = true
+        onHidden: {
+            internal.menuVisible = false
+            internal.activeMenuHandle = null
+            trayMenuContent.activeSubmenu = null
         }
 
         TrayContextMenu {
@@ -200,66 +198,6 @@ Item {
             menuHandle: internal.activeMenuHandle
             panelWindow: trayRoot.panelWindow
             onItemTriggered: trayRoot.closeMenu()
-        }
-
-        ParallelAnimation {
-            id: showAnim
-            onStarted: {
-                trayMenuContainer.visible = true
-                internal.menuVisible = true
-            }
-            NumberAnimation {
-                target: trayMenuContainer
-                property: "opacity"
-                from: 0; to: 1
-                duration: 200
-                easing.type: Easing.OutCubic
-            }
-            NumberAnimation {
-                target: menuSlideTransform
-                property: "y"
-                from: -trayMenuContainer._slideOffset; to: 0
-                duration: 200
-                easing.type: Easing.OutCubic
-            }
-            NumberAnimation {
-                target: trayMenuContainer
-                property: "scale"
-                to: 1.0
-                duration: 200
-                easing.type: Easing.OutBack
-            }
-        }
-
-        ParallelAnimation {
-            id: hideAnim
-            onFinished: {
-                trayMenuContainer.visible = false
-                internal.menuVisible = false
-                internal.activeMenuHandle = null
-                trayMenuContent.activeSubmenu = null
-            }
-            NumberAnimation {
-                target: trayMenuContainer
-                property: "opacity"
-                to: 0
-                duration: 120
-                easing.type: Easing.InCubic
-            }
-            NumberAnimation {
-                target: menuSlideTransform
-                property: "y"
-                to: -trayMenuContainer._slideOffset
-                duration: 120
-                easing.type: Easing.InCubic
-            }
-            NumberAnimation {
-                target: trayMenuContainer
-                property: "scale"
-                to: 0.96
-                duration: 120
-                easing.type: Easing.InCubic
-            }
         }
     }
 
@@ -292,15 +230,13 @@ Item {
         function onMenuOpenChanged() {
             if (internal.menuOpen) {
                 closeTimer.stop()
-                hideAnim.stop()
-                showAnim.start()
+                trayMenuContainer.show()
                 // Start close timer immediately — if the user never hovers the menu,
                 // the timer will fire and close it. If they do hover, it gets canceled.
                 closeTimer.restart()
             } else {
                 closeTimer.stop()
-                showAnim.stop()
-                hideAnim.start()
+                trayMenuContainer.hide()
             }
         }
     }

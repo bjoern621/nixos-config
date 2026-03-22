@@ -148,29 +148,28 @@ Scope {
                 onTapped: launcherScope.launcherVisible = false
             }
 
-            Rectangle {
-                id: panel
+            PopReveal {
+                id: panelReveal
                 width: 500
+                height: panel.implicitHeight
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                height: contentColumn.implicitHeight + 2 * Spacing.spacing12
+                showing: launcherScope.launcherVisible
+                showDuration: 120
+                hideDuration: 120
+                slideOffset: 0
 
-                radius: Spacing.spacing12
-                color: Colors.pillBackground
-                border.width: 1
-                border.color: Colors.pillBorder
+                Rectangle {
+                    id: panel
+                    anchors.fill: parent
+                    implicitHeight: contentColumn.implicitHeight + 2 * Spacing.spacing12
 
-                opacity: launcherScope.launcherVisible ? 1 : 0
-                scale: launcherScope.launcherVisible ? 1.0 : 0.96
-                transformOrigin: Item.Top
-
-                Behavior on opacity {
-                    NumberAnimation { duration: 120; easing.type: launcherScope.launcherVisible ? Easing.OutCubic : Easing.InCubic }
+                    radius: Spacing.spacing12
+                    color: Colors.pillBackground
+                    border.width: 1
+                    border.color: Colors.pillBorder
                 }
-                Behavior on scale {
-                    NumberAnimation { duration: 120; easing.type: launcherScope.launcherVisible ? Easing.OutCubic : Easing.InCubic }
-                }
- 
+
                 Column {
                     id: contentColumn
                     anchors {

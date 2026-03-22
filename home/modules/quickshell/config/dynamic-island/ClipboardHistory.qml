@@ -209,27 +209,26 @@ Scope {
                 onTapped: clipScope.clipVisible = false
             }
 
-            Rectangle {
-                id: clipPanel
+            PopReveal {
+                id: clipPanelReveal
                 width: 500
+                height: clipPanel.implicitHeight
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                height: clipContent.implicitHeight + 2 * Spacing.spacing12
+                showing: clipScope.clipVisible
+                showDuration: 120
+                hideDuration: 120
+                slideOffset: 0
 
-                radius: Spacing.spacing12
-                color: Colors.pillBackground
-                border.width: 1
-                border.color: Colors.pillBorder
+                Rectangle {
+                    id: clipPanel
+                    anchors.fill: parent
+                    implicitHeight: clipContent.implicitHeight + 2 * Spacing.spacing12
 
-                opacity: clipScope.clipVisible ? 1 : 0
-                scale: clipScope.clipVisible ? 1.0 : 0.96
-                transformOrigin: Item.Top
-
-                Behavior on opacity {
-                    NumberAnimation { duration: 120; easing.type: clipScope.clipVisible ? Easing.OutCubic : Easing.InCubic }
-                }
-                Behavior on scale {
-                    NumberAnimation { duration: 120; easing.type: clipScope.clipVisible ? Easing.OutCubic : Easing.InCubic }
+                    radius: Spacing.spacing12
+                    color: Colors.pillBackground
+                    border.width: 1
+                    border.color: Colors.pillBorder
                 }
 
                 Column {

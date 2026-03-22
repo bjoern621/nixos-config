@@ -1,6 +1,6 @@
 import QtQuick
 
-Item {
+PopReveal {
     id: menuWrapper
 
     default property alias content: contentArea.data
@@ -10,20 +10,7 @@ Item {
     readonly property bool menuHovered: hoverHandler.hovered
     readonly property bool keepOpen: menuHovered || contentInteracting
 
-    signal hidden()
-
-    readonly property real _slideOffset: Spacing.spacing8
-
     implicitHeight: contentArea.childrenRect.height + gapHeight
-    opacity: 0
-    visible: opacity > 0
-    scale: 0.96
-    transformOrigin: Item.Top
-
-    transform: Translate {
-        id: slideTransform
-        y: -menuWrapper._slideOffset
-    }
 
     HoverHandler {
         id: hoverHandler
@@ -34,30 +21,5 @@ Item {
         y: menuWrapper.gapHeight
         width: menuWrapper.width
         height: childrenRect.height
-    }
-
-    ParallelAnimation {
-        id: showAnim
-        NumberAnimation { target: menuWrapper; property: "opacity"; to: 1; duration: 150; easing.type: Easing.OutCubic }
-        NumberAnimation { target: slideTransform; property: "y"; to: 0; duration: 150; easing.type: Easing.OutCubic }
-        NumberAnimation { target: menuWrapper; property: "scale"; to: 1.0; duration: 200; easing.type: Easing.OutBack }
-    }
-
-    ParallelAnimation {
-        id: hideAnim
-        NumberAnimation { target: menuWrapper; property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
-        NumberAnimation { target: slideTransform; property: "y"; to: -menuWrapper._slideOffset; duration: 150; easing.type: Easing.InCubic }
-        NumberAnimation { target: menuWrapper; property: "scale"; to: 0.96; duration: 150; easing.type: Easing.InCubic }
-        onStopped: menuWrapper.hidden()
-    }
-
-    function show() {
-        hideAnim.stop()
-        showAnim.start()
-    }
-
-    function hide() {
-        showAnim.stop()
-        hideAnim.start()
     }
 }

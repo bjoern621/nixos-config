@@ -53,14 +53,13 @@ Scope {
         const s = focusedScreen()
         if (s) osdWindow.screen = s
         osdHideTimer.restart()
-        hideAnim.stop()
-        showAnim.start()
+        osdReveal.show()
     }
 
     Timer {
         id: osdHideTimer
         interval: 2000
-        onTriggered: hideAnim.start()
+        onTriggered: osdReveal.hide()
     }
 
     PanelWindow {
@@ -69,120 +68,110 @@ Scope {
         anchors { top: true }
         exclusiveZone: 0
         color: "transparent"
-        readonly property real pillHeight: osdPill.implicitHeight
-        readonly property real animOffset: 16
-        readonly property real finalY: 36
 
         implicitWidth: 280
-        implicitHeight: finalY + pillHeight + animOffset
+        implicitHeight: 40 + osdPill.implicitHeight + Spacing.spacing16
         mask: Region {}
 
-        ParallelAnimation {
-            id: showAnim
-            NumberAnimation { target: osdPill; property: "y"; to: osdWindow.finalY; duration: 220; easing.type: Easing.OutCubic }
-            NumberAnimation { target: osdPill; property: "opacity"; to: 1; duration: 180; easing.type: Easing.OutCubic }
-            NumberAnimation { target: osdPill; property: "scale"; to: 1.0; duration: 220; easing.type: Easing.OutBack }
-        }
+        PopReveal {
+            id: osdReveal
+            x: (osdWindow.width - width) / 2
+            y: 40
+            width: 200
+            height: osdPill.implicitHeight
+            showDuration: 200
+            hideDuration: 180
+            slideOffset: Spacing.spacing16
 
-        ParallelAnimation {
-            id: hideAnim
-            NumberAnimation { target: osdPill; property: "y"; to: osdWindow.finalY - 16; duration: 220; easing.type: Easing.InCubic }
-            NumberAnimation { target: osdPill; property: "opacity"; to: 0; duration: 180; easing.type: Easing.InCubic }
-            NumberAnimation { target: osdPill; property: "scale"; to: 0.96; duration: 180; easing.type: Easing.InCubic }
-        }
+            Rectangle {
+                id: osdPill
+                anchors.fill: parent
 
-        Rectangle {
-            id: osdPill
-            x: (osdWindow.width - implicitWidth) / 2
-            y: osdWindow.finalY - osdWindow.animOffset
-            opacity: 0
-            scale: 0.96
-            transformOrigin: Item.Top
+                property int marginTopBottom: Spacing.spacing8
+                property int marginLeftRight: Spacing.spacing12
 
-            property int marginTopBottom: Spacing.spacing8
-            property int marginLeftRight: Spacing.spacing12
+                implicitWidth: 200
+                implicitHeight: contentRow.implicitHeight + 2*marginTopBottom
 
-            implicitWidth: 200
-            implicitHeight: contentRow.implicitHeight + 2*marginTopBottom
+                radius: implicitHeight / 2
+                color: Colors.pillBackground
+                border.width: 1
+                border.color: Colors.pillBorder
 
-            radius: implicitHeight / 2
-            color: Colors.pillBackground
-            border.width: 1
-            border.color: Colors.pillBorder
-
-            Row {
-                id: contentRow
-                anchors {
-                    fill:parent
-                    leftMargin: osdPill.marginLeftRight
-                    rightMargin: osdPill.marginLeftRight
-                    topMargin: osdPill.marginTopBottom
-                    bottomMargin: osdPill.marginTopBottom
-                }
-                spacing: Spacing.spacing8
-
-                Item {
-                    width: 24
-                    height: osdIconText.implicitHeight
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                        id: osdIconText
-                        text: volumeScope.osdIcon
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize16
-                        color: Colors.textColor
-                        anchors.centerIn: parent
+                Row {
+                    id: contentRow
+                    anchors {
+                        fill: parent
+                        leftMargin: osdPill.marginLeftRight
+                        rightMargin: osdPill.marginLeftRight
+                        topMargin: osdPill.marginTopBottom
+                        bottomMargin: osdPill.marginTopBottom
                     }
-                }
-
-                Column {
-                    spacing: Spacing.spacing4
-                    width: parent.width - 24 - parent.spacing
-                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Spacing.spacing8
 
                     Item {
-                        width: parent.width
-                        height: labelText.implicitHeight
+                        width: 24
+                        height: osdIconText.implicitHeight
+                        anchors.verticalCenter: parent.verticalCenter
 
-                        Label {
-                            id: labelText
-                            text: "Lautstärke"
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Label {
-                            text: volumeScope.isMuted ? "stumm" : (volumeScope.actualVolume + " %")
-                            color: volumeScope.isMuted ? Colors.textColorMuted : Colors.textColor
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            id: osdIconText
+                            text: volumeScope.osdIcon
+                            font.family: Typography.iconFontFamily
+                            font.pixelSize: Typography.fontSize16
+                            color: Colors.textColor
+                            anchors.centerIn: parent
                         }
                     }
 
-                    Row {
-                        width: parent.width
-                        spacing: volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0
+                    Column {
+                        spacing: Spacing.spacing4
+                        width: parent.width - 24 - parent.spacing
+                        anchors.verticalCenter: parent.verticalCenter
 
-                        Rectangle {
-                            width: Math.max(0, (parent.width - (volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0)) * volumeScope.osdValue / 100)
-                            height: 6
-                            radius: 3
-                            color: volumeScope.isMuted ? Colors.progressMuted : Colors.accentColor
+                        Item {
+                            width: parent.width
+                            height: labelText.implicitHeight
 
-                            Behavior on width {
-                                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                            Label {
+                                id: labelText
+                                text: "Lautstärke"
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Label {
+                                text: volumeScope.isMuted ? "stumm" : (volumeScope.actualVolume + " %")
+                                color: volumeScope.isMuted ? Colors.textColorMuted : Colors.textColor
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                         }
 
-                        Rectangle {
-                            width: Math.max(0, (parent.width - (volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0)) * (100 - volumeScope.osdValue) / 100)
-                            height: 6
-                            radius: 3
-                            color: Colors.progressBackground
+                        Row {
+                            width: parent.width
+                            spacing: volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0
 
-                            Behavior on width {
-                                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                            Rectangle {
+                                width: Math.max(0, (parent.width - (volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0)) * volumeScope.osdValue / 100)
+                                height: 6
+                                radius: 3
+                                color: volumeScope.isMuted ? Colors.progressMuted : Colors.accentColor
+
+                                Behavior on width {
+                                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                }
+                            }
+
+                            Rectangle {
+                                width: Math.max(0, (parent.width - (volumeScope.osdValue > 0 && volumeScope.osdValue < 100 ? 3 : 0)) * (100 - volumeScope.osdValue) / 100)
+                                height: 6
+                                radius: 3
+                                color: Colors.progressBackground
+
+                                Behavior on width {
+                                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                }
                             }
                         }
                     }

@@ -13,8 +13,6 @@ QtObject {
     readonly property color separatorColor: Qt.rgba(1, 1, 1, 0.2)
     readonly property color hoverItemHovered: Qt.rgba(1, 1, 1, 0.08)
     readonly property color hoverItemPressed: Qt.rgba(1, 1, 1, 0.15)
-    readonly property color osdPillBackground: Qt.rgba(0.12, 0.12, 0.12, 0.88)
-    readonly property color osdPillBorder: Qt.rgba(1, 1, 1, 0.18)
 
     // Accent / progress colors
     readonly property color calendarToday: "#d5071b"
