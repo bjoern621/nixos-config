@@ -25,3 +25,5 @@ VolumeIcon 1.0 components/VolumeIcon.qml
 DateTime 1.0 components/DateTime.qml
 WorkspaceIndicator 1.0 components/WorkspaceIndicator.qml
 SystemTray 1.0 components/SystemTray.qml
+NowPlaying 1.0 components/NowPlaying.qml
+MusicBars 1.0 components/MusicBars.qml

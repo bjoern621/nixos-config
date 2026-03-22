@@ -77,6 +77,18 @@ Variants {
                     }
 
                     Rectangle {
+                        visible: nowPlaying.visible
+                        width: 1
+                        height: Spacing.spacing16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    NowPlaying {
+                        id: nowPlaying
+                    }
+
+                    Rectangle {
                         width: 1
                         height: Spacing.spacing16
                         color: Colors.separatorColor
