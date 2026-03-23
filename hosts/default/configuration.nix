@@ -23,6 +23,7 @@
     ../../modules/hibernate.nix
     ../../modules/nix-ld.nix
     ../../modules/auto-update.nix
+    ../../modules/howdy.nix
   ];
 
   # Bootloader.
