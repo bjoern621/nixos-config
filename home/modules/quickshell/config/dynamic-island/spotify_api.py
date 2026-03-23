@@ -179,7 +179,11 @@ def api_request(endpoint: str) -> dict[str, Any] | None:
             # Token expired, try refresh
             if refresh_access_token():
                 return api_request(endpoint)
-        print(f"API error {e.code}: {e.reason}", file=sys.stderr)
+        retry_after = e.headers.get("Retry-After", "unknown") if e.headers else "unknown"
+        if e.code == 429:
+            print(f"API rate limited (429): retry after {retry_after}s", file=sys.stderr)
+        else:
+            print(f"API error {e.code}: {e.reason}", file=sys.stderr)
         return None
     except Exception as e:
         print(f"Request error: {e}", file=sys.stderr)
