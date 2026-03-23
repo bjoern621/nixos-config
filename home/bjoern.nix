@@ -20,6 +20,7 @@
     ./modules/google-chrome.nix
     ./user-packages.nix
     ./modules/quickshell/quickshell.nix
+    ./modules/paintdotnet.nix
   ];
 
   home.username = "bjoern";
