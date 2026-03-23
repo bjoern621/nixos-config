@@ -173,7 +173,7 @@ Item {
     // Refresh Spotify data periodically when queue is expanded
     Timer {
         id: spotifyRefreshTimer
-        interval: 5000
+        interval: 60000
         repeat: true
         running: root.queueExpanded && root.hasPlayer
         onTriggered: root.refreshSpotifyData()
