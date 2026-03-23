@@ -11,6 +11,15 @@ Item {
     readonly property bool hasPlayer: player !== null
     readonly property bool isPlaying: hasPlayer && player.playbackState === MprisPlaybackState.Playing
 
+    // Convenience properties — null-check player once, use these everywhere in the UI
+    readonly property string trackTitle: hasPlayer ? player.trackTitle : ""
+    readonly property string trackArtist: hasPlayer ? player.trackArtist : ""
+    readonly property string trackAlbum: hasPlayer ? player.trackAlbum : ""
+    readonly property string trackArtUrl: hasPlayer ? player.trackArtUrl : ""
+    readonly property real trackLength: hasPlayer ? player.length : 0
+    readonly property bool canGoNext: hasPlayer && player.canGoNext
+    readonly property bool canGoPrevious: hasPlayer && player.canGoPrevious
+
     readonly property int contentPadding: Spacing.spacing12
 
     implicitWidth: 280
@@ -187,7 +196,7 @@ Item {
     }
 
     // Local position cache, updated by timer
-    property real currentPosition: root.hasPlayer ? root.player.position : 0
+    property real currentPosition: hasPlayer ? player.position : 0
 
     // Suppresses externalValue updates briefly after seeking to prevent snap-back
     property bool seekInProgress: false
@@ -209,7 +218,7 @@ Item {
                     root.currentPosition = root.player.position;
                 }
                 if (!root.seekInProgress && !positionSlider.pressed) {
-                    positionSlider.externalValue = root.player.length > 0 ? root.player.position / root.player.length : 0;
+                    positionSlider.externalValue = root.trackLength > 0 ? root.player.position / root.trackLength : 0;
                 }
             }
         }
@@ -267,12 +276,44 @@ Item {
         return m + ":" + (s < 10 ? "0" : "") + s;
     }
 
+    // Empty state when no player is available
     Rectangle {
         anchors.fill: parent
         radius: Spacing.spacing12
         color: Colors.pillBackground
         border.width: 1
         border.color: Colors.pillBorder
+        visible: !root.hasPlayer
+
+        Column {
+            anchors.centerIn: parent
+            spacing: Spacing.spacing8
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "\uf001"
+                font.family: Typography.iconFontFamily
+                font.pixelSize: Typography.fontSize20
+                color: Colors.textColorMuted
+            }
+
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Keine Wiedergabe"
+                font.pixelSize: Typography.fontSize14
+                font.weight: Font.Normal
+                color: Colors.textColorMuted
+            }
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: Spacing.spacing12
+        color: Colors.pillBackground
+        border.width: 1
+        border.color: Colors.pillBorder
+        visible: root.hasPlayer
 
         Column {
             id: menuLayout
@@ -298,7 +339,7 @@ Item {
                     Image {
                         id: albumArt
                         anchors.fill: parent
-                        source: root.hasPlayer ? root.player.trackArtUrl : ""
+                        source: root.trackArtUrl
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         visible: status === Image.Ready
@@ -349,14 +390,14 @@ Item {
                     spacing: Spacing.spacing2
 
                     Label {
-                        text: root.hasPlayer ? root.player.trackTitle : ""
+                        text: root.trackTitle
                         font.pixelSize: Typography.fontSize16
                         elide: Text.ElideRight
                         width: parent.width
                     }
 
                     Label {
-                        text: root.hasPlayer ? root.player.trackArtist : ""
+                        text: root.trackArtist
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -365,8 +406,8 @@ Item {
                     }
 
                     Label {
-                        visible: root.hasPlayer && root.player.trackAlbum !== ""
-                        text: root.hasPlayer ? root.player.trackAlbum : ""
+                        visible: root.trackAlbum !== ""
+                        text: root.trackAlbum
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -389,24 +430,24 @@ Item {
                     stepSize: 0.005
                     liveUpdate: false
                     handleVerticalSize: Spacing.spacing12
-                    externalValue: root.hasPlayer && root.player.length > 0 ? root.player.position / root.player.length : 0
+                    externalValue: root.trackLength > 0 ? root.player.position / root.trackLength : 0
 
                     onPressedChanged: {
-                        if (pressed && root.hasPlayer && root.player.length > 0) {
-                            root.currentPosition = value * root.player.length;
+                        if (pressed && root.trackLength > 0) {
+                            root.currentPosition = value * root.trackLength;
                         }
                     }
 
                     onValueChanged: {
-                        if (pressed && root.hasPlayer && root.player.length > 0) {
-                            root.currentPosition = value * root.player.length;
+                        if (pressed && root.trackLength > 0) {
+                            root.currentPosition = value * root.trackLength;
                         }
                     }
 
                     onMoved: (newValue) => {
-                        if (root.hasPlayer && root.player.canSeek && root.player.length > 0) {
-                            root.player.position = newValue * root.player.length;
-                            root.currentPosition = newValue * root.player.length;
+                        if (root.hasPlayer && root.player.canSeek && root.trackLength > 0) {
+                            root.player.position = newValue * root.trackLength;
+                            root.currentPosition = newValue * root.trackLength;
                             positionSlider.externalValue = newValue;
                             root.seekInProgress = true;
                             seekGuardTimer.restart();
@@ -420,7 +461,7 @@ Item {
 
                     Label {
                         id: elapsedLabel
-                        text: root.hasPlayer ? root.formatTime(root.currentPosition) : "0:00"
+                        text: root.formatTime(root.currentPosition)
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -428,7 +469,7 @@ Item {
                     }
 
                     Label {
-                        text: root.hasPlayer ? root.formatTime(root.player.length) : "0:00"
+                        text: root.formatTime(root.trackLength)
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -464,7 +505,7 @@ Item {
                         text: "\uf048"
                         font.family: Typography.iconFontFamily
                         font.pixelSize: Typography.fontSize20
-                        color: root.hasPlayer && root.player.canGoPrevious ? Colors.textColor : Colors.textColorMuted
+                        color: root.canGoPrevious ? Colors.textColor : Colors.textColorMuted
                     }
 
                     HoverHandler { id: prevHover; cursorShape: Qt.PointingHandCursor }
@@ -528,7 +569,7 @@ Item {
                         text: "\uf051"
                         font.family: Typography.iconFontFamily
                         font.pixelSize: Typography.fontSize20
-                        color: root.hasPlayer && root.player.canGoNext ? Colors.textColor : Colors.textColorMuted
+                        color: root.canGoNext ? Colors.textColor : Colors.textColorMuted
                     }
 
                     HoverHandler { id: nextHover; cursorShape: Qt.PointingHandCursor }
@@ -831,7 +872,7 @@ Item {
 
                                     Image {
                                         anchors.fill: parent
-                                        source: root.hasPlayer ? root.player.trackArtUrl : ""
+                                        source: root.trackArtUrl
                                         fillMode: Image.PreserveAspectCrop
                                         asynchronous: true
                                         visible: status === Image.Ready
@@ -864,7 +905,7 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
 
                                     Label {
-                                        text: root.hasPlayer ? root.player.trackTitle : ""
+                                        text: root.trackTitle
                                         font.pixelSize: Typography.fontSize14
                                         font.weight: Font.Bold
                                         color: Colors.textColor
@@ -873,8 +914,8 @@ Item {
                                     }
 
                                     Label {
-                                        visible: root.hasPlayer && (root.player.trackArtist || "") !== ""
-                                        text: root.hasPlayer ? root.player.trackArtist : ""
+                                        visible: root.trackArtist !== ""
+                                        text: root.trackArtist
                                         font.pixelSize: Typography.fontSize12
                                         font.weight: Font.Normal
                                         color: Colors.textColorMuted
