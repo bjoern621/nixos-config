@@ -1,4 +1,6 @@
 import QtQuick
+import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import "../"
 
@@ -19,17 +21,96 @@ Item {
     property int maxHistory: 8
     property bool queueExpanded: false
 
-    // Mock data for playlist sections (will be replaced with Spotify API)
+    // Spotify API data
+    property var spotifyRecentlyPlayed: []
+    property var spotifyQueue: []
+    property var spotifyCurrent: null
+    property bool spotifyDataLoading: false
+
+    // Fallback mock data (used when Spotify API is not available)
     readonly property var mockRecentlyPlayed: [
-        { title: "Midnight City", artist: "M83", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
-        { title: "Blinding Lights", artist: "The Weeknd", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
-        { title: "Take On Me", artist: "a-ha", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" }
+        { title: "Midnight City", artist: "M83", artUrl: "" },
+        { title: "Blinding Lights", artist: "The Weeknd", artUrl: "" },
+        { title: "Take On Me", artist: "a-ha", artUrl: "" }
     ]
     readonly property var mockQueue: [
-        { title: "Stressed Out", artist: "Twenty One Pilots", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
-        { title: "Electric Feel", artist: "MGMT", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
-        { title: "Do I Wanna Know?", artist: "Arctic Monkeys", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" }
+        { title: "Stressed Out", artist: "Twenty One Pilots", artUrl: "" },
+        { title: "Electric Feel", artist: "MGMT", artUrl: "" },
+        { title: "Do I Wanna Know?", artist: "Arctic Monkeys", artUrl: "" }
     ]
+
+    // Use Spotify data if available, otherwise fall back to mock
+    readonly property var displayRecentlyPlayed: spotifyRecentlyPlayed.length > 0 ? spotifyRecentlyPlayed : mockRecentlyPlayed
+    readonly property var displayQueue: spotifyQueue.length > 0 ? spotifyQueue : mockQueue
+
+    // Spotify API process
+    Process {
+        id: spotifyProcess
+        running: false
+
+        property string currentCommand: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    const result = JSON.parse(data)
+                    if (spotifyProcess.currentCommand === "all") {
+                        if (result.recently_played) {
+                            root.spotifyRecentlyPlayed = result.recently_played
+                        }
+                        if (result.current) {
+                            root.spotifyCurrent = result.current
+                        }
+                        if (result.queue) {
+                            root.spotifyQueue = result.queue
+                        }
+                        root.spotifyDataLoading = false
+                    }
+                } catch (e) {
+                    console.log("Spotify API parse error:", e)
+                    root.spotifyDataLoading = false
+                }
+            }
+        }
+
+        stderr: SplitParser {
+            onRead: data => {
+                console.log("Spotify API error:", data)
+            }
+        }
+
+        onExited: (code, status) => {
+            if (code !== 0) {
+                console.log("Spotify API process exited with code", code)
+                root.spotifyDataLoading = false
+            }
+        }
+    }
+
+    function refreshSpotifyData() {
+        if (root.spotifyDataLoading) return
+        root.spotifyDataLoading = true
+        spotifyProcess.currentCommand = "all"
+        const scriptPath = Qt.resolvedUrl("../spotify_api.py").toString().replace("file://", "")
+        spotifyProcess.command = ["python3", scriptPath, "all"]
+        spotifyProcess.running = true
+    }
+
+    // Refresh Spotify data periodically when queue is expanded
+    Timer {
+        id: spotifyRefreshTimer
+        interval: 5000
+        repeat: true
+        running: root.queueExpanded && root.hasPlayer
+        onTriggered: root.refreshSpotifyData()
+    }
+
+    // Initial load when queue expands
+    onQueueExpandedChanged: {
+        if (queueExpanded && root.hasPlayer) {
+            root.refreshSpotifyData()
+        }
+    }
 
     // Local position cache, updated by timer
     property real currentPosition: root.hasPlayer ? root.player.position : 0
@@ -462,7 +543,7 @@ Item {
                         }
 
                         Repeater {
-                            model: root.mockRecentlyPlayed
+                            model: root.displayRecentlyPlayed
 
                             delegate: Item {
                                 id: recentDelegate
@@ -543,8 +624,12 @@ Item {
                                 TapHandler {
                                     id: recentTap
                                     onTapped: {
-                                        // Placeholder - will integrate with Spotify API
-                                        console.log("Play recent track:", modelData.title)
+                                        if (modelData.uri) {
+                                            // Play via Spotify URI
+                                            console.log("Play Spotify URI:", modelData.uri)
+                                        } else {
+                                            console.log("Play recent track:", modelData.title)
+                                        }
                                     }
                                 }
 
@@ -687,7 +772,7 @@ Item {
                         }
 
                         Repeater {
-                            model: root.mockQueue
+                            model: root.displayQueue
 
                             delegate: Item {
                                 id: queueDelegate
@@ -768,8 +853,12 @@ Item {
                                 TapHandler {
                                     id: queueTap
                                     onTapped: {
-                                        // Placeholder - will integrate with Spotify API
-                                        console.log("Play queued track:", modelData.title)
+                                        if (modelData.uri) {
+                                            // Play via Spotify URI
+                                            console.log("Play Spotify URI:", modelData.uri)
+                                        } else {
+                                            console.log("Play queued track:", modelData.title)
+                                        }
                                     }
                                 }
 

@@ -1,5 +1,7 @@
 # Hardware configuration (machine-specific)
 hosts/*/hardware-configuration.nix
 
+__pycache__/
+
 # Non-free assets
 modules/fancy-boot/darwin/logo.png

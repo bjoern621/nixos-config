@@ -16,6 +16,7 @@
     font-awesome # Icons
     inter # Text
     imagemagick # WallpaperAccent color extraction
+    python3 # For Spotify API integration
   ];
 
   # Link quickshell config to ~/.config/quickshell via an out-of-store symlink
