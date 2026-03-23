@@ -4,48 +4,64 @@ Spotify API integration for Quickshell NowPlayingMenu.
 Handles OAuth2 authentication and provides recently played, current track, and queue data.
 """
 
+from __future__ import annotations
+
+import base64
 import json
 import sys
-import urllib.request
-import urllib.parse
-import urllib.error
 import time
-import base64
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import threading
+import urllib.error
+import urllib.parse
+import urllib.request
 import webbrowser
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
+from typing import Any
 
 # Configuration
-CREDENTIALS_FILE = Path.home() / ".config" / "quickshell-spotify" / "credentials.json"
-CLIENT_ID = ""  # Will be set from credentials file or CLI
-CLIENT_SECRET = ""  # Will be set from credentials file or CLI
-REDIRECT_URI = "http://127.0.0.1:8888/callback"
-SCOPES = (
+CREDENTIALS_FILE: Path = (
+    Path.home() / ".config" / "quickshell-spotify" / "credentials.json"
+)
+_client_id: str = ""  # Set from credentials file
+_client_secret: str = ""  # Set from credentials file
+REDIRECT_URI: str = "http://127.0.0.1:8888/callback"
+SCOPES: str = (
     "user-read-recently-played user-read-currently-playing user-read-playback-state"
 )
 
 # Token storage
-_tokens = None
+_tokens: dict[str, Any] | None = None
 
 
-def load_credentials():
-    """Load client credentials from file or use defaults."""
-    global CLIENT_ID, CLIENT_SECRET
+def load_credentials() -> tuple[str, str]:
+    """
+    Load client credentials from file or use defaults.
+
+    Returns:
+        A tuple of (client_id, client_secret).
+    """
+    global _client_id, _client_secret
 
     if CREDENTIALS_FILE.exists():
         with open(CREDENTIALS_FILE, "r") as f:
-            data = json.load(f)
-            CLIENT_ID = data.get("client_id", "")
-            CLIENT_SECRET = data.get("client_secret", "")
+            data: dict[str, Any] = json.load(f)
+            _client_id = data.get("client_id", "")
+            _client_secret = data.get("client_secret", "")
 
-    return CLIENT_ID, CLIENT_SECRET
+    return _client_id, _client_secret
 
 
-def save_tokens(access_token, refresh_token, expires_in):
-    """Save tokens to file."""
+def save_tokens(access_token: str, refresh_token: str, expires_in: int) -> None:
+    """
+    Save tokens to file.
+
+    Args:
+        access_token: The Spotify access token.
+        refresh_token: The Spotify refresh token.
+        expires_in: Token expiration time in seconds.
+    """
     CREDENTIALS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    data = {}
+    data: dict[str, Any] = {}
     if CREDENTIALS_FILE.exists():
         with open(CREDENTIALS_FILE, "r") as f:
             data = json.load(f)
@@ -58,8 +74,13 @@ def save_tokens(access_token, refresh_token, expires_in):
         json.dump(data, f, indent=2)
 
 
-def load_tokens():
-    """Load tokens from file."""
+def load_tokens() -> dict[str, Any] | None:
+    """
+    Load tokens from file.
+
+    Returns:
+        The tokens dictionary or None if no tokens exist.
+    """
     global _tokens
 
     if not CREDENTIALS_FILE.exists():
@@ -71,8 +92,13 @@ def load_tokens():
         return data
 
 
-def refresh_access_token():
-    """Refresh the access token using refresh token."""
+def refresh_access_token() -> bool:
+    """
+    Refresh the access token using refresh token.
+
+    Returns:
+        True if refresh was successful, False otherwise.
+    """
     global _tokens
 
     tokens = load_tokens()
@@ -80,7 +106,7 @@ def refresh_access_token():
         return False
 
     url = "https://accounts.spotify.com/api/token"
-    auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
+    auth_str = f"{_client_id}:{_client_secret}"
     auth_b64 = base64.b64encode(auth_str.encode()).decode()
 
     data = urllib.parse.urlencode(
@@ -104,8 +130,13 @@ def refresh_access_token():
         return False
 
 
-def get_valid_token():
-    """Get a valid access token, refreshing if necessary."""
+def get_valid_token() -> str | None:
+    """
+    Get a valid access token, refreshing if necessary.
+
+    Returns:
+        A valid access token string, or None if unavailable.
+    """
     tokens = load_tokens()
     if not tokens or "access_token" not in tokens:
         return None
@@ -116,12 +147,22 @@ def get_valid_token():
         if not refresh_access_token():
             return None
         tokens = load_tokens()
+        if not tokens:
+            return None
 
     return tokens.get("access_token")
 
 
-def api_request(endpoint):
-    """Make an authenticated API request."""
+def api_request(endpoint: str) -> dict[str, Any] | None:
+    """
+    Make an authenticated API request.
+
+    Args:
+        endpoint: The Spotify API endpoint (e.g., "/v1/me/player").
+
+    Returns:
+        The JSON response as a dictionary, or None on error.
+    """
     token = get_valid_token()
     if not token:
         return None
@@ -145,13 +186,21 @@ def api_request(endpoint):
         return None
 
 
-def get_recently_played(limit=3):
-    """Get recently played tracks."""
+def get_recently_played(limit: int = 3) -> list[dict[str, str]]:
+    """
+    Get recently played tracks.
+
+    Args:
+        limit: Maximum number of tracks to return.
+
+    Returns:
+        A list of track dictionaries with title, artist, artUrl, and uri.
+    """
     result = api_request(f"/v1/me/player/recently-played?limit={limit}")
     if not result or "items" not in result:
         return []
 
-    tracks = []
+    tracks: list[dict[str, str]] = []
     for item in result["items"]:
         track = item.get("track", {})
         album = track.get("album", {})
@@ -171,8 +220,14 @@ def get_recently_played(limit=3):
     return tracks
 
 
-def get_current_playback():
-    """Get current playback state."""
+def get_current_playback() -> dict[str, Any] | None:
+    """
+    Get current playback state.
+
+    Returns:
+        A dictionary with track info (title, artist, artUrl, album, uri,
+        is_playing, progress_ms, duration_ms), or None if not playing.
+    """
     result = api_request("/v1/me/player")
     if not result:
         return None
@@ -199,13 +254,18 @@ def get_current_playback():
     }
 
 
-def get_queue():
-    """Get the user's queue."""
+def get_queue() -> list[dict[str, str]]:
+    """
+    Get the user's queue.
+
+    Returns:
+        A list of track dictionaries with title, artist, artUrl, and uri.
+    """
     result = api_request("/v1/me/player/queue")
     if not result or "queue" not in result:
         return []
 
-    tracks = []
+    tracks: list[dict[str, str]] = []
     for track in result["queue"]:
         album = track.get("album", {})
         images = album.get("images", [])
@@ -224,10 +284,17 @@ def get_queue():
     return tracks
 
 
+class _OAuthServer(HTTPServer):
+    """HTTPServer with shutdown_flag for OAuth callback handling."""
+
+    shutdown_flag: bool = False
+
+
 class CallbackHandler(BaseHTTPRequestHandler):
     """HTTP handler for OAuth callback."""
 
-    def do_GET(self):
+    def do_GET(self) -> None:
+        """Handle GET requests for OAuth callback."""
         query = urllib.parse.urlparse(self.path).query
         params = urllib.parse.parse_qs(query)
 
@@ -247,6 +314,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
 
             # Exchange code for tokens
             exchange_code(code)
+            assert isinstance(self.server, _OAuthServer)
             self.server.shutdown_flag = True
         elif "error" in params:
             self.send_response(400)
@@ -255,16 +323,26 @@ class CallbackHandler(BaseHTTPRequestHandler):
             self.wfile.write(
                 f"<html><body><h1>Error</h1><p>{params['error'][0]}</p></body></html>".encode()
             )
+            assert isinstance(self.server, _OAuthServer)
             self.server.shutdown_flag = True
 
-    def log_message(self, format, *args):
-        pass  # Suppress logging
+    def log_message(self, format: str, *args: Any) -> None:
+        """Suppress logging."""
+        pass
 
 
-def exchange_code(code):
-    """Exchange authorization code for tokens."""
+def exchange_code(code: str) -> bool:
+    """
+    Exchange authorization code for tokens.
+
+    Args:
+        code: The authorization code from Spotify.
+
+    Returns:
+        True if exchange was successful, False otherwise.
+    """
     url = "https://accounts.spotify.com/api/token"
-    auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
+    auth_str = f"{_client_id}:{_client_secret}"
     auth_b64 = base64.b64encode(auth_str.encode()).decode()
 
     data = urllib.parse.urlencode(
@@ -288,12 +366,17 @@ def exchange_code(code):
         return False
 
 
-def start_auth():
-    """Start the OAuth2 authorization flow."""
+def start_auth() -> bool:
+    """
+    Start the OAuth2 authorization flow.
+
+    Returns:
+        True if authorization was initiated, False if credentials are missing.
+    """
     load_credentials()
 
-    if not CLIENT_ID or not CLIENT_SECRET:
-        print("Error: CLIENT_ID and CLIENT_SECRET must be set", file=sys.stderr)
+    if not _client_id or not _client_secret:
+        print("Error: client_id and client_secret must be set", file=sys.stderr)
         print(f"Create {CREDENTIALS_FILE} with:", file=sys.stderr)
         print(
             '  {"client_id": "your_id", "client_secret": "your_secret"}',
@@ -304,7 +387,7 @@ def start_auth():
     # Build auth URL
     params = urllib.parse.urlencode(
         {
-            "client_id": CLIENT_ID,
+            "client_id": _client_id,
             "response_type": "code",
             "redirect_uri": REDIRECT_URI,
             "scope": SCOPES,
@@ -313,8 +396,7 @@ def start_auth():
     auth_url = f"https://accounts.spotify.com/authorize?{params}"
 
     # Start local server
-    server = HTTPServer(("127.0.0.1", 8888), CallbackHandler)
-    server.shutdown_flag = False
+    server = _OAuthServer(("127.0.0.1", 8888), CallbackHandler)
 
     print(f"Opening browser for authentication...", file=sys.stderr)
     webbrowser.open(auth_url)
@@ -327,8 +409,8 @@ def start_auth():
     return True
 
 
-def main():
-    """Main entry point."""
+def main() -> None:
+    """Main entry point for CLI usage."""
     load_credentials()
 
     if len(sys.argv) < 2:
@@ -350,22 +432,22 @@ def main():
         start_auth()
     elif command == "recent":
         limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
-        result = get_recently_played(limit)
-        print(json.dumps(result))
+        result_recent: list[dict[str, str]] = get_recently_played(limit)
+        print(json.dumps(result_recent))
     elif command == "current":
-        result = get_current_playback()
-        print(json.dumps(result))
+        result_current: dict[str, Any] | None = get_current_playback()
+        print(json.dumps(result_current))
     elif command == "queue":
         limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
-        result = get_queue()[:limit]
-        print(json.dumps(result))
+        result_queue: list[dict[str, str]] = get_queue()[:limit]
+        print(json.dumps(result_queue))
     elif command == "all":
-        result = {
+        result_all: dict[str, Any] = {
             "recently_played": get_recently_played(3),
             "current": get_current_playback(),
             "queue": get_queue()[:3],
         }
-        print(json.dumps(result))
+        print(json.dumps(result_all))
     else:
         print(f"Unknown command: {command}", file=sys.stderr)
         sys.exit(1)
