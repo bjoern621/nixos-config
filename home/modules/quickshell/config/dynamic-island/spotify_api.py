@@ -9,7 +9,7 @@ import sys
 import urllib.request
 import urllib.parse
 import urllib.error
-import os
+import time
 import base64
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
@@ -52,7 +52,7 @@ def save_tokens(access_token, refresh_token, expires_in):
 
     data["access_token"] = access_token
     data["refresh_token"] = refresh_token
-    data["expires_at"] = int(os.times().elapsed * 1000) + (expires_in * 1000)
+    data["expires_at"] = int(time.time() * 1000) + (expires_in * 1000)
 
     with open(CREDENTIALS_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -111,7 +111,7 @@ def get_valid_token():
         return None
 
     # Check if token needs refresh (5 minute buffer)
-    current_time = int(os.times().elapsed * 1000)
+    current_time = int(time.time() * 1000)
     if "expires_at" in tokens and current_time >= tokens["expires_at"] - 300000:
         if not refresh_access_token():
             return None
