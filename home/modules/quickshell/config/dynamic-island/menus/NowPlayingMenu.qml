@@ -20,6 +20,7 @@ Item {
     property var trackHistory: []
     property int maxHistory: 8
     property bool queueExpanded: false
+    property bool showMockData: false
 
     // Spotify API data
     property var spotifyRecentlyPlayed: []
@@ -40,8 +41,8 @@ Item {
     ]
 
     // Use Spotify data if available, otherwise fall back to mock
-    readonly property var displayRecentlyPlayed: spotifyRecentlyPlayed.length > 0 ? spotifyRecentlyPlayed : mockRecentlyPlayed
-    readonly property var displayQueue: spotifyQueue.length > 0 ? spotifyQueue : mockQueue
+    readonly property var displayRecentlyPlayed: showMockData ? mockRecentlyPlayed : (spotifyRecentlyPlayed.length > 0 ? spotifyRecentlyPlayed : mockRecentlyPlayed)
+    readonly property var displayQueue: showMockData ? mockQueue : (spotifyQueue.length > 0 ? spotifyQueue : mockQueue)
 
     // Spotify API process
     Process {
