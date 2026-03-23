@@ -24,12 +24,101 @@ Item {
     // Spotify API data
     property var spotifyRecentlyPlayed: []
     property var spotifyQueue: []
-    property var spotifyCurrent: null
     property bool spotifyDataLoading: false
 
-    readonly property var displayRecentlyPlayed: spotifyRecentlyPlayed
+    property var displayRecentlyPlayed: []
     readonly property var displayQueue: spotifyQueue
-    readonly property bool showSkeletons: debugSkeletons || spotifyDataLoading || (spotifyRecentlyPlayed.length === 0 && spotifyQueue.length === 0)
+    readonly property bool showSkeletons: debugSkeletons || (spotifyDataLoading && trackHistory.length <= 1 && spotifyRecentlyPlayed.length === 0 && spotifyQueue.length === 0)
+
+    // Debug info from last merge
+    property string debugMergeLog: ""
+
+    function mergeRecentlyPlayed() {
+        const now = new Date().toLocaleTimeString()
+        let log = "=== MERGE @ " + now + " ===\n"
+
+        // Local MPRIS history minus current track — already ordered old→new
+        const local = trackHistory.slice(0, -1)
+        log += "\n--- MPRIS trackHistory (" + trackHistory.length + " total, " + local.length + " without current) ---\n"
+        for (let i = 0; i < trackHistory.length; i++) {
+            const t = trackHistory[i]
+            const isCurrent = (i === trackHistory.length - 1)
+            log += "  [" + i + "] " + t.title + " - " + t.artist + (isCurrent ? " [CURRENT]" : "") + "\n"
+        }
+
+        log += "\n--- Spotify recently_played (" + spotifyRecentlyPlayed.length + ") ---\n"
+        for (let i = 0; i < spotifyRecentlyPlayed.length; i++) {
+            const s = spotifyRecentlyPlayed[i]
+            log += "  [" + i + "] " + s.title + " - " + s.artist + " (uri: " + (s.uri || "none") + ")\n"
+        }
+
+        // Build a lookup from Spotify data for enrichment
+        const spotifyLookup = {}
+        for (let i = 0; i < spotifyRecentlyPlayed.length; i++) {
+            const s = spotifyRecentlyPlayed[i]
+            const key = (s.title + "|" + s.artist).toLowerCase().trim()
+            spotifyLookup[key] = s
+        }
+
+        // Enrich local tracks with Spotify metadata
+        const seenKeys = new Set()
+        const merged = []
+        log += "\n--- Enriching local tracks ---\n"
+        for (let i = 0; i < local.length; i++) {
+            const t = local[i]
+            const key = (t.title + "|" + t.artist).toLowerCase().trim()
+            seenKeys.add(key)
+            const spot = spotifyLookup[key]
+            const enriched = {
+                title: t.title,
+                artist: t.artist,
+                artUrl: (spot && spot.artUrl) ? spot.artUrl : (t.artUrl || ""),
+                uri: spot ? (spot.uri || "") : "",
+                source: spot ? "mpris+spotify" : "mpris"
+            }
+            merged.push(enriched)
+            log += "  [" + i + "] " + t.title + " - " + t.artist + " → " + enriched.source + (spot ? " (matched key: " + key + ")" : "") + "\n"
+        }
+
+        // Prepend Spotify-only tracks (older, from before Quickshell started)
+        // Spotify API returns newest-first, so reverse for old→new order
+        const backfill = []
+        log += "\n--- Spotify-only backfill ---\n"
+        for (let i = spotifyRecentlyPlayed.length - 1; i >= 0; i--) {
+            const s = spotifyRecentlyPlayed[i]
+            const key = (s.title + "|" + s.artist).toLowerCase().trim()
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key)
+                backfill.push({
+                    title: s.title,
+                    artist: s.artist,
+                    artUrl: s.artUrl || "",
+                    uri: s.uri || "",
+                    source: "spotify"
+                })
+                log += "  + " + s.title + " - " + s.artist + " (backfill)\n"
+            } else {
+                log += "  - " + s.title + " - " + s.artist + " (already in local, skipped)\n"
+            }
+        }
+
+        // Backfill goes before local (they're older), then take last 3
+        const all = backfill.concat(merged)
+        const result = all.slice(Math.max(0, all.length - 3))
+
+        log += "\n--- Final merged list (from " + all.length + ", showing last 3) ---\n"
+        for (let i = 0; i < result.length; i++) {
+            const r = result[i]
+            log += "  [" + i + "] " + r.title + " - " + r.artist + " (" + r.source + ")\n"
+        }
+
+        debugMergeLog = log
+        console.log(log)
+        return result
+    }
+
+    onTrackHistoryChanged: displayRecentlyPlayed = mergeRecentlyPlayed()
+    onSpotifyRecentlyPlayedChanged: displayRecentlyPlayed = mergeRecentlyPlayed()
 
     // Spotify API process
     Process {
@@ -45,9 +134,6 @@ Item {
                     if (spotifyProcess.currentCommand === "all") {
                         if (result.recently_played) {
                             root.spotifyRecentlyPlayed = result.recently_played
-                        }
-                        if (result.current) {
-                            root.spotifyCurrent = result.current
                         }
                         if (result.queue) {
                             root.spotifyQueue = result.queue
@@ -129,22 +215,30 @@ Item {
         }
     }
 
-    // Track changes → push to history
+    // Track changes → push to history (use postTrackChanged so properties are already updated)
     Connections {
         target: root.player
         enabled: root.hasPlayer
 
-        function onTrackChanged() {
+        function onPostTrackChanged() {
             if (!root.hasPlayer) return;
             const title = root.player.trackTitle;
             const artist = root.player.trackArtist;
             const artUrl = root.player.trackArtUrl;
-            if (!title) return;
+            console.log("[trackHistory] postTrackChanged fired — title:", title, "artist:", artist)
+
+            if (!title) {
+                console.log("[trackHistory] skipped: no title")
+                return;
+            }
 
             const h = root.trackHistory;
             if (h.length > 0) {
                 const last = h[h.length - 1];
-                if (last.title === title && last.artist === artist) return;
+                if (last.title === title && last.artist === artist) {
+                    console.log("[trackHistory] skipped: duplicate of last entry")
+                    return;
+                }
             }
 
             let newHistory = h.slice();
@@ -152,6 +246,7 @@ Item {
             if (newHistory.length > root.maxHistory + 1)
                 newHistory = newHistory.slice(newHistory.length - root.maxHistory - 1);
             root.trackHistory = newHistory;
+            console.log("[trackHistory] added:", title, "- total:", newHistory.length)
         }
     }
 
@@ -923,6 +1018,31 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    // Debug overlay — shows merge log at top-left
+    Rectangle {
+        anchors.top: parent.bottom
+        anchors.topMargin: 8
+        anchors.left: parent.left
+        width: 500
+        height: debugText.implicitHeight + 16
+        radius: 6
+        color: "#ee1a1a2e"
+        border.width: 1
+        border.color: "#444"
+        visible: root.debugMergeLog !== ""
+
+        Text {
+            id: debugText
+            anchors.fill: parent
+            anchors.margins: 8
+            text: root.debugMergeLog
+            font.family: "monospace"
+            font.pixelSize: 11
+            color: "#88ff88"
+            wrapMode: Text.Wrap
         }
     }
 }

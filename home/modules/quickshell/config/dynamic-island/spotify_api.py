@@ -220,40 +220,6 @@ def get_recently_played(limit: int = 3) -> list[dict[str, str]]:
     return tracks
 
 
-def get_current_playback() -> dict[str, Any] | None:
-    """
-    Get current playback state.
-
-    Returns:
-        A dictionary with track info (title, artist, artUrl, album, uri,
-        is_playing, progress_ms, duration_ms), or None if not playing.
-    """
-    result = api_request("/v1/me/player")
-    if not result:
-        return None
-
-    if not result.get("is_playing", False) and "item" not in result:
-        return None
-
-    track = result.get("item", {})
-    if not track:
-        return None
-
-    album = track.get("album", {})
-    images = album.get("images", [])
-
-    return {
-        "title": track.get("name", ""),
-        "artist": ", ".join([a.get("name", "") for a in track.get("artists", [])]),
-        "artUrl": images[0].get("url", "") if images else "",
-        "album": album.get("name", ""),
-        "uri": track.get("uri", ""),
-        "is_playing": result.get("is_playing", False),
-        "progress_ms": result.get("progress_ms", 0),
-        "duration_ms": track.get("duration_ms", 0),
-    }
-
-
 def get_queue() -> list[dict[str, str]]:
     """
     Get the user's queue.
@@ -421,7 +387,6 @@ def main() -> None:
             "  recent [n]    - Get n recently played tracks (default 3)",
             file=sys.stderr,
         )
-        print("  current       - Get current playback", file=sys.stderr)
         print("  queue [n]     - Get n tracks from queue (default 3)", file=sys.stderr)
         print("  all           - Get all data as JSON", file=sys.stderr)
         sys.exit(1)
@@ -434,9 +399,6 @@ def main() -> None:
         limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
         result_recent: list[dict[str, str]] = get_recently_played(limit)
         print(json.dumps(result_recent))
-    elif command == "current":
-        result_current: dict[str, Any] | None = get_current_playback()
-        print(json.dumps(result_current))
     elif command == "queue":
         limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
         result_queue: list[dict[str, str]] = get_queue()[:limit]
@@ -444,7 +406,6 @@ def main() -> None:
     elif command == "all":
         result_all: dict[str, Any] = {
             "recently_played": get_recently_played(3),
-            "current": get_current_playback(),
             "queue": get_queue()[:3],
         }
         print(json.dumps(result_all))
