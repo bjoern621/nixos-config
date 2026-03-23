@@ -11,6 +11,7 @@ Scope {
     id: launcherScope
 
     property bool launcherVisible: false
+    onLauncherVisibleChanged: Globals.launcherVisible = launcherVisible
 
     function focusedScreen() {
         const mon = Hyprland.focusedMonitor

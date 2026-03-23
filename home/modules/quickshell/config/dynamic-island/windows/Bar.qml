@@ -44,7 +44,7 @@ Variants {
             item: interactionZone
         }
 
-        readonly property bool shouldShowPill: zoneHover.hovered || nowPlayingHoverItem.menuOpen || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible
+        readonly property bool shouldShowPill: zoneHover.hovered || nowPlayingHoverItem.menuOpen || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible || Globals.launcherVisible
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
