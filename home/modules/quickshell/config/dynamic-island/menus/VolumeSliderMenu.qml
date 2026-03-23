@@ -29,19 +29,25 @@ Item {
         border.width: 1
         border.color: Colors.pillBorder
 
-        Text {
-            id: volIcon
-            text: sliderMenu.volumeIcon
-            font.family: Typography.iconFontFamily
-            font.pixelSize: Typography.fontSize14
-            color: Colors.textColor
+        ContentReplace {
+            id: volIconReplace
+            contentKey: sliderMenu.volumeIcon
             anchors {
                 left: parent.left
                 leftMargin: Spacing.spacing16
                 verticalCenter: parent.verticalCenter
             }
-            width: 16
-            horizontalAlignment: Text.AlignHCenter
+            width: 20
+            height: volIcon.implicitHeight
+
+            Text {
+                id: volIcon
+                text: volIconReplace.displayValue
+                font.family: Typography.iconFontFamily
+                font.pixelSize: Typography.fontSize14
+                color: Colors.textColor
+                anchors.centerIn: parent
+            }
         }
 
         Label {
@@ -59,7 +65,7 @@ Item {
         StepSlider {
             id: stepSlider
             anchors {
-                left: volIcon.right
+                left: volIconReplace.right
                 leftMargin: Spacing.spacing8
                 right: pctLabel.left
                 rightMargin: Spacing.spacing8

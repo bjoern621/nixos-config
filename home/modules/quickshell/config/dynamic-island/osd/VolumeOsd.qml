@@ -110,14 +110,16 @@ Scope {
                     }
                     spacing: Spacing.spacing8
 
-                    Item {
+                    ContentReplace {
+                        id: osdIconReplace
                         width: 24
                         height: osdIconText.implicitHeight
                         anchors.verticalCenter: parent.verticalCenter
+                        contentKey: volumeScope.osdIcon
 
                         Text {
                             id: osdIconText
-                            text: volumeScope.osdIcon
+                            text: osdIconReplace.displayValue
                             font.family: Typography.iconFontFamily
                             font.pixelSize: Typography.fontSize16
                             color: Colors.textColor
@@ -141,11 +143,19 @@ Scope {
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
-                            Label {
-                                text: volumeScope.isMuted ? "stumm" : (volumeScope.actualVolume + " %")
-                                color: volumeScope.isMuted ? Colors.textColorMuted : Colors.textColor
+                            ContentReplace {
+                                id: volLabelReplace
+                                contentKey: volumeScope.isMuted ? "muted" : volumeScope.actualVolume
                                 anchors.right: parent.right
                                 anchors.verticalCenter: parent.verticalCenter
+                                width: volLabel.implicitWidth
+                                height: volLabel.implicitHeight
+
+                                Label {
+                                    id: volLabel
+                                    text: volLabelReplace.displayValue === "muted" ? "stumm" : (volLabelReplace.displayValue + " %")
+                                    color: volLabelReplace.displayValue === "muted" ? Colors.textColorMuted : Colors.textColor
+                                }
                             }
                         }
 

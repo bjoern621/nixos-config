@@ -10,6 +10,7 @@ PopReveal 1.0 animations/PopReveal.qml
 SquishBehavior 1.0 animations/SquishBehavior.qml
 ContentSlide 1.0 animations/ContentSlide.qml
 ExpandSection 1.0 animations/ExpandSection.qml
+ContentReplace 1.0 animations/ContentReplace.qml
 
 HoverItem 1.0 widgets/HoverItem.qml
 HoverMenu 1.0 widgets/HoverMenu.qml
