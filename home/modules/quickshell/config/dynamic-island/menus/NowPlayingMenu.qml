@@ -20,29 +20,16 @@ Item {
     property var trackHistory: []
     property int maxHistory: 8
     property bool queueExpanded: false
-    property bool showMockData: false
-
+    property bool debugSkeletons: false
     // Spotify API data
     property var spotifyRecentlyPlayed: []
     property var spotifyQueue: []
     property var spotifyCurrent: null
     property bool spotifyDataLoading: false
 
-    // Fallback mock data (used when Spotify API is not available)
-    readonly property var mockRecentlyPlayed: [
-        { title: "Midnight City", artist: "M83", artUrl: "" },
-        { title: "Blinding Lights", artist: "The Weeknd", artUrl: "" },
-        { title: "Take On Me", artist: "a-ha", artUrl: "" }
-    ]
-    readonly property var mockQueue: [
-        { title: "Stressed Out", artist: "Twenty One Pilots", artUrl: "" },
-        { title: "Electric Feel", artist: "MGMT", artUrl: "" },
-        { title: "Do I Wanna Know?", artist: "Arctic Monkeys", artUrl: "" }
-    ]
-
-    // Use Spotify data if available, otherwise fall back to mock
-    readonly property var displayRecentlyPlayed: showMockData ? mockRecentlyPlayed : (spotifyRecentlyPlayed.length > 0 ? spotifyRecentlyPlayed : mockRecentlyPlayed)
-    readonly property var displayQueue: showMockData ? mockQueue : (spotifyQueue.length > 0 ? spotifyQueue : mockQueue)
+    readonly property var displayRecentlyPlayed: spotifyRecentlyPlayed
+    readonly property var displayQueue: spotifyQueue
+    readonly property bool showSkeletons: debugSkeletons || spotifyDataLoading || (spotifyRecentlyPlayed.length === 0 && spotifyQueue.length === 0)
 
     // Spotify API process
     Process {
@@ -530,21 +517,89 @@ Item {
                     width: parent.width
                     spacing: Spacing.spacing8
 
+                    // Skeleton row component
+                    Component {
+                        id: skeletonRowComponent
+
+                        Item {
+                            width: trackListColumn.width
+                            height: 32 + Spacing.spacing8
+
+                            Row {
+                                anchors.verticalCenter: parent.verticalCenter
+                                x: Spacing.spacing4
+                                width: parent.width - 2 * Spacing.spacing4
+                                spacing: Spacing.spacing8
+
+                                Rectangle {
+                                    width: 32
+                                    height: 32
+                                    radius: Spacing.spacing4
+                                    color: Colors.progressBackground
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    opacity: skeletonPulse.pulseOpacity
+                                }
+
+                                Column {
+                                    width: parent.width - 32 - Spacing.spacing8
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: Spacing.spacing4
+
+                                    Rectangle {
+                                        width: parent.width * 0.65
+                                        height: Typography.fontSize14
+                                        radius: height / 2
+                                        color: Colors.progressBackground
+
+                                        opacity: skeletonPulse.pulseOpacity
+                                    }
+
+                                    Rectangle {
+                                        width: parent.width * 0.4
+                                        height: Typography.fontSize12
+                                        radius: height / 2
+                                        color: Colors.progressBackground
+
+                                        opacity: skeletonPulse.pulseOpacity
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Shared pulse value for skeleton shimmer
+                    QtObject {
+                        id: skeletonPulse
+                        property real pulseOpacity: 0.4
+
+                        SequentialAnimation on pulseOpacity {
+                            running: root.showSkeletons
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.4; to: 1.0; duration: 800; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: 1.0; to: 0.4; duration: 800; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
                     // Section: Recently Played
                     Column {
                         width: parent.width
                         spacing: Spacing.spacing2
 
-                        Label {
-                            text: "Zuletzt gespielt"
-                            font.pixelSize: Typography.fontSize12
-                            font.weight: Font.Normal
-                            color: Colors.textColorMuted
-                            leftPadding: Spacing.spacing4
+
+                        // Skeleton placeholders
+                        Column {
+                            width: parent.width
+                            spacing: Spacing.spacing2
+                            visible: root.debugSkeletons || (root.showSkeletons && root.displayRecentlyPlayed.length === 0)
+
+                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
+                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
+                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
                         }
 
                         Repeater {
-                            model: root.displayRecentlyPlayed
+                            model: root.debugSkeletons ? [] : root.displayRecentlyPlayed
 
                             delegate: Item {
                                 id: recentDelegate
@@ -646,13 +701,6 @@ Item {
                         width: parent.width
                         spacing: Spacing.spacing2
 
-                        Label {
-                            text: "Aktuell"
-                            font.pixelSize: Typography.fontSize12
-                            font.weight: Font.Normal
-                            color: Colors.textColorMuted
-                            leftPadding: Spacing.spacing4
-                        }
 
                         Item {
                             id: currentTrackDelegate
@@ -764,16 +812,20 @@ Item {
                         width: parent.width
                         spacing: Spacing.spacing2
 
-                        Label {
-                            text: "Warteschlange"
-                            font.pixelSize: Typography.fontSize12
-                            font.weight: Font.Normal
-                            color: Colors.textColorMuted
-                            leftPadding: Spacing.spacing4
+
+                        // Skeleton placeholders
+                        Column {
+                            width: parent.width
+                            spacing: Spacing.spacing2
+                            visible: root.debugSkeletons || (root.showSkeletons && root.displayQueue.length === 0)
+
+                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
+                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
+                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
                         }
 
                         Repeater {
-                            model: root.displayQueue
+                            model: root.debugSkeletons ? [] : root.displayQueue
 
                             delegate: Item {
                                 id: queueDelegate
