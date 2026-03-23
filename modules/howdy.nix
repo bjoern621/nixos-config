@@ -8,7 +8,7 @@
     settings = {
       video = {
         device_path = "/dev/video2"; # Integrated IR camera
-        dark_threshold = 30;
+        dark_threshold = 70;
         timeout = 5; # Seconds to wait for a face to be recognized
       };
       core = {
