@@ -19,6 +19,18 @@ Item {
     property int maxHistory: 8
     property bool queueExpanded: false
 
+    // Mock data for playlist sections (will be replaced with Spotify API)
+    readonly property var mockRecentlyPlayed: [
+        { title: "Midnight City", artist: "M83", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
+        { title: "Blinding Lights", artist: "The Weeknd", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
+        { title: "Take On Me", artist: "a-ha", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" }
+    ]
+    readonly property var mockQueue: [
+        { title: "Stressed Out", artist: "Twenty One Pilots", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
+        { title: "Electric Feel", artist: "MGMT", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" },
+        { title: "Do I Wanna Know?", artist: "Arctic Monkeys", artUrl: "https://i.scdn.co/image/ab67616d0000b273f9d4f05f1b5bb17b6faba046" }
+    ]
+
     // Local position cache, updated by timer
     property real currentPosition: root.hasPlayer ? root.player.position : 0
 
@@ -368,7 +380,6 @@ Item {
                 id: queueToggle
                 width: parent.width
                 height: 28
-                visible: root.trackHistory.length > 1
 
                 property bool hovered: queueToggleHover.hovered
                 property bool pressed: queueToggleTap.pressed
@@ -380,7 +391,6 @@ Item {
                          : queueToggle.hovered ? Colors.hoverItemHovered
                          : "transparent"
                     border.color: queueToggle.hovered || queueToggle.pressed ? Colors.pillBorder : "transparent"
-                    Behavior on color { ColorAnimation { duration: 100 } }
                 }
 
                 Row {
@@ -404,14 +414,17 @@ Item {
                     }
 
                     Text {
-                        text: root.queueExpanded ? "\uf077" : "\uf078"
+                        id: chevronIcon
+                        text: "\uf078"
                         font.family: Typography.iconFontFamily
                         font.pixelSize: Typography.fontSize12
                         color: Colors.textColorMuted
                         anchors.verticalCenter: parent.verticalCenter
 
-                        // Rotate animation for the chevron
-                        rotation: root.queueExpanded ? 0 : 0
+                        rotation: root.queueExpanded ? 180 : 0
+                        Behavior on rotation {
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
                     }
                 }
 
@@ -429,44 +442,156 @@ Item {
             ExpandSection {
                 id: trackListWrapper
                 expanded: root.queueExpanded
-                visible: root.trackHistory.length > 1
 
                 Column {
                     id: trackListColumn
                     width: parent.width
-                    spacing: 0
+                    spacing: Spacing.spacing8
 
-                    Repeater {
-                        model: root.trackHistory
+                    // Section: Recently Played
+                    Column {
+                        width: parent.width
+                        spacing: Spacing.spacing2
 
-                        delegate: Item {
-                            id: trackDelegate
-                            required property var modelData
-                            required property int index
+                        Label {
+                            text: "Zuletzt gespielt"
+                            font.pixelSize: Typography.fontSize12
+                            font.weight: Font.Normal
+                            color: Colors.textColorMuted
+                            leftPadding: Spacing.spacing4
+                        }
 
-                            readonly property bool isCurrent: index === root.trackHistory.length - 1
-                            property bool hovered: trackDelegateHover.hovered
-                            property bool pressed: trackDelegateTap.pressed
+                        Repeater {
+                            model: root.mockRecentlyPlayed
 
-                            width: trackListColumn.width
-                            height: trackRow.implicitHeight + Spacing.spacing8
+                            delegate: Item {
+                                id: recentDelegate
+                                required property var modelData
+                                required property int index
+
+                                property bool hovered: recentHover.hovered
+                                property bool pressed: recentTap.pressed
+
+                                width: trackListColumn.width
+                                height: trackRowRecent.implicitHeight + Spacing.spacing8
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: Spacing.spacing4
+                                    color: recentDelegate.pressed ? Colors.hoverItemPressed
+                                         : recentDelegate.hovered ? Colors.hoverItemHovered
+                                         : "transparent"
+                                    border.color: recentDelegate.hovered || recentDelegate.pressed ? Colors.pillBorder : "transparent"
+                                    border.width: recentDelegate.hovered || recentDelegate.pressed ? 1 : 0
+                                }
+
+                                Row {
+                                    id: trackRowRecent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    x: Spacing.spacing4
+                                    width: parent.width - 2 * Spacing.spacing4
+                                    spacing: Spacing.spacing8
+
+                                    Rectangle {
+                                        width: 32
+                                        height: 32
+                                        radius: Spacing.spacing4
+                                        color: Colors.progressBackground
+                                        clip: true
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Image {
+                                            anchors.fill: parent
+                                            source: modelData.artUrl || ""
+                                            fillMode: Image.PreserveAspectCrop
+                                            asynchronous: true
+                                            visible: status === Image.Ready
+                                        }
+                                    }
+
+                                    Column {
+                                        width: parent.width - 32 - Spacing.spacing8
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Label {
+                                            text: modelData.title || ""
+                                            font.pixelSize: Typography.fontSize14
+                                            font.weight: Font.Normal
+                                            color: Colors.textColorMuted
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                        }
+
+                                        Label {
+                                            visible: (modelData.artist || "") !== ""
+                                            text: modelData.artist || ""
+                                            font.pixelSize: Typography.fontSize12
+                                            font.weight: Font.Normal
+                                            color: Colors.textColorMuted
+                                            opacity: 0.6
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                        }
+                                    }
+                                }
+
+                                HoverHandler {
+                                    id: recentHover
+                                    cursorShape: Qt.PointingHandCursor
+                                }
+
+                                TapHandler {
+                                    id: recentTap
+                                    onTapped: {
+                                        // Placeholder - will integrate with Spotify API
+                                        console.log("Play recent track:", modelData.title)
+                                    }
+                                }
+
+                                scale: recentTap.pressed ? 0.97 : 1.0
+                                transformOrigin: Item.Center
+                                SquishBehavior on scale {}
+                            }
+                        }
+                    }
+
+                    // Section: Current Track
+                    Column {
+                        width: parent.width
+                        spacing: Spacing.spacing2
+
+                        Label {
+                            text: "Aktuell"
+                            font.pixelSize: Typography.fontSize12
+                            font.weight: Font.Normal
+                            color: Colors.textColorMuted
+                            leftPadding: Spacing.spacing4
+                        }
+
+                        Item {
+                            id: currentTrackDelegate
+                            width: parent.width
+                            height: trackRowCurrent.implicitHeight + Spacing.spacing8
+
+                            property bool hovered: currentHover.hovered
+                            property bool pressed: currentTap.pressed
 
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing4
-                                color: trackDelegate.pressed ? Colors.hoverItemPressed
-                                     : trackDelegate.hovered ? Colors.hoverItemHovered
-                                     : "transparent"
-                                    }
+                                color: Colors.hoverItemHovered
+                                opacity: 0.3
+                                border.color: Colors.accentColor
+                                border.width: 1
+                            }
 
                             Row {
-                                id: trackRow
+                                id: trackRowCurrent
                                 anchors.verticalCenter: parent.verticalCenter
                                 x: Spacing.spacing4
                                 width: parent.width - 2 * Spacing.spacing4
                                 spacing: Spacing.spacing8
 
-                                // Track album art thumbnail
                                 Rectangle {
                                     width: 32
                                     height: 32
@@ -477,15 +602,13 @@ Item {
 
                                     Image {
                                         anchors.fill: parent
-                                        source: modelData.artUrl || ""
+                                        source: root.hasPlayer ? root.player.trackArtUrl : ""
                                         fillMode: Image.PreserveAspectCrop
                                         asynchronous: true
                                         visible: status === Image.Ready
                                     }
 
-                                    // Playing indicator overlay for current track
                                     Rectangle {
-                                        visible: trackDelegate.isCurrent
                                         anchors.fill: parent
                                         color: Qt.rgba(0, 0, 0, 0.5)
                                         radius: Spacing.spacing4
@@ -512,17 +635,17 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
 
                                     Label {
-                                        text: modelData.title || ""
+                                        text: root.hasPlayer ? root.player.trackTitle : ""
                                         font.pixelSize: Typography.fontSize14
-                                        font.weight: trackDelegate.isCurrent ? Font.Bold : Font.Normal
-                                        color: trackDelegate.isCurrent ? Colors.textColor : Colors.textColorMuted
+                                        font.weight: Font.Bold
+                                        color: Colors.textColor
                                         elide: Text.ElideRight
                                         width: parent.width
                                     }
 
                                     Label {
-                                        visible: (modelData.artist || "") !== ""
-                                        text: modelData.artist || ""
+                                        visible: root.hasPlayer && (root.player.trackArtist || "") !== ""
+                                        text: root.hasPlayer ? root.player.trackArtist : ""
                                         font.pixelSize: Typography.fontSize12
                                         font.weight: Font.Normal
                                         color: Colors.textColorMuted
@@ -533,27 +656,127 @@ Item {
                             }
 
                             HoverHandler {
-                                id: trackDelegateHover
+                                id: currentHover
                                 cursorShape: Qt.PointingHandCursor
                             }
 
                             TapHandler {
-                                id: trackDelegateTap
+                                id: currentTap
                                 onTapped: {
-                                    if (!root.hasPlayer) return;
-                                    if (trackDelegate.isCurrent) {
-                                        root.player.togglePlaying();
-                                    } else {
-                                        const stepsBack = root.trackHistory.length - 1 - trackDelegate.index;
-                                        for (let i = 0; i < stepsBack; i++)
-                                            root.player.previous();
-                                    }
+                                    if (root.hasPlayer) root.player.togglePlaying()
                                 }
                             }
 
-                            scale: trackDelegateTap.pressed ? 0.97 : 1.0
+                            scale: currentTap.pressed ? 0.97 : 1.0
                             transformOrigin: Item.Center
                             SquishBehavior on scale {}
+                        }
+                    }
+
+                    // Section: Queue
+                    Column {
+                        width: parent.width
+                        spacing: Spacing.spacing2
+
+                        Label {
+                            text: "Warteschlange"
+                            font.pixelSize: Typography.fontSize12
+                            font.weight: Font.Normal
+                            color: Colors.textColorMuted
+                            leftPadding: Spacing.spacing4
+                        }
+
+                        Repeater {
+                            model: root.mockQueue
+
+                            delegate: Item {
+                                id: queueDelegate
+                                required property var modelData
+                                required property int index
+
+                                property bool hovered: queueHover.hovered
+                                property bool pressed: queueTap.pressed
+
+                                width: trackListColumn.width
+                                height: trackRowQueue.implicitHeight + Spacing.spacing8
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: Spacing.spacing4
+                                    color: queueDelegate.pressed ? Colors.hoverItemPressed
+                                         : queueDelegate.hovered ? Colors.hoverItemHovered
+                                         : "transparent"
+                                    border.color: queueDelegate.hovered || queueDelegate.pressed ? Colors.pillBorder : "transparent"
+                                    border.width: queueDelegate.hovered || queueDelegate.pressed ? 1 : 0
+                                }
+
+                                Row {
+                                    id: trackRowQueue
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    x: Spacing.spacing4
+                                    width: parent.width - 2 * Spacing.spacing4
+                                    spacing: Spacing.spacing8
+
+                                    Rectangle {
+                                        width: 32
+                                        height: 32
+                                        radius: Spacing.spacing4
+                                        color: Colors.progressBackground
+                                        clip: true
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Image {
+                                            anchors.fill: parent
+                                            source: modelData.artUrl || ""
+                                            fillMode: Image.PreserveAspectCrop
+                                            asynchronous: true
+                                            visible: status === Image.Ready
+                                        }
+                                    }
+
+                                    Column {
+                                        width: parent.width - 32 - Spacing.spacing8
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Label {
+                                            text: modelData.title || ""
+                                            font.pixelSize: Typography.fontSize14
+                                            font.weight: Font.Normal
+                                            color: Colors.textColorMuted
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                        }
+
+                                        Label {
+                                            visible: (modelData.artist || "") !== ""
+                                            text: modelData.artist || ""
+                                            font.pixelSize: Typography.fontSize12
+                                            font.weight: Font.Normal
+                                            color: Colors.textColorMuted
+                                            opacity: 0.6
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                        }
+                                    }
+                                }
+
+                                HoverHandler {
+                                    id: queueHover
+                                    cursorShape: Qt.PointingHandCursor
+                                }
+
+                                TapHandler {
+                                    id: queueTap
+                                    onTapped: {
+                                        // Placeholder - will integrate with Spotify API
+                                        console.log("Play queued track:", modelData.title)
+                                    }
+                                }
+
+                                scale: queueTap.pressed ? 0.97 : 1.0
+                                transformOrigin: Item.Center
+                                SquishBehavior on scale {}
+                            }
                         }
                     }
                 }
