@@ -19,4 +19,8 @@ QtObject {
     readonly property color accentColor: Globals.accentColor
     readonly property color progressBackground: Qt.rgba(1, 1, 1, 0.12)
     readonly property color progressMuted: "#666666"
+
+    // Battery warning colors
+    readonly property color batteryWarning: "#f5c542"
+    readonly property color batteryCritical: "#e53935"
 }

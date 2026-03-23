@@ -16,6 +16,8 @@ ShellRoot {
     PowerCorner {}
     VolumeOsd {}
     BrightnessOsd {}
+    BatteryWarning {}
+    PopupWindow {}
     AppLauncher {}
     ClipboardHistory {}
 }

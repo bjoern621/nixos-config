@@ -15,19 +15,24 @@ Row {
         return "\uf240"
     }
 
-    property var charging: UPower.displayDevice.state === UPowerDeviceState.Charging
-    property var chargeRate: Math.round(UPower.displayDevice.changeRate)
+    property color batteryColor: {
+        const pct = UPower.displayDevice.percentage
+        if (pct <= 0.10) return Colors.batteryCritical
+        if (pct <= 0.25) return Colors.batteryWarning
+        return Colors.textColor
+    }
 
     Text {
         text: batteryIcon
         font.family: Typography.iconFontFamily
         font.pixelSize: Typography.fontSize14
-        color: Colors.textColor
+        color: batteryColor
         anchors.verticalCenter: parent.verticalCenter
     }
 
     Label {
-        text: Math.round(UPower.displayDevice.percentage * 100) + " %" + (charging ? " (+" + chargeRate + " W)" : "")
+        text: Math.round(UPower.displayDevice.percentage * 100) + " %"
         anchors.verticalCenter: parent.verticalCenter
+        color: batteryColor
     }
 }

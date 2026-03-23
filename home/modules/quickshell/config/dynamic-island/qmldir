@@ -15,6 +15,7 @@ ContentReplace 1.0 animations/ContentReplace.qml
 HoverItem 1.0 widgets/HoverItem.qml
 HoverMenu 1.0 widgets/HoverMenu.qml
 StepSlider 1.0 widgets/StepSlider.qml
+PopupNotification 1.0 widgets/PopupNotification.qml
 
 VolumeSliderMenu 1.0 menus/VolumeSliderMenu.qml
 CalendarMenu 1.0 menus/CalendarMenu.qml
@@ -25,10 +26,13 @@ TrayContextMenu 1.0 menus/TrayContextMenu.qml
 
 VolumeOsd 1.0 osd/VolumeOsd.qml
 BrightnessOsd 1.0 osd/BrightnessOsd.qml
+BatteryWarning 1.0 osd/BatteryWarning.qml
 
 Bar 1.0 windows/Bar.qml
 ScreenCorners 1.0 windows/ScreenCorners.qml
 PowerCorner 1.0 windows/PowerCorner.qml
+singleton PopupHost 1.0 base/PopupHost.qml
+PopupWindow 1.0 windows/PopupWindow.qml
 AppLauncher 1.0 windows/AppLauncher.qml
 ClipboardHistory 1.0 windows/ClipboardHistory.qml
 
