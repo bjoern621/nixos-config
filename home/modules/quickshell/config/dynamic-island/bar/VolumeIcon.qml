@@ -14,4 +14,6 @@ Icon {
 
     text: volumeIcon
     anchors.verticalCenter: parent.verticalCenter
+    width: height
+    horizontalAlignment: Text.AlignHCenter
 }
