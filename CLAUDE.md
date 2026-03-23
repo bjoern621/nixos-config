@@ -159,6 +159,22 @@ The standard pattern for popup/menu transitions (see `HoverMenu.qml`, `VolumeOsd
 
 **When NOT to use scale pop**: Content transitions *within* an already-visible container (e.g. calendar year switching, expanding a section) should use fade + slide only, not scale. Scale pop is for showing/hiding the container itself.
 
+#### Content replace: scale down → swap → scale up
+
+When a value changes and the displayed content should swap in-place (e.g. a volume icon changing between muted/low/high), use **`ContentReplace`**. It scales down + fades out the old content, swaps to the new value at the midpoint, then scales back up + fades in:
+
+```qml
+ContentReplace {
+    id: iconReplace
+    contentKey: someChangingValue  // triggers animation on change
+    Text { text: iconReplace.displayValue }  // bind to displayValue, NOT the source
+}
+```
+
+`ContentReplace` properties: `duration` (default 150ms), `contentKey` (watched value that triggers the transition), `displayValue` (read-only — updates at the animation midpoint).
+
+**Important**: content inside must bind to `displayValue`, not directly to the source property. Direct binding bypasses the deferred swap and the old content won't be visible during scale-down.
+
 #### Expandable sections: height + opacity
 
 For collapsible content (e.g. Wiedergabeliste):
