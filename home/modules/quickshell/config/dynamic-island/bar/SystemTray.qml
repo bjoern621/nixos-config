@@ -137,13 +137,13 @@ Item {
 
                 Timer {
                     id: tooltipShowTimer
-                    interval: 250
+                    interval: 150
                     onTriggered: iconItem.tooltipVisible = true
                 }
 
                 Timer {
                     id: tooltipHideTimer
-                    interval: 200
+                    interval: 100
                     onTriggered: iconItem.tooltipVisible = false
                 }
 
@@ -182,8 +182,6 @@ Item {
         y: trayRoot.menuTopY
         width: trayMenuContent.implicitWidth
         height: trayMenuContent.implicitHeight
-        showDuration: 200
-        hideDuration: 120
 
         onShown: internal.menuVisible = true
         onHidden: {

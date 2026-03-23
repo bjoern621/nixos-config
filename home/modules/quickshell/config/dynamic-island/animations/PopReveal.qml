@@ -5,8 +5,8 @@ Item {
     id: root
 
     property real slideOffset: Spacing.spacing8
-    property int showDuration: 150
-    property int hideDuration: 150
+    property int showDuration: 80
+    property int hideDuration: 80
     property bool showing: false
     property int transformOriginValue: Item.Top
 

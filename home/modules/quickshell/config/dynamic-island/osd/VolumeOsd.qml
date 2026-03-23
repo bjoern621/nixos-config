@@ -80,8 +80,8 @@ Scope {
             y: 40
             width: 200
             height: osdPill.implicitHeight
-            showDuration: 200
-            hideDuration: 180
+            showDuration: 120
+            hideDuration: 100
             slideOffset: Spacing.spacing16
 
             Rectangle {

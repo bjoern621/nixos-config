@@ -42,7 +42,7 @@ Item {
 
     Timer {
         id: menuShowTimer
-        interval: 250
+        interval: 150
         onTriggered: {
             internal.menuOpen = true
             internal.effectiveMenuHeight = root.menu ? root.menu.implicitHeight : 0
@@ -52,7 +52,7 @@ Item {
 
     Timer {
         id: menuHideTimer
-        interval: 200
+        interval: 100
         onTriggered: {
             internal.menuOpen = false
             if (root.menu) root.menu.hide()

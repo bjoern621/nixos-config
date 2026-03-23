@@ -156,8 +156,6 @@ Scope {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 showing: launcherScope.launcherVisible
-                showDuration: 120
-                hideDuration: 120
                 slideOffset: 0
 
                 Rectangle {
@@ -233,11 +231,13 @@ Scope {
                                     }
                                 }
                                 Keys.onDownPressed: {
+                                    resultsList.keyboardNav = true
                                     if (resultsList.currentIndex < launcherWindow.filteredApps.length - 1) {
                                         resultsList.currentIndex++
                                     }
                                 }
                                 Keys.onUpPressed: {
+                                    resultsList.keyboardNav = true
                                     if (resultsList.currentIndex > 0) {
                                         resultsList.currentIndex--
                                     }
@@ -254,6 +254,22 @@ Scope {
                         currentIndex: 0
                         model: launcherWindow.filteredApps
                         boundsBehavior: Flickable.StopAtBounds
+                        highlightMoveDuration: 0
+
+                        property bool keyboardNav: false
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.NoButton
+                            hoverEnabled: true
+                            onPositionChanged: resultsList.keyboardNav = false
+                            onWheel: (wheel) => {
+                                resultsList.contentY = Math.max(0, Math.min(
+                                    resultsList.contentHeight - resultsList.height,
+                                    resultsList.contentY - wheel.angleDelta.y * 2
+                                ))
+                            }
+                        }
 
                         ScrollBar.vertical: ScrollBar {
                             policy: resultsList.contentHeight > resultsList.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
@@ -341,7 +357,7 @@ Scope {
                                 id: delegateHover
                                 cursorShape: Qt.PointingHandCursor
                                 onHoveredChanged: {
-                                    if (hovered) resultsList.currentIndex = index
+                                    if (hovered && !resultsList.keyboardNav) resultsList.currentIndex = index
                                 }
                             }
 
@@ -378,6 +394,8 @@ Scope {
             function onLauncherVisibleChanged() {
                 if (launcherScope.launcherVisible) {
                     searchInput.text = ""
+                    resultsList.contentY = 0
+                    resultsList.keyboardNav = false
                     launcherWindow.updateFilter()
                     focusTimer.restart()
                 }

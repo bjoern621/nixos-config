@@ -112,9 +112,8 @@ All animations should feel **playful, squishy, and smooth**. The overall approac
 
 | Range | Use for |
 | --- | --- |
-| **80–120ms** | Micro-interactions: slider feedback, squishy press, small state changes |
-| **150–200ms** | Menu show/hide, panel transitions |
-| **200–300ms** | Content transitions (slide-in after fade-out, OSD popups), album art bounce |
+| **60–100ms** | Micro-interactions: slider feedback, squishy press, menu show/hide, panel transitions |
+| **100–200ms** | Content transitions (slide-in after fade-out, OSD popups), album art bounce |
 | **250–450ms** | Continuous looping animations (e.g. music visualizer bars) |
 
 #### Hover: always instant
@@ -153,8 +152,8 @@ SquishBehavior on scale { bouncy: true; duration: 120 }
 
 The standard pattern for popup/menu transitions (see `HoverMenu.qml`, `VolumeOsd.qml`, `SystemTray.qml`):
 
-- **Show**: slide up ~8–16px + fade in (`OutCubic`, 150–220ms) + scale 0.96→1.0 (`OutBack`, 200–220ms)
-- **Hide**: slide down ~8–16px + fade out (`InCubic`, 120–180ms) + scale 1.0→0.96 (`InCubic`, 120–180ms)
+- **Show**: slide up ~8–16px + fade in (`OutCubic`, 60–100ms) + scale 0.96→1.0 (`OutBack`, 80–130ms)
+- **Hide**: slide down ~8–16px + fade out (`InCubic`, 60–80ms) + scale 1.0→0.96 (`InCubic`, 60–80ms)
 - Set `transformOrigin: Item.Top` so scaling anchors to the bar/trigger
 - Initial state: `opacity: 0`, `scale: 0.96`
 
@@ -202,8 +201,8 @@ OSD progress bars (volume, brightness) use **120ms** for a slightly smoother vis
 
 #### Menu timing
 
-- **250ms** delay before showing a hover menu (prevents accidental triggers)
-- **200ms** delay before hiding (prevents flicker on brief mouse passes)
+- **150ms** delay before showing a hover menu (prevents accidental triggers)
+- **100ms** delay before hiding (prevents flicker on brief mouse passes)
 
 ### Component Patterns
 

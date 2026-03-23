@@ -217,8 +217,6 @@ Scope {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 showing: clipScope.clipVisible
-                showDuration: 120
-                hideDuration: 120
                 slideOffset: 0
 
                 Rectangle {
@@ -294,11 +292,13 @@ Scope {
                                     }
                                 }
                                 Keys.onDownPressed: {
+                                    clipList.keyboardNav = true
                                     if (clipList.currentIndex < clipScope.filteredEntries.length - 1) {
                                         clipList.currentIndex++
                                     }
                                 }
                                 Keys.onUpPressed: {
+                                    clipList.keyboardNav = true
                                     if (clipList.currentIndex > 0) {
                                         clipList.currentIndex--
                                     }
@@ -315,6 +315,22 @@ Scope {
                         currentIndex: 0
                         model: clipScope.filteredEntries
                         boundsBehavior: Flickable.StopAtBounds
+                        highlightMoveDuration: 0
+
+                        property bool keyboardNav: false
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.NoButton
+                            hoverEnabled: true
+                            onPositionChanged: clipList.keyboardNav = false
+                            onWheel: (wheel) => {
+                                clipList.contentY = Math.max(0, Math.min(
+                                    clipList.contentHeight - clipList.height,
+                                    clipList.contentY - wheel.angleDelta.y * 2
+                                ))
+                            }
+                        }
 
                         ScrollBar.vertical: ScrollBar {
                             policy: clipList.contentHeight > clipList.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
@@ -375,7 +391,7 @@ Scope {
                                 id: clipDelegateHover
                                 cursorShape: Qt.PointingHandCursor
                                 onHoveredChanged: {
-                                    if (hovered) clipList.currentIndex = index
+                                    if (hovered && !clipList.keyboardNav) clipList.currentIndex = index
                                 }
                             }
 
@@ -416,6 +432,8 @@ Scope {
                     clipScope.filteredEntries = []
                     clipScope.imageDecodeQueue = []
                     clipScope.decodedCount = 0
+                    clipList.contentY = 0
+                    clipList.keyboardNav = false
                     listProc.running = true
                     clipList.currentIndex = 0
                     focusTimer.restart()
