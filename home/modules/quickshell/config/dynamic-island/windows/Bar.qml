@@ -136,6 +136,15 @@ Variants {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
+                    NotificationIndicator {}
+
+                    Rectangle {
+                        width: 1
+                        height: Spacing.spacing16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
                     HoverItem {
                         id: calendarHoverItem
                         clickable: false

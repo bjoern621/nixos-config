@@ -10,6 +10,9 @@ import "widgets"
 import "windows"
 
 ShellRoot {
+    // Force-load the NotificationHost singleton so the D-Bus server registers early.
+    property var _notifHost: NotificationHost.server
+
     WallpaperAccent {}
     ScreenCorners {}
     Bar {}
@@ -20,4 +23,6 @@ ShellRoot {
     PopupWindow {}
     AppLauncher {}
     ClipboardHistory {}
+    NotificationToast {}
+    NotificationPanel {}
 }

@@ -106,7 +106,7 @@ Scope {
                     icon: PopupHost.icon
                     title: PopupHost.title
                     message: PopupHost.message
-                    accentColor: PopupHost.color
+                    accentColor: PopupHost.accentColor
                     onDismissed: PopupHost.dismiss()
                 }
             }

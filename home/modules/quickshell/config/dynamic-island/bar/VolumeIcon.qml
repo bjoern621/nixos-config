@@ -29,8 +29,10 @@ Item {
             font.family: Typography.iconFontFamily
             font.pixelSize: Typography.fontSize14
             color: Colors.textColor
-            anchors.centerIn: parent
+            width: parent.width
+            height: parent.height
             horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
         }
     }
 }

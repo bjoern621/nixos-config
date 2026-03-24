@@ -35,8 +35,9 @@ Variants {
             }
         }
 
-        Item {
+        Rectangle {
             id: powerInteractionZone
+            color: Qt.rgba(0, 0, 1, 0.3) // DEBUG
             anchors.top: parent.top
             anchors.right: parent.right
             width: powerMenuWrapper.visible ? powerMenuView.implicitWidth + Spacing.spacing16 : Spacing.spacing8

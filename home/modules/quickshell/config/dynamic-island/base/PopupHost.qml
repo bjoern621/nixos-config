@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 
 // Singleton managing a queue of dismissable popup notifications.
-// Usage: PopupHost.show("\uf071", "Title", "Message", "#e53935")
+// Usage: PopupHost.show("\uf071", "Title", "Message", accentColor)
 QtObject {
     id: root
 
@@ -11,12 +11,12 @@ QtObject {
     property string icon: ""
     property string title: ""
     property string message: ""
-    property color color: "#ffffff"
+    property color accentColor: "#ffffff"
 
     property var _queue: []
 
-    function show(icon, title, message, color) {
-        _queue.push({ icon: icon, title: title, message: message, color: color })
+    function show(icon, title, message, accentColor) {
+        _queue.push({ icon: icon, title: title, message: message, accentColor: accentColor })
         _queueChanged()
         if (!visible) _showNext()
     }
@@ -41,7 +41,7 @@ QtObject {
         icon = item.icon
         title = item.title
         message = item.message
-        color = item.color
+        accentColor = item.accentColor
         visible = true
     }
 }
