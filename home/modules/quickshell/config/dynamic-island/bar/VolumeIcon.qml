@@ -1,8 +1,10 @@
 import Quickshell.Services.Pipewire
 import QtQuick
 import "../"
+import "../animations"
 
-Icon {
+Item {
+    id: root
     readonly property int volume: Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100)
     readonly property bool isMuted: Pipewire.defaultAudioSink?.audio.muted ?? false
 
@@ -12,8 +14,23 @@ Icon {
         return "\uf028"
     }
 
-    text: volumeIcon
     anchors.verticalCenter: parent.verticalCenter
-    width: height
-    horizontalAlignment: Text.AlignHCenter
+    width: 20
+    height: volIcon.implicitHeight
+
+    ContentReplace {
+        id: volIconReplace
+        contentKey: root.volumeIcon
+        anchors.fill: parent
+
+        Text {
+            id: volIcon
+            text: volIconReplace.displayValue
+            font.family: Typography.iconFontFamily
+            font.pixelSize: Typography.fontSize14
+            color: Colors.textColor
+            anchors.centerIn: parent
+            horizontalAlignment: Text.AlignHCenter
+        }
+    }
 }

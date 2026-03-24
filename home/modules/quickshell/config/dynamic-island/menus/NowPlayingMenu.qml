@@ -289,10 +289,9 @@ Item {
             anchors.centerIn: parent
             spacing: Spacing.spacing8
 
-            Text {
+            Icon {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "\uf001"
-                font.family: Typography.iconFontFamily
                 font.pixelSize: Typography.fontSize20
                 color: Colors.textColorMuted
             }

@@ -78,12 +78,9 @@ Item {
                         border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
 
-                    Text {
+                    Icon {
                         anchors.centerIn: parent
                         text: "\uf053"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize14
-                        color: Colors.textColor
                     }
 
                     MouseArea {
@@ -154,12 +151,9 @@ Item {
                         border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
 
-                    Text {
+                    Icon {
                         anchors.centerIn: parent
                         text: "\uf054"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize14
-                        color: Colors.textColor
                     }
 
                     MouseArea {

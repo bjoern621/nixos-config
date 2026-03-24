@@ -254,10 +254,8 @@ Scope {
                             }
                             spacing: Spacing.spacing8
 
-                            Text {
+                            Icon {
                                 text: "\uf002"
-                                font.family: Typography.iconFontFamily
-                                font.pixelSize: Typography.fontSize14
                                 color: Colors.textColorMuted
                                 anchors.verticalCenter: parent.verticalCenter
                             }

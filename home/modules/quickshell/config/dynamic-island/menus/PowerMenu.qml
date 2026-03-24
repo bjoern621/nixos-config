@@ -84,11 +84,9 @@ Item {
                         x: Spacing.spacing12
                         spacing: Spacing.spacing8
 
-                        Text {
+                        Icon {
                             text: modelData.icon
-                            font.family: Typography.iconFontFamily
                             font.pixelSize: Typography.fontSize16
-                            color: Colors.textColor
                             anchors.verticalCenter: parent.verticalCenter
                         }
 

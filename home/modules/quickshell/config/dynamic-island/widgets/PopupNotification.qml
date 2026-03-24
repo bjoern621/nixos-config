@@ -35,9 +35,8 @@ Item {
         }
         spacing: Spacing.spacing12
 
-        Text {
+        Icon {
             text: root.icon
-            font.family: Typography.iconFontFamily
             font.pixelSize: 40
             color: root.accentColor
             anchors.horizontalCenter: parent.horizontalCenter

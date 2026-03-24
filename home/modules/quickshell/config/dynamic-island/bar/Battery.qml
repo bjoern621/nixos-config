@@ -22,10 +22,8 @@ Row {
         return Colors.textColor
     }
 
-    Text {
+    Icon {
         text: batteryIcon
-        font.family: Typography.iconFontFamily
-        font.pixelSize: Typography.fontSize14
         color: batteryColor
         anchors.verticalCenter: parent.verticalCenter
     }

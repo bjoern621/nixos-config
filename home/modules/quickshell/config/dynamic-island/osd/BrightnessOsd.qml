@@ -122,19 +122,13 @@ Scope {
                     }
                 spacing: Spacing.spacing8
 
-                Item {
+                Icon {
+                    text: brightnessScope.osdIcon
+                    font.pixelSize: Typography.fontSize16
                     width: 24
-                    height: osdIconText.implicitHeight
+                    height: implicitHeight
                     anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                        id: osdIconText
-                        text: brightnessScope.osdIcon
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize16
-                        color: Colors.textColor
-                        anchors.centerIn: parent
-                    }
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
                 Column {
