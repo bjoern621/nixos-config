@@ -43,7 +43,7 @@ Variants {
         // Interaction zone: expands when panel is visible
         Rectangle {
             id: panelInteraction
-            color: Qt.rgba(0, 0, 1, 0.3) // DEBUG
+            color: "transparent"
             anchors.right: parent.right
             width: panelMenu.visible ? 380 : Spacing.spacing8
             height: panelMenu.visible ? panelWindow.height : modelData.height * 0.25
