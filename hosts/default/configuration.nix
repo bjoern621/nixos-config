@@ -96,16 +96,19 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Define a user account. Don’t forget to set a password with ‘passwd’.
   users.users.bjoern = {
     isNormalUser = true;
     description = "Björn";
+    shell = pkgs.zsh;
     extraGroups = [
       "networkmanager"
       "wheel" # Root access via sudo
       "docker" # Docker access, effectively equivalent to being root (https://github.com/moby/moby/issues/9976)
     ];
   };
+
+  programs.zsh.enable = true;
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;

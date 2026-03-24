@@ -32,7 +32,7 @@
   # https://www.youtube.com/watch?v=7QLhCgDMqgw
   # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#in-tty
   # Already done by display manager.
-  # programs.bash = {
+  # programs.zsh = {
   #   enable = true;
   #   profileExtra = ''
   #     if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" = 1 ]; then
