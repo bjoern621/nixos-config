@@ -5,6 +5,12 @@
 
   powerManagement.enable = true;
 
+  # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
+  # Its DSP firmware state is not restored properly, causing tinny audio.
+  services.udev.extraRules = ''
+    ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-TIAS2781:00", ATTR{power/control}="on"
+  '';
+
   services.tlp = {
     enable = true;
     settings = {
@@ -28,9 +34,10 @@
       PLATFORM_PROFILE_ON_BAT = "low-power";
 
       # --- Audio ---
-      # Enable audio power saving on battery (10s timeout avoids pops)
+      # Disable audio power saving — the TAS2781 speaker amplifier
+      # loses DSP firmware state when the HDA codec suspends.
       SOUND_POWER_SAVE_ON_AC = 0;
-      SOUND_POWER_SAVE_ON_BAT = 10;
+      SOUND_POWER_SAVE_ON_BAT = 0;
 
       # --- WiFi ---
       WIFI_PWR_ON_AC = "off";
