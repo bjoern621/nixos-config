@@ -17,8 +17,8 @@ Scope {
     readonly property bool charging: UPower.displayDevice.state === UPowerDeviceState.Charging
     readonly property bool fullyCharged: UPower.displayDevice.state === UPowerDeviceState.FullyCharged
 
-    readonly property bool isCritical: !charging && !fullyCharged && pct <= 0.10
-    readonly property bool isWarning: !charging && !fullyCharged && pct <= 0.25
+    readonly property bool isCritical: !charging && !fullyCharged && pct == 0.10
+    readonly property bool isWarning: !charging && !fullyCharged && pct == 0.25
 
     Timer {
         interval: 2000
