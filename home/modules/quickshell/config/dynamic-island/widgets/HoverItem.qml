@@ -24,7 +24,7 @@ Item {
     QtObject {
         id: internal
         property bool menuOpen: false
-        property real effectiveMenuHeight: 0
+        readonly property real effectiveMenuHeight: menuOpen && root.menu ? root.menu.implicitHeight : 0
         readonly property bool shouldShow: root.menu !== null && (root.hovered || (root.menu && root.menu.keepOpen))
 
         onShouldShowChanged: {
@@ -45,7 +45,6 @@ Item {
         interval: 150
         onTriggered: {
             internal.menuOpen = true
-            internal.effectiveMenuHeight = root.menu ? root.menu.implicitHeight : 0
             root.menu.show()
         }
     }
@@ -63,7 +62,6 @@ Item {
         target: root.menu
         enabled: root.menu !== null
         function onHidden() {
-            internal.effectiveMenuHeight = 0
             root.menuClosed()
         }
     }

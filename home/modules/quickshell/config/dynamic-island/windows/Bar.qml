@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import QtQuick
 import "../"
@@ -61,7 +60,7 @@ Variants {
 
         Item {
             id: interactionZone
-            width: Math.max(pill.implicitWidth + Spacing.spacing24, nowPlayingHoverItem.menuOpen ? nowPlayingView.implicitWidth + 2 * Spacing.spacing24 : 0, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 2 * Spacing.spacing24 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 2 * Spacing.spacing24 : 0)
+            width: Math.max(pill.implicitWidth + Spacing.spacing24, nowPlayingHoverItem.menuOpen ? nowPlayingView.implicitWidth + 2 * Spacing.spacing24 : 0, volumeHoverItem.menuOpen ? volumeSlider.implicitWidth + 2 * Spacing.spacing24 : 0, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 2 * Spacing.spacing24 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 2 * Spacing.spacing24 : 0)
             x: (root.width - width) / 2
             height: root.isHovered ? 44 + Math.max(nowPlayingHoverItem.menuHeight, volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, batteryHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + Spacing.spacing12 : 0) + ((nowPlayingHoverItem.menuOpen || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible) ? Spacing.spacing8 : 0) : Spacing.spacing8
             anchors.top: parent.top
@@ -161,18 +160,13 @@ Variants {
 
                     HoverItem {
                         id: volumeHoverItem
+                        clickable: false
                         menu: volumeMenu
                         onMenuOpenChanged: {
                             Globals.volumeSliderOpen = menuOpen
                         }
                         VolumeIcon {
                             id: volumeIcon
-                        }
-                        onClicked: {
-                            const sink = Pipewire.defaultAudioSink;
-                            if (sink) {
-                                sink.audio.muted = !sink.audio.muted;
-                            }
                         }
                     }
 
@@ -222,7 +216,7 @@ Variants {
 
             HoverMenu {
                 id: volumeMenu
-                width: 200
+                width: volumeSlider.implicitWidth
                 anchors.top: volumeAnchor.top
                 anchors.horizontalCenter: volumeAnchor.horizontalCenter
                 contentInteracting: volumeSlider.sliderActive
