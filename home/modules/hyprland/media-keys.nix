@@ -20,6 +20,11 @@
       ", XF86AudioNext, exec, playerctl next"
       ", XF86AudioPrev, exec, playerctl previous"
       ", XF86AudioPlay, exec, playerctl play-pause"
+
+      # AltGr + key for media controls
+      "MOD5, P, exec, playerctl play-pause"
+      "MOD5, O, exec, playerctl previous"
+      "MOD5, udiaeresis, exec, playerctl next"
     ];
   };
 }
