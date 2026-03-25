@@ -37,7 +37,8 @@ Item {
 
     property var displayRecentlyPlayed: []
     readonly property var displayQueue: spotifyQueue
-    readonly property bool showSkeletons: debugSkeletons || (spotifyDataLoading && trackHistory.length <= 1 && spotifyRecentlyPlayed.length === 0 && spotifyQueue.length === 0)
+    readonly property int recentSkeletonCount: debugSkeletons ? 3 : Math.max(0, 3 - displayRecentlyPlayed.length)
+    readonly property int queueSkeletonCount: debugSkeletons ? 3 : Math.max(0, 3 - displayQueue.length)
 
     // Debug info from last merge
     property string debugMergeLog: ""
@@ -179,21 +180,19 @@ Item {
         spotifyProcess.running = true
     }
 
-    // Refresh Spotify data periodically when queue is expanded
-    Timer {
-        id: spotifyRefreshTimer
-        interval: 60000
-        repeat: true
-        running: root.queueExpanded && root.hasPlayer
-        onTriggered: root.refreshSpotifyData()
-    }
-
-    // Initial load when queue expands
-    onQueueExpandedChanged: {
-        if (queueExpanded && root.hasPlayer) {
-            root.refreshSpotifyData()
-        }
-    }
+    // Auto-fetch disabled for debugging — use manual buttons instead
+    // Timer {
+    //     id: spotifyRefreshTimer
+    //     interval: 60000
+    //     repeat: true
+    //     running: root.queueExpanded && root.hasPlayer
+    //     onTriggered: root.refreshSpotifyData()
+    // }
+    // onQueueExpandedChanged: {
+    //     if (queueExpanded && root.hasPlayer) {
+    //         root.refreshSpotifyData()
+    //     }
+    // }
 
     // Local position cache, updated by timer
     property real currentPosition: hasPlayer ? player.position : 0
@@ -642,6 +641,131 @@ Item {
                 SquishBehavior on scale {}
             }
 
+            // --- Debug Buttons ---
+            Row {
+                width: parent.width
+                spacing: Spacing.spacing4
+                visible: root.queueExpanded
+
+                Item {
+                    id: fetchBtn
+                    width: (parent.width - 2 * Spacing.spacing4) / 3
+                    height: 24
+
+                    property bool hovered: fetchBtnHover.hovered
+                    property bool pressed: fetchBtnTap.pressed
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: height / 2
+                        color: fetchBtn.pressed ? Colors.hoverItemPressed
+                             : fetchBtn.hovered ? Colors.hoverItemHovered
+                             : Colors.progressBackground
+                        border.color: Colors.pillBorder
+                        border.width: 1
+                    }
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: root.spotifyDataLoading ? "Loading..." : "Fetch"
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: Colors.textColor
+                    }
+
+                    HoverHandler { id: fetchBtnHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler { id: fetchBtnTap; onTapped: root.refreshSpotifyData() }
+
+                    scale: fetchBtnTap.pressed ? 0.96 : 1.0
+                    SquishBehavior on scale {}
+                }
+
+                Item {
+                    id: clearBtn
+                    width: (parent.width - 2 * Spacing.spacing4) / 3
+                    height: 24
+
+                    property bool hovered: clearBtnHover.hovered
+                    property bool pressed: clearBtnTap.pressed
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: height / 2
+                        color: clearBtn.pressed ? Colors.hoverItemPressed
+                             : clearBtn.hovered ? Colors.hoverItemHovered
+                             : Colors.progressBackground
+                        border.color: Colors.pillBorder
+                        border.width: 1
+                    }
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: "Clear"
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: Colors.textColor
+                    }
+
+                    HoverHandler { id: clearBtnHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler {
+                        id: clearBtnTap
+                        onTapped: {
+                            root.spotifyRecentlyPlayed = []
+                            root.spotifyQueue = []
+                            root.trackHistory = root.hasPlayer && root.player.trackTitle
+                                ? [{ title: root.player.trackTitle, artist: root.player.trackArtist, artUrl: root.player.trackArtUrl || "" }]
+                                : []
+                            root.debugMergeLog = ""
+                        }
+                    }
+
+                    scale: clearBtnTap.pressed ? 0.96 : 1.0
+                    SquishBehavior on scale {}
+                }
+
+                Item {
+                    id: logBtn
+                    width: (parent.width - 2 * Spacing.spacing4) / 3
+                    height: 24
+
+                    property bool hovered: logBtnHover.hovered
+                    property bool pressed: logBtnTap.pressed
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: height / 2
+                        color: logBtn.pressed ? Colors.hoverItemPressed
+                             : logBtn.hovered ? Colors.hoverItemHovered
+                             : Colors.progressBackground
+                        border.color: Colors.pillBorder
+                        border.width: 1
+                    }
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: root.debugMergeLog !== "" ? "Hide Log" : "Show Log"
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: Colors.textColor
+                    }
+
+                    HoverHandler { id: logBtnHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler {
+                        id: logBtnTap
+                        onTapped: {
+                            if (root.debugMergeLog !== "") {
+                                root.debugMergeLog = ""
+                            } else {
+                                root.mergeRecentlyPlayed()
+                            }
+                        }
+                    }
+
+                    scale: logBtnTap.pressed ? 0.96 : 1.0
+                    SquishBehavior on scale {}
+                }
+            }
+
             // --- Expandable Track List ---
             ExpandSection {
                 id: trackListWrapper
@@ -650,7 +774,7 @@ Item {
                 Column {
                     id: trackListColumn
                     width: parent.width
-                    spacing: Spacing.spacing8
+                    spacing: 0
 
                     // Skeleton row component
                     Component {
@@ -672,7 +796,6 @@ Item {
                                     radius: Spacing.spacing4
                                     color: Colors.progressBackground
                                     anchors.verticalCenter: parent.verticalCenter
-
                                     opacity: skeletonPulse.pulseOpacity
                                 }
 
@@ -686,7 +809,6 @@ Item {
                                         height: Typography.fontSize14
                                         radius: height / 2
                                         color: Colors.progressBackground
-
                                         opacity: skeletonPulse.pulseOpacity
                                     }
 
@@ -695,7 +817,6 @@ Item {
                                         height: Typography.fontSize12
                                         radius: height / 2
                                         color: Colors.progressBackground
-
                                         opacity: skeletonPulse.pulseOpacity
                                     }
                                 }
@@ -703,16 +824,15 @@ Item {
                         }
                     }
 
-                    // Shared pulse value for skeleton shimmer
+                    // Shared pulse opacity for synchronized skeleton loading
                     QtObject {
                         id: skeletonPulse
                         property real pulseOpacity: 0.4
-
                         SequentialAnimation on pulseOpacity {
-                            running: root.showSkeletons
+                            running: root.recentSkeletonCount > 0 || root.queueSkeletonCount > 0
                             loops: Animation.Infinite
-                            NumberAnimation { from: 0.4; to: 1.0; duration: 800; easing.type: Easing.InOutQuad }
-                            NumberAnimation { from: 1.0; to: 0.4; duration: 800; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: 0.4; to: 0.7; duration: 1200; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: 0.7; to: 0.4; duration: 1200; easing.type: Easing.InOutQuad }
                         }
                     }
 
@@ -721,16 +841,10 @@ Item {
                         width: parent.width
                         spacing: Spacing.spacing2
 
-
-                        // Skeleton placeholders
-                        Column {
-                            width: parent.width
-                            spacing: Spacing.spacing2
-                            visible: root.debugSkeletons || (root.showSkeletons && root.displayRecentlyPlayed.length === 0)
-
-                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
-                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
-                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
+                        // Skeleton placeholders to fill up to 3 items
+                        Repeater {
+                            model: root.recentSkeletonCount
+                            Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
                         }
 
                         Repeater {
@@ -878,9 +992,18 @@ Item {
                                     }
 
                                     Rectangle {
-                                        anchors.fill: parent
-                                        color: Qt.rgba(0, 0, 0, 0.5)
-                                        radius: Spacing.spacing4
+                                        width: root.isPlaying ? 26 : 20
+                                        height: root.isPlaying ? 18 : 20
+                                        radius: root.isPlaying ? Spacing.spacing4 : height / 2
+                                        color: Qt.rgba(0, 0, 0, 0.35)
+                                        anchors.centerIn: parent
+
+                                        Behavior on width {
+                                            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+                                        }
+                                        Behavior on height {
+                                            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+                                        }
 
                                         MusicBars {
                                             visible: root.isPlaying
@@ -897,6 +1020,7 @@ Item {
                                             color: Colors.textColor
                                         }
                                     }
+
                                 }
 
                                 Column {
@@ -947,17 +1071,6 @@ Item {
                         width: parent.width
                         spacing: Spacing.spacing2
 
-
-                        // Skeleton placeholders
-                        Column {
-                            width: parent.width
-                            spacing: Spacing.spacing2
-                            visible: root.debugSkeletons || (root.showSkeletons && root.displayQueue.length === 0)
-
-                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
-                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
-                            Loader { sourceComponent: skeletonRowComponent; width: parent.width }
-                        }
 
                         Repeater {
                             model: root.debugSkeletons ? [] : root.displayQueue
@@ -1054,6 +1167,12 @@ Item {
                                 transformOrigin: Item.Center
                                 SquishBehavior on scale {}
                             }
+                        }
+
+                        // Skeleton placeholders to fill up to 3 items
+                        Repeater {
+                            model: root.queueSkeletonCount
+                            Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
                         }
                     }
                 }
