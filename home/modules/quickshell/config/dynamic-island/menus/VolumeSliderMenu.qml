@@ -213,11 +213,8 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Text {
-                        text: root.outputExpanded ? "\uf077" : "\uf078"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize12
-                        color: Colors.textColorMuted
+                    ExpandArrow {
+                        expanded: root.outputExpanded
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }

@@ -616,18 +616,10 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Text {
+                    ExpandArrow {
                         id: chevronIcon
-                        text: "\uf078"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize12
-                        color: Colors.textColorMuted
+                        expanded: root.queueExpanded
                         anchors.verticalCenter: parent.verticalCenter
-
-                        rotation: root.queueExpanded ? 180 : 0
-                        Behavior on rotation {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        }
                     }
                 }
 
