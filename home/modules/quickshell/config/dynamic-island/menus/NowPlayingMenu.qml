@@ -64,6 +64,29 @@ Item {
     onTrackTitleChanged: _rebuildTrackList()
     onTrackArtUrlChanged: _rebuildTrackList()
 
+    // Builds the unified track list: [recent...] + [current] + [queue...]
+    //
+    // Queue dedup: the Spotify queue API may return stale data that still
+    // includes the currently playing track (e.g. the fetch was in-flight when
+    // the user pressed next). We skip any queue entry whose title+artist
+    // matches the current track to avoid showing it twice.
+    //
+    // Known limitations of the dedup:
+    // - Only compares against the current track. If the user spams previous
+    //   rapidly, multiple optimistic unshifts pile up before the fetch returns.
+    //   The stale API response may contain the current track at position > 0
+    //   (e.g. index 2 or 3) — the dedup still catches it since it scans the
+    //   full buffer, but earlier stale entries (tracks the user already skipped
+    //   back past) won't be deduped and may briefly duplicate items in the
+    //   recently-played section until the next fetch reconciles.
+    // - Matches by title+artist only, not URI. Two different tracks with
+    //   identical title+artist (e.g. remasters, live versions) would be
+    //   incorrectly deduped, hiding a legitimate queue entry.
+    // - Does not dedup recently-played. That list is built from local MPRIS
+    //   history (which already excludes the current track via slice(0, -1)),
+    //   so duplicates with the current track can't occur there. However,
+    //   duplicates between recently-played and queue are not checked — if the
+    //   same track appears in both (e.g. on repeat), it shows in both sections.
     function _buildUnifiedData() {
         const result = []
         const currentKey = hasPlayer && trackTitle
@@ -77,12 +100,14 @@ Item {
         if (hasPlayer && trackTitle)
             result.push({ title: trackTitle, artist: trackArtist,
                           artUrl: trackArtUrl || "", uri: "", type: "current" })
-        for (let i = 0; i < displayQueue.length; i++) {
-            const q = displayQueue[i]
-            // Skip duplicate of current (brief overlap during optimistic update)
+        // Pull from full buffer, dedup against current, then take first 3
+        let queueCount = 0
+        for (let i = 0; i < spotifyQueue.length && queueCount < 3; i++) {
+            const q = spotifyQueue[i]
             if ((q.title + "|" + q.artist).toLowerCase() === currentKey) continue
             result.push({ title: q.title || "", artist: q.artist || "",
                           artUrl: q.artUrl || "", uri: q.uri || "", type: "queue" })
+            queueCount++
         }
         _syncTrackListModel(trackListModel, result)
     }
