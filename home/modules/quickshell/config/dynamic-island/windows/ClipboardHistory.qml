@@ -179,6 +179,8 @@ Scope {
 
     PanelWindow {
         id: clipWindow
+        visible: clipScope.clipVisible || !hideComplete
+        property bool hideComplete: true
 
         anchors {
             top: true
@@ -415,6 +417,11 @@ Scope {
             }
         }
 
+        Connections {
+            target: clipPanelReveal
+            function onHidden() { clipWindow.hideComplete = true }
+        }
+
         Timer {
             id: focusTimer
             interval: 50
@@ -425,6 +432,7 @@ Scope {
             target: clipScope
             function onClipVisibleChanged() {
                 if (clipScope.clipVisible) {
+                    clipWindow.hideComplete = false
                     clipSearch.text = ""
                     clipScope.allEntries = []
                     clipScope.filteredEntries = []

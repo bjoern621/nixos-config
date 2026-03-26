@@ -21,6 +21,7 @@ Variants {
         color: "transparent"
 
         property bool isHovered: false
+        property bool pillHidden: true
 
         // MPRIS player lookup: prefer playing, fall back to paused
         readonly property var mprisPlayer: {
@@ -37,7 +38,7 @@ Variants {
         }
         readonly property bool hasMprisPlayer: mprisPlayer !== null
 
-        implicitHeight: 1000
+        implicitHeight: !pillHidden ? 1000 : Spacing.spacing8
 
         mask: Region {
             item: interactionZone
@@ -48,6 +49,7 @@ Variants {
         onShouldShowPillChanged: {
             if (shouldShowPill) {
                 pillHideTimer.stop()
+                pillHidden = false
                 if (!isHovered) {
                     isHovered = true
                     slideOut.stop()
@@ -296,6 +298,7 @@ Variants {
             to: -pill.implicitHeight - 8
             duration: 200
             easing.type: Easing.OutCubic
+            onFinished: root.pillHidden = true
         }
     }
 }

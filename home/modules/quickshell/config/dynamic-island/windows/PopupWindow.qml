@@ -27,6 +27,7 @@ Scope {
         target: PopupHost
         function onVisibleChanged() {
             if (PopupHost.visible) {
+                popupWindow.hideComplete = false
                 const s = popupScope.focusedScreen()
                 if (s) popupWindow.screen = s
             }
@@ -49,6 +50,8 @@ Scope {
 
     PanelWindow {
         id: popupWindow
+        visible: PopupHost.visible || !hideComplete
+        property bool hideComplete: true
 
         anchors {
             top: true
@@ -64,6 +67,11 @@ Scope {
 
         mask: Region {
             item: PopupHost.visible ? fullArea : emptyMask
+        }
+
+        Connections {
+            target: popupReveal
+            function onHidden() { popupWindow.hideComplete = true }
         }
 
         Item {

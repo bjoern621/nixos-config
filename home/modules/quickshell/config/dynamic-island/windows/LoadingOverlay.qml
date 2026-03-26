@@ -13,6 +13,8 @@ Variants {
 
     PanelWindow {
         id: loadingWindow
+        visible: LoadingHost.active || !hideComplete
+        property bool hideComplete: true
         required property var modelData
         screen: modelData
 
@@ -32,6 +34,13 @@ Variants {
             item: LoadingHost.active ? fullArea : emptyMask
         }
 
+        Connections {
+            target: LoadingHost
+            function onActiveChanged() {
+                if (LoadingHost.active) loadingWindow.hideComplete = false
+            }
+        }
+
         Item {
             id: emptyMask
             width: 0
@@ -49,6 +58,7 @@ Variants {
                 actionLabel: LoadingHost.label
 
                 onCancelled: LoadingHost.hide()
+                onHidden: loadingWindow.hideComplete = true
             }
         }
     }

@@ -53,6 +53,7 @@ Scope {
         if (suppressOsd || !_startupDone) return
         const s = focusedScreen()
         if (s) osdWindow.screen = s
+        osdWindow.visible = true
         osdHideTimer.restart()
         osdReveal.show()
     }
@@ -65,6 +66,7 @@ Scope {
 
     PanelWindow {
         id: osdWindow
+        visible: false
 
         anchors { top: true }
         exclusiveZone: 0
@@ -73,6 +75,11 @@ Scope {
         implicitWidth: 280
         implicitHeight: 40 + osdPill.implicitHeight + Spacing.spacing16
         mask: Region {}
+
+        Connections {
+            target: osdReveal
+            function onHidden() { osdWindow.visible = false }
+        }
 
         PopReveal {
             id: osdReveal

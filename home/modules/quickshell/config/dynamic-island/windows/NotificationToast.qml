@@ -9,6 +9,7 @@ Variants {
 
     PanelWindow {
         id: toastWindow
+        visible: toastEntries.length > 0
         required property var modelData
         screen: modelData
 

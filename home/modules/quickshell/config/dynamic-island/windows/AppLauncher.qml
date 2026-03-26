@@ -64,6 +64,8 @@ Scope {
 
     PanelWindow {
         id: launcherWindow
+        visible: launcherScope.launcherVisible || !hideComplete
+        property bool hideComplete: true
 
         anchors {
             top: true
@@ -384,6 +386,11 @@ Scope {
             }
         }
 
+        Connections {
+            target: panelReveal
+            function onHidden() { launcherWindow.hideComplete = true }
+        }
+
         Timer {
             id: focusTimer
             interval: 50
@@ -394,6 +401,7 @@ Scope {
             target: launcherScope
             function onLauncherVisibleChanged() {
                 if (launcherScope.launcherVisible) {
+                    launcherWindow.hideComplete = false
                     searchInput.text = ""
                     resultsList.contentY = 0
                     resultsList.keyboardNav = false

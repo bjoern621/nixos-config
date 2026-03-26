@@ -101,20 +101,20 @@ All animations should feel **playful, squishy, and smooth**. The overall approac
 
 **Easing reference**:
 
-| Easing | Use for |
-| --- | --- |
-| `Easing.OutCubic` | Enter/show animations, general motion |
-| `Easing.InCubic` | Exit/hide animations |
-| `Easing.OutBack` | Scale "pop" on show (overshoots slightly for a bouncy feel) |
-| `Easing.OutQuad` / `InQuad` | Continuous oscillating motion (e.g. music visualizer bars) |
+| Easing                      | Use for                                                     |
+| --------------------------- | ----------------------------------------------------------- |
+| `Easing.OutCubic`           | Enter/show animations, general motion                       |
+| `Easing.InCubic`            | Exit/hide animations                                        |
+| `Easing.OutBack`            | Scale "pop" on show (overshoots slightly for a bouncy feel) |
+| `Easing.OutQuad` / `InQuad` | Continuous oscillating motion (e.g. music visualizer bars)  |
 
 **Duration ranges**:
 
-| Range | Use for |
-| --- | --- |
-| **60–100ms** | Micro-interactions: slider feedback, squishy press, menu show/hide, panel transitions |
-| **100–200ms** | Content transitions (slide-in after fade-out, OSD popups), album art bounce |
-| **250–450ms** | Continuous looping animations (e.g. music visualizer bars) |
+| Range         | Use for                                                                               |
+| ------------- | ------------------------------------------------------------------------------------- |
+| **60–100ms**  | Micro-interactions: slider feedback, squishy press, menu show/hide, panel transitions |
+| **100–200ms** | Content transitions (slide-in after fade-out, OSD popups), album art bounce           |
+| **250–450ms** | Continuous looping animations (e.g. music visualizer bars)                            |
 
 #### Hover: always instant
 
@@ -142,11 +142,11 @@ SquishBehavior on scale { bouncy: true; duration: 120 }
 
 **Scale values by element size** (smaller elements scale more):
 
-| Element | Pressed scale | `bouncy` | `duration` |
-| --- | --- | --- | --- |
-| Small icon buttons (32px) | `0.85` | `false` | 100ms (default) |
-| Medium buttons (40px), play/pause | `0.82` | `true` | 120ms |
-| Large interactive items (list rows, toggles) | `0.96`–`0.97` | `false` | 100ms (default) |
+| Element                                      | Pressed scale | `bouncy` | `duration`      |
+| -------------------------------------------- | ------------- | -------- | --------------- |
+| Small icon buttons (32px)                    | `0.85`        | `false`  | 100ms (default) |
+| Medium buttons (40px), play/pause            | `0.82`        | `true`   | 120ms           |
+| Large interactive items (list rows, toggles) | `0.96`–`0.97` | `false`  | 100ms (default) |
 
 #### Show/hide: fade + slide + scale pop
 
@@ -157,7 +157,7 @@ The standard pattern for popup/menu transitions (see `HoverMenu.qml`, `VolumeOsd
 - Set `transformOrigin: Item.Top` so scaling anchors to the bar/trigger
 - Initial state: `opacity: 0`, `scale: 0.96`
 
-**When NOT to use scale pop**: Content transitions *within* an already-visible container (e.g. calendar year switching, expanding a section) should use fade + slide only, not scale. Scale pop is for showing/hiding the container itself.
+**When NOT to use scale pop**: Content transitions _within_ an already-visible container (e.g. calendar year switching, expanding a section) should use fade + slide only, not scale. Scale pop is for showing/hiding the container itself.
 
 #### Content replace: scale down → swap → scale up
 
@@ -227,3 +227,22 @@ OSD progress bars (volume, brightness) use **120ms** for a slightly smoother vis
 - **`HoverMenu`** as the animated wrapper for dropdown content.
 - **`Scope`** wrapper for self-contained OSD/overlay features.
 - **`Variants`** with `Quickshell.screens` model for per-screen windows.
+
+### Layer Surface Management (Performance)
+
+**Every mapped PanelWindow creates a Wayland layer surface that Hyprland must composite and blur each frame.** With `Variants` per screen this multiplies quickly. Minimizing mapped surfaces is critical for battery life.
+
+**Rule: A PanelWindow must be unmapped (`visible: false`) whenever it has no visible content.** Only windows that need always-on hover detection (Bar trigger strip, PowerCorner, NotificationPanel) should stay mapped — and those should be as small as possible.
+
+Verify with: `hyprctl layers | grep quickshell`
+
+**Patterns by window type:**
+
+| Type                       | Pattern                                                                     | Example                                    |
+| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
+| Toggled overlay (IPC/flag) | `visible: flag \|\| !hideComplete` + track PopReveal `onHidden`             | AppLauncher, ClipboardHistory, PopupWindow |
+| Transient OSD              | `visible: false` default, set `true` before `show()`, `false` on `onHidden` | VolumeOsd, BrightnessOsd                   |
+| Notification-driven        | `visible: entries.length > 0`                                               | NotificationToast                          |
+| Hover-triggered            | Keep mapped but **shrink** `implicitHeight` when idle                       | Bar (1000px → 8px trigger strip)           |
+
+**When adding a new PanelWindow**, always implement one of these patterns. Never leave a PanelWindow permanently mapped with no visibility management.

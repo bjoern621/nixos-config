@@ -9,6 +9,7 @@ Item {
     property bool showing: false
     property string actionLabel: ""
     signal cancelled()
+    signal hidden()
 
     opacity: 0
     visible: opacity > 0
@@ -169,6 +170,7 @@ Item {
         NumberAnimation { target: root; property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
         NumberAnimation { target: slideTransform; property: "y"; to: Spacing.spacing8; duration: 150; easing.type: Easing.InCubic }
         NumberAnimation { target: root; property: "scale"; to: 0.96; duration: 150; easing.type: Easing.InCubic }
+        onFinished: root.hidden()
     }
 
     onShowingChanged: {
