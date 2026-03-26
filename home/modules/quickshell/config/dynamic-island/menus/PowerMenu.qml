@@ -69,7 +69,6 @@ Item {
                     { action: "reboot", icon: "\uf0e2", label: "Reboot" },
                     { action: "lock", icon: "\uf023", label: "Lock" },
                     { action: "hibernate", icon: "\uf2dc", label: "Hibernate" },
-                    { action: "test", icon: "\uf0e7", label: "Test Loading" }
                 ]
 
                 Item {
