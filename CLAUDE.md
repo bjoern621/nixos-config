@@ -247,7 +247,7 @@ Verify with: `hyprctl layers | grep quickshell`
 
 **When adding a new PanelWindow**, always implement one of these patterns. Never leave a PanelWindow permanently mapped with no visibility management.
 
-**Blur namespace split:** Hyprland applies blur via `layerrule = "blur on, match:namespace quickshell"` (defined in `quickshell.nix`). Windows that don't need blur (e.g. ScreenCorners, PowerCorner) must opt out by setting a different namespace:
+**Blur namespace split:** Hyprland applies blur via `layerrule = "blur on, match:namespace quickshell"` (defined in `quickshell.nix`). Windows that don't need blur can opt out by setting a different namespace:
 
 ```qml
 import Quickshell.Wayland._WlrLayerShell
@@ -257,4 +257,4 @@ PanelWindow {
 }
 ```
 
-Only windows with visible blurred content (pills, panels, menus) should use the default `quickshell` namespace. Purely decorative or interaction-only surfaces should use `quickshell-noblur` to avoid unnecessary blur processing.
+Currently only ScreenCorners uses `quickshell-noblur` since it's purely decorative (opaque corner masks, no translucent content). All other windows use the default `quickshell` namespace because they contain blurred content (pills, panels, menus).
