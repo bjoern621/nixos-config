@@ -25,6 +25,7 @@
     ../../modules/nix-ld.nix
     ../../modules/auto-update.nix
     ../../modules/howdy.nix
+    ../../modules/fonts.nix
   ];
 
   # Bootloader.

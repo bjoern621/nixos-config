@@ -55,6 +55,4 @@
     "blur on, match:namespace quickshell"
     "ignore_alpha 0.01, match:namespace quickshell"
   ];
-
-  fonts.fontconfig.enable = true;
 }
