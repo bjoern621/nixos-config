@@ -26,7 +26,8 @@ _client_id: str = ""  # Set from credentials file
 _client_secret: str = ""  # Set from credentials file
 REDIRECT_URI: str = "http://127.0.0.1:8888/callback"
 SCOPES: str = (
-    "user-read-recently-played user-read-currently-playing user-read-playback-state"
+    "user-read-recently-played user-read-currently-playing "
+    "user-read-playback-state user-modify-playback-state"
 )
 
 # Token storage
@@ -153,32 +154,44 @@ def get_valid_token() -> str | None:
     return tokens.get("access_token")
 
 
-def api_request(endpoint: str) -> dict[str, Any] | None:
+def api_request(
+    endpoint: str,
+    method: str = "GET",
+    data: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
     """
     Make an authenticated API request.
 
     Args:
         endpoint: The Spotify API endpoint (e.g., "/v1/me/player").
+        method: HTTP method (GET, PUT, POST, etc.).
+        data: Optional JSON body for PUT/POST requests.
 
     Returns:
         The JSON response as a dictionary, or None on error.
+        For 204 No Content responses, returns an empty dict.
     """
     token = get_valid_token()
     if not token:
         return None
 
     url = f"https://api.spotify.com{endpoint}"
-    req = urllib.request.Request(url)
+    body = json.dumps(data).encode() if data else None
+    req = urllib.request.Request(url, data=body, method=method)
     req.add_header("Authorization", f"Bearer {token}")
+    if body:
+        req.add_header("Content-Type", "application/json")
 
     try:
         with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 204:
+                return {}
             return json.loads(response.read().decode())
     except urllib.error.HTTPError as e:
         if e.code == 401:
             # Token expired, try refresh
             if refresh_access_token():
-                return api_request(endpoint)
+                return api_request(endpoint, method, data)
         retry_after = e.headers.get("Retry-After", "unknown") if e.headers else "unknown"
         if e.code == 429:
             print(f"API rate limited (429): retry after {retry_after}s", file=sys.stderr)
@@ -252,6 +265,20 @@ def get_queue() -> list[dict[str, str]]:
         )
 
     return tracks
+
+
+def play_track(uri: str) -> bool:
+    """
+    Play a specific track by Spotify URI.
+
+    Args:
+        uri: The Spotify track URI (e.g., "spotify:track:...").
+
+    Returns:
+        True if playback started successfully, False otherwise.
+    """
+    result = api_request("/v1/me/player/play", method="PUT", data={"uris": [uri]})
+    return result is not None
 
 
 class _OAuthServer(HTTPServer):
@@ -393,6 +420,7 @@ def main() -> None:
         )
         print("  queue [n]     - Get n tracks from queue (default 3)", file=sys.stderr)
         print("  all           - Get all data as JSON", file=sys.stderr)
+        print("  play <uri>    - Play a track by Spotify URI", file=sys.stderr)
         sys.exit(1)
 
     command = sys.argv[1]
@@ -409,10 +437,17 @@ def main() -> None:
         print(json.dumps(result_queue))
     elif command == "all":
         result_all: dict[str, Any] = {
-            "recently_played": get_recently_played(3),
-            "queue": get_queue()[:3],
+            "recently_played": get_recently_played(10),
+            "queue": get_queue()[:10],
         }
         print(json.dumps(result_all))
+    elif command == "play":
+        if len(sys.argv) < 3:
+            print(json.dumps({"success": False, "error": "Missing URI"}))
+            sys.exit(1)
+        uri = sys.argv[2]
+        success = play_track(uri)
+        print(json.dumps({"success": success}))
     else:
         print(f"Unknown command: {command}", file=sys.stderr)
         sys.exit(1)

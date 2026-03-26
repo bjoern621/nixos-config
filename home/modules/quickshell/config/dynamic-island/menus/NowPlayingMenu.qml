@@ -25,7 +25,11 @@ Item {
     implicitWidth: 280
     implicitHeight: menuLayout.height + 2 * contentPadding
 
-    // Track history (stores {title, artist, artUrl} objects)
+    // Track history
+    // History rewind strategy:
+    // The last element is always the current track. 
+    // Forward track changes (next, auto-advance) append. 
+    // Rewind detection is declarative: when onPostTrackChanged fires and the new track matches trackHistory[-2] (the entry before current), it's a rewind - pop the current track instead of appending. Clicking a recently-played or queue track uses the Spotify API to play that URI directly, which always counts as a forward advance (new play).
     property var trackHistory: []
     property int maxHistory: 8
     property bool queueExpanded: false
@@ -35,10 +39,92 @@ Item {
     property var spotifyQueue: []
     property bool spotifyDataLoading: false
 
+    // +1 = forward (next), -1 = backward (prev), 0 = no directional slide
+    property int _trackDirection: 0
+
     property var displayRecentlyPlayed: []
-    readonly property var displayQueue: spotifyQueue
+    readonly property var displayQueue: spotifyQueue.slice(0, 3)
     readonly property int recentSkeletonCount: debugSkeletons ? 3 : Math.max(0, 3 - displayRecentlyPlayed.length)
     readonly property int queueSkeletonCount: debugSkeletons ? 3 : Math.max(0, 3 - displayQueue.length)
+
+    // Unified ListModel for animated track list (recent + current + queue)
+    ListModel { id: trackListModel }
+
+    // Batch rebuilds so history + queue updates in the same handler don't double-trigger
+    Timer {
+        id: unifiedRebuildTimer
+        interval: 0
+        onTriggered: root._buildUnifiedData()
+    }
+
+    function _rebuildTrackList() { unifiedRebuildTimer.restart() }
+
+    onDisplayRecentlyPlayedChanged: _rebuildTrackList()
+    onDisplayQueueChanged: _rebuildTrackList()
+    onTrackTitleChanged: _rebuildTrackList()
+    onTrackArtUrlChanged: _rebuildTrackList()
+
+    function _buildUnifiedData() {
+        const result = []
+        const currentKey = hasPlayer && trackTitle
+            ? (trackTitle + "|" + trackArtist).toLowerCase() : ""
+
+        for (let i = 0; i < displayRecentlyPlayed.length; i++) {
+            const r = displayRecentlyPlayed[i]
+            result.push({ title: r.title || "", artist: r.artist || "",
+                          artUrl: r.artUrl || "", uri: r.uri || "", type: "recent" })
+        }
+        if (hasPlayer && trackTitle)
+            result.push({ title: trackTitle, artist: trackArtist,
+                          artUrl: trackArtUrl || "", uri: "", type: "current" })
+        for (let i = 0; i < displayQueue.length; i++) {
+            const q = displayQueue[i]
+            // Skip duplicate of current (brief overlap during optimistic update)
+            if ((q.title + "|" + q.artist).toLowerCase() === currentKey) continue
+            result.push({ title: q.title || "", artist: q.artist || "",
+                          artUrl: q.artUrl || "", uri: q.uri || "", type: "queue" })
+        }
+        _syncTrackListModel(trackListModel, result)
+    }
+
+    // Diff a JS array into a ListModel so ListView gets proper add/remove/move signals
+    function _syncTrackListModel(model, newData) {
+        const newKeys = []
+        for (let i = 0; i < newData.length; i++)
+            newKeys.push((newData[i].title + "|" + newData[i].artist).toLowerCase())
+
+        // Remove items not in new data (iterate backwards to keep indices stable)
+        for (let i = model.count - 1; i >= 0; i--) {
+            const item = model.get(i)
+            const key = (item.title + "|" + item.artist).toLowerCase()
+            if (newKeys.indexOf(key) === -1)
+                model.remove(i)
+        }
+
+        // Insert, reorder, and update properties
+        for (let i = 0; i < newData.length; i++) {
+            const d = newData[i]
+            const key = (d.title + "|" + d.artist).toLowerCase()
+
+            let found = -1
+            for (let j = i; j < model.count; j++) {
+                const item = model.get(j)
+                if ((item.title + "|" + item.artist).toLowerCase() === key) {
+                    found = j
+                    break
+                }
+            }
+
+            if (found === -1) {
+                model.insert(i, d)
+            } else {
+                if (found !== i)
+                    model.move(found, i, 1)
+                // Update type/artUrl/uri (item may have moved between sections)
+                model.set(i, { type: d.type, artUrl: d.artUrl, uri: d.uri })
+            }
+        }
+    }
 
     // Debug info from last merge
     property string debugMergeLog: ""
@@ -112,7 +198,7 @@ Item {
             }
         }
 
-        // Backfill goes before local (they're older), then take last 3
+        // Backfill goes before local (they're older), then take last 3 for display
         const all = backfill.concat(merged)
         const result = all.slice(Math.max(0, all.length - 3))
 
@@ -171,28 +257,68 @@ Item {
         }
     }
 
+    // Separate process for play commands — avoids blocking data fetches
+    Process {
+        id: spotifyPlayProcess
+        running: false
+
+        stderr: SplitParser {
+            onRead: data => {
+                console.log("Spotify play error:", data)
+            }
+        }
+
+        onExited: (code, status) => {
+            if (code !== 0) console.log("Spotify play failed, code:", code)
+        }
+    }
+
+    function playSpotifyUri(uri) {
+        if (!uri) return
+        const scriptPath = Qt.resolvedUrl("../spotify_api.py").toString().replace("file://", "")
+        spotifyPlayProcess.command = ["python3", scriptPath, "play", uri]
+        spotifyPlayProcess.running = true
+    }
+
+    // Cooldown guard — debounces Spotify API calls (e.g. spam-clicking next)
+    Timer {
+        id: spotifyRefreshCooldown
+        interval: 15000
+        onTriggered: {
+            if (spotifyRefreshCooldown._pending) {
+                spotifyRefreshCooldown._pending = false
+                root._doRefreshSpotifyData()
+            }
+        }
+        property bool _pending: false
+    }
+
+    // Fetches all Spotify data (queue + recently played). 
+    // A 15s cooldown prevents spamming; calls during cooldown are queued and data is fetched once after the cooldown expires.
     function refreshSpotifyData() {
+        if (spotifyRefreshCooldown.running) {
+            spotifyRefreshCooldown._pending = true
+            return
+        }
+        _doRefreshSpotifyData()
+    }
+
+    function _doRefreshSpotifyData() {
         if (root.spotifyDataLoading) return
         root.spotifyDataLoading = true
         spotifyProcess.currentCommand = "all"
         const scriptPath = Qt.resolvedUrl("../spotify_api.py").toString().replace("file://", "")
         spotifyProcess.command = ["python3", scriptPath, "all"]
         spotifyProcess.running = true
+        spotifyRefreshCooldown.restart()
     }
 
-    // Auto-fetch disabled for debugging — use manual buttons instead
-    // Timer {
-    //     id: spotifyRefreshTimer
-    //     interval: 60000
-    //     repeat: true
-    //     running: root.queueExpanded && root.hasPlayer
-    //     onTriggered: root.refreshSpotifyData()
-    // }
-    // onQueueExpandedChanged: {
-    //     if (queueExpanded && root.hasPlayer) {
-    //         root.refreshSpotifyData()
-    //     }
-    // }
+    // Refresh Spotify data when queue is first expanded
+    onQueueExpandedChanged: {
+        if (queueExpanded && root.hasPlayer) {
+            root.refreshSpotifyData()
+        }
+    }
 
     // Local position cache, updated by timer
     property real currentPosition: hasPlayer ? player.position : 0
@@ -240,21 +366,54 @@ Item {
                 return;
             }
 
-            const h = root.trackHistory;
+            let h = root.trackHistory.slice();
+
+            // Duplicate of current track (e.g. player restarted at 0:00) → skip
             if (h.length > 0) {
                 const last = h[h.length - 1];
                 if (last.title === title && last.artist === artist) {
-                    console.log("[trackHistory] skipped: duplicate of last entry")
+                    console.log("[trackHistory] skipped: duplicate of current")
                     return;
                 }
             }
 
-            let newHistory = h.slice();
-            newHistory.push({ title: title, artist: artist, artUrl: artUrl || "" });
-            if (newHistory.length > root.maxHistory + 1)
-                newHistory = newHistory.slice(newHistory.length - root.maxHistory - 1);
-            root.trackHistory = newHistory;
-            console.log("[trackHistory] added:", title, "- total:", newHistory.length)
+            // Declarative rewind detection: if new track matches the entry
+            // before current, this is a "go back" — pop instead of append
+            if (h.length >= 2) {
+                const beforeCurrent = h[h.length - 2];
+                if (beforeCurrent.title === title && beforeCurrent.artist === artist) {
+                    root._trackDirection = -1
+                    // Capture the old current before popping — it goes back into the queue
+                    const oldCurrent = h[h.length - 1];
+                    h.pop();
+                    root.trackHistory = h;
+                    console.log("[trackHistory] rewound — popped current, length:", h.length)
+
+                    // Optimistic queue update: old current track goes back to front of queue
+                    let q = root.spotifyQueue.slice();
+                    q.unshift({ title: oldCurrent.title, artist: oldCurrent.artist, artUrl: oldCurrent.artUrl || "" });
+                    root.spotifyQueue = q;
+
+                    root.refreshSpotifyData()
+                    return;
+                }
+            }
+
+            // Forward advance: append
+            root._trackDirection = 1
+            h.push({ title: title, artist: artist, artUrl: artUrl || "" });
+            if (h.length > root.maxHistory + 1)
+                h = h.slice(h.length - root.maxHistory - 1);
+            root.trackHistory = h;
+            console.log("[trackHistory] added:", title, "- total:", h.length)
+
+            // Optimistic queue update: the first queue item just became the current track
+            if (root.spotifyQueue.length > 0) {
+                root.spotifyQueue = root.spotifyQueue.slice(1);
+            }
+
+            // Also trigger a real fetch to reconcile
+            root.refreshSpotifyData()
         }
     }
 
@@ -266,6 +425,7 @@ Item {
                 artUrl: root.player.trackArtUrl || ""
             }];
         }
+        _buildUnifiedData()
     }
 
     function formatTime(seconds) {
@@ -623,7 +783,15 @@ Item {
                     }
                 }
 
-                HoverHandler { id: queueToggleHover; cursorShape: Qt.PointingHandCursor }
+                HoverHandler {
+                    id: queueToggleHover
+                    cursorShape: Qt.PointingHandCursor
+                    onHoveredChanged: {
+                        if (hovered && !root.queueExpanded) {
+                            root.refreshSpotifyData()
+                        }
+                    }
+                }
                 TapHandler {
                     id: queueToggleTap
                     onTapped: root.queueExpanded = !root.queueExpanded
@@ -758,6 +926,90 @@ Item {
                 }
             }
 
+            // --- Fetch Status Indicator ---
+            Row {
+                width: parent.width
+                spacing: Spacing.spacing8
+                visible: root.queueExpanded
+
+                // Cooldown countdown
+                Rectangle {
+                    width: cooldownLabel.implicitWidth + 12
+                    height: 20
+                    radius: height / 2
+                    color: spotifyRefreshCooldown.running ? Colors.hoverItemHovered : Colors.progressBackground
+                    border.color: Colors.pillBorder
+                    border.width: 1
+
+                    Label {
+                        id: cooldownLabel
+                        anchors.centerIn: parent
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: Colors.textColor
+                        text: spotifyRefreshCooldown.running
+                            ? "CD " + Math.ceil(cooldownTick.remaining / 1000) + "s"
+                            : "CD —"
+                    }
+
+                    Timer {
+                        id: cooldownTick
+                        interval: 200
+                        repeat: true
+                        running: spotifyRefreshCooldown.running
+                        property real remaining: 0
+                        property real startTime: 0
+                        onRunningChanged: {
+                            if (running) {
+                                startTime = Date.now()
+                                remaining = spotifyRefreshCooldown.interval
+                            }
+                        }
+                        onTriggered: {
+                            remaining = Math.max(0, spotifyRefreshCooldown.interval - (Date.now() - startTime))
+                        }
+                    }
+                }
+
+                // Pending indicator
+                Rectangle {
+                    width: pendingLabel.implicitWidth + 12
+                    height: 20
+                    radius: height / 2
+                    color: spotifyRefreshCooldown._pending ? Colors.accentColor : Colors.progressBackground
+                    border.color: Colors.pillBorder
+                    border.width: 1
+
+                    Label {
+                        id: pendingLabel
+                        anchors.centerIn: parent
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: spotifyRefreshCooldown._pending ? "#000" : Colors.textColorMuted
+                        text: spotifyRefreshCooldown._pending ? "Pending" : "No Pending"
+                    }
+                }
+
+                // Loading indicator
+                Rectangle {
+                    width: loadingLabel.implicitWidth + 12
+                    height: 20
+                    radius: height / 2
+                    color: root.spotifyDataLoading ? Colors.accentColor : Colors.progressBackground
+                    border.color: Colors.pillBorder
+                    border.width: 1
+
+                    Label {
+                        id: loadingLabel
+                        anchors.centerIn: parent
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: root.spotifyDataLoading ? "#000" : Colors.textColorMuted
+                        text: root.spotifyDataLoading ? "Fetching..." : "Idle"
+                    }
+                }
+            }
+
             // --- Expandable Track List ---
             ExpandSection {
                 id: trackListWrapper
@@ -828,140 +1080,76 @@ Item {
                         }
                     }
 
-                    // Section: Recently Played
-                    Column {
-                        width: parent.width
-                        spacing: Spacing.spacing2
-
-                        // Skeleton placeholders to fill up to 3 items
-                        Repeater {
-                            model: root.recentSkeletonCount
-                            Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
-                        }
-
-                        Repeater {
-                            model: root.debugSkeletons ? [] : root.displayRecentlyPlayed
-
-                            delegate: Item {
-                                id: recentDelegate
-                                required property var modelData
-                                required property int index
-
-                                property bool hovered: recentHover.hovered
-                                property bool pressed: recentTap.pressed
-
-                                width: trackListColumn.width
-                                height: trackRowRecent.implicitHeight + Spacing.spacing8
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: Spacing.spacing4
-                                    color: recentDelegate.pressed ? Colors.hoverItemPressed
-                                         : recentDelegate.hovered ? Colors.hoverItemHovered
-                                         : "transparent"
-                                    border.color: recentDelegate.hovered || recentDelegate.pressed ? Colors.pillBorder : "transparent"
-                                    border.width: recentDelegate.hovered || recentDelegate.pressed ? 1 : 0
-                                }
-
-                                Row {
-                                    id: trackRowRecent
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    x: Spacing.spacing4
-                                    width: parent.width - 2 * Spacing.spacing4
-                                    spacing: Spacing.spacing8
-
-                                    Rectangle {
-                                        width: 32
-                                        height: 32
-                                        radius: Spacing.spacing4
-                                        color: Colors.progressBackground
-                                        clip: true
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        Image {
-                                            anchors.fill: parent
-                                            source: modelData.artUrl || ""
-                                            fillMode: Image.PreserveAspectCrop
-                                            asynchronous: true
-                                            visible: status === Image.Ready
-                                        }
-                                    }
-
-                                    Column {
-                                        width: parent.width - 32 - Spacing.spacing8
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        Label {
-                                            text: modelData.title || ""
-                                            font.pixelSize: Typography.fontSize14
-                                            font.weight: Font.Normal
-                                            color: Colors.textColorMuted
-                                            elide: Text.ElideRight
-                                            width: parent.width
-                                        }
-
-                                        Label {
-                                            visible: (modelData.artist || "") !== ""
-                                            text: modelData.artist || ""
-                                            font.pixelSize: Typography.fontSize12
-                                            font.weight: Font.Normal
-                                            color: Colors.textColorMuted
-                                            opacity: 0.6
-                                            elide: Text.ElideRight
-                                            width: parent.width
-                                        }
-                                    }
-                                }
-
-                                HoverHandler {
-                                    id: recentHover
-                                    cursorShape: Qt.PointingHandCursor
-                                }
-
-                                TapHandler {
-                                    id: recentTap
-                                    onTapped: {
-                                        if (modelData.uri) {
-                                            // Play via Spotify URI
-                                            console.log("Play Spotify URI:", modelData.uri)
-                                        } else {
-                                            console.log("Play recent track:", modelData.title)
-                                        }
-                                    }
-                                }
-
-                                scale: recentTap.pressed ? 0.97 : 1.0
-                                transformOrigin: Item.Center
-                                SquishBehavior on scale {}
-                            }
-                        }
+                    // Skeleton placeholders for recently played (top)
+                    Repeater {
+                        model: root.recentSkeletonCount
+                        Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
                     }
 
-                    // Section: Current Track
-                    Column {
+                    // Unified track list: Recently Played → Current → Queue
+                    ListView {
+                        id: trackListView
                         width: parent.width
+                        height: contentHeight
+                        interactive: false
+                        clip: true
                         spacing: Spacing.spacing2
+                        model: root.debugSkeletons ? 0 : trackListModel
 
+                        Behavior on height {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                        }
 
-                        Item {
-                            id: currentTrackDelegate
-                            width: parent.width
-                            height: trackRowCurrent.implicitHeight + Spacing.spacing8
+                        add: Transition {
+                            ParallelAnimation {
+                                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                                NumberAnimation { property: "scale"; from: 0.96; to: 1.0; duration: 250; easing.type: Easing.OutBack }
+                            }
+                        }
 
-                            property bool hovered: currentHover.hovered
-                            property bool pressed: currentTap.pressed
+                        remove: Transition {
+                            ParallelAnimation {
+                                NumberAnimation { property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
+                                NumberAnimation { property: "scale"; to: 0.96; duration: 150; easing.type: Easing.InCubic }
+                            }
+                        }
+
+                        displaced: Transition {
+                            NumberAnimation { properties: "y"; duration: 250; easing.type: Easing.OutCubic }
+                        }
+
+                        delegate: Item {
+                            id: trackDelegate
+                            required property string title
+                            required property string artist
+                            required property string artUrl
+                            required property string uri
+                            required property string type
+                            required property int index
+
+                            property bool isCurrent: type === "current"
+                            property bool hovered: trackDelegateHover.hovered
+                            property bool pressed: trackDelegateTap.pressed
+
+                            width: trackListView.width
+                            height: trackDelegateRow.implicitHeight + Spacing.spacing8
 
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing4
-                                color: Colors.hoverItemHovered
-                                opacity: 0.3
-                                border.color: Colors.accentColor
-                                border.width: 1
+                                color: trackDelegate.isCurrent ? Colors.hoverItemHovered
+                                     : trackDelegate.pressed ? Colors.hoverItemPressed
+                                     : trackDelegate.hovered ? Colors.hoverItemHovered
+                                     : "transparent"
+                                opacity: trackDelegate.isCurrent ? 0.3 : 1
+                                border.color: trackDelegate.isCurrent ? Colors.accentColor
+                                            : (trackDelegate.hovered || trackDelegate.pressed) ? Colors.pillBorder
+                                            : "transparent"
+                                border.width: trackDelegate.isCurrent || trackDelegate.hovered || trackDelegate.pressed ? 1 : 0
                             }
 
                             Row {
-                                id: trackRowCurrent
+                                id: trackDelegateRow
                                 anchors.verticalCenter: parent.verticalCenter
                                 x: Spacing.spacing4
                                 width: parent.width - 2 * Spacing.spacing4
@@ -977,13 +1165,15 @@ Item {
 
                                     Image {
                                         anchors.fill: parent
-                                        source: root.trackArtUrl
+                                        source: trackDelegate.artUrl
                                         fillMode: Image.PreserveAspectCrop
                                         asynchronous: true
                                         visible: status === Image.Ready
                                     }
 
+                                    // Play/pause indicator for current track
                                     Rectangle {
+                                        visible: trackDelegate.isCurrent
                                         width: root.isPlaying ? 26 : 20
                                         height: root.isPlaying ? 18 : 20
                                         radius: root.isPlaying ? Spacing.spacing4 : height / 2
@@ -1012,7 +1202,6 @@ Item {
                                             color: Colors.textColor
                                         }
                                     }
-
                                 }
 
                                 Column {
@@ -1020,20 +1209,21 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
 
                                     Label {
-                                        text: root.trackTitle
+                                        text: trackDelegate.title
                                         font.pixelSize: Typography.fontSize14
-                                        font.weight: Font.Bold
-                                        color: Colors.textColor
+                                        font.weight: trackDelegate.isCurrent ? Font.Bold : Font.Normal
+                                        color: trackDelegate.isCurrent ? Colors.textColor : Colors.textColorMuted
                                         elide: Text.ElideRight
                                         width: parent.width
                                     }
 
                                     Label {
-                                        visible: root.trackArtist !== ""
-                                        text: root.trackArtist
+                                        visible: trackDelegate.artist !== ""
+                                        text: trackDelegate.artist
                                         font.pixelSize: Typography.fontSize12
                                         font.weight: Font.Normal
                                         color: Colors.textColorMuted
+                                        opacity: trackDelegate.isCurrent ? 1 : 0.6
                                         elide: Text.ElideRight
                                         width: parent.width
                                     }
@@ -1041,131 +1231,31 @@ Item {
                             }
 
                             HoverHandler {
-                                id: currentHover
+                                id: trackDelegateHover
                                 cursorShape: Qt.PointingHandCursor
                             }
 
                             TapHandler {
-                                id: currentTap
+                                id: trackDelegateTap
                                 onTapped: {
-                                    if (root.hasPlayer) root.player.togglePlaying()
+                                    if (trackDelegate.isCurrent) {
+                                        if (root.hasPlayer) root.player.togglePlaying()
+                                    } else if (trackDelegate.uri) {
+                                        root.playSpotifyUri(trackDelegate.uri)
+                                    }
                                 }
                             }
 
-                            scale: currentTap.pressed ? 0.97 : 1.0
+                            scale: trackDelegateTap.pressed ? 0.97 : 1.0
                             transformOrigin: Item.Center
                             SquishBehavior on scale {}
                         }
                     }
 
-                    // Section: Queue
-                    Column {
-                        width: parent.width
-                        spacing: Spacing.spacing2
-
-
-                        Repeater {
-                            model: root.debugSkeletons ? [] : root.displayQueue
-
-                            delegate: Item {
-                                id: queueDelegate
-                                required property var modelData
-                                required property int index
-
-                                property bool hovered: queueHover.hovered
-                                property bool pressed: queueTap.pressed
-
-                                width: trackListColumn.width
-                                height: trackRowQueue.implicitHeight + Spacing.spacing8
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: Spacing.spacing4
-                                    color: queueDelegate.pressed ? Colors.hoverItemPressed
-                                         : queueDelegate.hovered ? Colors.hoverItemHovered
-                                         : "transparent"
-                                    border.color: queueDelegate.hovered || queueDelegate.pressed ? Colors.pillBorder : "transparent"
-                                    border.width: queueDelegate.hovered || queueDelegate.pressed ? 1 : 0
-                                }
-
-                                Row {
-                                    id: trackRowQueue
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    x: Spacing.spacing4
-                                    width: parent.width - 2 * Spacing.spacing4
-                                    spacing: Spacing.spacing8
-
-                                    Rectangle {
-                                        width: 32
-                                        height: 32
-                                        radius: Spacing.spacing4
-                                        color: Colors.progressBackground
-                                        clip: true
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        Image {
-                                            anchors.fill: parent
-                                            source: modelData.artUrl || ""
-                                            fillMode: Image.PreserveAspectCrop
-                                            asynchronous: true
-                                            visible: status === Image.Ready
-                                        }
-                                    }
-
-                                    Column {
-                                        width: parent.width - 32 - Spacing.spacing8
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        Label {
-                                            text: modelData.title || ""
-                                            font.pixelSize: Typography.fontSize14
-                                            font.weight: Font.Normal
-                                            color: Colors.textColorMuted
-                                            elide: Text.ElideRight
-                                            width: parent.width
-                                        }
-
-                                        Label {
-                                            visible: (modelData.artist || "") !== ""
-                                            text: modelData.artist || ""
-                                            font.pixelSize: Typography.fontSize12
-                                            font.weight: Font.Normal
-                                            color: Colors.textColorMuted
-                                            opacity: 0.6
-                                            elide: Text.ElideRight
-                                            width: parent.width
-                                        }
-                                    }
-                                }
-
-                                HoverHandler {
-                                    id: queueHover
-                                    cursorShape: Qt.PointingHandCursor
-                                }
-
-                                TapHandler {
-                                    id: queueTap
-                                    onTapped: {
-                                        if (modelData.uri) {
-                                            // Play via Spotify URI
-                                            console.log("Play Spotify URI:", modelData.uri)
-                                        } else {
-                                            console.log("Play queued track:", modelData.title)
-                                        }
-                                    }
-                                }
-
-                                scale: queueTap.pressed ? 0.97 : 1.0
-                                transformOrigin: Item.Center
-                                SquishBehavior on scale {}
-                            }
-                        }
-
-                        // Skeleton placeholders to fill up to 3 items
-                        Repeater {
-                            model: root.queueSkeletonCount
-                            Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
-                        }
+                    // Skeleton placeholders for queue (bottom)
+                    Repeater {
+                        model: root.queueSkeletonCount
+                        Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
                     }
                 }
             }
@@ -1174,9 +1264,9 @@ Item {
 
     // Debug overlay — shows merge log at top-left
     Rectangle {
-        anchors.top: parent.bottom
+        anchors.top: parent.top
         anchors.topMargin: 8
-        anchors.left: parent.left
+        anchors.left: parent.right
         width: 500
         height: debugText.implicitHeight + 16
         radius: 6
