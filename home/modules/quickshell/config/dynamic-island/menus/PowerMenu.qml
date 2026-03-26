@@ -42,7 +42,6 @@ Item {
             id: col
             anchors.fill: parent
             anchors.margins: root.contentPadding
-            spacing: Spacing.spacing4
 
             Repeater {
                 model: [
