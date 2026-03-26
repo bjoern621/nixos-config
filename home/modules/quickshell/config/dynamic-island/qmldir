@@ -2,6 +2,7 @@ singleton Globals 1.0 base/Globals.qml
 singleton Colors 1.0 base/Colors.qml
 singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml
+singleton LoadingHost 1.0 base/LoadingHost.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 Label 1.0 base/Label.qml
 Icon 1.0 base/Icon.qml
@@ -24,6 +25,7 @@ BatteryMenu 1.0 menus/BatteryMenu.qml
 NowPlayingMenu 1.0 menus/NowPlayingMenu.qml
 PowerMenu 1.0 menus/PowerMenu.qml
 TrayContextMenu 1.0 menus/TrayContextMenu.qml
+LoadingScreen 1.0 menus/LoadingScreen.qml
 
 VolumeOsd 1.0 osd/VolumeOsd.qml
 BrightnessOsd 1.0 osd/BrightnessOsd.qml
@@ -32,6 +34,7 @@ BatteryWarning 1.0 osd/BatteryWarning.qml
 Bar 1.0 windows/Bar.qml
 ScreenCorners 1.0 windows/ScreenCorners.qml
 PowerCorner 1.0 windows/PowerCorner.qml
+LoadingOverlay 1.0 windows/LoadingOverlay.qml
 singleton PopupHost 1.0 base/PopupHost.qml
 singleton NotificationHost 1.0 base/NotificationHost.qml
 PopupWindow 1.0 windows/PopupWindow.qml

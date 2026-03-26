@@ -13,6 +13,26 @@ Item {
     readonly property int buttonWidth: 140
     readonly property int buttonHeight: 36
     function triggerAction(action) {
+        // Show loading screen with appropriate label
+        var label = ""
+        switch (action) {
+            case "shutdown":
+                label = "Shutting down..."
+                break
+            case "reboot":
+                label = "Rebooting..."
+                break
+            case "lock":
+                label = "Locking..."
+                break
+            case "hibernate":
+                label = "Hibernating..."
+                break
+        }
+        
+        LoadingHost.show(label)
+        
+        // Execute the action after a brief delay to show the loading screen
         Qt.callLater(() => {
             switch (action) {
                 case "shutdown":
@@ -48,7 +68,8 @@ Item {
                     { action: "shutdown", icon: "\uf011", label: "Shutdown" },
                     { action: "reboot", icon: "\uf0e2", label: "Reboot" },
                     { action: "lock", icon: "\uf023", label: "Lock" },
-                    { action: "hibernate", icon: "\uf2dc", label: "Hibernate" }
+                    { action: "hibernate", icon: "\uf2dc", label: "Hibernate" },
+                    { action: "test", icon: "\uf0e7", label: "Test Loading" }
                 ]
 
                 Item {

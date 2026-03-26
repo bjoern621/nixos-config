@@ -25,7 +25,7 @@ Variants {
             item: powerInteractionZone
         }
 
-        readonly property bool shouldShowMenu: cornerHover.hovered || powerMenuWrapper.keepOpen
+        readonly property bool shouldShowMenu: (cornerHover.hovered || powerMenuWrapper.keepOpen) && !LoadingHost.active
 
         onShouldShowMenuChanged: {
             if (shouldShowMenu) {

@@ -12,11 +12,14 @@ import "windows"
 ShellRoot {
     // Force-load the NotificationHost singleton so the D-Bus server registers early.
     property var _notifHost: NotificationHost.server
+    // Force-load LoadingHost so it's ready when needed.
+    property var _loadingHost: LoadingHost
 
     WallpaperAccent {}
     ScreenCorners {}
     Bar {}
     PowerCorner {}
+    LoadingOverlay {}
     VolumeOsd {}
     BrightnessOsd {}
     BatteryWarning {}
