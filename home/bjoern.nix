@@ -23,6 +23,7 @@
     ./modules/paintdotnet.nix
     ./modules/shell.nix
     ./modules/file-manager.nix
+    ./modules/keyring.nix
   ];
 
   home.username = "bjoern";

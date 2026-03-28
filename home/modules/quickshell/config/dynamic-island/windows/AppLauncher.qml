@@ -14,39 +14,42 @@ Scope {
     onLauncherVisibleChanged: Globals.launcherVisible = launcherVisible
 
     function focusedScreen() {
-        const mon = Hyprland.focusedMonitor
+        const mon = Hyprland.focusedMonitor;
         if (mon) {
-            const screens = Quickshell.screens
+            const screens = Quickshell.screens;
             for (let i = 0; i < screens.length; i++) {
                 if (screens[i].name === mon.name)
-                    return screens[i]
+                    return screens[i];
             }
         }
-        return null
+        return null;
     }
 
     property var appIndexMap: ({})
 
     Process {
         id: fzfProc
-        command: ["bash", "-c", "printf '%s\\n' \"$APP_LIST\" | fzf --filter=\"$QUERY\""]
-        environment: ({ APP_LIST: "", QUERY: "" })
+        command: ["bash", "-c", "printf '%s\\n' \"$APP_LIST\" | fzf --delimiter='\t' --nth=2.. --filter=\"$QUERY\" | cut -f1"]
+        environment: ({
+                APP_LIST: "",
+                QUERY: ""
+            })
         running: false
 
         property var results: []
 
         stdout: SplitParser {
             onRead: data => {
-                const line = data.trim()
+                const line = data.trim();
                 if (line.length > 0 && line in launcherScope.appIndexMap) {
-                    fzfProc.results.push(launcherScope.appIndexMap[line])
+                    fzfProc.results.push(launcherScope.appIndexMap[line]);
                 }
             }
         }
 
         onExited: (code, status) => {
-            launcherWindow.filteredApps = fzfProc.results.slice(0, 50)
-            resultsList.currentIndex = 0
+            launcherWindow.filteredApps = fzfProc.results.slice(0, 50);
+            resultsList.currentIndex = 0;
         }
     }
 
@@ -55,10 +58,11 @@ Scope {
 
         function toggle() {
             if (!launcherScope.launcherVisible) {
-                const s = launcherScope.focusedScreen()
-                if (s) launcherWindow.screen = s
+                const s = launcherScope.focusedScreen();
+                if (s)
+                    launcherWindow.screen = s;
             }
-            launcherScope.launcherVisible = !launcherScope.launcherVisible
+            launcherScope.launcherVisible = !launcherScope.launcherVisible;
         }
     }
 
@@ -93,44 +97,55 @@ Scope {
         property var filteredApps: []
 
         function rebuildAppList() {
-            const apps = DesktopEntries.applications
-            let list = []
+            const apps = DesktopEntries.applications;
+            let list = [];
 
             for (let i = 0; i < apps.values.length; i++) {
-                const app = apps.values[i]
-                if (app.noDisplay) continue
-                list.push(app)
+                const app = apps.values[i];
+                if (app.noDisplay)
+                    continue;
+                list.push(app);
             }
 
-            list.sort((a, b) => a.name.localeCompare(b.name))
-            allApps = list
+            list.sort((a, b) => a.name.localeCompare(b.name));
+            allApps = list;
         }
 
         function updateFilter() {
-            const query = searchInput.text.toLowerCase()
+            const query = searchInput.text.toLowerCase();
             if (query === "") {
-                filteredApps = allApps.slice(0, 50)
-                resultsList.currentIndex = 0
-                return
+                filteredApps = allApps.slice(0, 50);
+                resultsList.currentIndex = 0;
+                return;
             }
 
-            let lines = []
-            let indexMap = {}
+            let lines = [];
+            let indexMap = {};
             for (let i = 0; i < allApps.length; i++) {
-                const name = allApps[i].name
-                lines.push(name)
-                indexMap[name] = allApps[i]
-            }
-            launcherScope.appIndexMap = indexMap
+                const app = allApps[i];
+                const id = app.id;
+                const name = app.name || "";
+                const genericName = app.genericName || "";
+                const comment = app.comment || "";
+                const keywords = Array.isArray(app.keywords) ? app.keywords.join(" ") : (app.keywords || "");
+                const searchable = [name, genericName, comment, keywords].join(" ");
 
-            fzfProc.results = []
-            fzfProc.environment = { APP_LIST: lines.join("\n"), QUERY: query }
-            fzfProc.running = true
+                lines.push([id, name, searchable].join("\t"));
+                indexMap[id] = app;
+            }
+            launcherScope.appIndexMap = indexMap;
+
+            fzfProc.results = [];
+            fzfProc.environment = {
+                APP_LIST: lines.join("\n"),
+                QUERY: query
+            };
+            fzfProc.running = true;
         }
 
         function launchApp(app) {
-            launcherScope.launcherVisible = false
-            Quickshell.execDetached(["uwsm", "app", "--", app.id + ".desktop"])
+            launcherScope.launcherVisible = false;
+            Quickshell.execDetached(["uwsm", "app", "--", app.id + ".desktop"]);
         }
 
         Component.onCompleted: rebuildAppList()
@@ -138,8 +153,8 @@ Scope {
         Connections {
             target: DesktopEntries
             function onApplicationsChanged() {
-                launcherWindow.rebuildAppList()
-                launcherWindow.updateFilter()
+                launcherWindow.rebuildAppList();
+                launcherWindow.updateFilter();
             }
         }
 
@@ -214,7 +229,8 @@ Scope {
                                 color: Colors.textColor
                                 clip: true
                                 selectByMouse: true
-                                onActiveFocusChanged: if (!activeFocus && launcherScope.launcherVisible) launcherScope.launcherVisible = false
+                                onActiveFocusChanged: if (!activeFocus && launcherScope.launcherVisible)
+                                    launcherScope.launcherVisible = false
 
                                 Text {
                                     anchors.fill: parent
@@ -230,19 +246,19 @@ Scope {
                                 Keys.onEscapePressed: launcherScope.launcherVisible = false
                                 Keys.onReturnPressed: {
                                     if (launcherWindow.filteredApps.length > 0) {
-                                        launcherWindow.launchApp(launcherWindow.filteredApps[resultsList.currentIndex])
+                                        launcherWindow.launchApp(launcherWindow.filteredApps[resultsList.currentIndex]);
                                     }
                                 }
                                 Keys.onDownPressed: {
-                                    resultsList.keyboardNav = true
+                                    resultsList.keyboardNav = true;
                                     if (resultsList.currentIndex < launcherWindow.filteredApps.length - 1) {
-                                        resultsList.currentIndex++
+                                        resultsList.currentIndex++;
                                     }
                                 }
                                 Keys.onUpPressed: {
-                                    resultsList.keyboardNav = true
+                                    resultsList.keyboardNav = true;
                                     if (resultsList.currentIndex > 0) {
-                                        resultsList.currentIndex--
+                                        resultsList.currentIndex--;
                                     }
                                 }
                             }
@@ -266,11 +282,8 @@ Scope {
                             acceptedButtons: Qt.NoButton
                             hoverEnabled: true
                             onPositionChanged: resultsList.keyboardNav = false
-                            onWheel: (wheel) => {
-                                resultsList.contentY = Math.max(0, Math.min(
-                                    resultsList.contentHeight - resultsList.height,
-                                    resultsList.contentY - wheel.angleDelta.y * 2
-                                ))
+                            onWheel: wheel => {
+                                resultsList.contentY = Math.max(0, Math.min(resultsList.contentHeight - resultsList.height, resultsList.contentY - wheel.angleDelta.y * 2));
                             }
                         }
 
@@ -281,7 +294,11 @@ Scope {
                                 radius: width / 2
                                 color: Colors.textColorMuted
                                 opacity: parent.active ? 0.6 : 0.3
-                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 120
+                                    }
+                                }
                             }
                         }
 
@@ -294,9 +311,7 @@ Scope {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing8
-                                color: delegateTap.pressed ? Colors.hoverItemPressed
-                                     : resultsList.currentIndex === index || delegateHover.hovered ? Colors.hoverItemHovered
-                                     : "transparent"
+                                color: delegateTap.pressed ? Colors.hoverItemPressed : resultsList.currentIndex === index || delegateHover.hovered ? Colors.hoverItemHovered : "transparent"
                                 border.color: resultsList.currentIndex === index || delegateHover.hovered || delegateTap.pressed ? Colors.pillBorder : "transparent"
                             }
 
@@ -360,7 +375,8 @@ Scope {
                                 id: delegateHover
                                 cursorShape: Qt.PointingHandCursor
                                 onHoveredChanged: {
-                                    if (hovered && !resultsList.keyboardNav) resultsList.currentIndex = index
+                                    if (hovered && !resultsList.keyboardNav)
+                                        resultsList.currentIndex = index;
                                 }
                             }
 
@@ -388,7 +404,9 @@ Scope {
 
         Connections {
             target: panelReveal
-            function onHidden() { launcherWindow.hideComplete = true }
+            function onHidden() {
+                launcherWindow.hideComplete = true;
+            }
         }
 
         Timer {
@@ -401,12 +419,12 @@ Scope {
             target: launcherScope
             function onLauncherVisibleChanged() {
                 if (launcherScope.launcherVisible) {
-                    launcherWindow.hideComplete = false
-                    searchInput.text = ""
-                    resultsList.contentY = 0
-                    resultsList.keyboardNav = false
-                    launcherWindow.updateFilter()
-                    focusTimer.restart()
+                    launcherWindow.hideComplete = false;
+                    searchInput.text = "";
+                    resultsList.contentY = 0;
+                    resultsList.keyboardNav = false;
+                    launcherWindow.updateFilter();
+                    focusTimer.restart();
                 }
             }
         }
