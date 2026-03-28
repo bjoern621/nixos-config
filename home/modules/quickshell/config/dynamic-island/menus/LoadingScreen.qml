@@ -8,8 +8,8 @@ Item {
 
     property bool showing: false
     property string actionLabel: ""
-    signal cancelled()
-    signal hidden()
+    signal cancelled
+    signal hidden
 
     opacity: 0
     visible: opacity > 0
@@ -39,13 +39,14 @@ Item {
             height: 40
             radius: height / 2
             opacity: exitHover.hovered ? 1 : 0
-            color: exitTap.pressed ? Colors.hoverItemPressed
-                 : exitHover.hovered ? Colors.hoverItemHovered
-                 : "transparent"
+            color: exitTap.pressed ? Colors.hoverItemPressed : exitHover.hovered ? Colors.hoverItemHovered : "transparent"
             border.color: exitHover.hovered || exitTap.pressed ? Colors.pillBorder : "transparent"
 
             Behavior on opacity {
-                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: 150
+                    easing.type: Easing.OutCubic
+                }
             }
 
             scale: exitTap.pressed ? 0.85 : 1.0
@@ -84,29 +85,29 @@ Item {
                 Canvas {
                     id: spinnerCanvas
                     anchors.fill: parent
-                    
+
                     property real angle: 0
                     property real sweep: 0
 
                     onPaint: {
-                        var ctx = getContext("2d")
-                        ctx.reset()
-                        ctx.clearRect(0, 0, width, height)
-                        ctx.strokeStyle = Colors.accentColor
-                        ctx.lineWidth = 6
-                        ctx.lineCap = "round"
-                        
-                        var centerX = width / 2
-                        var centerY = height / 2
-                        var radius = width / 2 - 4
-                        
+                        var ctx = getContext("2d");
+                        ctx.reset();
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.strokeStyle = Colors.accentColor;
+                        ctx.lineWidth = 6;
+                        ctx.lineCap = "round";
+
+                        var centerX = width / 2;
+                        var centerY = height / 2;
+                        var radius = width / 2 - 4;
+
                         // Draw arc with current angle and sweep
-                        var startAngle = (angle - 90) * Math.PI / 180
-                        var endAngle = (angle + sweep - 90) * Math.PI / 180
-                        
-                        ctx.beginPath()
-                        ctx.arc(centerX, centerY, radius, startAngle, endAngle)
-                        ctx.stroke()
+                        var startAngle = (angle - 90) * Math.PI / 180;
+                        var endAngle = (angle + sweep - 90) * Math.PI / 180;
+
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                        ctx.stroke();
                     }
 
                     // Smooth rotation animation
@@ -123,7 +124,7 @@ Item {
                     SequentialAnimation on sweep {
                         running: root.visible
                         loops: Animation.Infinite
-                        
+
                         NumberAnimation {
                             from: 30
                             to: 240
@@ -140,7 +141,7 @@ Item {
 
                     onAngleChanged: requestPaint()
                     onSweepChanged: requestPaint()
-                    
+
                     Component.onCompleted: requestPaint()
                 }
             }
@@ -160,35 +161,71 @@ Item {
 
     ParallelAnimation {
         id: showAnim
-        NumberAnimation { target: root; property: "opacity"; to: 1; duration: 200; easing.type: Easing.OutCubic }
-        NumberAnimation { target: slideTransform; property: "y"; to: 0; duration: 200; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutBack }
+        NumberAnimation {
+            target: root
+            property: "opacity"
+            to: 1
+            duration: 200
+            easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            target: slideTransform
+            property: "y"
+            to: 0
+            duration: 200
+            easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            target: root
+            property: "scale"
+            to: 1.0
+            duration: 250
+            easing.type: Easing.OutBack
+        }
     }
 
     ParallelAnimation {
         id: hideAnim
-        NumberAnimation { target: root; property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
-        NumberAnimation { target: slideTransform; property: "y"; to: Spacing.spacing8; duration: 150; easing.type: Easing.InCubic }
-        NumberAnimation { target: root; property: "scale"; to: 0.96; duration: 150; easing.type: Easing.InCubic }
+        NumberAnimation {
+            target: root
+            property: "opacity"
+            to: 0
+            duration: 150
+            easing.type: Easing.InCubic
+        }
+        NumberAnimation {
+            target: slideTransform
+            property: "y"
+            to: Spacing.spacing8
+            duration: 150
+            easing.type: Easing.InCubic
+        }
+        NumberAnimation {
+            target: root
+            property: "scale"
+            to: 0.96
+            duration: 150
+            easing.type: Easing.InCubic
+        }
         onFinished: root.hidden()
     }
 
     onShowingChanged: {
         if (showing) {
-            hideAnim.stop()
-            showAnim.start()
+            hideAnim.stop();
+            showAnim.start();
         } else {
-            showAnim.stop()
-            hideAnim.start()
+            showAnim.stop();
+            hideAnim.start();
         }
     }
 
     function show(label) {
-        root.actionLabel = label
-        root.showing = true
+        root.actionLabel = label;
+        root.showing = true;
     }
 
     function hide() {
-        root.showing = false
+        root.showing = false;
     }
 }
