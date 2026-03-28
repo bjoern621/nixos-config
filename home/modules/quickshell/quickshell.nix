@@ -8,15 +8,19 @@
 let
   qs = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
+  # Python with added keyring and secretstorage packages for Spotify API integration.
+  qsPython = pkgs.python3.withPackages (ps: [
+    ps.keyring
+    ps.secretstorage
+  ]);
+
   # Private runtime deps — visible only to the quickshell process and its
   # children, never added to the user's global environment.
   qsPrivateBinPath = pkgs.lib.makeBinPath [
     pkgs.imagemagick # WallpaperAccent color extraction
-    (pkgs.python3.withPackages (ps: [
-      ps.keyring
-      ps.secretstorage
-    ])) # Spotify API
+    qsPython
   ];
+
   # Fonts are discovered via XDG_DATA_DIRS (fontconfig + Qt), not PATH.
   qsPrivateDataPath = pkgs.lib.makeSearchPath "share" [
     pkgs.font-awesome # Icons
@@ -28,12 +32,7 @@ let
   # The QML uses quickshell's private python3; this gives the user a terminal
   # entry-point that also has keyring+secretstorage available.
   spotifyCli = pkgs.writeShellScriptBin "quickshell-spotify" ''
-    exec ${
-      pkgs.python3.withPackages (ps: [
-        ps.keyring
-        ps.secretstorage
-      ])
-    }/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
+    exec ${qsPython}/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
   '';
 
   # Wrap the quickshell binary so its subprocesses see the private PATH/data
