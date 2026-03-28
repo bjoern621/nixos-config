@@ -28,9 +28,7 @@ let
   ];
 
   # CLI helper for one-time user setup (setup/auth/clear).
-  # A plain shell script — no Python env conflict with the user's global python3.
-  # The QML uses quickshell's private python3; this gives the user a terminal
-  # entry-point that also has keyring+secretstorage available.
+  # This gives the user a python executable that also has keyring+secretstorage available.
   spotifyCli = pkgs.writeShellScriptBin "quickshell-spotify" ''
     exec ${qsPython}/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
   '';
