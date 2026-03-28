@@ -28,36 +28,39 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       home-manager,
-      nix-search-tv,
+      quickshell,
       ...
     }@inputs:
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      qs = quickshell.packages.x86_64-linux.default;
+      qt = pkgs.qt6.qtdeclarative;
     in
     {
       devShells.x86_64-linux.default = pkgs.mkShell {
-        packages = [
-          # Python — spotify_api.py runtime deps + linting/typing
-          (pkgs.python3.withPackages (ps: [
+        # Allows qmlls (and the VS Code qt-qml extension) to resolve Qt and Quickshell imports.
+        # Without this, qmlls only searches standard FHS paths which don't existon NixOS,
+        # resulting in "unknown module" errors for every Qt import.
+        QML_IMPORT_PATH = "${qt}/lib/qt-6/qml:${qs}/lib/qt-6/qml";
+
+        packages = with pkgs; [
+          # Python + packages for runtime deps e.g. spotify_api.py
+          (python3.withPackages (ps: [
             ps.keyring
             ps.secretstorage
           ]))
-          pkgs.ruff # linter + formatter (replaces flake8 / black)
-          pkgs.mypy # static type checker
-
-          # Bash — setup-spotify.sh
-          pkgs.shellcheck # static analysis
-          pkgs.shfmt # formatter
+          ruff # linter + formatter
+          mypy # static type check
 
           # Nix
-          pkgs.nil # LSP server
-          pkgs.nixfmt # formatter
+          nil # LSP server
+          nixfmt # formatter
 
-          # QML — provides qmllint
-          pkgs.kdePackages.qtdeclarative
+          # QML qmllint, qmlls, qmlformat + Quickshell modules for import resolution
+          qt
+          qs
         ];
 
         shellHook = ''
@@ -66,6 +69,15 @@
           echo "  ruff     $(ruff --version)"
           echo "  mypy     $(mypy --version)"
           echo "  qmllint  $(qmllint --version 2>&1 | head -1)"
+
+          # qmlls lives in a nix store path that changes on every rebuild, so VS Code's
+          # qt-qml extension (configured with a static path) can't find it. 
+          # This wrapper at ~/.local/bin/qmlls stays stable and forwards to the current store path.
+          # Without it, no QML language server in VS Code (the bundled language server does not work because it can't find it's dependencies).
+          mkdir -p "$HOME/.local/bin"
+          printf '#!/bin/sh\nexec "%s/bin/qmlls" "$@"\n' "${qt}" > "$HOME/.local/bin/qmlls"
+          chmod +x "$HOME/.local/bin/qmlls"
+          echo "  ~/.local/bin/qmlls wrapper written"
         '';
       };
 
