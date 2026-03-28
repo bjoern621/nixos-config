@@ -1,7 +1,6 @@
 { ... }:
 
 {
-  # Alias-friendly desktop entry for Seahorse so launchers match common terms.
   xdg.desktopEntries."org.gnome.seahorse.Application" = {
     name = "Schlüsselbund";
     genericName = "Passwörter und Schlüssel";
