@@ -12,6 +12,7 @@
       # Application shortcuts
       "$mainMod, Q, exec, $terminal"
       "$mainMod, W, killactive,"
+      "$mainMod, F, fullscreen, 0"
       "$mainMod, M, exit,"
 
       # Move focus with mainMod + arrow keys
