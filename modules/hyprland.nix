@@ -1,4 +1,9 @@
-{ inputs, config, pkgs, ... }:
+{
+  inputs,
+  config,
+  pkgs,
+  ...
+}:
 
 {
   programs.hyprland = {
@@ -7,7 +12,8 @@
 
     # https://wiki.hypr.land/Nix/Hyprland-on-NixOS/
     package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+    portalPackage =
+      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
 
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     withUWSM = true;
