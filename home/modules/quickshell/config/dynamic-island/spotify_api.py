@@ -108,7 +108,13 @@ def save_credentials(client_id: str, client_secret: str) -> None:
 
 def clear_credentials() -> None:
     """Remove all stored credentials and tokens from the keyring."""
-    for key in ("client_id", "client_secret", "access_token", "refresh_token", "expires_at"):
+    for key in (
+        "client_id",
+        "client_secret",
+        "access_token",
+        "refresh_token",
+        "expires_at",
+    ):
         _kr_del(key)
     print("All keyring entries for quickshell-spotify cleared.", file=sys.stderr)
 
@@ -167,7 +173,9 @@ def refresh_access_token() -> bool:
     try:
         with urllib.request.urlopen(req, timeout=10) as response:
             result = json.loads(response.read().decode())
-            save_tokens(result["access_token"], tokens["refresh_token"], result["expires_in"])
+            save_tokens(
+                result["access_token"], tokens["refresh_token"], result["expires_in"]
+            )
             return True
     except Exception as exc:
         print(f"Error refreshing token: {exc}", file=sys.stderr)
@@ -220,9 +228,13 @@ def api_request(
         if exc.code == 401:
             if refresh_access_token():
                 return api_request(endpoint, method, data)
-        retry_after = exc.headers.get("Retry-After", "unknown") if exc.headers else "unknown"
+        retry_after = (
+            exc.headers.get("Retry-After", "unknown") if exc.headers else "unknown"
+        )
         if exc.code == 429:
-            print(f"API rate limited (429): retry after {retry_after}s", file=sys.stderr)
+            print(
+                f"API rate limited (429): retry after {retry_after}s", file=sys.stderr
+            )
         else:
             print(f"API error {exc.code}: {exc.reason}", file=sys.stderr)
         return None
@@ -247,7 +259,9 @@ def get_recently_played(limit: int = 3) -> list[dict[str, str]]:
         tracks.append(
             {
                 "title": track.get("name", ""),
-                "artist": ", ".join(a.get("name", "") for a in track.get("artists", [])),
+                "artist": ", ".join(
+                    a.get("name", "") for a in track.get("artists", [])
+                ),
                 "artUrl": images[0].get("url", "") if images else "",
                 "uri": track.get("uri", ""),
             }
@@ -267,7 +281,9 @@ def get_queue() -> list[dict[str, str]]:
         tracks.append(
             {
                 "title": track.get("name", ""),
-                "artist": ", ".join(a.get("name", "") for a in track.get("artists", [])),
+                "artist": ", ".join(
+                    a.get("name", "") for a in track.get("artists", [])
+                ),
                 "artUrl": images[0].get("url", "") if images else "",
                 "uri": track.get("uri", ""),
             }
@@ -277,7 +293,10 @@ def get_queue() -> list[dict[str, str]]:
 
 def play_track(uri: str) -> bool:
     """Play a specific track by Spotify URI."""
-    return api_request("/v1/me/player/play", method="PUT", data={"uris": [uri]}) is not None
+    return (
+        api_request("/v1/me/player/play", method="PUT", data={"uris": [uri]})
+        is not None
+    )
 
 
 # ── OAuth flow ─────────────────────────────────────────────────────────────────
@@ -337,8 +356,12 @@ def exchange_code(code: str) -> bool:
     try:
         with urllib.request.urlopen(req, timeout=10) as response:
             result = json.loads(response.read().decode())
-            save_tokens(result["access_token"], result["refresh_token"], result["expires_in"])
-            print("Authentication successful! Tokens stored in keyring.", file=sys.stderr)
+            save_tokens(
+                result["access_token"], result["refresh_token"], result["expires_in"]
+            )
+            print(
+                "Authentication successful! Tokens stored in keyring.", file=sys.stderr
+            )
             return True
     except Exception as exc:
         print(f"Error exchanging code: {exc}", file=sys.stderr)
@@ -406,10 +429,19 @@ def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: spotify_api.py <command>", file=sys.stderr)
         print("Commands:", file=sys.stderr)
-        print("  setup         - Store Spotify app credentials in keyring", file=sys.stderr)
+        print(
+            "  setup         - Store Spotify app credentials in keyring",
+            file=sys.stderr,
+        )
         print("  auth          - Start OAuth2 authorization flow", file=sys.stderr)
-        print("  clear         - Remove all stored credentials/tokens from keyring", file=sys.stderr)
-        print("  recent [n]    - Get n recently played tracks (default 3)", file=sys.stderr)
+        print(
+            "  clear         - Remove all stored credentials/tokens from keyring",
+            file=sys.stderr,
+        )
+        print(
+            "  recent [n]    - Get n recently played tracks (default 3)",
+            file=sys.stderr,
+        )
         print("  queue [n]     - Get n tracks from queue (default 3)", file=sys.stderr)
         print("  all           - Get all data as JSON", file=sys.stderr)
         print("  play <uri>    - Play a track by Spotify URI", file=sys.stderr)
@@ -432,7 +464,11 @@ def main() -> None:
         limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
         print(json.dumps(get_queue()[:limit]))
     elif command == "all":
-        print(json.dumps({"recently_played": get_recently_played(10), "queue": get_queue()[:10]}))
+        print(
+            json.dumps(
+                {"recently_played": get_recently_played(10), "queue": get_queue()[:10]}
+            )
+        )
     elif command == "play":
         if len(sys.argv) < 3:
             print(json.dumps({"success": False, "error": "Missing URI"}))
