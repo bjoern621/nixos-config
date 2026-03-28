@@ -32,48 +32,39 @@ Scope {
     }
 
     function sendNotification(msg) {
-        notifyProc.command = ["hyprctl", "notify", "-1", "10000", "0", msg]
-        notifyProc.running = true
+        notifyProc.command = ["hyprctl", "notify", "-1", "10000", "0", msg];
+        notifyProc.running = true;
     }
 
     onPctChanged: {
-        if (!_startupDone) return
-        const pctInt = Math.round(pct * 100)
+        if (!_startupDone)
+            return;
+        const pctInt = Math.round(pct * 100);
 
         if (isCritical && !_criticalShown) {
-            _criticalShown = true
-            _warningShown = true
-            sendNotification("⚠ Akku fast leer! " + pctInt + " %")
-            PopupHost.show(
-                "\uf244",
-                "Akku fast leer!",
-                "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!",
-                Colors.batteryCritical
-            )
+            _criticalShown = true;
+            _warningShown = true;
+            sendNotification("⚠ Akku fast leer! " + pctInt + " %");
+            PopupHost.show("\uf244", "Akku fast leer!", "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!", Colors.batteryCritical);
         } else if (isWarning && !isCritical && !_warningShown) {
-            _warningShown = true
-            sendNotification("🔋 Akku niedrig: " + pctInt + " %")
-            PopupHost.show(
-                "\uf243",
-                "Akku niedrig",
-                "Nur noch " + pctInt + " % Akku übrig.\nBitte bald das Ladegerät anschließen.",
-                Colors.batteryWarning
-            )
+            _warningShown = true;
+            sendNotification("🔋 Akku niedrig: " + pctInt + " %");
+            PopupHost.show("\uf243", "Akku niedrig", "Nur noch " + pctInt + " % Akku übrig.\nBitte bald das Ladegerät anschließen.", Colors.batteryWarning);
         }
     }
 
     // Reset thresholds when charger is connected
     onChargingChanged: {
         if (charging) {
-            _warningShown = false
-            _criticalShown = false
+            _warningShown = false;
+            _criticalShown = false;
         }
     }
 
     onFullyChargedChanged: {
         if (fullyCharged) {
-            _warningShown = false
-            _criticalShown = false
+            _warningShown = false;
+            _criticalShown = false;
         }
     }
 }

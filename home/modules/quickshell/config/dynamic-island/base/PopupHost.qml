@@ -16,14 +16,20 @@ QtObject {
     property var _queue: []
 
     function show(icon, title, message, accentColor) {
-        _queue.push({ icon: icon, title: title, message: message, accentColor: accentColor })
-        _queueChanged()
-        if (!visible) _showNext()
+        _queue.push({
+            icon: icon,
+            title: title,
+            message: message,
+            accentColor: accentColor
+        });
+        _queueChanged();
+        if (!visible)
+            _showNext();
     }
 
     function dismiss() {
-        visible = false
-        _dismissTimer.restart()
+        visible = false;
+        _dismissTimer.restart();
     }
 
     property var _dismissTimer: Timer {
@@ -33,15 +39,15 @@ QtObject {
 
     function _showNext() {
         if (_queue.length === 0) {
-            visible = false
-            return
+            visible = false;
+            return;
         }
-        const item = _queue.shift()
-        _queueChanged()
-        icon = item.icon
-        title = item.title
-        message = item.message
-        accentColor = item.accentColor
-        visible = true
+        const item = _queue.shift();
+        _queueChanged();
+        icon = item.icon;
+        title = item.title;
+        message = item.message;
+        accentColor = item.accentColor;
+        visible = true;
     }
 }

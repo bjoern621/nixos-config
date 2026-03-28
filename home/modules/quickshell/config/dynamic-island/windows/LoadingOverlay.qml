@@ -37,7 +37,8 @@ Variants {
         Connections {
             target: LoadingHost
             function onActiveChanged() {
-                if (LoadingHost.active) loadingWindow.hideComplete = false
+                if (LoadingHost.active)
+                    loadingWindow.hideComplete = false;
             }
         }
 

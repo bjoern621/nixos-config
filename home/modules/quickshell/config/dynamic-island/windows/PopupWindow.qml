@@ -12,24 +12,25 @@ Scope {
     id: popupScope
 
     function focusedScreen() {
-        const mon = Hyprland.focusedMonitor
+        const mon = Hyprland.focusedMonitor;
         if (mon) {
-            const screens = Quickshell.screens
+            const screens = Quickshell.screens;
             for (let i = 0; i < screens.length; i++) {
                 if (screens[i].name === mon.name)
-                    return screens[i]
+                    return screens[i];
             }
         }
-        return null
+        return null;
     }
 
     Connections {
         target: PopupHost
         function onVisibleChanged() {
             if (PopupHost.visible) {
-                popupWindow.hideComplete = false
-                const s = popupScope.focusedScreen()
-                if (s) popupWindow.screen = s
+                popupWindow.hideComplete = false;
+                const s = popupScope.focusedScreen();
+                if (s)
+                    popupWindow.screen = s;
             }
         }
     }
@@ -39,12 +40,7 @@ Scope {
         target: "popup"
 
         function test() {
-            PopupHost.show(
-                "\uf0a2",
-                "Test",
-                "Dies ist eine Testbenachrichtigung.",
-                Colors.textColor
-            )
+            PopupHost.show("\uf0a2", "Test", "Dies ist eine Testbenachrichtigung.", Colors.textColor);
         }
     }
 
@@ -71,7 +67,9 @@ Scope {
 
         Connections {
             target: popupReveal
-            function onHidden() { popupWindow.hideComplete = true }
+            function onHidden() {
+                popupWindow.hideComplete = true;
+            }
         }
 
         Item {
@@ -89,7 +87,10 @@ Scope {
                 color: Qt.rgba(0, 0, 0, 0.3)
                 opacity: PopupHost.visible ? 1 : 0
                 Behavior on opacity {
-                    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
 

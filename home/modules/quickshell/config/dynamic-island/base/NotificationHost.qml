@@ -17,9 +17,9 @@ QtObject {
         actionsSupported: true
         bodySupported: true
         imageSupported: true
-        onNotification: function(notification) {
-            notification.tracked = !notification.transient
-            root.newNotification(notification)
+        onNotification: function (notification) {
+            notification.tracked = !notification.transient;
+            root.newNotification(notification);
         }
     }
 }

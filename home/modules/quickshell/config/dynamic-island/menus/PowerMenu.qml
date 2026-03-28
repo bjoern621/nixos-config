@@ -14,41 +14,41 @@ Item {
     readonly property int buttonHeight: 36
     function triggerAction(action) {
         // Show loading screen with appropriate label
-        var label = ""
+        var label = "";
         switch (action) {
-            case "shutdown":
-                label = "Shutting down..."
-                break
-            case "reboot":
-                label = "Rebooting..."
-                break
-            case "lock":
-                label = "Locking..."
-                break
-            case "hibernate":
-                label = "Hibernating..."
-                break
+        case "shutdown":
+            label = "Shutting down...";
+            break;
+        case "reboot":
+            label = "Rebooting...";
+            break;
+        case "lock":
+            label = "Locking...";
+            break;
+        case "hibernate":
+            label = "Hibernating...";
+            break;
         }
-        
-        LoadingHost.show(label)
-        
+
+        LoadingHost.show(label);
+
         // Execute the action after a brief delay to show the loading screen
         Qt.callLater(() => {
             switch (action) {
-                case "shutdown":
-                    Quickshell.execDetached(["systemctl", "poweroff"])
-                    break
-                case "reboot":
-                    Quickshell.execDetached(["systemctl", "reboot"])
-                    break
-                case "lock":
-                    Quickshell.execDetached(["loginctl", "lock-session"])
-                    break
-                case "hibernate":
-                    Quickshell.execDetached(["systemctl", "hibernate"])
-                    break
+            case "shutdown":
+                Quickshell.execDetached(["systemctl", "poweroff"]);
+                break;
+            case "reboot":
+                Quickshell.execDetached(["systemctl", "reboot"]);
+                break;
+            case "lock":
+                Quickshell.execDetached(["loginctl", "lock-session"]);
+                break;
+            case "hibernate":
+                Quickshell.execDetached(["systemctl", "hibernate"]);
+                break;
             }
-        })
+        });
     }
 
     Rectangle {
@@ -65,10 +65,26 @@ Item {
 
             Repeater {
                 model: [
-                    { action: "shutdown", icon: "\uf011", label: "Shutdown" },
-                    { action: "reboot", icon: "\uf0e2", label: "Reboot" },
-                    { action: "lock", icon: "\uf023", label: "Lock" },
-                    { action: "hibernate", icon: "\uf2dc", label: "Hibernate" },
+                    {
+                        action: "shutdown",
+                        icon: "\uf011",
+                        label: "Shutdown"
+                    },
+                    {
+                        action: "reboot",
+                        icon: "\uf0e2",
+                        label: "Reboot"
+                    },
+                    {
+                        action: "lock",
+                        icon: "\uf023",
+                        label: "Lock"
+                    },
+                    {
+                        action: "hibernate",
+                        icon: "\uf2dc",
+                        label: "Hibernate"
+                    },
                 ]
 
                 Item {
@@ -81,9 +97,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: Spacing.spacing8
-                        color: buttonTapHandler.pressed ? Colors.hoverItemPressed
-                             : buttonHoverHandler.hovered ? Colors.hoverItemHovered
-                             : "transparent"
+                        color: buttonTapHandler.pressed ? Colors.hoverItemPressed : buttonHoverHandler.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: buttonHoverHandler.hovered || buttonTapHandler.pressed ? Colors.pillBorder : "transparent"
                     }
 

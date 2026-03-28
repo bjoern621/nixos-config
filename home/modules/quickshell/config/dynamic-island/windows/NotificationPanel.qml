@@ -34,9 +34,9 @@ Variants {
 
         onShouldShowChanged: {
             if (shouldShow) {
-                panelMenu.show()
+                panelMenu.show();
             } else {
-                panelMenu.hide()
+                panelMenu.hide();
             }
         }
 
@@ -110,9 +110,7 @@ Variants {
                             height: 26
                             radius: height / 2
                             visible: NotificationHost.server && NotificationHost.server.trackedNotifications.count > 0
-                            color: clearTap.pressed ? Colors.hoverItemPressed
-                                 : clearHover.hovered ? Colors.hoverItemHovered
-                                 : "transparent"
+                            color: clearTap.pressed ? Colors.hoverItemPressed : clearHover.hovered ? Colors.hoverItemHovered : "transparent"
                             border.width: 1
                             border.color: clearHover.hovered || clearTap.pressed ? Colors.pillBorder : "transparent"
 
@@ -136,11 +134,12 @@ Variants {
                             TapHandler {
                                 id: clearTap
                                 onTapped: {
-                                    if (!NotificationHost.server) return
-                                    const model = NotificationHost.server.trackedNotifications
+                                    if (!NotificationHost.server)
+                                        return;
+                                    const model = NotificationHost.server.trackedNotifications;
                                     // Dismiss all tracked notifications
                                     while (model.count > 0) {
-                                        model.get(0).dismiss()
+                                        model.get(0).dismiss();
                                     }
                                 }
                             }
@@ -172,7 +171,8 @@ Variants {
                                 notification: modelData
                                 compact: false
                                 onDismissed: {
-                                    if (modelData) modelData.dismiss()
+                                    if (modelData)
+                                        modelData.dismiss();
                                 }
                             }
                         }

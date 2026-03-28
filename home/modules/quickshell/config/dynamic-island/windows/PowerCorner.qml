@@ -29,9 +29,9 @@ Variants {
 
         onShouldShowMenuChanged: {
             if (shouldShowMenu) {
-                powerMenuWrapper.show()
+                powerMenuWrapper.show();
             } else {
-                powerMenuWrapper.hide()
+                powerMenuWrapper.hide();
             }
         }
 

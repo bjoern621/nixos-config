@@ -8,7 +8,7 @@ Item {
     property var menuHandle: null
     property var panelWindow: null
 
-    signal itemTriggered()
+    signal itemTriggered
 
     readonly property bool hovered: rootHover.hovered
     property var activeSubmenu: null
@@ -26,7 +26,7 @@ Item {
         interval: 300
         onTriggered: {
             if (!submenuHover.hovered) {
-                menuRoot.activeSubmenu = null
+                menuRoot.activeSubmenu = null;
             }
         }
     }
@@ -74,17 +74,13 @@ Item {
                         visible: !modelData.isSeparator
                         anchors.fill: parent
                         radius: Spacing.spacing4
-                        color: mainItemMouse.containsMouse && modelData.enabled
-                                 ? Colors.hoverItemHovered : "transparent"
-                        border.color: mainItemMouse.containsMouse && modelData.enabled
-                                 ? Colors.pillBorder : "transparent"
+                        color: mainItemMouse.containsMouse && modelData.enabled ? Colors.hoverItemHovered : "transparent"
+                        border.color: mainItemMouse.containsMouse && modelData.enabled ? Colors.pillBorder : "transparent"
 
                         Text {
                             id: mainCheckMark
                             visible: modelData.buttonType !== 0
-                            text: modelData.checkState === Qt.Checked
-                                    ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF")
-                                    : " "
+                            text: modelData.checkState === Qt.Checked ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF") : " "
                             color: Colors.textColor
                             font.pixelSize: Typography.fontSize12
                             width: visible ? 16 : 0
@@ -110,8 +106,7 @@ Item {
 
                         Text {
                             text: modelData.text ?? ""
-                            color: modelData.enabled
-                                     ? Colors.textColor : Colors.textColorMuted
+                            color: modelData.enabled ? Colors.textColor : Colors.textColorMuted
                             font.pixelSize: Typography.fontSize12
                             elide: Text.ElideRight
                             anchors.left: mainItemIcon.visible ? mainItemIcon.right : mainCheckMark.right
@@ -141,26 +136,29 @@ Item {
                             onContainsMouseChanged: {
                                 if (containsMouse) {
                                     if (modelData.hasChildren) {
-                                        submenuCloseTimer.stop()
-                                        menuRoot.activeSubmenu = modelData
-                                        menuRoot.submenuY = mainItemBg.mapToItem(menuRoot, 0, 0).y
+                                        submenuCloseTimer.stop();
+                                        menuRoot.activeSubmenu = modelData;
+                                        menuRoot.submenuY = mainItemBg.mapToItem(menuRoot, 0, 0).y;
                                     } else if (menuRoot.activeSubmenu !== null) {
-                                        submenuCloseTimer.restart()
+                                        submenuCloseTimer.restart();
                                     }
                                 } else if (modelData.hasChildren) {
-                                    submenuCloseTimer.restart()
+                                    submenuCloseTimer.restart();
                                 }
                             }
 
                             onClicked: {
-                                if (!modelData.enabled) return
+                                if (!modelData.enabled)
+                                    return;
                                 if (modelData.hasChildren) {
-                                    menuRoot.activeSubmenu = modelData
-                                    menuRoot.submenuY = mainItemBg.mapToItem(menuRoot, 0, 0).y
+                                    menuRoot.activeSubmenu = modelData;
+                                    menuRoot.submenuY = mainItemBg.mapToItem(menuRoot, 0, 0).y;
                                 } else {
-                                    if (modelData.sendTriggered) modelData.sendTriggered()
-                                    else modelData.triggered()
-                                    menuRoot.itemTriggered()
+                                    if (modelData.sendTriggered)
+                                        modelData.sendTriggered();
+                                    else
+                                        modelData.triggered();
+                                    menuRoot.itemTriggered();
                                 }
                             }
                         }
@@ -187,7 +185,8 @@ Item {
         HoverHandler {
             id: submenuHover
             onHoveredChanged: {
-                if (hovered) submenuCloseTimer.stop()
+                if (hovered)
+                    submenuCloseTimer.stop();
             }
         }
 
@@ -223,17 +222,13 @@ Item {
                         visible: !modelData.isSeparator
                         anchors.fill: parent
                         radius: Spacing.spacing4
-                        color: subItemMouse.containsMouse && modelData.enabled
-                                 ? Colors.hoverItemHovered : "transparent"
-                        border.color: subItemMouse.containsMouse && modelData.enabled
-                                 ? Colors.pillBorder : "transparent"
+                        color: subItemMouse.containsMouse && modelData.enabled ? Colors.hoverItemHovered : "transparent"
+                        border.color: subItemMouse.containsMouse && modelData.enabled ? Colors.pillBorder : "transparent"
 
                         Text {
                             id: subCheckMark
                             visible: modelData.buttonType !== 0
-                            text: modelData.checkState === Qt.Checked
-                                    ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF")
-                                    : " "
+                            text: modelData.checkState === Qt.Checked ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF") : " "
                             color: Colors.textColor
                             font.pixelSize: Typography.fontSize12
                             width: visible ? 16 : 0
@@ -259,8 +254,7 @@ Item {
 
                         Text {
                             text: modelData.text ?? ""
-                            color: modelData.enabled
-                                     ? Colors.textColor : Colors.textColorMuted
+                            color: modelData.enabled ? Colors.textColor : Colors.textColorMuted
                             font.pixelSize: Typography.fontSize12
                             elide: Text.ElideRight
                             anchors.left: subItemIcon.visible ? subItemIcon.right : subCheckMark.right
@@ -288,14 +282,17 @@ Item {
                             cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
 
                             onClicked: {
-                                if (!modelData.enabled) return
+                                if (!modelData.enabled)
+                                    return;
                                 if (modelData.hasChildren) {
-                                    const pos = subItemBg.mapToItem(null, subItemBg.width, 0)
-                                    modelData.display(menuRoot.panelWindow, pos.x, pos.y)
+                                    const pos = subItemBg.mapToItem(null, subItemBg.width, 0);
+                                    modelData.display(menuRoot.panelWindow, pos.x, pos.y);
                                 } else {
-                                    if (modelData.sendTriggered) modelData.sendTriggered()
-                                    else modelData.triggered()
-                                    menuRoot.itemTriggered()
+                                    if (modelData.sendTriggered)
+                                        modelData.sendTriggered();
+                                    else
+                                        modelData.triggered();
+                                    menuRoot.itemTriggered();
                                 }
                             }
                         }

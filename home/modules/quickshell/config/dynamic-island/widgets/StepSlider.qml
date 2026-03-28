@@ -52,7 +52,10 @@ Item {
 
         Behavior on width {
             enabled: !sliderArea.pressed
-            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                duration: 80
+                easing.type: Easing.OutCubic
+            }
         }
     }
 
@@ -67,7 +70,10 @@ Item {
 
         Behavior on x {
             enabled: !sliderArea.pressed
-            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                duration: 80
+                easing.type: Easing.OutCubic
+            }
         }
     }
 
@@ -92,11 +98,12 @@ Item {
     }
 
     function updateValue(mouseX) {
-        var usable = root.width - 2 * root.trackPadding
-        var rawFraction = Math.max(0, Math.min(1, (mouseX - root.trackPadding) / usable))
-        var steppedValue = Math.round(rawFraction / root.stepSize) * root.stepSize
-        root.value = steppedValue
-        if (root.liveUpdate) root.moved(steppedValue)
+        var usable = root.width - 2 * root.trackPadding;
+        var rawFraction = Math.max(0, Math.min(1, (mouseX - root.trackPadding) / usable));
+        var steppedValue = Math.round(rawFraction / root.stepSize) * root.stepSize;
+        root.value = steppedValue;
+        if (root.liveUpdate)
+            root.moved(steppedValue);
     }
 
     property real scrollAccumulator: 0
@@ -111,23 +118,25 @@ Item {
             bottomMargin: -root.handleVerticalSize
         }
 
-        onPressed: (mouse) => root.updateValue(mouse.x)
-        onPositionChanged: (mouse) => {
-            if (pressed) root.updateValue(mouse.x)
+        onPressed: mouse => root.updateValue(mouse.x)
+        onPositionChanged: mouse => {
+            if (pressed)
+                root.updateValue(mouse.x);
         }
         onReleased: {
-            if (!root.liveUpdate) root.moved(root.value)
+            if (!root.liveUpdate)
+                root.moved(root.value);
         }
-        onWheel: (wheel) => {
-            var delta = wheel.angleDelta.y
-            var threshold = Math.abs(delta) >= root.mouseThreshold ? root.mouseThreshold : root.touchpadThreshold
-            root.scrollAccumulator += delta
+        onWheel: wheel => {
+            var delta = wheel.angleDelta.y;
+            var threshold = Math.abs(delta) >= root.mouseThreshold ? root.mouseThreshold : root.touchpadThreshold;
+            root.scrollAccumulator += delta;
             while (Math.abs(root.scrollAccumulator) >= threshold) {
-                var direction = root.scrollAccumulator > 0 ? 1 : -1
-                root.scrollAccumulator -= direction * threshold
-                var steppedValue = Math.max(0, Math.min(1, root.value + direction * root.stepSize))
-                root.value = steppedValue
-                root.moved(steppedValue)
+                var direction = root.scrollAccumulator > 0 ? 1 : -1;
+                root.scrollAccumulator -= direction * threshold;
+                var steppedValue = Math.max(0, Math.min(1, root.value + direction * root.stepSize));
+                root.value = steppedValue;
+                root.moved(steppedValue);
             }
         }
     }

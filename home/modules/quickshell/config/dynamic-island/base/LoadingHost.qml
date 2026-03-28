@@ -11,15 +11,15 @@ QtObject {
     property bool active: false
     property string label: ""
 
-    signal cancelled()
+    signal cancelled
 
     function show(actionLabel) {
-        label = actionLabel
-        active = true
+        label = actionLabel;
+        active = true;
     }
 
     function hide() {
-        active = false
-        label = ""
+        active = false;
+        label = "";
     }
 }

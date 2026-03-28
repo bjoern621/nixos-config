@@ -11,7 +11,7 @@ Item {
     property string message: ""
     property color accentColor: Colors.textColor
 
-    signal dismissed()
+    signal dismissed
 
     implicitWidth: 340
     implicitHeight: panel.implicitHeight
@@ -75,9 +75,7 @@ Item {
                 width: dismissLabel.implicitWidth + 2 * Spacing.spacing16
                 height: 36
                 radius: height / 2
-                color: dismissTap.pressed ? Colors.hoverItemPressed
-                     : dismissHover.hovered ? Colors.hoverItemHovered
-                     : "transparent"
+                color: dismissTap.pressed ? Colors.hoverItemPressed : dismissHover.hovered ? Colors.hoverItemHovered : "transparent"
                 border.width: 1
                 border.color: Colors.pillBorder
 

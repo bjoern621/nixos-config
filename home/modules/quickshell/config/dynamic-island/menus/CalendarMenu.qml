@@ -7,7 +7,7 @@ Item {
     property int displayYear: new Date().getFullYear()
 
     function navigateYear(direction) {
-        gridSlide.transition(direction)
+        gridSlide.transition(direction);
     }
 
     readonly property var today: new Date()
@@ -126,7 +126,7 @@ Item {
                         cursorShape: parent.canNavigate ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
                             if (parent.canNavigate) {
-                                root.navigateYear(root.todayYear - root.displayYear)
+                                root.navigateYear(root.todayYear - root.displayYear);
                             }
                         }
                     }
@@ -169,9 +169,9 @@ Item {
             ContentSlide {
                 id: gridSlide
 
-                onReadyToSwap: (direction) => {
-                    root.displayYear += direction
-                    gridSlide.completeTransition()
+                onReadyToSwap: direction => {
+                    root.displayYear += direction;
+                    gridSlide.completeTransition();
                 }
 
                 Grid {
@@ -180,145 +180,142 @@ Item {
                     columnSpacing: root.monthHorizontalGap
                     rowSpacing: root.monthVerticalGap
 
-                Repeater {
-                    model: 12
+                    Repeater {
+                        model: 12
 
-                    delegate: Column {
-                        id: mCol
+                        delegate: Column {
+                            id: mCol
 
-                        required property int index
-                        property int monthIndex: index
-                        property int daysInMonth: root.getDaysInMonth(root.displayYear, monthIndex)
-                        property int firstDayOffset: root.getFirstDayOffset(root.displayYear, monthIndex)
+                            required property int index
+                            property int monthIndex: index
+                            property int daysInMonth: root.getDaysInMonth(root.displayYear, monthIndex)
+                            property int firstDayOffset: root.getFirstDayOffset(root.displayYear, monthIndex)
 
-                        width: root.monthWidth
-                        spacing: Spacing.spacing2
+                            width: root.monthWidth
+                            spacing: Spacing.spacing2
 
-                        Label {
-                            text: root.germanLocale.monthName(mCol.monthIndex, Locale.LongFormat)
-                            font.pixelSize: Typography.fontSize14
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Row {
-                            spacing: 0
-
-                            Rectangle {
-                                width: root.weekNumberColumnWidth
-                                height: root.dayCellSize
-                                color: "transparent"
+                            Label {
+                                text: root.germanLocale.monthName(mCol.monthIndex, Locale.LongFormat)
+                                font.pixelSize: Typography.fontSize14
+                                anchors.horizontalCenter: parent.horizontalCenter
                             }
 
-                            Repeater {
-                                model: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-
-                                Text {
-                                    required property string modelData
-
-                                    width: root.dayCellSize
-                                    height: root.dayCellSize
-                                    text: modelData
-                                    font {
-                                        family: Typography.fontFamily
-                                        pixelSize: Typography.fontSize12
-                                        weight: Font.Bold
-                                    }
-                                    color: Colors.textColorMuted
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-                            }
-                        }
-
-                        Repeater {
-                            model: 6
-
-                            delegate: Row {
-                                id: wRow
-
-                                required property int index
-                                property int weekIndex: index
-                                property int firstDay: weekIndex * 7 - mCol.firstDayOffset + 1
-
-                                visible: {
-                                    for (var i = 0; i < 7; i++)
-                                        if (firstDay + i >= 1 && firstDay + i <= mCol.daysInMonth)
-                                            return true;
-                                    return false;
-                                }
+                            Row {
                                 spacing: 0
 
-                                Text {
+                                Rectangle {
                                     width: root.weekNumberColumnWidth
                                     height: root.dayCellSize
-                                    text: {
-                                        for (var i = 0; i < 7; i++) {
-                                            var d = wRow.firstDay + i;
-                                            if (d >= 1 && d <= mCol.daysInMonth)
-                                                return root.getIsoWeekNumber(root.displayYear, mCol.monthIndex, d);
-                                        }
-                                        return "";
-                                    }
-                                    font {
-                                        family: Typography.fontFamily
-                                        pixelSize: Typography.fontSize12
-                                    }
-                                    color: Colors.textColorMuted
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
+                                    color: "transparent"
                                 }
 
                                 Repeater {
-                                    model: 7
+                                    model: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
-                                    delegate: Item {
-                                        id: dayCell
-
-                                        required property int index
-                                        property int dayNumber: wRow.firstDay + index
-                                        property bool isValidDay: dayNumber >= 1 && dayNumber <= mCol.daysInMonth
-                                        property bool isToday: isValidDay
-                                            && root.displayYear === root.todayYear
-                                            && mCol.monthIndex === root.todayMonth
-                                            && dayNumber === root.todayDay
+                                    Text {
+                                        required property string modelData
 
                                         width: root.dayCellSize
                                         height: root.dayCellSize
+                                        text: modelData
+                                        font {
+                                            family: Typography.fontFamily
+                                            pixelSize: Typography.fontSize12
+                                            weight: Font.Bold
+                                        }
+                                        color: Colors.textColorMuted
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                }
+                            }
 
-                                        property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
+                            Repeater {
+                                model: 6
 
-                                        scale: dayCellMouse.pressed && dayCell.isValidDay ? 0.85 : 1.0
-                                        SquishBehavior on scale {}
+                                delegate: Row {
+                                    id: wRow
 
-                                        Rectangle {
-                                            anchors.centerIn: parent
+                                    required property int index
+                                    property int weekIndex: index
+                                    property int firstDay: weekIndex * 7 - mCol.firstDayOffset + 1
+
+                                    visible: {
+                                        for (var i = 0; i < 7; i++)
+                                            if (firstDay + i >= 1 && firstDay + i <= mCol.daysInMonth)
+                                                return true;
+                                        return false;
+                                    }
+                                    spacing: 0
+
+                                    Text {
+                                        width: root.weekNumberColumnWidth
+                                        height: root.dayCellSize
+                                        text: {
+                                            for (var i = 0; i < 7; i++) {
+                                                var d = wRow.firstDay + i;
+                                                if (d >= 1 && d <= mCol.daysInMonth)
+                                                    return root.getIsoWeekNumber(root.displayYear, mCol.monthIndex, d);
+                                            }
+                                            return "";
+                                        }
+                                        font {
+                                            family: Typography.fontFamily
+                                            pixelSize: Typography.fontSize12
+                                        }
+                                        color: Colors.textColorMuted
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                    Repeater {
+                                        model: 7
+
+                                        delegate: Item {
+                                            id: dayCell
+
+                                            required property int index
+                                            property int dayNumber: wRow.firstDay + index
+                                            property bool isValidDay: dayNumber >= 1 && dayNumber <= mCol.daysInMonth
+                                            property bool isToday: isValidDay && root.displayYear === root.todayYear && mCol.monthIndex === root.todayMonth && dayNumber === root.todayDay
+
                                             width: root.dayCellSize
                                             height: root.dayCellSize
-                                            radius: (root.dayCellSize) / 2
-                                            color: dayCell.isToday ? Colors.calendarToday : dayCell.hovered ? Colors.hoverItemHovered : "transparent"
-                                            border.color: dayCell.hovered ? Colors.pillBorder : "transparent"
-                                        }
 
-                                        Label {
-                                            anchors.fill: parent
-                                            text: dayCell.isValidDay ? dayCell.dayNumber : ""
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                        }
+                                            property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
 
-                                        MouseArea {
-                                            id: dayCellMouse
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: dayCell.isValidDay ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                            onClicked: console.log("Calendar: clicked " + dayCell.dayNumber + "." + (mCol.monthIndex + 1) + "." + root.displayYear)
+                                            scale: dayCellMouse.pressed && dayCell.isValidDay ? 0.85 : 1.0
+                                            SquishBehavior on scale {}
+
+                                            Rectangle {
+                                                anchors.centerIn: parent
+                                                width: root.dayCellSize
+                                                height: root.dayCellSize
+                                                radius: (root.dayCellSize) / 2
+                                                color: dayCell.isToday ? Colors.calendarToday : dayCell.hovered ? Colors.hoverItemHovered : "transparent"
+                                                border.color: dayCell.hovered ? Colors.pillBorder : "transparent"
+                                            }
+
+                                            Label {
+                                                anchors.fill: parent
+                                                text: dayCell.isValidDay ? dayCell.dayNumber : ""
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                            }
+
+                                            MouseArea {
+                                                id: dayCellMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: dayCell.isValidDay ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                onClicked: console.log("Calendar: clicked " + dayCell.dayNumber + "." + (mCol.monthIndex + 1) + "." + root.displayYear)
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
                 }
             }
         }

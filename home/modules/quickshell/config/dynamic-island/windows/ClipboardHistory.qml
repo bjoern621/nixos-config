@@ -13,15 +13,15 @@ Scope {
     property bool clipVisible: false
 
     function focusedScreen() {
-        const mon = Hyprland.focusedMonitor
+        const mon = Hyprland.focusedMonitor;
         if (mon) {
-            const screens = Quickshell.screens
+            const screens = Quickshell.screens;
             for (let i = 0; i < screens.length; i++) {
                 if (screens[i].name === mon.name)
-                    return screens[i]
+                    return screens[i];
             }
         }
-        return null
+        return null;
     }
 
     property var allEntries: []
@@ -32,81 +32,91 @@ Scope {
     Process {
         id: fzfProc
         command: ["bash", "-c", "printf '%s\\n' \"$CLIP_LIST\" | fzf --filter=\"$QUERY\""]
-        environment: ({ CLIP_LIST: "", QUERY: "" })
+        environment: ({
+                CLIP_LIST: "",
+                QUERY: ""
+            })
         running: false
 
         property var results: []
 
         stdout: SplitParser {
             onRead: data => {
-                const line = data.trim()
+                const line = data.trim();
                 if (line.length > 0 && line in clipScope.entryIndexMap) {
-                    fzfProc.results.push(clipScope.entryIndexMap[line])
+                    fzfProc.results.push(clipScope.entryIndexMap[line]);
                 }
             }
         }
 
         onExited: (code, status) => {
-            clipScope.filteredEntries = fzfProc.results
-            clipList.currentIndex = 0
+            clipScope.filteredEntries = fzfProc.results;
+            clipList.currentIndex = 0;
         }
     }
 
     property var entryIndexMap: ({})
 
     function updateFilter() {
-        const query = clipSearch.text.toLowerCase()
+        const query = clipSearch.text.toLowerCase();
         if (query === "") {
-            filteredEntries = allEntries
-            clipList.currentIndex = 0
-            return
+            filteredEntries = allEntries;
+            clipList.currentIndex = 0;
+            return;
         }
 
-        let lines = []
-        let indexMap = {}
+        let lines = [];
+        let indexMap = {};
         for (let i = 0; i < allEntries.length; i++) {
-            const key = i + "\t" + allEntries[i].display
-            lines.push(key)
-            indexMap[key] = allEntries[i]
+            const key = i + "\t" + allEntries[i].display;
+            lines.push(key);
+            indexMap[key] = allEntries[i];
         }
-        entryIndexMap = indexMap
+        entryIndexMap = indexMap;
 
-        fzfProc.results = []
-        fzfProc.environment = { CLIP_LIST: lines.join("\n"), QUERY: query }
-        fzfProc.running = true
+        fzfProc.results = [];
+        fzfProc.environment = {
+            CLIP_LIST: lines.join("\n"),
+            QUERY: query
+        };
+        fzfProc.running = true;
     }
 
     function selectEntry(entry) {
-        clipScope.clipVisible = false
-        decodeProc.entry = entry.raw
-        decodeProc.isImage = entry.isImage
-        decodeProc.running = true
+        clipScope.clipVisible = false;
+        decodeProc.entry = entry.raw;
+        decodeProc.isImage = entry.isImage;
+        decodeProc.running = true;
     }
 
     function decodeNextImage() {
-        if (imageDecodeQueue.length === 0) return
-        const entry = imageDecodeQueue.shift()
-        imageDecodeProc.entry = entry
+        if (imageDecodeQueue.length === 0)
+            return;
+        const entry = imageDecodeQueue.shift();
+        imageDecodeProc.entry = entry;
         imageDecodeProc.environment = {
             CLIP_ENTRY: entry.raw,
             OUT_PATH: entry.imagePath
-        }
-        imageDecodeProc.running = true
+        };
+        imageDecodeProc.running = true;
     }
 
     Process {
         id: imageDecodeProc
         property var entry: null
         command: ["bash", "-c", "printf '%s' \"$CLIP_ENTRY\" | cliphist decode > \"$OUT_PATH\""]
-        environment: ({ CLIP_ENTRY: "", OUT_PATH: "" })
+        environment: ({
+                CLIP_ENTRY: "",
+                OUT_PATH: ""
+            })
         running: false
 
         onExited: (code, status) => {
             if (code === 0 && imageDecodeProc.entry) {
                 // Bump decodedCount to trigger image reloads
-                clipScope.decodedCount++
+                clipScope.decodedCount++;
             }
-            clipScope.decodeNextImage()
+            clipScope.decodeNextImage();
         }
     }
 
@@ -118,33 +128,38 @@ Scope {
 
         stdout: SplitParser {
             onRead: data => {
-                const tabIdx = data.indexOf('\t')
+                const tabIdx = data.indexOf('\t');
                 if (tabIdx >= 0) {
-                    const display = data.substring(tabIdx + 1).trim()
+                    const display = data.substring(tabIdx + 1).trim();
                     if (display.length > 0) {
-                        const isImage = display.startsWith("[[ binary data")
-                        const entry = { raw: data, display: display, isImage: isImage, imagePath: "" }
+                        const isImage = display.startsWith("[[ binary data");
+                        const entry = {
+                            raw: data,
+                            display: display,
+                            isImage: isImage,
+                            imagePath: ""
+                        };
                         if (isImage) {
-                            const clipId = data.substring(0, tabIdx).trim()
-                            entry.imagePath = "/tmp/cliphist_preview_" + clipId + ".png"
+                            const clipId = data.substring(0, tabIdx).trim();
+                            entry.imagePath = "/tmp/cliphist_preview_" + clipId + ".png";
                         }
-                        clipScope.allEntries = [...clipScope.allEntries, entry]
+                        clipScope.allEntries = [...clipScope.allEntries, entry];
                     }
                 }
             }
         }
 
         onExited: (code, status) => {
-            clipScope.filteredEntries = clipScope.allEntries
+            clipScope.filteredEntries = clipScope.allEntries;
             // Queue image entries for decoding
-            let queue = []
+            let queue = [];
             for (let i = 0; i < clipScope.allEntries.length; i++) {
                 if (clipScope.allEntries[i].isImage) {
-                    queue.push(clipScope.allEntries[i])
+                    queue.push(clipScope.allEntries[i]);
                 }
             }
-            clipScope.imageDecodeQueue = queue
-            clipScope.decodeNextImage()
+            clipScope.imageDecodeQueue = queue;
+            clipScope.decodeNextImage();
         }
     }
 
@@ -153,15 +168,14 @@ Scope {
         id: decodeProc
         property string entry: ""
         property bool isImage: false
-        command: ["bash", "-c", isImage
-            ? "printf '%s' \"$CLIP_ENTRY\" | cliphist decode | wl-copy --type image/png"
-            : "printf '%s' \"$CLIP_ENTRY\" | cliphist decode | wl-copy"
-        ]
-        environment: ({ CLIP_ENTRY: entry })
+        command: ["bash", "-c", isImage ? "printf '%s' \"$CLIP_ENTRY\" | cliphist decode | wl-copy --type image/png" : "printf '%s' \"$CLIP_ENTRY\" | cliphist decode | wl-copy"]
+        environment: ({
+                CLIP_ENTRY: entry
+            })
         running: false
 
         onExited: (code, status) => {
-            Quickshell.execDetached(["wtype", "-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"])
+            Quickshell.execDetached(["wtype", "-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"]);
         }
     }
 
@@ -170,10 +184,11 @@ Scope {
 
         function toggle() {
             if (!clipScope.clipVisible) {
-                const s = clipScope.focusedScreen()
-                if (s) clipWindow.screen = s
+                const s = clipScope.focusedScreen();
+                if (s)
+                    clipWindow.screen = s;
             }
-            clipScope.clipVisible = !clipScope.clipVisible
+            clipScope.clipVisible = !clipScope.clipVisible;
         }
     }
 
@@ -266,7 +281,8 @@ Scope {
                                 id: clipSearch
                                 width: parent.width - Typography.fontSize14 - Spacing.spacing8 - 2 * Spacing.spacing12
                                 anchors.verticalCenter: parent.verticalCenter
-                                onActiveFocusChanged: if (!activeFocus && clipScope.clipVisible) clipScope.clipVisible = false
+                                onActiveFocusChanged: if (!activeFocus && clipScope.clipVisible)
+                                    clipScope.clipVisible = false
                                 font.family: Typography.fontFamily
                                 font.pixelSize: Typography.fontSize14
                                 font.weight: Font.Bold
@@ -288,19 +304,19 @@ Scope {
                                 Keys.onEscapePressed: clipScope.clipVisible = false
                                 Keys.onReturnPressed: {
                                     if (clipScope.filteredEntries.length > 0) {
-                                        clipScope.selectEntry(clipScope.filteredEntries[clipList.currentIndex])
+                                        clipScope.selectEntry(clipScope.filteredEntries[clipList.currentIndex]);
                                     }
                                 }
                                 Keys.onDownPressed: {
-                                    clipList.keyboardNav = true
+                                    clipList.keyboardNav = true;
                                     if (clipList.currentIndex < clipScope.filteredEntries.length - 1) {
-                                        clipList.currentIndex++
+                                        clipList.currentIndex++;
                                     }
                                 }
                                 Keys.onUpPressed: {
-                                    clipList.keyboardNav = true
+                                    clipList.keyboardNav = true;
                                     if (clipList.currentIndex > 0) {
-                                        clipList.currentIndex--
+                                        clipList.currentIndex--;
                                     }
                                 }
                             }
@@ -324,11 +340,8 @@ Scope {
                             acceptedButtons: Qt.NoButton
                             hoverEnabled: true
                             onPositionChanged: clipList.keyboardNav = false
-                            onWheel: (wheel) => {
-                                clipList.contentY = Math.max(0, Math.min(
-                                    clipList.contentHeight - clipList.height,
-                                    clipList.contentY - wheel.angleDelta.y * 2
-                                ))
+                            onWheel: wheel => {
+                                clipList.contentY = Math.max(0, Math.min(clipList.contentHeight - clipList.height, clipList.contentY - wheel.angleDelta.y * 2));
                             }
                         }
 
@@ -339,7 +352,11 @@ Scope {
                                 radius: width / 2
                                 color: Colors.textColorMuted
                                 opacity: parent.active ? 0.6 : 0.3
-                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 120
+                                    }
+                                }
                             }
                         }
 
@@ -352,9 +369,7 @@ Scope {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing8
-                                color: clipDelegateTap.pressed ? Colors.hoverItemPressed
-                                     : clipList.currentIndex === index || clipDelegateHover.hovered ? Colors.hoverItemHovered
-                                     : "transparent"
+                                color: clipDelegateTap.pressed ? Colors.hoverItemPressed : clipList.currentIndex === index || clipDelegateHover.hovered ? Colors.hoverItemHovered : "transparent"
                                 border.color: clipList.currentIndex === index || clipDelegateHover.hovered || clipDelegateTap.pressed ? Colors.pillBorder : "transparent"
                             }
 
@@ -391,7 +406,8 @@ Scope {
                                 id: clipDelegateHover
                                 cursorShape: Qt.PointingHandCursor
                                 onHoveredChanged: {
-                                    if (hovered && !clipList.keyboardNav) clipList.currentIndex = index
+                                    if (hovered && !clipList.keyboardNav)
+                                        clipList.currentIndex = index;
                                 }
                             }
 
@@ -419,7 +435,9 @@ Scope {
 
         Connections {
             target: clipPanelReveal
-            function onHidden() { clipWindow.hideComplete = true }
+            function onHidden() {
+                clipWindow.hideComplete = true;
+            }
         }
 
         Timer {
@@ -432,17 +450,17 @@ Scope {
             target: clipScope
             function onClipVisibleChanged() {
                 if (clipScope.clipVisible) {
-                    clipWindow.hideComplete = false
-                    clipSearch.text = ""
-                    clipScope.allEntries = []
-                    clipScope.filteredEntries = []
-                    clipScope.imageDecodeQueue = []
-                    clipScope.decodedCount = 0
-                    clipList.contentY = 0
-                    clipList.keyboardNav = false
-                    listProc.running = true
-                    clipList.currentIndex = 0
-                    focusTimer.restart()
+                    clipWindow.hideComplete = false;
+                    clipSearch.text = "";
+                    clipScope.allEntries = [];
+                    clipScope.filteredEntries = [];
+                    clipScope.imageDecodeQueue = [];
+                    clipScope.decodedCount = 0;
+                    clipList.contentY = 0;
+                    clipList.keyboardNav = false;
+                    listProc.running = true;
+                    clipList.currentIndex = 0;
+                    focusTimer.restart();
                 }
             }
         }

@@ -13,8 +13,8 @@ Item {
     readonly property bool menuOpen: internal.menuOpen
     readonly property real menuHeight: internal.effectiveMenuHeight
 
-    signal clicked()
-    signal menuClosed()
+    signal clicked
+    signal menuClosed
 
     implicitWidth: contentContainer.childrenRect.width + Spacing.spacing12
     implicitHeight: 28
@@ -29,13 +29,13 @@ Item {
 
         onShouldShowChanged: {
             if (shouldShow) {
-                menuHideTimer.stop()
+                menuHideTimer.stop();
                 if (!menuOpen) {
-                    menuShowTimer.restart()
+                    menuShowTimer.restart();
                 }
             } else {
-                menuShowTimer.stop()
-                menuHideTimer.restart()
+                menuShowTimer.stop();
+                menuHideTimer.restart();
             }
         }
     }
@@ -44,8 +44,8 @@ Item {
         id: menuShowTimer
         interval: 150
         onTriggered: {
-            internal.menuOpen = true
-            root.menu.show()
+            internal.menuOpen = true;
+            root.menu.show();
         }
     }
 
@@ -53,8 +53,9 @@ Item {
         id: menuHideTimer
         interval: 100
         onTriggered: {
-            internal.menuOpen = false
-            if (root.menu) root.menu.hide()
+            internal.menuOpen = false;
+            if (root.menu)
+                root.menu.hide();
         }
     }
 
@@ -62,7 +63,7 @@ Item {
         target: root.menu
         enabled: root.menu !== null
         function onHidden() {
-            root.menuClosed()
+            root.menuClosed();
         }
     }
 
@@ -73,9 +74,7 @@ Item {
         id: background
         anchors.fill: parent
         radius: height / 2
-        color: root.clickable && root.pressed ? Colors.hoverItemPressed
-             : root.hovered ? Colors.hoverItemHovered
-             : "transparent"
+        color: root.clickable && root.pressed ? Colors.hoverItemPressed : root.hovered ? Colors.hoverItemHovered : "transparent"
         border.color: root.hovered || (root.clickable && root.pressed) ? Colors.pillBorder : "transparent"
     }
 

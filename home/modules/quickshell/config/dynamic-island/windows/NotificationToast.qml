@@ -36,12 +36,14 @@ Variants {
         Connections {
             target: NotificationHost
             function onNewNotification(notification) {
-                toastWindow.toastEntries = toastWindow.toastEntries.concat([notification])
+                toastWindow.toastEntries = toastWindow.toastEntries.concat([notification]);
             }
         }
 
         function removeToast(notification) {
-            toastWindow.toastEntries = toastWindow.toastEntries.filter(function(n) { return n !== notification })
+            toastWindow.toastEntries = toastWindow.toastEntries.filter(function (n) {
+                return n !== notification;
+            });
         }
 
         // Only expand the interaction zone when there are toasts
@@ -85,7 +87,7 @@ Variants {
                         Component.onCompleted: show()
 
                         onHidden: {
-                            toastWindow.removeToast(toastItem.notif)
+                            toastWindow.removeToast(toastItem.notif);
                         }
 
                         NotificationCard {
@@ -94,9 +96,10 @@ Variants {
                             notification: toastItem.notif
                             compact: true
                             onDismissed: {
-                                dismissTimer.stop()
-                                if (toastItem.notif) toastItem.notif.dismiss()
-                                toastReveal.hide()
+                                dismissTimer.stop();
+                                if (toastItem.notif)
+                                    toastItem.notif.dismiss();
+                                toastReveal.hide();
                             }
                         }
                     }

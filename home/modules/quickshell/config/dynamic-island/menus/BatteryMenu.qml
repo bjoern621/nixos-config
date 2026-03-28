@@ -16,11 +16,13 @@ Item {
     implicitHeight: layout.height + 2 * contentPadding
 
     function formatTime(seconds) {
-        if (seconds <= 0) return "—"
-        const h = Math.floor(seconds / 3600)
-        const m = Math.floor((seconds % 3600) / 60)
-        if (h > 0) return h + " Std " + m + " Min"
-        return m + " Min"
+        if (seconds <= 0)
+            return "—";
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        if (h > 0)
+            return h + " Std " + m + " Min";
+        return m + " Min";
     }
 
     Rectangle {
@@ -38,10 +40,7 @@ Item {
             spacing: Spacing.spacing6
 
             Label {
-                text: root.isCharging ? "Wird geladen"
-                    : root.isFullyCharged ? "Vollständig geladen"
-                    : root.isDischarging ? "Wird entladen"
-                    : "Unbekannt"
+                text: root.isCharging ? "Wird geladen" : root.isFullyCharged ? "Vollständig geladen" : root.isDischarging ? "Wird entladen" : "Unbekannt"
                 font.pixelSize: Typography.fontSize14
             }
 

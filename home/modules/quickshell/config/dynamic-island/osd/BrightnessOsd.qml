@@ -31,11 +31,11 @@ Scope {
         stdout: SplitParser {
             onRead: data => {
                 // Format: device,class,current,percentage%,max
-                const parts = data.split(",")
+                const parts = data.split(",");
                 if (parts.length >= 4) {
-                    const pct = parseInt(parts[3])
+                    const pct = parseInt(parts[3]);
                     if (!isNaN(pct) && pct !== brightnessScope._brightness) {
-                        brightnessScope._brightness = pct
+                        brightnessScope._brightness = pct;
                     }
                 }
             }
@@ -44,30 +44,34 @@ Scope {
 
     readonly property int osdValue: Math.max(0, Math.min(100, _brightness))
     readonly property string osdIcon: {
-        if (osdValue <= 0) return "\uf185"
-        if (osdValue < 50) return "\uf185"
-        return "\uf185"
+        if (osdValue <= 0)
+            return "\uf185";
+        if (osdValue < 50)
+            return "\uf185";
+        return "\uf185";
     }
 
     function focusedScreen() {
-        const mon = Hyprland.focusedMonitor
+        const mon = Hyprland.focusedMonitor;
         if (mon) {
-            const screens = Quickshell.screens
+            const screens = Quickshell.screens;
             for (let i = 0; i < screens.length; i++) {
                 if (screens[i].name === mon.name)
-                    return screens[i]
+                    return screens[i];
             }
         }
-        return null
+        return null;
     }
 
     on_BrightnessChanged: {
-        if (!_startupDone || _brightness < 0) return
-        const s = focusedScreen()
-        if (s) osdWindow.screen = s
-        osdWindow.visible = true
-        osdHideTimer.restart()
-        osdReveal.show()
+        if (!_startupDone || _brightness < 0)
+            return;
+        const s = focusedScreen();
+        if (s)
+            osdWindow.screen = s;
+        osdWindow.visible = true;
+        osdHideTimer.restart();
+        osdReveal.show();
     }
 
     Timer {
@@ -80,7 +84,9 @@ Scope {
         id: osdWindow
         visible: false
 
-        anchors { top: true }
+        anchors {
+            top: true
+        }
         exclusiveZone: 0
         color: "transparent"
 
@@ -90,7 +96,9 @@ Scope {
 
         Connections {
             target: osdReveal
-            function onHidden() { osdWindow.visible = false }
+            function onHidden() {
+                osdWindow.visible = false;
+            }
         }
 
         PopReveal {
@@ -111,7 +119,7 @@ Scope {
                 property int marginLeftRight: Spacing.spacing12
 
                 implicitWidth: 200
-                implicitHeight: contentRow.implicitHeight + 2*marginTopBottom
+                implicitHeight: contentRow.implicitHeight + 2 * marginTopBottom
 
                 radius: implicitHeight / 2
                 color: Colors.pillBackground
@@ -127,70 +135,76 @@ Scope {
                         topMargin: osdPill.marginTopBottom
                         bottomMargin: osdPill.marginTopBottom
                     }
-                spacing: Spacing.spacing8
+                    spacing: Spacing.spacing8
 
-                Icon {
-                    text: brightnessScope.osdIcon
-                    font.pixelSize: Typography.fontSize16
-                    width: 24
-                    height: implicitHeight
-                    anchors.verticalCenter: parent.verticalCenter
-                    horizontalAlignment: Text.AlignHCenter
-                }
-
-                Column {
-                    spacing: Spacing.spacing4
-                    width: parent.width - 24 - parent.spacing
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Item {
-                        width: parent.width
-                        height: labelText.implicitHeight
-
-                        Label {
-                            id: labelText
-                            text: "Helligkeit"
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Label {
-                            text: brightnessScope.osdValue + " %"
-                            color: Colors.textColor
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
+                    Icon {
+                        text: brightnessScope.osdIcon
+                        font.pixelSize: Typography.fontSize16
+                        width: 24
+                        height: implicitHeight
+                        anchors.verticalCenter: parent.verticalCenter
+                        horizontalAlignment: Text.AlignHCenter
                     }
 
-                    Row {
-                        width: parent.width
-                        spacing: brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0
+                    Column {
+                        spacing: Spacing.spacing4
+                        width: parent.width - 24 - parent.spacing
+                        anchors.verticalCenter: parent.verticalCenter
 
-                        Rectangle {
-                            width: Math.max(0, (parent.width - (brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0)) * brightnessScope.osdValue / 100)
-                            height: 6
-                            radius: 3
-                            color: Colors.accentColor
+                        Item {
+                            width: parent.width
+                            height: labelText.implicitHeight
 
-                            Behavior on width {
-                                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                            Label {
+                                id: labelText
+                                text: "Helligkeit"
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Label {
+                                text: brightnessScope.osdValue + " %"
+                                color: Colors.textColor
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                         }
 
-                        Rectangle {
-                            width: Math.max(0, (parent.width - (brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0)) * (100 - brightnessScope.osdValue) / 100)
-                            height: 6
-                            radius: 3
-                            color: Colors.progressBackground
+                        Row {
+                            width: parent.width
+                            spacing: brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0
 
-                            Behavior on width {
-                                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                            Rectangle {
+                                width: Math.max(0, (parent.width - (brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0)) * brightnessScope.osdValue / 100)
+                                height: 6
+                                radius: 3
+                                color: Colors.accentColor
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 120
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: Math.max(0, (parent.width - (brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0)) * (100 - brightnessScope.osdValue) / 100)
+                                height: 6
+                                radius: 3
+                                color: Colors.progressBackground
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 120
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-        }
         }
     }
 }

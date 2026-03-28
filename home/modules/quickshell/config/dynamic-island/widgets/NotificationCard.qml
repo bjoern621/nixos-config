@@ -10,26 +10,34 @@ Item {
     required property var notification
     property bool compact: false
 
-    signal dismissed()
+    signal dismissed
 
     implicitWidth: parent ? parent.width : 320
     implicitHeight: cardBackground.implicitHeight
 
     readonly property color urgencyColor: {
-        if (!notification) return Colors.textColor
+        if (!notification)
+            return Colors.textColor;
         switch (notification.urgency) {
-            case NotificationUrgency.Critical: return Colors.batteryCritical
-            case NotificationUrgency.Low: return Colors.textColorMuted
-            default: return Colors.textColor
+        case NotificationUrgency.Critical:
+            return Colors.batteryCritical;
+        case NotificationUrgency.Low:
+            return Colors.textColorMuted;
+        default:
+            return Colors.textColor;
         }
     }
 
     readonly property color accentStripColor: {
-        if (!notification) return "transparent"
+        if (!notification)
+            return "transparent";
         switch (notification.urgency) {
-            case NotificationUrgency.Critical: return Colors.batteryCritical
-            case NotificationUrgency.Low: return "transparent"
-            default: return Colors.pillBorder
+        case NotificationUrgency.Critical:
+            return Colors.batteryCritical;
+        case NotificationUrgency.Low:
+            return "transparent";
+        default:
+            return Colors.pillBorder;
         }
     }
 
@@ -67,7 +75,7 @@ Item {
         id: cardTap
         onTapped: {
             if (root.notification && root.notification.actions.length > 0) {
-                root.notification.actions[0].invoke()
+                root.notification.actions[0].invoke();
             }
         }
     }
@@ -115,9 +123,7 @@ Item {
                 width: 20
                 height: 20
                 radius: width / 2
-                color: dismissTap.pressed ? Colors.hoverItemPressed
-                     : dismissHover.hovered ? Colors.hoverItemHovered
-                     : "transparent"
+                color: dismissTap.pressed ? Colors.hoverItemPressed : dismissHover.hovered ? Colors.hoverItemHovered : "transparent"
 
                 scale: dismissTap.pressed ? 0.85 : 1.0
                 SquishBehavior on scale {}
@@ -172,7 +178,12 @@ Item {
             fillMode: Image.PreserveAspectFit
             visible: status === Image.Ready
             opacity: status === Image.Ready ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             sourceSize.width: parent.width
             sourceSize.height: 180
@@ -191,9 +202,7 @@ Item {
                     width: actionLabel.implicitWidth + 2 * Spacing.spacing12
                     height: 28
                     radius: height / 2
-                    color: actionTap.pressed ? Colors.hoverItemPressed
-                         : actionHover.hovered ? Colors.hoverItemHovered
-                         : "transparent"
+                    color: actionTap.pressed ? Colors.hoverItemPressed : actionHover.hovered ? Colors.hoverItemHovered : "transparent"
                     border.width: 1
                     border.color: actionHover.hovered || actionTap.pressed ? Colors.pillBorder : Qt.rgba(1, 1, 1, 0.1)
 
