@@ -27,8 +27,8 @@ Item {
 
     // Track history
     // History rewind strategy:
-    // The last element is always the current track. 
-    // Forward track changes (next, auto-advance) append. 
+    // The last element is always the current track.
+    // Forward track changes (next, auto-advance) append.
     // Rewind detection is declarative: when onPostTrackChanged fires and the new track matches trackHistory[-2] (the entry before current), it's a rewind - pop the current track instead of appending. Clicking a recently-played or queue track uses the Spotify API to play that URI directly, which always counts as a forward advance (new play).
     property var trackHistory: []
     property int maxHistory: 8
@@ -48,7 +48,9 @@ Item {
     readonly property int queueSkeletonCount: debugSkeletons ? 3 : Math.max(0, 3 - displayQueue.length)
 
     // Unified ListModel for animated track list (recent + current + queue)
-    ListModel { id: trackListModel }
+    ListModel {
+        id: trackListModel
+    }
 
     // Batch rebuilds so history + queue updates in the same handler don't double-trigger
     Timer {
@@ -57,7 +59,9 @@ Item {
         onTriggered: root._buildUnifiedData()
     }
 
-    function _rebuildTrackList() { unifiedRebuildTimer.restart() }
+    function _rebuildTrackList() {
+        unifiedRebuildTimer.restart();
+    }
 
     onDisplayRecentlyPlayedChanged: _rebuildTrackList()
     onDisplayQueueChanged: _rebuildTrackList()
@@ -88,65 +92,84 @@ Item {
     //   duplicates between recently-played and queue are not checked — if the
     //   same track appears in both (e.g. on repeat), it shows in both sections.
     function _buildUnifiedData() {
-        const result = []
-        const currentKey = hasPlayer && trackTitle
-            ? (trackTitle + "|" + trackArtist).toLowerCase() : ""
+        const result = [];
+        const currentKey = hasPlayer && trackTitle ? (trackTitle + "|" + trackArtist).toLowerCase() : "";
 
         for (let i = 0; i < displayRecentlyPlayed.length; i++) {
-            const r = displayRecentlyPlayed[i]
-            result.push({ title: r.title || "", artist: r.artist || "",
-                          artUrl: r.artUrl || "", uri: r.uri || "", type: "recent" })
+            const r = displayRecentlyPlayed[i];
+            result.push({
+                title: r.title || "",
+                artist: r.artist || "",
+                artUrl: r.artUrl || "",
+                uri: r.uri || "",
+                type: "recent"
+            });
         }
         if (hasPlayer && trackTitle)
-            result.push({ title: trackTitle, artist: trackArtist,
-                          artUrl: trackArtUrl || "", uri: "", type: "current" })
+            result.push({
+                title: trackTitle,
+                artist: trackArtist,
+                artUrl: trackArtUrl || "",
+                uri: "",
+                type: "current"
+            });
         // Pull from full buffer, dedup against current, then take first 3
-        let queueCount = 0
+        let queueCount = 0;
         for (let i = 0; i < spotifyQueue.length && queueCount < 3; i++) {
-            const q = spotifyQueue[i]
-            if ((q.title + "|" + q.artist).toLowerCase() === currentKey) continue
-            result.push({ title: q.title || "", artist: q.artist || "",
-                          artUrl: q.artUrl || "", uri: q.uri || "", type: "queue" })
-            queueCount++
+            const q = spotifyQueue[i];
+            if ((q.title + "|" + q.artist).toLowerCase() === currentKey)
+                continue;
+            result.push({
+                title: q.title || "",
+                artist: q.artist || "",
+                artUrl: q.artUrl || "",
+                uri: q.uri || "",
+                type: "queue"
+            });
+            queueCount++;
         }
-        _syncTrackListModel(trackListModel, result)
+        _syncTrackListModel(trackListModel, result);
     }
 
     // Diff a JS array into a ListModel so ListView gets proper add/remove/move signals
     function _syncTrackListModel(model, newData) {
-        const newKeys = []
+        const newKeys = [];
         for (let i = 0; i < newData.length; i++)
-            newKeys.push((newData[i].title + "|" + newData[i].artist).toLowerCase())
+            newKeys.push((newData[i].title + "|" + newData[i].artist).toLowerCase());
 
         // Remove items not in new data (iterate backwards to keep indices stable)
         for (let i = model.count - 1; i >= 0; i--) {
-            const item = model.get(i)
-            const key = (item.title + "|" + item.artist).toLowerCase()
+            const item = model.get(i);
+            const key = (item.title + "|" + item.artist).toLowerCase();
             if (newKeys.indexOf(key) === -1)
-                model.remove(i)
+                model.remove(i);
         }
 
         // Insert, reorder, and update properties
         for (let i = 0; i < newData.length; i++) {
-            const d = newData[i]
-            const key = (d.title + "|" + d.artist).toLowerCase()
+            const d = newData[i];
+            const key = (d.title + "|" + d.artist).toLowerCase();
 
-            let found = -1
+            let found = -1;
             for (let j = i; j < model.count; j++) {
-                const item = model.get(j)
+                const item = model.get(j);
                 if ((item.title + "|" + item.artist).toLowerCase() === key) {
-                    found = j
-                    break
+                    found = j;
+                    break;
                 }
             }
 
             if (found === -1) {
-                model.insert(i, d)
+                model.insert(i, d);
             } else {
                 if (found !== i)
-                    model.move(found, i, 1)
+                    model.move(found, i, 1);
                 // Update type/artUrl/uri (item may have moved between sections)
-                model.set(i, { type: d.type, artUrl: d.artUrl, uri: d.uri })
+                model.set(i, {
+                    type: d.type,
+                    artUrl: d.artUrl,
+                    uri: d.uri
+                });
             }
         }
     }
@@ -155,87 +178,86 @@ Item {
     property string debugMergeLog: ""
 
     function mergeRecentlyPlayed() {
-        const now = new Date().toLocaleTimeString()
-        let log = "=== MERGE @ " + now + " ===\n"
+        const now = new Date().toLocaleTimeString();
+        let log = "=== MERGE @ " + now + " ===\n";
 
         // Local MPRIS history minus current track — already ordered old→new
-        const local = trackHistory.slice(0, -1)
-        log += "\n--- MPRIS trackHistory (" + trackHistory.length + " total, " + local.length + " without current) ---\n"
+        const local = trackHistory.slice(0, -1);
+        log += "\n--- MPRIS trackHistory (" + trackHistory.length + " total, " + local.length + " without current) ---\n";
         for (let i = 0; i < trackHistory.length; i++) {
-            const t = trackHistory[i]
-            const isCurrent = (i === trackHistory.length - 1)
-            log += "  [" + i + "] " + t.title + " - " + t.artist + (isCurrent ? " [CURRENT]" : "") + "\n"
+            const t = trackHistory[i];
+            const isCurrent = (i === trackHistory.length - 1);
+            log += "  [" + i + "] " + t.title + " - " + t.artist + (isCurrent ? " [CURRENT]" : "") + "\n";
         }
 
-        log += "\n--- Spotify recently_played (" + spotifyRecentlyPlayed.length + ") ---\n"
+        log += "\n--- Spotify recently_played (" + spotifyRecentlyPlayed.length + ") ---\n";
         for (let i = 0; i < spotifyRecentlyPlayed.length; i++) {
-            const s = spotifyRecentlyPlayed[i]
-            log += "  [" + i + "] " + s.title + " - " + s.artist + " (uri: " + (s.uri || "none") + ")\n"
+            const s = spotifyRecentlyPlayed[i];
+            log += "  [" + i + "] " + s.title + " - " + s.artist + " (uri: " + (s.uri || "none") + ")\n";
         }
 
         // Build a lookup from Spotify data for enrichment
-        const spotifyLookup = {}
+        const spotifyLookup = {};
         for (let i = 0; i < spotifyRecentlyPlayed.length; i++) {
-            const s = spotifyRecentlyPlayed[i]
-            const key = (s.title + "|" + s.artist).toLowerCase().trim()
-            spotifyLookup[key] = s
+            const s = spotifyRecentlyPlayed[i];
+            const key = (s.title + "|" + s.artist).toLowerCase().trim();
+            spotifyLookup[key] = s;
         }
 
         // Enrich local tracks with Spotify metadata
-        const seenKeys = new Set()
-        const merged = []
-        log += "\n--- Enriching local tracks ---\n"
+        const seenKeys = new Set();
+        const merged = [];
+        log += "\n--- Enriching local tracks ---\n";
         for (let i = 0; i < local.length; i++) {
-            const t = local[i]
-            const key = (t.title + "|" + t.artist).toLowerCase().trim()
-            seenKeys.add(key)
-            const spot = spotifyLookup[key]
+            const t = local[i];
+            const key = (t.title + "|" + t.artist).toLowerCase().trim();
+            seenKeys.add(key);
+            const spot = spotifyLookup[key];
             const enriched = {
                 title: t.title,
                 artist: t.artist,
                 artUrl: (spot && spot.artUrl) ? spot.artUrl : (t.artUrl || ""),
                 uri: spot ? (spot.uri || "") : "",
                 source: spot ? "mpris+spotify" : "mpris"
-            }
-            merged.push(enriched)
-            log += "  [" + i + "] " + t.title + " - " + t.artist + " → " + enriched.source + (spot ? " (matched key: " + key + ")" : "") + "\n"
+            };
+            merged.push(enriched);
+            log += "  [" + i + "] " + t.title + " - " + t.artist + " → " + enriched.source + (spot ? " (matched key: " + key + ")" : "") + "\n";
         }
 
         // Prepend Spotify-only tracks (older, from before Quickshell started)
         // Spotify API returns newest-first, so reverse for old→new order
-        const backfill = []
-        log += "\n--- Spotify-only backfill ---\n"
+        const backfill = [];
+        log += "\n--- Spotify-only backfill ---\n";
         for (let i = spotifyRecentlyPlayed.length - 1; i >= 0; i--) {
-            const s = spotifyRecentlyPlayed[i]
-            const key = (s.title + "|" + s.artist).toLowerCase().trim()
+            const s = spotifyRecentlyPlayed[i];
+            const key = (s.title + "|" + s.artist).toLowerCase().trim();
             if (!seenKeys.has(key)) {
-                seenKeys.add(key)
+                seenKeys.add(key);
                 backfill.push({
                     title: s.title,
                     artist: s.artist,
                     artUrl: s.artUrl || "",
                     uri: s.uri || "",
                     source: "spotify"
-                })
-                log += "  + " + s.title + " - " + s.artist + " (backfill)\n"
+                });
+                log += "  + " + s.title + " - " + s.artist + " (backfill)\n";
             } else {
-                log += "  - " + s.title + " - " + s.artist + " (already in local, skipped)\n"
+                log += "  - " + s.title + " - " + s.artist + " (already in local, skipped)\n";
             }
         }
 
         // Backfill goes before local (they're older), then take last 3 for display
-        const all = backfill.concat(merged)
-        const result = all.slice(Math.max(0, all.length - 3))
+        const all = backfill.concat(merged);
+        const result = all.slice(Math.max(0, all.length - 3));
 
-        log += "\n--- Final merged list (from " + all.length + ", showing last 3) ---\n"
+        log += "\n--- Final merged list (from " + all.length + ", showing last 3) ---\n";
         for (let i = 0; i < result.length; i++) {
-            const r = result[i]
-            log += "  [" + i + "] " + r.title + " - " + r.artist + " (" + r.source + ")\n"
+            const r = result[i];
+            log += "  [" + i + "] " + r.title + " - " + r.artist + " (" + r.source + ")\n";
         }
 
-        debugMergeLog = log
-        console.log(log)
-        return result
+        debugMergeLog = log;
+        return result;
     }
 
     onTrackHistoryChanged: displayRecentlyPlayed = mergeRecentlyPlayed()
@@ -251,33 +273,29 @@ Item {
         stdout: SplitParser {
             onRead: data => {
                 try {
-                    const result = JSON.parse(data)
+                    const result = JSON.parse(data);
                     if (spotifyProcess.currentCommand === "all") {
                         if (result.recently_played) {
-                            root.spotifyRecentlyPlayed = result.recently_played
+                            root.spotifyRecentlyPlayed = result.recently_played;
                         }
                         if (result.queue) {
-                            root.spotifyQueue = result.queue
+                            root.spotifyQueue = result.queue;
                         }
-                        root.spotifyDataLoading = false
+                        root.spotifyDataLoading = false;
                     }
                 } catch (e) {
-                    console.log("Spotify API parse error:", e)
-                    root.spotifyDataLoading = false
+                    root.spotifyDataLoading = false;
                 }
             }
         }
 
         stderr: SplitParser {
-            onRead: data => {
-                console.log("Spotify API error:", data)
-            }
+            onRead: data => {}
         }
 
         onExited: (code, status) => {
             if (code !== 0) {
-                console.log("Spotify API process exited with code", code)
-                root.spotifyDataLoading = false
+                root.spotifyDataLoading = false;
             }
         }
     }
@@ -286,23 +304,14 @@ Item {
     Process {
         id: spotifyPlayProcess
         running: false
-
-        stderr: SplitParser {
-            onRead: data => {
-                console.log("Spotify play error:", data)
-            }
-        }
-
-        onExited: (code, status) => {
-            if (code !== 0) console.log("Spotify play failed, code:", code)
-        }
     }
 
     function playSpotifyUri(uri) {
-        if (!uri) return
-        const scriptPath = Qt.resolvedUrl("../spotify_api.py").toString().replace("file://", "")
-        spotifyPlayProcess.command = ["python3", scriptPath, "play", uri]
-        spotifyPlayProcess.running = true
+        if (!uri)
+            return;
+        const scriptPath = Qt.resolvedUrl("../spotify_api.py").toString().replace("file://", "");
+        spotifyPlayProcess.command = ["python3", scriptPath, "play", uri];
+        spotifyPlayProcess.running = true;
     }
 
     // Cooldown guard — debounces Spotify API calls (e.g. spam-clicking next)
@@ -311,37 +320,38 @@ Item {
         interval: 15000
         onTriggered: {
             if (spotifyRefreshCooldown._pending) {
-                spotifyRefreshCooldown._pending = false
-                root._doRefreshSpotifyData()
+                spotifyRefreshCooldown._pending = false;
+                root._doRefreshSpotifyData();
             }
         }
         property bool _pending: false
     }
 
-    // Fetches all Spotify data (queue + recently played). 
+    // Fetches all Spotify data (queue + recently played).
     // A 15s cooldown prevents spamming; calls during cooldown are queued and data is fetched once after the cooldown expires.
     function refreshSpotifyData() {
         if (spotifyRefreshCooldown.running) {
-            spotifyRefreshCooldown._pending = true
-            return
+            spotifyRefreshCooldown._pending = true;
+            return;
         }
-        _doRefreshSpotifyData()
+        _doRefreshSpotifyData();
     }
 
     function _doRefreshSpotifyData() {
-        if (root.spotifyDataLoading) return
-        root.spotifyDataLoading = true
-        spotifyProcess.currentCommand = "all"
-        const scriptPath = Qt.resolvedUrl("../spotify_api.py").toString().replace("file://", "")
-        spotifyProcess.command = ["python3", scriptPath, "all"]
-        spotifyProcess.running = true
-        spotifyRefreshCooldown.restart()
+        if (root.spotifyDataLoading)
+            return;
+        root.spotifyDataLoading = true;
+        spotifyProcess.currentCommand = "all";
+        const scriptPath = Qt.resolvedUrl("../spotify_api.py").toString().replace("file://", "");
+        spotifyProcess.command = ["python3", scriptPath, "all"];
+        spotifyProcess.running = true;
+        spotifyRefreshCooldown.restart();
     }
 
     // Refresh Spotify data when queue is first expanded
     onQueueExpandedChanged: {
         if (queueExpanded && root.hasPlayer) {
-            root.refreshSpotifyData()
+            root.refreshSpotifyData();
         }
     }
 
@@ -380,14 +390,13 @@ Item {
         enabled: root.hasPlayer
 
         function onPostTrackChanged() {
-            if (!root.hasPlayer) return;
+            if (!root.hasPlayer)
+                return;
             const title = root.player.trackTitle;
             const artist = root.player.trackArtist;
             const artUrl = root.player.trackArtUrl;
-            console.log("[trackHistory] postTrackChanged fired — title:", title, "artist:", artist)
 
             if (!title) {
-                console.log("[trackHistory] skipped: no title")
                 return;
             }
 
@@ -397,7 +406,6 @@ Item {
             if (h.length > 0) {
                 const last = h[h.length - 1];
                 if (last.title === title && last.artist === artist) {
-                    console.log("[trackHistory] skipped: duplicate of current")
                     return;
                 }
             }
@@ -407,30 +415,36 @@ Item {
             if (h.length >= 2) {
                 const beforeCurrent = h[h.length - 2];
                 if (beforeCurrent.title === title && beforeCurrent.artist === artist) {
-                    root._trackDirection = -1
+                    root._trackDirection = -1;
                     // Capture the old current before popping — it goes back into the queue
                     const oldCurrent = h[h.length - 1];
                     h.pop();
                     root.trackHistory = h;
-                    console.log("[trackHistory] rewound — popped current, length:", h.length)
 
                     // Optimistic queue update: old current track goes back to front of queue
                     let q = root.spotifyQueue.slice();
-                    q.unshift({ title: oldCurrent.title, artist: oldCurrent.artist, artUrl: oldCurrent.artUrl || "" });
+                    q.unshift({
+                        title: oldCurrent.title,
+                        artist: oldCurrent.artist,
+                        artUrl: oldCurrent.artUrl || ""
+                    });
                     root.spotifyQueue = q;
 
-                    root.refreshSpotifyData()
+                    root.refreshSpotifyData();
                     return;
                 }
             }
 
             // Forward advance: append
-            root._trackDirection = 1
-            h.push({ title: title, artist: artist, artUrl: artUrl || "" });
+            root._trackDirection = 1;
+            h.push({
+                title: title,
+                artist: artist,
+                artUrl: artUrl || ""
+            });
             if (h.length > root.maxHistory + 1)
                 h = h.slice(h.length - root.maxHistory - 1);
             root.trackHistory = h;
-            console.log("[trackHistory] added:", title, "- total:", h.length)
 
             // Optimistic queue update: the first queue item just became the current track
             if (root.spotifyQueue.length > 0) {
@@ -438,23 +452,26 @@ Item {
             }
 
             // Also trigger a real fetch to reconcile
-            root.refreshSpotifyData()
+            root.refreshSpotifyData();
         }
     }
 
     Component.onCompleted: {
         if (root.hasPlayer && root.player.trackTitle) {
-            root.trackHistory = [{
-                title: root.player.trackTitle,
-                artist: root.player.trackArtist,
-                artUrl: root.player.trackArtUrl || ""
-            }];
+            root.trackHistory = [
+                {
+                    title: root.player.trackTitle,
+                    artist: root.player.trackArtist,
+                    artUrl: root.player.trackArtUrl || ""
+                }
+            ];
         }
-        _buildUnifiedData()
+        _buildUnifiedData();
     }
 
     function formatTime(seconds) {
-        if (seconds <= 0 || !isFinite(seconds)) return "0:00";
+        if (seconds <= 0 || !isFinite(seconds))
+            return "0:00";
         const m = Math.floor(seconds / 60);
         const s = Math.floor(seconds % 60);
         return m + ":" + (s < 10 ? "0" : "") + s;
@@ -530,7 +547,10 @@ Item {
                         // Smooth fade-in when image loads
                         opacity: status === Image.Ready ? 1 : 0
                         Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            NumberAnimation {
+                                duration: 200
+                                easing.type: Easing.OutCubic
+                            }
                         }
                     }
 
@@ -547,7 +567,10 @@ Item {
                     // Squishy pulse on track change
                     scale: 1.0
                     Behavior on scale {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.OutBack
+                        }
                     }
 
                     Connections {
@@ -627,7 +650,7 @@ Item {
                         }
                     }
 
-                    onMoved: (newValue) => {
+                    onMoved: newValue => {
                         if (root.hasPlayer && root.player.canSeek && root.trackLength > 0) {
                             root.player.position = newValue * root.trackLength;
                             root.currentPosition = newValue * root.trackLength;
@@ -669,7 +692,8 @@ Item {
                 // Previous
                 Item {
                     id: prevBtn
-                    width: 40; height: 40
+                    width: 40
+                    height: 40
 
                     property bool hovered: prevHover.hovered
                     property bool pressed: prevTap.pressed
@@ -677,9 +701,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: prevBtn.pressed ? Colors.hoverItemPressed
-                             : prevBtn.hovered ? Colors.hoverItemHovered
-                             : "transparent"
+                        color: prevBtn.pressed ? Colors.hoverItemPressed : prevBtn.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: prevBtn.hovered || prevBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
@@ -691,17 +713,30 @@ Item {
                         color: root.canGoPrevious ? Colors.textColor : Colors.textColorMuted
                     }
 
-                    HoverHandler { id: prevHover; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { id: prevTap; onTapped: { if (root.hasPlayer) root.player.previous() } }
+                    HoverHandler {
+                        id: prevHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                    TapHandler {
+                        id: prevTap
+                        onTapped: {
+                            if (root.hasPlayer)
+                                root.player.previous();
+                        }
+                    }
 
                     scale: prevTap.pressed ? 0.82 : 1.0
-                    SquishBehavior on scale { bouncy: true; duration: 120 }
+                    SquishBehavior on scale {
+                        bouncy: true
+                        duration: 120
+                    }
                 }
 
                 // Play/Pause
                 Item {
                     id: playBtn
-                    width: 40; height: 40
+                    width: 40
+                    height: 40
 
                     property bool hovered: playHover.hovered
                     property bool pressed: playTap.pressed
@@ -709,9 +744,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: playBtn.pressed ? Colors.hoverItemPressed
-                             : playBtn.hovered ? Colors.hoverItemHovered
-                             : "transparent"
+                        color: playBtn.pressed ? Colors.hoverItemPressed : playBtn.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: playBtn.hovered || playBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
@@ -723,17 +756,30 @@ Item {
                         color: Colors.textColor
                     }
 
-                    HoverHandler { id: playHover; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { id: playTap; onTapped: { if (root.hasPlayer) root.player.togglePlaying() } }
+                    HoverHandler {
+                        id: playHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                    TapHandler {
+                        id: playTap
+                        onTapped: {
+                            if (root.hasPlayer)
+                                root.player.togglePlaying();
+                        }
+                    }
 
                     scale: playTap.pressed ? 0.82 : 1.0
-                    SquishBehavior on scale { bouncy: true; duration: 120 }
+                    SquishBehavior on scale {
+                        bouncy: true
+                        duration: 120
+                    }
                 }
 
                 // Next
                 Item {
                     id: nextBtn
-                    width: 40; height: 40
+                    width: 40
+                    height: 40
 
                     property bool hovered: nextHover.hovered
                     property bool pressed: nextTap.pressed
@@ -741,9 +787,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: nextBtn.pressed ? Colors.hoverItemPressed
-                             : nextBtn.hovered ? Colors.hoverItemHovered
-                             : "transparent"
+                        color: nextBtn.pressed ? Colors.hoverItemPressed : nextBtn.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: nextBtn.hovered || nextBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
@@ -755,11 +799,23 @@ Item {
                         color: root.canGoNext ? Colors.textColor : Colors.textColorMuted
                     }
 
-                    HoverHandler { id: nextHover; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { id: nextTap; onTapped: { if (root.hasPlayer) root.player.next() } }
+                    HoverHandler {
+                        id: nextHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                    TapHandler {
+                        id: nextTap
+                        onTapped: {
+                            if (root.hasPlayer)
+                                root.player.next();
+                        }
+                    }
 
                     scale: nextTap.pressed ? 0.82 : 1.0
-                    SquishBehavior on scale { bouncy: true; duration: 120 }
+                    SquishBehavior on scale {
+                        bouncy: true
+                        duration: 120
+                    }
                 }
             }
 
@@ -775,9 +831,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: height / 2
-                    color: queueToggle.pressed ? Colors.hoverItemPressed
-                         : queueToggle.hovered ? Colors.hoverItemHovered
-                         : "transparent"
+                    color: queueToggle.pressed ? Colors.hoverItemPressed : queueToggle.hovered ? Colors.hoverItemHovered : "transparent"
                     border.color: queueToggle.hovered || queueToggle.pressed ? Colors.pillBorder : "transparent"
                 }
 
@@ -813,7 +867,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onHoveredChanged: {
                         if (hovered && !root.queueExpanded) {
-                            root.refreshSpotifyData()
+                            root.refreshSpotifyData();
                         }
                     }
                 }
@@ -843,9 +897,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: fetchBtn.pressed ? Colors.hoverItemPressed
-                             : fetchBtn.hovered ? Colors.hoverItemHovered
-                             : Colors.progressBackground
+                        color: fetchBtn.pressed ? Colors.hoverItemPressed : fetchBtn.hovered ? Colors.hoverItemHovered : Colors.progressBackground
                         border.color: Colors.pillBorder
                         border.width: 1
                     }
@@ -858,8 +910,14 @@ Item {
                         color: Colors.textColor
                     }
 
-                    HoverHandler { id: fetchBtnHover; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { id: fetchBtnTap; onTapped: root.refreshSpotifyData() }
+                    HoverHandler {
+                        id: fetchBtnHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                    TapHandler {
+                        id: fetchBtnTap
+                        onTapped: root.refreshSpotifyData()
+                    }
 
                     scale: fetchBtnTap.pressed ? 0.96 : 1.0
                     SquishBehavior on scale {}
@@ -876,9 +934,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: clearBtn.pressed ? Colors.hoverItemPressed
-                             : clearBtn.hovered ? Colors.hoverItemHovered
-                             : Colors.progressBackground
+                        color: clearBtn.pressed ? Colors.hoverItemPressed : clearBtn.hovered ? Colors.hoverItemHovered : Colors.progressBackground
                         border.color: Colors.pillBorder
                         border.width: 1
                     }
@@ -891,16 +947,23 @@ Item {
                         color: Colors.textColor
                     }
 
-                    HoverHandler { id: clearBtnHover; cursorShape: Qt.PointingHandCursor }
+                    HoverHandler {
+                        id: clearBtnHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
                     TapHandler {
                         id: clearBtnTap
                         onTapped: {
-                            root.spotifyRecentlyPlayed = []
-                            root.spotifyQueue = []
-                            root.trackHistory = root.hasPlayer && root.player.trackTitle
-                                ? [{ title: root.player.trackTitle, artist: root.player.trackArtist, artUrl: root.player.trackArtUrl || "" }]
-                                : []
-                            root.debugMergeLog = ""
+                            root.spotifyRecentlyPlayed = [];
+                            root.spotifyQueue = [];
+                            root.trackHistory = root.hasPlayer && root.player.trackTitle ? [
+                                {
+                                    title: root.player.trackTitle,
+                                    artist: root.player.trackArtist,
+                                    artUrl: root.player.trackArtUrl || ""
+                                }
+                            ] : [];
+                            root.debugMergeLog = "";
                         }
                     }
 
@@ -919,9 +982,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: logBtn.pressed ? Colors.hoverItemPressed
-                             : logBtn.hovered ? Colors.hoverItemHovered
-                             : Colors.progressBackground
+                        color: logBtn.pressed ? Colors.hoverItemPressed : logBtn.hovered ? Colors.hoverItemHovered : Colors.progressBackground
                         border.color: Colors.pillBorder
                         border.width: 1
                     }
@@ -934,14 +995,17 @@ Item {
                         color: Colors.textColor
                     }
 
-                    HoverHandler { id: logBtnHover; cursorShape: Qt.PointingHandCursor }
+                    HoverHandler {
+                        id: logBtnHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
                     TapHandler {
                         id: logBtnTap
                         onTapped: {
                             if (root.debugMergeLog !== "") {
-                                root.debugMergeLog = ""
+                                root.debugMergeLog = "";
                             } else {
-                                root.mergeRecentlyPlayed()
+                                root.mergeRecentlyPlayed();
                             }
                         }
                     }
@@ -972,9 +1036,7 @@ Item {
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColor
-                        text: spotifyRefreshCooldown.running
-                            ? "CD " + Math.ceil(cooldownTick.remaining / 1000) + "s"
-                            : "CD —"
+                        text: spotifyRefreshCooldown.running ? "CD " + Math.ceil(cooldownTick.remaining / 1000) + "s" : "CD —"
                     }
 
                     Timer {
@@ -986,12 +1048,12 @@ Item {
                         property real startTime: 0
                         onRunningChanged: {
                             if (running) {
-                                startTime = Date.now()
-                                remaining = spotifyRefreshCooldown.interval
+                                startTime = Date.now();
+                                remaining = spotifyRefreshCooldown.interval;
                             }
                         }
                         onTriggered: {
-                            remaining = Math.max(0, spotifyRefreshCooldown.interval - (Date.now() - startTime))
+                            remaining = Math.max(0, spotifyRefreshCooldown.interval - (Date.now() - startTime));
                         }
                     }
                 }
@@ -1100,15 +1162,28 @@ Item {
                         SequentialAnimation on pulseOpacity {
                             running: root.recentSkeletonCount > 0 || root.queueSkeletonCount > 0
                             loops: Animation.Infinite
-                            NumberAnimation { from: 0.4; to: 0.7; duration: 1200; easing.type: Easing.InOutQuad }
-                            NumberAnimation { from: 0.7; to: 0.4; duration: 1200; easing.type: Easing.InOutQuad }
+                            NumberAnimation {
+                                from: 0.4
+                                to: 0.7
+                                duration: 1200
+                                easing.type: Easing.InOutQuad
+                            }
+                            NumberAnimation {
+                                from: 0.7
+                                to: 0.4
+                                duration: 1200
+                                easing.type: Easing.InOutQuad
+                            }
                         }
                     }
 
                     // Skeleton placeholders for recently played (top)
                     Repeater {
                         model: root.recentSkeletonCount
-                        Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
+                        Loader {
+                            sourceComponent: skeletonRowComponent
+                            width: trackListColumn.width
+                        }
                     }
 
                     // Unified track list: Recently Played → Current → Queue
@@ -1122,25 +1197,54 @@ Item {
                         model: root.debugSkeletons ? 0 : trackListModel
 
                         Behavior on height {
-                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                            NumberAnimation {
+                                duration: 100
+                                easing.type: Easing.OutCubic
+                            }
                         }
 
                         add: Transition {
                             ParallelAnimation {
-                                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
-                                NumberAnimation { property: "scale"; from: 0.96; to: 1.0; duration: 250; easing.type: Easing.OutBack }
+                                NumberAnimation {
+                                    property: "opacity"
+                                    from: 0
+                                    to: 1
+                                    duration: 200
+                                    easing.type: Easing.OutCubic
+                                }
+                                NumberAnimation {
+                                    property: "scale"
+                                    from: 0.96
+                                    to: 1.0
+                                    duration: 250
+                                    easing.type: Easing.OutBack
+                                }
                             }
                         }
 
                         remove: Transition {
                             ParallelAnimation {
-                                NumberAnimation { property: "opacity"; to: 0; duration: 150; easing.type: Easing.InCubic }
-                                NumberAnimation { property: "scale"; to: 0.96; duration: 150; easing.type: Easing.InCubic }
+                                NumberAnimation {
+                                    property: "opacity"
+                                    to: 0
+                                    duration: 150
+                                    easing.type: Easing.InCubic
+                                }
+                                NumberAnimation {
+                                    property: "scale"
+                                    to: 0.96
+                                    duration: 150
+                                    easing.type: Easing.InCubic
+                                }
                             }
                         }
 
                         displaced: Transition {
-                            NumberAnimation { properties: "y"; duration: 250; easing.type: Easing.OutCubic }
+                            NumberAnimation {
+                                properties: "y"
+                                duration: 250
+                                easing.type: Easing.OutCubic
+                            }
                         }
 
                         delegate: Item {
@@ -1162,14 +1266,9 @@ Item {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing4
-                                color: trackDelegate.isCurrent ? Colors.hoverItemHovered
-                                     : trackDelegate.pressed ? Colors.hoverItemPressed
-                                     : trackDelegate.hovered ? Colors.hoverItemHovered
-                                     : "transparent"
+                                color: trackDelegate.isCurrent ? Colors.hoverItemHovered : trackDelegate.pressed ? Colors.hoverItemPressed : trackDelegate.hovered ? Colors.hoverItemHovered : "transparent"
                                 opacity: trackDelegate.isCurrent ? 0.3 : 1
-                                border.color: trackDelegate.isCurrent ? Colors.accentColor
-                                            : (trackDelegate.hovered || trackDelegate.pressed) ? Colors.pillBorder
-                                            : "transparent"
+                                border.color: trackDelegate.isCurrent ? Colors.accentColor : (trackDelegate.hovered || trackDelegate.pressed) ? Colors.pillBorder : "transparent"
                                 border.width: trackDelegate.isCurrent || trackDelegate.hovered || trackDelegate.pressed ? 1 : 0
                             }
 
@@ -1206,10 +1305,16 @@ Item {
                                         anchors.centerIn: parent
 
                                         Behavior on width {
-                                            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+                                            NumberAnimation {
+                                                duration: 80
+                                                easing.type: Easing.OutCubic
+                                            }
                                         }
                                         Behavior on height {
-                                            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+                                            NumberAnimation {
+                                                duration: 80
+                                                easing.type: Easing.OutCubic
+                                            }
                                         }
 
                                         MusicBars {
@@ -1264,9 +1369,10 @@ Item {
                                 id: trackDelegateTap
                                 onTapped: {
                                     if (trackDelegate.isCurrent) {
-                                        if (root.hasPlayer) root.player.togglePlaying()
+                                        if (root.hasPlayer)
+                                            root.player.togglePlaying();
                                     } else if (trackDelegate.uri) {
-                                        root.playSpotifyUri(trackDelegate.uri)
+                                        root.playSpotifyUri(trackDelegate.uri);
                                     }
                                 }
                             }
@@ -1280,7 +1386,10 @@ Item {
                     // Skeleton placeholders for queue (bottom)
                     Repeater {
                         model: root.queueSkeletonCount
-                        Loader { sourceComponent: skeletonRowComponent; width: trackListColumn.width }
+                        Loader {
+                            sourceComponent: skeletonRowComponent
+                            width: trackListColumn.width
+                        }
                     }
                 }
             }
