@@ -8,5 +8,6 @@
     gimp
     obsidian
     python3
+    feh
   ];
 }
