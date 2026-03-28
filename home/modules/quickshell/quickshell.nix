@@ -18,6 +18,7 @@ let
   # Private runtime deps — visible only to the quickshell process and its
   # children, never added to the user's global environment.
   qsWrapped = customLib.wrapWithPrivateDeps qs {
+    bin = "quickshell";
     binDeps = [
       pkgs.imagemagick # WallpaperAccent color extraction
       qsPython
