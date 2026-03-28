@@ -48,15 +48,15 @@ Variants {
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
-                pillHideTimer.stop()
-                pillHidden = false
+                pillHideTimer.stop();
+                pillHidden = false;
                 if (!isHovered) {
-                    isHovered = true
-                    slideOut.stop()
-                    slideIn.start()
+                    isHovered = true;
+                    slideOut.stop();
+                    slideIn.start();
                 }
             } else {
-                pillHideTimer.restart()
+                pillHideTimer.restart();
             }
         }
 
@@ -156,7 +156,7 @@ Variants {
                         clickable: false
                         menu: volumeMenu
                         onMenuOpenChanged: {
-                            Globals.volumeSliderOpen = menuOpen
+                            Globals.volumeSliderOpen = menuOpen;
                         }
                         VolumeIcon {
                             id: volumeIcon
@@ -181,7 +181,8 @@ Variants {
 
             Item {
                 id: nowPlayingAnchor
-                width: 0; height: 0
+                width: 0
+                height: 0
                 x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + nowPlayingHoverItem.x + nowPlayingHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
@@ -202,7 +203,8 @@ Variants {
 
             Item {
                 id: volumeAnchor
-                width: 0; height: 0
+                width: 0
+                height: 0
                 x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + volumeHoverItem.x + volumeHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
@@ -223,7 +225,8 @@ Variants {
 
             Item {
                 id: calendarAnchor
-                width: 0; height: 0
+                width: 0
+                height: 0
                 x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + calendarHoverItem.x + calendarHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
@@ -243,7 +246,8 @@ Variants {
 
             Item {
                 id: batteryAnchor
-                width: 0; height: 0
+                width: 0
+                height: 0
                 x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + batteryHoverItem.x + batteryHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
@@ -266,10 +270,11 @@ Variants {
             id: pillHideTimer
             interval: 100
             onTriggered: {
-                if (root.shouldShowPill) return
-                root.isHovered = false
-                slideIn.stop()
-                slideOut.start()
+                if (root.shouldShowPill)
+                    return;
+                root.isHovered = false;
+                slideIn.stop();
+                slideOut.start();
             }
         }
 
