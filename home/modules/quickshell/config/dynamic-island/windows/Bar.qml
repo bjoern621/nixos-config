@@ -123,11 +123,11 @@ Variants {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    SystemTray {
-                        id: systemTray
-                        panelWindow: root
-                        menuParent: interactionZone
-                        menuTopY: pill.y + pill.implicitHeight + Spacing.spacing4
+                    HoverItem {
+                        id: calendarHoverItem
+                        clickable: false
+                        menu: calendarMenu
+                        DateTime {}
                     }
 
                     Rectangle {
@@ -137,11 +137,11 @@ Variants {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    HoverItem {
-                        id: calendarHoverItem
-                        clickable: false
-                        menu: calendarMenu
-                        DateTime {}
+                    SystemTray {
+                        id: systemTray
+                        panelWindow: root
+                        menuParent: interactionZone
+                        menuTopY: pill.y + pill.implicitHeight + Spacing.spacing4
                     }
 
                     Rectangle {
