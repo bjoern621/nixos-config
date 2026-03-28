@@ -241,7 +241,14 @@ Scope {
                                     verticalAlignment: Text.AlignVCenter
                                 }
 
-                                onTextChanged: launcherWindow.updateFilter()
+                                onTextChanged: {
+                                    if (searchInput.text === "") {
+                                        searchDebounce.stop();
+                                        launcherWindow.updateFilter();
+                                    } else {
+                                        searchDebounce.restart();
+                                    }
+                                }
 
                                 Keys.onEscapePressed: launcherScope.launcherVisible = false
                                 Keys.onReturnPressed: {
@@ -407,6 +414,12 @@ Scope {
             function onHidden() {
                 launcherWindow.hideComplete = true;
             }
+        }
+
+        Timer {
+            id: searchDebounce
+            interval: 80
+            onTriggered: launcherWindow.updateFilter()
         }
 
         Timer {
