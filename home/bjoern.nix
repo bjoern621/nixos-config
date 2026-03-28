@@ -24,6 +24,8 @@
     ./modules/shell.nix
     ./modules/file-manager.nix
     ./modules/keyring.nix
+    ./modules/image-viewer.nix
+    ./modules/mpv.nix
   ];
 
   home.username = "bjoern";
