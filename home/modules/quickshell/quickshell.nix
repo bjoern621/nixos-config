@@ -2,6 +2,7 @@
   inputs,
   pkgs,
   config,
+  customLib,
   ...
 }:
 
@@ -16,35 +17,22 @@ let
 
   # Private runtime deps — visible only to the quickshell process and its
   # children, never added to the user's global environment.
-  qsPrivateBinPath = pkgs.lib.makeBinPath [
-    pkgs.imagemagick # WallpaperAccent color extraction
-    qsPython
-  ];
-
-  # Fonts are discovered via XDG_DATA_DIRS (fontconfig + Qt), not PATH.
-  qsPrivateDataPath = pkgs.lib.makeSearchPath "share" [
-    pkgs.font-awesome # Icons
-    pkgs.inter # Text
-  ];
+  qsWrapped = customLib.wrapWithPrivateDeps qs {
+    binDeps = [
+      pkgs.imagemagick # WallpaperAccent color extraction
+      qsPython
+    ];
+    dataDeps = [
+      pkgs.font-awesome # Icons
+      pkgs.inter # Text
+    ];
+  };
 
   # CLI helper for one-time user setup (setup/auth/clear).
   # This gives the user a python executable that also has keyring+secretstorage available.
   spotifyCli = pkgs.writeShellScriptBin "quickshell-spotify" ''
     exec ${qsPython}/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
   '';
-
-  # Wrap the quickshell binary so its subprocesses see the private PATH/data
-  # dirs prepended to the inherited values.  The user's shell is untouched.
-  qsWrapped = pkgs.symlinkJoin {
-    name = "quickshell-wrapped";
-    paths = [ qs ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postBuild = ''
-      wrapProgram $out/bin/quickshell \
-        --prefix PATH          : ${qsPrivateBinPath} \
-        --prefix XDG_DATA_DIRS : ${qsPrivateDataPath}
-    '';
-  };
 in
 
 {

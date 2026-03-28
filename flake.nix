@@ -35,6 +35,7 @@
     }@inputs:
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      customLib = import ./lib/customLib.nix { inherit pkgs; };
       qs = quickshell.packages.x86_64-linux.default;
       qt = pkgs.qt6.qtdeclarative;
     in
@@ -102,11 +103,11 @@
             home-manager.useUserPackages = true; # Install user packages to /etc/profiles instead of ~/.nix-profile
             home-manager.backupFileExtension = "backup"; # Rename existing files (like ~/.config/hypr/hyprland.conf) to *.backup instead of failing
             home-manager.users.bjoern = import ./home/bjoern.nix; # User-specific Home Manager configuration
-            home-manager.extraSpecialArgs = { inherit inputs; }; # Pass flake inputs to home-manager modules
+            home-manager.extraSpecialArgs = { inherit inputs customLib; };
           }
         ];
 
-        specialArgs = { inherit inputs; }; # https://wiki.hypr.land/Nix/Hyprland-on-NixOS/
+        specialArgs = { inherit inputs customLib; }; # https://wiki.hypr.land/Nix/Hyprland-on-NixOS/
       };
     };
 }
