@@ -424,7 +424,7 @@ Scope {
 
         Timer {
             id: focusTimer
-            interval: 50
+            interval: 16
             onTriggered: searchInput.forceActiveFocus()
         }
 
@@ -437,6 +437,7 @@ Scope {
                     resultsList.contentY = 0;
                     resultsList.keyboardNav = false;
                     launcherWindow.updateFilter();
+                    searchInput.forceActiveFocus();
                     focusTimer.restart();
                 }
             }
