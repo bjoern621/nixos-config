@@ -34,7 +34,41 @@
       nix-search-tv,
       ...
     }@inputs:
+    let
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    in
     {
+      devShells.x86_64-linux.default = pkgs.mkShell {
+        packages = [
+          # Python — spotify_api.py runtime deps + linting/typing
+          (pkgs.python3.withPackages (ps: [
+            ps.keyring
+            ps.secretstorage
+          ]))
+          pkgs.ruff # linter + formatter (replaces flake8 / black)
+          pkgs.mypy # static type checker
+
+          # Bash — setup-spotify.sh
+          pkgs.shellcheck # static analysis
+          pkgs.shfmt # formatter
+
+          # Nix
+          pkgs.nil # LSP server
+          pkgs.nixfmt # formatter
+
+          # QML — provides qmllint
+          pkgs.kdePackages.qtdeclarative
+        ];
+
+        shellHook = ''
+          echo "nixos-config dev shell"
+          echo "  python3  $(python3 --version)"
+          echo "  ruff     $(ruff --version)"
+          echo "  mypy     $(mypy --version)"
+          echo "  qmllint  $(qmllint --version 2>&1 | head -1)"
+        '';
+      };
+
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         modules = [
           ./hosts/default/configuration.nix

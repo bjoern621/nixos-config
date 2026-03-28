@@ -22,6 +22,7 @@
     ./modules/quickshell/quickshell.nix
     ./modules/paintdotnet.nix
     ./modules/shell.nix
+    ./modules/file-manager.nix
   ];
 
   home.username = "bjoern";

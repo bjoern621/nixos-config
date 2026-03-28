@@ -5,18 +5,60 @@
   ...
 }:
 
+let
+  qs = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
+  # Private runtime deps — visible only to the quickshell process and its
+  # children, never added to the user's global environment.
+  qsPrivateBinPath = pkgs.lib.makeBinPath [
+    pkgs.imagemagick # WallpaperAccent color extraction
+    (pkgs.python3.withPackages (ps: [
+      ps.keyring
+      ps.secretstorage
+    ])) # Spotify API
+  ];
+  # Fonts are discovered via XDG_DATA_DIRS (fontconfig + Qt), not PATH.
+  qsPrivateDataPath = pkgs.lib.makeSearchPath "share" [
+    pkgs.font-awesome # Icons
+    pkgs.inter # Text
+  ];
+
+  # CLI helper for one-time user setup (setup/auth/clear).
+  # A plain shell script — no Python env conflict with the user's global python3.
+  # The QML uses quickshell's private python3; this gives the user a terminal
+  # entry-point that also has keyring+secretstorage available.
+  spotifyCli = pkgs.writeShellScriptBin "quickshell-spotify" ''
+    exec ${
+      pkgs.python3.withPackages (ps: [
+        ps.keyring
+        ps.secretstorage
+      ])
+    }/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
+  '';
+
+  # Wrap the quickshell binary so its subprocesses see the private PATH/data
+  # dirs prepended to the inherited values.  The user's shell is untouched.
+  qsWrapped = pkgs.symlinkJoin {
+    name = "quickshell-wrapped";
+    paths = [ qs ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/quickshell \
+        --prefix PATH          : ${qsPrivateBinPath} \
+        --prefix XDG_DATA_DIRS : ${qsPrivateDataPath}
+    '';
+  };
+in
+
 {
   # User-level quickshell configuration.
   # NOTE: This module is paired with modules/quickshell.nix
   # which contains system-level dependencies like UPower.
 
   home.packages = with pkgs; [
-    inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default
+    qsWrapped # quickshell + private PATH/fonts (imagemagick, python3+keyring, font-awesome, inter)
+    spotifyCli # quickshell-spotify: user-facing CLI for setup/auth/clear
     # inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
-    font-awesome # Icons
-    inter # Text
-    imagemagick # WallpaperAccent color extraction
-    python3 # For Spotify API integration
   ];
 
   # Link quickshell config to ~/.config/quickshell via an out-of-store symlink
@@ -32,9 +74,7 @@
       After = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${
-        inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default
-      }/bin/quickshell";
+      ExecStart = "${qsWrapped}/bin/quickshell";
       Restart = "on-failure";
       RestartSec = 1;
       # Without a platform theme, Qt defaults to hicolor icons.
