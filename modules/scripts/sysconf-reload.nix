@@ -24,6 +24,14 @@ let
     sudo mkdir -p "$NIXOS_CONFIG/hosts/default"
     sudo cp -f /etc/nixos/hardware-configuration.nix "$NIXOS_CONFIG/hosts/default/hardware-configuration.nix"
 
+    # git ls-files: list files in the repo
+    #   --others: only show untracked files
+    #   --exclude-standard: respect .gitignore rules
+    # wc -l: count the number of lines (= number of files)
+    NEW_FILES=$(sudo git -C "$NIXOS_CONFIG" ls-files --others --exclude-standard | wc -l)
+    sudo git -C "$NIXOS_CONFIG" add -N .
+    echo "Marked $NEW_FILES untracked files as intent-to-add so Nix can see them."
+
     echo "Rebuilding NixOS from $NIXOS_CONFIG..."
     sudo nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
 
