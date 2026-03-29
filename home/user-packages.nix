@@ -6,6 +6,5 @@
     kdePackages.kate
     gimp
     obsidian
-    python3
   ];
 }
