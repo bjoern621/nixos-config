@@ -26,6 +26,7 @@
     ./mouse-accel.nix
     ./screenshot.nix
     ./exclusive-workspace.nix
+    ./smart-gaps.nix
   ];
 
   # Auto-start Hyprland uwsm after login
