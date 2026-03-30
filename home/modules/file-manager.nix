@@ -1,6 +1,7 @@
 { ... }:
 
 {
+  # TODO doesnt work
   # nautilus-python loads Python extensions from ~/.local/share/nautilus-python/extensions/.
   # The extension below registers Backspace as an extra accelerator for the win.back action
   # via GTK4's GtkApplication API, entirely inside Nautilus's own process.
