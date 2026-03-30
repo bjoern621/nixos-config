@@ -81,7 +81,7 @@ Item {
                 }
             }
 
-            // Power draw
+            // Power draw / charge
             Item {
                 visible: Math.abs(root.dev.changeRate) > 0
                 width: parent.width
@@ -94,7 +94,7 @@ Item {
                     anchors.left: parent.left
                 }
                 Label {
-                    text: Math.abs(root.dev.changeRate).toFixed(1) + " W"
+                    text: root.isCharging ? "+" + Math.abs(root.dev.changeRate).toFixed(1) + " W" : "-" + Math.abs(root.dev.changeRate).toFixed(1) + " W"
                     font.weight: Font.Normal
                     anchors.right: parent.right
                 }
