@@ -4,6 +4,7 @@ singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml
 singleton LoadingHost 1.0 base/LoadingHost.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
+WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
 Icon 1.0 base/Icon.qml
 
@@ -54,3 +55,4 @@ NotificationCard 1.0 widgets/NotificationCard.qml
 
 NotificationToast 1.0 windows/NotificationToast.qml
 NotificationPanel 1.0 windows/NotificationPanel.qml
+WallpaperChooser 1.0 windows/WallpaperChooser.qml

@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ ... }:
 
 let
   wallpaper_rel_path = ".local/share/wallpapers";
@@ -8,17 +8,11 @@ in
   home.file."${wallpaper_rel_path}".source = ../../wallpapers;
 
   # https://nix-community.github.io/home-manager/options.xhtml#opt-services.hyprpaper.enable
+  # Wallpaper is applied at runtime by Quickshell's WallpaperBackend.
   services.hyprpaper = {
     enable = true;
     settings = {
       splash = false;
-
-      wallpaper = [
-        {
-          monitor = "";
-          path = "${config.home.homeDirectory}/${wallpaper_rel_path}/Bloom.jpg";
-        }
-      ];
     };
   };
 

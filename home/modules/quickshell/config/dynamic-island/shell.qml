@@ -15,6 +15,8 @@ ShellRoot {
     // Force-load LoadingHost so it's ready when needed.
     property var _loadingHost: LoadingHost
 
+    WallpaperPersist { id: wallpaperPersist }
+    WallpaperBackend {}
     WallpaperAccent {}
     ScreenCorners {}
     Bar {}
@@ -28,4 +30,5 @@ ShellRoot {
     ClipboardHistory {}
     NotificationToast {}
     NotificationPanel {}
+    WallpaperChooser {}
 }

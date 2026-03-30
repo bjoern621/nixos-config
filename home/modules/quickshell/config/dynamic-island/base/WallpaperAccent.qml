@@ -1,6 +1,10 @@
 // WallpaperAccent - Extracts a vibrant accent color from the current wallpaper
-// using ImageMagick. Runs a Process to sample colors and pick the most vibrant
-// hue, then stores the result in Globals.accentColor.
+// using ImageMagick. Caches results per wallpaper in
+// $HOME/.cache/quickshell/wallpaper-accents/ so subsequent loads are instant.
+//
+// A single bash process per resolve handles both cache lookup and extraction.
+// A generation counter discards stale results when the wallpaper changes
+// before the previous resolve finishes.
 
 import QtQuick
 import Quickshell
@@ -11,34 +15,89 @@ Item {
     id: root
     visible: false
 
+    readonly property string _cacheDir: Quickshell.env("HOME") + "/.cache/quickshell/wallpaper-accents"
+
     // Re-extract when wallpaper changes
     property url _wallpaper: Globals.wallpaperPath
-    on_WallpaperChanged: extractProc.running = true
+    on_WallpaperChanged: _resolve()
 
-    Component.onCompleted: extractProc.running = true
+    Component.onCompleted: _resolve()
 
-    // magick outputs histogram lines like:
-    //   12345: (R,G,B) #RRGGBB srgb(...)
-    // We resize to 64x64 for speed, quantize to 16 colors, then output the histogram.
+    // Generation counter — bumped on each _resolve(), checked in all handlers
+    property int _generation: 0
+
+    // Accumulate histogram entries for the current generation
+    property var _candidates: []
+
+    function _wallpaperFile() {
+        return Globals.wallpaperPath.toString().replace("file://", "");
+    }
+
+    function _cacheFile() {
+        const path = _wallpaperFile();
+        const name = path.substring(path.lastIndexOf("/") + 1).replace(/\.[^.]+$/, "");
+        return _cacheDir + "/" + name;
+    }
+
+    function _resolve() {
+        _generation++;
+        _candidates = [];
+
+        const wallpaper = _wallpaperFile();
+        const cache = _cacheFile();
+        console.log("[WallpaperAccent] Resolving accent for:", wallpaper, "(gen " + _generation + ")");
+
+        // Single process: check cache first, fall back to magick extraction.
+        // Output is prefixed so QML can distinguish: "CACHED:#rrggbb" vs histogram lines.
+        resolveProc.command = ["bash", "-c",
+            "if [ -f '" + cache + "' ]; then " +
+            "  echo \"CACHED:$(cat '" + cache + "')\"; " +
+            "else " +
+            "  magick '" + wallpaper + "' -resize 64x64! -colors 16 -depth 8 -format '%c' histogram:info: | sort -rn; " +
+            "fi"
+        ];
+        resolveProc.running = true;
+    }
+
     Process {
-        id: extractProc
-        command: ["bash", "-c", "magick '" + Globals.wallpaperPath.toString().replace("file://", "") + "' " + "-resize 64x64! -colors 16 -depth 8 -format '%c' histogram:info: | " + "sort -rn"]
+        id: resolveProc
+
+        property int generation
+
+        onRunningChanged: {
+            if (running)
+                generation = root._generation;
+        }
+
         stdout: SplitParser {
             onRead: data => {
-                root.parseLine(data);
+                if (resolveProc.generation !== root._generation) return;
+
+                if (data.startsWith("CACHED:")) {
+                    const color = data.substring(7).trim();
+                    console.log("[WallpaperAccent] Cache hit:", color);
+                    Globals.accentColor = color;
+                } else {
+                    root.parseLine(data);
+                }
             }
         }
+
         onExited: (exitCode, exitStatus) => {
+            if (generation !== root._generation) return;
             if (exitCode !== 0) {
-                console.log("[WallpaperAccent] magick failed with exit code", exitCode);
+                console.log("[WallpaperAccent] resolve failed with exit code", exitCode);
                 return;
             }
-            root.pickBestColor();
+            // If candidates were collected, this was an extraction (not a cache hit)
+            if (root._candidates.length > 0)
+                root.pickBestColor();
         }
     }
 
-    // Accumulate histogram entries
-    property var _candidates: []
+    Process {
+        id: cacheSaveProc
+    }
 
     function parseLine(line) {
         // Format: "  count: (R,G,B) #RRGGBB srgb(...)"
@@ -110,6 +169,11 @@ Item {
         console.log("[WallpaperAccent] Extracted color:", color);
         Globals.accentColor = color;
         _candidates = [];
+
+        // Save to cache
+        const cache = _cacheFile();
+        cacheSaveProc.command = ["bash", "-c", "mkdir -p '" + _cacheDir + "' && echo '" + color + "' > '" + cache + "'"];
+        cacheSaveProc.running = true;
     }
 
     function hslToHex(h, s, l) {
