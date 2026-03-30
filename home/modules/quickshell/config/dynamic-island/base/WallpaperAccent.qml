@@ -1,10 +1,6 @@
 // WallpaperAccent - Extracts a vibrant accent color from the current wallpaper
 // using ImageMagick. Caches results per wallpaper in
 // $HOME/.cache/quickshell/wallpaper-accents/ so subsequent loads are instant.
-//
-// A single bash process per resolve handles both cache lookup and extraction.
-// A generation counter discards stale results when the wallpaper changes
-// before the previous resolve finishes.
 
 import QtQuick
 import Quickshell
@@ -15,165 +11,157 @@ Item {
     id: root
     visible: false
 
-    readonly property string _cacheDir: Quickshell.env("HOME") + "/.cache/quickshell/wallpaper-accents"
+    readonly property string cacheDir: Quickshell.env("HOME") + "/.cache/quickshell/wallpaper-accents"
 
-    // Re-extract when wallpaper changes
-    property url _wallpaper: Globals.wallpaperPath
-    on_WallpaperChanged: _resolve()
+    onWallpaperChanged: resolve()
 
-    Component.onCompleted: _resolve()
+    Component.onCompleted: resolve()
 
-    // Generation counter — bumped on each _resolve(), checked in all handlers
-    property int _generation: 0
+    // Use Globals.wallpaperPath via this alias so the onChanged signal fires
+    readonly property url wallpaper: Globals.wallpaperPath
 
-    // Accumulate histogram entries for the current generation
-    property var _candidates: []
-
-    function _wallpaperFile() {
-        return Globals.wallpaperPath.toString().replace("file://", "");
+    function wallpaperFile() {
+        return root.wallpaper.toString().replace("file://", "");
     }
 
-    function _cacheFile() {
-        const path = _wallpaperFile();
+    function cacheFile() {
+        const path = wallpaperFile();
         const name = path.substring(path.lastIndexOf("/") + 1).replace(/\.[^.]+$/, "");
-        return _cacheDir + "/" + name;
+        return cacheDir + "/" + name;
     }
 
-    function _resolve() {
-        _generation++;
-        _candidates = [];
-
-        const wallpaper = _wallpaperFile();
-        const cache = _cacheFile();
-        console.log("[WallpaperAccent] Resolving accent for:", wallpaper, "(gen " + _generation + ")");
-
-        // Single process: check cache first, fall back to magick extraction.
-        // Output is prefixed so QML can distinguish: "CACHED:#rrggbb" vs histogram lines.
-        resolveProc.command = ["bash", "-c",
-            "if [ -f '" + cache + "' ]; then " +
-            "  echo \"CACHED:$(cat '" + cache + "')\"; " +
-            "else " +
-            "  magick '" + wallpaper + "' -resize 64x64! -colors 16 -depth 8 -format '%c' histogram:info: | sort -rn; " +
-            "fi"
-        ];
-        resolveProc.running = true;
+    function shellEscape(s) {
+        return "'" + s.replace(/'/g, "'\\''") + "'";
     }
 
+    function saveToCache(value, path) {
+        cacheSaveProc.command = ["bash", "-c", "mkdir -p " + shellEscape(cacheDir) + " && echo " + shellEscape(value) + " > " + shellEscape(path)];
+        cacheSaveProc.running = true;
+    }
+
+    function resolve() {
+        const cache = cacheFile();
+
+        cacheCheckProc.command = ["bash", "-c", "cat " + shellEscape(cache) + " 2>/dev/null || echo 'MISS'"];
+        cacheCheckProc.running = true;
+    }
+
+    // Step 1: Check if cache exists
     Process {
-        id: resolveProc
+        id: cacheCheckProc
 
-        property int generation
+        stdout: SplitParser {
+            onRead: data => {
+                if (data === "MISS") {
+                    extractProc.running = true;
+                } else {
+                    Globals.accentColor = data.trim();
+                }
+            }
+        }
+    }
+
+    // Step 2: Extract color from image (only runs on cache miss)
+    Process {
+        id: extractProc
+
+        property var candidates: []
+        property string cachePath: ""
+
+        command: ["bash", "-c", "magick " + root.shellEscape(root.wallpaperFile()) + " -resize 64x64! -colors 16 -depth 8 -format '%c' histogram:info: | sort -rn"]
 
         onRunningChanged: {
-            if (running)
-                generation = root._generation;
+            if (running) {
+                cachePath = root.cacheFile();
+                candidates = [];
+            }
         }
 
         stdout: SplitParser {
             onRead: data => {
-                if (resolveProc.generation !== root._generation) return;
-
-                if (data.startsWith("CACHED:")) {
-                    const color = data.substring(7).trim();
-                    console.log("[WallpaperAccent] Cache hit:", color);
-                    Globals.accentColor = color;
-                } else {
-                    root.parseLine(data);
-                }
+                extractProc.parseHistogramLine(data);
             }
         }
 
-        onExited: (exitCode, exitStatus) => {
-            if (generation !== root._generation) return;
+        onExited: exitCode => {
             if (exitCode !== 0) {
-                console.log("[WallpaperAccent] resolve failed with exit code", exitCode);
+                console.warn("[WallpaperAccent] magick failed (exit " + exitCode + ")");
                 return;
             }
-            // If candidates were collected, this was an extraction (not a cache hit)
-            if (root._candidates.length > 0)
-                root.pickBestColor();
+
+            if (candidates.length === 0) {
+                console.log("[WallpaperAccent] No vibrant colors found, using default");
+                const fallback = Globals.defaultAccentColor.toString();
+                Globals.accentColor = fallback;
+
+                root.saveToCache(fallback, cachePath);
+                return;
+            }
+
+            // Pick best color (highest weight = count * saturation^2)
+            let best = candidates[0];
+            for (let i = 1; i < candidates.length; i++) {
+                if (candidates[i].weight > best.weight)
+                    best = candidates[i];
+            }
+
+            // Boost saturation and fix lightness for accent use
+            const accentSat = Math.min(0.75, best.s * 1.3);
+            const accentLight = 0.65;
+            const color = hslToHex(best.h, accentSat, accentLight);
+
+            console.log("[WallpaperAccent] Accent:", color);
+            Globals.accentColor = color;
+
+            root.saveToCache(color, cachePath);
+        }
+
+        function parseHistogramLine(line) {
+            // Format: "  count: (R,G,B) #RRGGBB srgb(...)"
+            const rgbMatch = line.match(/\((\d+),(\d+),(\d+)\)/);
+            const countMatch = line.match(/^\s*(\d+):/);
+            if (!rgbMatch || !countMatch)
+                return;
+
+            const count = parseInt(countMatch[1]);
+            const r = parseInt(rgbMatch[1]) / 255;
+            const g = parseInt(rgbMatch[2]) / 255;
+            const b = parseInt(rgbMatch[3]) / 255;
+
+            // Convert to HSL
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const l = (max + min) / 2;
+            const d = max - min;
+
+            if (d < 0.08)
+                return; // too gray
+            if (l < 0.1 || l > 0.9)
+                return; // too dark/light
+            const s = d / (1 - Math.abs(2 * l - 1));
+            if (s < 0.15)
+                return; // too desaturated
+
+            let h;
+            if (max === r)
+                h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            else if (max === g)
+                h = ((b - r) / d + 2) / 6;
+            else
+                h = ((r - g) / d + 4) / 6;
+
+            candidates.push({
+                count: count,
+                h: h,
+                s: s,
+                l: l,
+                weight: count * s * s
+            });
         }
     }
 
     Process {
         id: cacheSaveProc
-    }
-
-    function parseLine(line) {
-        // Format: "  count: (R,G,B) #RRGGBB srgb(...)"
-        const rgbMatch = line.match(/\((\d+),(\d+),(\d+)\)/);
-        const countMatch = line.match(/^\s*(\d+):/);
-        if (!rgbMatch || !countMatch)
-            return;
-        const count = parseInt(countMatch[1]);
-        const r = parseInt(rgbMatch[1]) / 255;
-        const g = parseInt(rgbMatch[2]) / 255;
-        const b = parseInt(rgbMatch[3]) / 255;
-
-        // Convert to HSL
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        const l = (max + min) / 2;
-        const d = max - min;
-
-        if (d < 0.08)
-            // skip grays
-            return;
-        if (l < 0.1 || l > 0.9)
-            // skip near-black/white
-
-            return;
-        const s = d / (1 - Math.abs(2 * l - 1));
-        if (s < 0.15)
-            // skip desaturated
-
-            return;
-        let h;
-        if (max === r)
-            h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-        else if (max === g)
-            h = ((b - r) / d + 2) / 6;
-        else
-            h = ((r - g) / d + 4) / 6;
-
-        _candidates.push({
-            count: count,
-            h: h,
-            s: s,
-            l: l,
-            weight: count * s * s
-        });
-    }
-
-    function pickBestColor() {
-        if (_candidates.length === 0) {
-            console.log("[WallpaperAccent] No vibrant colors found, using fallback");
-            Globals.accentColor = "#f2ef45";
-            _candidates = [];
-            return;
-        }
-
-        // Pick candidate with highest weight (count * saturation^2)
-        let best = _candidates[0];
-        for (let i = 1; i < _candidates.length; i++) {
-            if (_candidates[i].weight > best.weight) {
-                best = _candidates[i];
-            }
-        }
-
-        // Boost saturation and fix lightness for accent use
-        const accentSat = Math.min(0.75, best.s * 1.3);
-        const accentLight = 0.65;
-        const color = hslToHex(best.h, accentSat, accentLight);
-
-        console.log("[WallpaperAccent] Extracted color:", color);
-        Globals.accentColor = color;
-        _candidates = [];
-
-        // Save to cache
-        const cache = _cacheFile();
-        cacheSaveProc.command = ["bash", "-c", "mkdir -p '" + _cacheDir + "' && echo '" + color + "' > '" + cache + "'"];
-        cacheSaveProc.running = true;
     }
 
     function hslToHex(h, s, l) {

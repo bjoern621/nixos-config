@@ -8,5 +8,6 @@ QtObject {
     // This is the fallback value if no wallpaper was selected ever.
     // See also WallpaperPersist.qml, WallpaperAccent.qml, WallpaperChooser.qml.
     property url wallpaperPath: "file:///home/bjoern/.local/share/wallpapers/Mist.jpg"
-    property color accentColor: "#ffffff"
+    readonly property color defaultAccentColor: "#ffffff"
+    property color accentColor: defaultAccentColor
 }
