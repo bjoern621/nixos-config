@@ -19,7 +19,7 @@ Row {
         onTriggered: {
             datetime.currentDate = new Date();
             interval = (60000 - (new Date().getTime() % 60000)) * 1.011;
-            console.log("DateTime timer: next update in", interval, "ms");
+            // console.log("DateTime timer: next update in", interval, "ms");
             start();
         }
     }
