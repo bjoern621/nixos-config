@@ -498,19 +498,12 @@ Scope {
             }
         }
 
-        Timer {
-            id: focusTimer
-            interval: 16
-            onTriggered: fullArea.forceActiveFocus()
-        }
-
         Connections {
             target: chooserScope
             function onChooserVisibleChanged() {
                 if (chooserScope.chooserVisible) {
                     chooserWindow.hideComplete = false;
-                    fullArea.forceActiveFocus();
-                    focusTimer.restart();
+                    fullArea.focus = true;
                 }
             }
         }

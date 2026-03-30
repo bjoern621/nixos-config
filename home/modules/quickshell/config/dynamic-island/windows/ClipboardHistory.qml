@@ -222,6 +222,43 @@ Scope {
         Item {
             id: clipFullArea
             anchors.fill: parent
+            focus: true
+
+            TextInput {
+                id: clipSearch
+                visible: false
+                focus: false
+                onTextChanged: clipScope.updateFilter()
+            }
+
+            Keys.onPressed: (event) => {
+                if (event.key === Qt.Key_Escape) {
+                    clipScope.clipVisible = false;
+                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (clipScope.filteredEntries.length > 0)
+                        clipScope.selectEntry(clipScope.filteredEntries[clipList.currentIndex]);
+                } else if (event.key === Qt.Key_Down) {
+                    clipList.keyboardNav = true;
+                    if (clipList.currentIndex < clipScope.filteredEntries.length - 1)
+                        clipList.currentIndex++;
+                } else if (event.key === Qt.Key_Up) {
+                    clipList.keyboardNav = true;
+                    if (clipList.currentIndex > 0)
+                        clipList.currentIndex--;
+                } else if (event.key === Qt.Key_Backspace) {
+                    if (event.modifiers & Qt.ControlModifier)
+                        clipSearch.text = clipSearch.text.replace(/\S+\s*$/, "");
+                    else
+                        clipSearch.text = clipSearch.text.slice(0, -1);
+                } else if (event.key === Qt.Key_Delete) {
+                    clipSearch.text = "";
+                } else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
+                    clipSearch.text = "";
+                } else if (event.text && event.text.length > 0 && !(event.modifiers & Qt.ControlModifier)) {
+                    clipSearch.text += event.text;
+                }
+                event.accepted = true;
+            }
 
             TapHandler {
                 onTapped: clipScope.clipVisible = false
@@ -261,7 +298,7 @@ Scope {
                         radius: Spacing.spacing8
                         color: Colors.hoverItemHovered
                         border.width: 1
-                        border.color: clipSearch.activeFocus ? Colors.accentColor : Colors.pillBorder
+                        border.color: clipScope.clipVisible ? Colors.accentColor : Colors.pillBorder
 
                         Row {
                             anchors {
@@ -277,48 +314,16 @@ Scope {
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
-                            TextInput {
-                                id: clipSearch
+                            Text {
                                 width: parent.width - Typography.fontSize14 - Spacing.spacing8 - 2 * Spacing.spacing12
                                 anchors.verticalCenter: parent.verticalCenter
-                                onActiveFocusChanged: if (!activeFocus && clipScope.clipVisible)
-                                    clipScope.clipVisible = false
                                 font.family: Typography.fontFamily
                                 font.pixelSize: Typography.fontSize14
                                 font.weight: Font.Bold
-                                color: Colors.textColor
+                                color: clipSearch.text ? Colors.textColor : Colors.textColorMuted
                                 clip: true
-                                selectByMouse: true
-
-                                Text {
-                                    anchors.fill: parent
-                                    text: "Zwischenablage durchsuchen..."
-                                    font: parent.font
-                                    color: Colors.textColorMuted
-                                    visible: !parent.text && !parent.activeFocus
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-
-                                onTextChanged: clipScope.updateFilter()
-
-                                Keys.onEscapePressed: clipScope.clipVisible = false
-                                Keys.onReturnPressed: {
-                                    if (clipScope.filteredEntries.length > 0) {
-                                        clipScope.selectEntry(clipScope.filteredEntries[clipList.currentIndex]);
-                                    }
-                                }
-                                Keys.onDownPressed: {
-                                    clipList.keyboardNav = true;
-                                    if (clipList.currentIndex < clipScope.filteredEntries.length - 1) {
-                                        clipList.currentIndex++;
-                                    }
-                                }
-                                Keys.onUpPressed: {
-                                    clipList.keyboardNav = true;
-                                    if (clipList.currentIndex > 0) {
-                                        clipList.currentIndex--;
-                                    }
-                                }
+                                text: clipSearch.text || "Zwischenablage durchsuchen..."
+                                verticalAlignment: Text.AlignVCenter
                             }
                         }
                     }
@@ -440,12 +445,6 @@ Scope {
             }
         }
 
-        Timer {
-            id: focusTimer
-            interval: 50
-            onTriggered: clipSearch.forceActiveFocus()
-        }
-
         Connections {
             target: clipScope
             function onClipVisibleChanged() {
@@ -460,7 +459,6 @@ Scope {
                     clipList.keyboardNav = false;
                     listProc.running = true;
                     clipList.currentIndex = 0;
-                    focusTimer.restart();
                 }
             }
         }

@@ -161,6 +161,53 @@ Scope {
         Item {
             id: fullArea
             anchors.fill: parent
+            focus: true
+
+            // Hidden TextInput for text editing logic (never rendered, no surface association)
+            TextInput {
+                id: searchInput
+                visible: false
+                focus: false
+
+                onTextChanged: {
+                    if (text === "") {
+                        searchDebounce.stop();
+                        launcherWindow.updateFilter();
+                    } else {
+                        searchDebounce.restart();
+                    }
+                }
+            }
+
+            Keys.onPressed: (event) => {
+                if (event.key === Qt.Key_Escape) {
+                    launcherScope.launcherVisible = false;
+                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (launcherWindow.filteredApps.length > 0)
+                        launcherWindow.launchApp(launcherWindow.filteredApps[resultsList.currentIndex]);
+                } else if (event.key === Qt.Key_Down) {
+                    resultsList.keyboardNav = true;
+                    if (resultsList.currentIndex < launcherWindow.filteredApps.length - 1)
+                        resultsList.currentIndex++;
+                } else if (event.key === Qt.Key_Up) {
+                    resultsList.keyboardNav = true;
+                    if (resultsList.currentIndex > 0)
+                        resultsList.currentIndex--;
+                } else if (event.key === Qt.Key_Backspace) {
+                    if (event.modifiers & Qt.ControlModifier)
+                        searchInput.text = searchInput.text.replace(/\S+\s*$/, "");
+                    else
+                        searchInput.text = searchInput.text.slice(0, -1);
+                } else if (event.key === Qt.Key_Delete) {
+                    searchInput.text = "";
+                } else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
+                    searchInput.text = "";
+                } else if (event.text && event.text.length > 0 && !(event.modifiers & Qt.ControlModifier)) {
+                    searchInput.text += event.text;
+                }
+                event.accepted = true;
+            }
+
 
             // Click-to-dismiss (transparent, no dim)
             TapHandler {
@@ -201,7 +248,7 @@ Scope {
                         radius: Spacing.spacing8
                         color: Colors.hoverItemHovered
                         border.width: 1
-                        border.color: searchInput.activeFocus ? Colors.accentColor : Colors.pillBorder
+                        border.color: launcherScope.launcherVisible ? Colors.accentColor : Colors.pillBorder
 
                         Row {
                             anchors {
@@ -219,55 +266,16 @@ Scope {
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
-                            TextInput {
-                                id: searchInput
+                            Text {
                                 width: parent.width - Typography.fontSize14 - Spacing.spacing8 - 2 * Spacing.spacing12
                                 anchors.verticalCenter: parent.verticalCenter
                                 font.family: Typography.fontFamily
                                 font.pixelSize: Typography.fontSize14
                                 font.weight: Font.Bold
-                                color: Colors.textColor
+                                color: searchInput.text ? Colors.textColor : Colors.textColorMuted
                                 clip: true
-                                selectByMouse: true
-                                onActiveFocusChanged: if (!activeFocus && launcherScope.launcherVisible)
-                                    launcherScope.launcherVisible = false
-
-                                Text {
-                                    anchors.fill: parent
-                                    text: "Suchen..."
-                                    font: parent.font
-                                    color: Colors.textColorMuted
-                                    visible: !parent.text && !parent.activeFocus
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-
-                                onTextChanged: {
-                                    if (searchInput.text === "") {
-                                        searchDebounce.stop();
-                                        launcherWindow.updateFilter();
-                                    } else {
-                                        searchDebounce.restart();
-                                    }
-                                }
-
-                                Keys.onEscapePressed: launcherScope.launcherVisible = false
-                                Keys.onReturnPressed: {
-                                    if (launcherWindow.filteredApps.length > 0) {
-                                        launcherWindow.launchApp(launcherWindow.filteredApps[resultsList.currentIndex]);
-                                    }
-                                }
-                                Keys.onDownPressed: {
-                                    resultsList.keyboardNav = true;
-                                    if (resultsList.currentIndex < launcherWindow.filteredApps.length - 1) {
-                                        resultsList.currentIndex++;
-                                    }
-                                }
-                                Keys.onUpPressed: {
-                                    resultsList.keyboardNav = true;
-                                    if (resultsList.currentIndex > 0) {
-                                        resultsList.currentIndex--;
-                                    }
-                                }
+                                text: searchInput.text || "Suchen..."
+                                verticalAlignment: Text.AlignVCenter
                             }
                         }
                     }
@@ -422,12 +430,6 @@ Scope {
             onTriggered: launcherWindow.updateFilter()
         }
 
-        Timer {
-            id: focusTimer
-            interval: 16
-            onTriggered: searchInput.forceActiveFocus()
-        }
-
         Connections {
             target: launcherScope
             function onLauncherVisibleChanged() {
@@ -437,8 +439,6 @@ Scope {
                     resultsList.contentY = 0;
                     resultsList.keyboardNav = false;
                     launcherWindow.updateFilter();
-                    searchInput.forceActiveFocus();
-                    focusTimer.restart();
                 }
             }
         }
