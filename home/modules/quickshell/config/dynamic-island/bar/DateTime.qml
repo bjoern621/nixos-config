@@ -12,15 +12,15 @@ Row {
     Row {
         spacing: Spacing.spacing4
 
-    Icon {
-        text: "\uf133"
-        anchors.verticalCenter: parent.verticalCenter
-    }
+        Icon {
+            text: "\uf133"
+            anchors.verticalCenter: parent.verticalCenter
+        }
 
-    Label {
-        text: germanLocale.dayName(datetime.currentDate.getDay(), Locale.ShortFormat) + ", " + Qt.formatDateTime(datetime.currentDate, "dd.MM.yyyy")
-        anchors.verticalCenter: parent.verticalCenter
-    }
+        Label {
+            text: germanLocale.dayName(datetime.currentDate.getDay(), Locale.LongFormat) + ", " + datetime.currentDate.toLocaleDateString(germanLocale, "dd. MMM")
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 
     Label {
@@ -30,17 +30,14 @@ Row {
     Row {
         spacing: Spacing.spacing4
 
+        Icon {
+            text: "\uf017"
+            anchors.verticalCenter: parent.verticalCenter
+        }
 
-    Icon {
-        text: "\uf017"
-        anchors.verticalCenter: parent.verticalCenter
+        Label {
+            text: Qt.formatDateTime(datetime.currentDate, "HH:mm")
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
-
-    Label {
-        text: Qt.formatDateTime(datetime.currentDate, "HH:mm")
-        anchors.verticalCenter: parent.verticalCenter
-    }
-
-    }
-
 }
