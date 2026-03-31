@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import "../"
@@ -12,6 +13,7 @@ Scope {
             required property var modelData
             screen: modelData
             WlrLayershell.namespace: "quickshell-noblur"
+            WlrLayershell.layer: WlrLayer.Overlay
 
             anchors {
                 top: true
