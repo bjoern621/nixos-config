@@ -150,11 +150,13 @@ Item {
             SquishBehavior on scale {}
 
             Text {
-                anchors.centerIn: parent
+                anchors.fill: parent
                 text: "\uf00d"
                 font.family: Typography.iconFontFamily
                 font.pixelSize: Typography.fontSize16
                 color: Colors.textColor
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             HoverHandler {
