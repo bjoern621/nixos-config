@@ -123,7 +123,7 @@ Scope {
                 const line = data.trim();
                 if (line.length > 0) {
                     chooserScope.wallpaperList.push(line);
-                    console.log("[WallpaperChooser] found wallpaper: " + line);
+                    // console.log("[WallpaperChooser] found wallpaper: " + line);
                 }
             }
         }
