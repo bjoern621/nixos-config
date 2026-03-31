@@ -5,8 +5,8 @@ import "../"
 Item {
     id: trayRoot
 
-    implicitWidth: iconRow.implicitWidth
-    implicitHeight: iconRow.implicitHeight
+    implicitWidth: trayRow.implicitWidth
+    implicitHeight: trayRow.implicitHeight
     anchors.verticalCenter: parent ? parent.verticalCenter : undefined
 
     // Input properties from Bar
@@ -19,6 +19,8 @@ Item {
     readonly property real menuContentWidth: trayMenuContent.implicitWidth
     readonly property real menuContentHeight: trayMenuContent.implicitHeight
 
+    property bool expanded: false
+
     QtObject {
         id: internal
         property bool menuOpen: false
@@ -28,145 +30,193 @@ Item {
     }
 
     function openMenu(menuHandle, iconCenterX) {
-        internal.activeMenuHandle = menuHandle
-        internal.menuAnchorX = iconCenterX
-        internal.menuOpen = true
+        internal.activeMenuHandle = menuHandle;
+        internal.menuAnchorX = iconCenterX;
+        internal.menuOpen = true;
     }
 
     function closeMenu() {
-        internal.menuOpen = false
+        internal.menuOpen = false;
     }
 
-    // --- Icons ---
+    // --- Main row: arrow + icons ---
 
     Row {
-        id: iconRow
-        spacing: Spacing.spacing2
+        id: trayRow
+        spacing: Spacing.spacing4
         anchors.verticalCenter: parent.verticalCenter
 
-        HoverHandler {
-            id: iconRowHover
-        }
-
-        Repeater {
-            model: SystemTray.items
+        HoverItem {
+            id: arrowButton
+            implicitWidth: height
+            onClicked: trayRoot.expanded = !trayRoot.expanded
 
             Item {
-                id: iconItem
-                width: 26
-                height: 26
+                anchors.centerIn: parent
+                width: arrow.implicitWidth
+                height: arrow.implicitHeight
+                rotation: -90
+
+                ExpandArrow {
+                    id: arrow
+                    anchors.centerIn: parent
+                    expanded: trayRoot.expanded
+                    iconColor: Colors.textColor
+                    iconWeight: Font.Bold
+                }
+            }
+        }
+
+        Item {
+            id: iconsContainer
+            anchors.verticalCenter: parent.verticalCenter
+            height: iconRow.implicitHeight
+            width: trayRoot.expanded ? iconRow.implicitWidth : 0
+            clip: true
+
+            Behavior on width {
+                NumberAnimation {
+                    duration: 250
+                    easing.type: trayRoot.expanded ? Easing.OutBack : Easing.InCubic
+                }
+            }
+
+            opacity: trayRoot.expanded ? 1 : 0
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: trayRoot.expanded ? 200 : 120
+                    easing.type: trayRoot.expanded ? Easing.OutCubic : Easing.InCubic
+                }
+            }
+
+            Row {
+                id: iconRow
+                spacing: Spacing.spacing2
                 anchors.verticalCenter: parent.verticalCenter
 
-                required property var modelData
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: height / 2
-                    color: iconMouse.pressed
-                             ? Colors.hoverItemPressed
-                             : iconMouse.containsMouse ? Colors.hoverItemHovered
-                             : "transparent"
-                    border.color: iconMouse.pressed || iconMouse.containsMouse
-                             ? Colors.pillBorder : "transparent"
+                HoverHandler {
+                    id: iconRowHover
                 }
 
-                Image {
-                    source: iconItem.modelData.icon
-                    sourceSize: Qt.size(16, 16)
-                    width: 16
-                    height: 16
-                    anchors.centerIn: parent
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    mipmap: true
-                }
+                Repeater {
+                    model: SystemTray.items
 
-                MouseArea {
-                    id: iconMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    Item {
+                        id: iconItem
+                        width: 26
+                        height: 26
+                        anchors.verticalCenter: parent.verticalCenter
 
-                    onClicked: function(mouse) {
-                        if (mouse.button === Qt.LeftButton) {
-                            if (iconItem.modelData.onlyMenu) {
-                                iconItem.openContextMenu()
-                            } else {
-                                iconItem.modelData.activate()
-                            }
-                        } else if (mouse.button === Qt.RightButton) {
-                            iconItem.openContextMenu()
-                        } else if (mouse.button === Qt.MiddleButton) {
-                            iconItem.modelData.secondaryActivate()
+                        required property var modelData
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: height / 2
+                            color: iconMouse.pressed ? Colors.hoverItemPressed : iconMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
+                            border.color: iconMouse.pressed || iconMouse.containsMouse ? Colors.pillBorder : "transparent"
                         }
-                    }
 
-                    onWheel: function(wheel) {
-                        if (wheel.angleDelta.y !== 0)
-                            iconItem.modelData.scroll(wheel.angleDelta.y, false)
-                        else if (wheel.angleDelta.x !== 0)
-                            iconItem.modelData.scroll(wheel.angleDelta.x, true)
-                    }
-                }
+                        Image {
+                            source: iconItem.modelData.icon
+                            sourceSize: Qt.size(16, 16)
+                            width: 16
+                            height: 16
+                            anchors.centerIn: parent
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
 
-                function openContextMenu() {
-                    if (!iconItem.modelData.hasMenu) return
-                    if (internal.menuOpen) {
-                        trayRoot.closeMenu()
-                        return
-                    }
-                    const handle = iconItem.modelData.menu ?? null
-                    if (!handle) return
-                    trayRoot.openMenu(handle, iconItem.x + iconItem.width / 2)
-                }
+                        MouseArea {
+                            id: iconMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
-                // Tooltip
-                property bool wantTooltip: iconMouse.containsMouse && iconItem.modelData.tooltipTitle !== "" && !internal.menuOpen
-                property bool tooltipVisible: false
+                            onClicked: function (mouse) {
+                                if (mouse.button === Qt.LeftButton) {
+                                    if (iconItem.modelData.onlyMenu) {
+                                        iconItem.openContextMenu();
+                                    } else {
+                                        iconItem.modelData.activate();
+                                    }
+                                } else if (mouse.button === Qt.RightButton) {
+                                    iconItem.openContextMenu();
+                                } else if (mouse.button === Qt.MiddleButton) {
+                                    iconItem.modelData.secondaryActivate();
+                                }
+                            }
 
-                onWantTooltipChanged: {
-                    if (wantTooltip) {
-                        tooltipShowTimer.restart()
-                        tooltipHideTimer.stop()
-                    } else {
-                        tooltipShowTimer.stop()
-                        tooltipHideTimer.restart()
-                    }
-                }
+                            onWheel: function (wheel) {
+                                if (wheel.angleDelta.y !== 0)
+                                    iconItem.modelData.scroll(wheel.angleDelta.y, false);
+                                else if (wheel.angleDelta.x !== 0)
+                                    iconItem.modelData.scroll(wheel.angleDelta.x, true);
+                            }
+                        }
 
-                Timer {
-                    id: tooltipShowTimer
-                    interval: 150
-                    onTriggered: iconItem.tooltipVisible = true
-                }
+                        function openContextMenu() {
+                            if (!iconItem.modelData.hasMenu)
+                                return;
+                            if (internal.menuOpen) {
+                                trayRoot.closeMenu();
+                                return;
+                            }
+                            const handle = iconItem.modelData.menu ?? null;
+                            if (!handle)
+                                return;
+                            trayRoot.openMenu(handle, iconItem.x + iconsContainer.x + arrowButton.width + trayRow.spacing + iconItem.width / 2);
+                        }
 
-                Timer {
-                    id: tooltipHideTimer
-                    interval: 100
-                    onTriggered: iconItem.tooltipVisible = false
-                }
+                        // Tooltip
+                        property bool wantTooltip: iconMouse.containsMouse && iconItem.modelData.tooltipTitle !== "" && !internal.menuOpen
+                        property bool tooltipVisible: false
 
-                Rectangle {
-                    id: tooltipRect
-                    visible: iconItem.tooltipVisible
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.bottom
-                    anchors.topMargin: Spacing.spacing4
-                    width: tooltipText.implicitWidth + Spacing.spacing16
-                    height: tooltipText.implicitHeight + Spacing.spacing8
-                    radius: height / 2
-                    color: Colors.pillBackground
-                    border.width: 1
-                    border.color: Colors.pillBorder
-                    z: 100
+                        onWantTooltipChanged: {
+                            if (wantTooltip) {
+                                tooltipShowTimer.restart();
+                                tooltipHideTimer.stop();
+                            } else {
+                                tooltipShowTimer.stop();
+                                tooltipHideTimer.restart();
+                            }
+                        }
 
-                    Text {
-                        id: tooltipText
-                        anchors.centerIn: parent
-                        text: iconItem.modelData.tooltipTitle
-                        color: Colors.textColor
-                        font.pixelSize: Typography.fontSize12
+                        Timer {
+                            id: tooltipShowTimer
+                            interval: 150
+                            onTriggered: iconItem.tooltipVisible = true
+                        }
+
+                        Timer {
+                            id: tooltipHideTimer
+                            interval: 100
+                            onTriggered: iconItem.tooltipVisible = false
+                        }
+
+                        Rectangle {
+                            id: tooltipRect
+                            visible: iconItem.tooltipVisible
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.bottom
+                            anchors.topMargin: Spacing.spacing4
+                            width: tooltipText.implicitWidth + Spacing.spacing16
+                            height: tooltipText.implicitHeight + Spacing.spacing8
+                            radius: height / 2
+                            color: Colors.pillBackground
+                            border.width: 1
+                            border.color: Colors.pillBorder
+                            z: 100
+
+                            Text {
+                                id: tooltipText
+                                anchors.centerIn: parent
+                                text: iconItem.modelData.tooltipTitle
+                                color: Colors.textColor
+                                font.pixelSize: Typography.fontSize12
+                            }
+                        }
                     }
                 }
             }
@@ -185,9 +235,9 @@ Item {
 
         onShown: internal.menuVisible = true
         onHidden: {
-            internal.menuVisible = false
-            internal.activeMenuHandle = null
-            trayMenuContent.activeSubmenu = null
+            internal.menuVisible = false;
+            internal.activeMenuHandle = null;
+            trayMenuContent.activeSubmenu = null;
         }
 
         TrayContextMenu {
@@ -206,9 +256,9 @@ Item {
     onAnyHoveredChanged: {
         if (internal.menuOpen) {
             if (anyHovered) {
-                closeTimer.stop()
+                closeTimer.stop();
             } else {
-                closeTimer.restart()
+                closeTimer.restart();
             }
         }
     }
@@ -218,7 +268,7 @@ Item {
         interval: 300
         onTriggered: {
             if (internal.menuOpen && !trayRoot.anyHovered) {
-                trayRoot.closeMenu()
+                trayRoot.closeMenu();
             }
         }
     }
@@ -227,14 +277,14 @@ Item {
         target: internal
         function onMenuOpenChanged() {
             if (internal.menuOpen) {
-                closeTimer.stop()
-                trayMenuContainer.show()
+                closeTimer.stop();
+                trayMenuContainer.show();
                 // Start close timer immediately — if the user never hovers the menu,
                 // the timer will fire and close it. If they do hover, it gets canceled.
-                closeTimer.restart()
+                closeTimer.restart();
             } else {
-                closeTimer.stop()
-                trayMenuContainer.hide()
+                closeTimer.stop();
+                trayMenuContainer.hide();
             }
         }
     }
