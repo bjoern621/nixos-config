@@ -5,9 +5,11 @@ Item {
     id: root
 
     property int displayYear: new Date().getFullYear()
+    property int _targetYear: displayYear
 
     function navigateYear(direction) {
-        gridSlide.transition(direction);
+        _targetYear = displayYear + direction;
+        gridSlide.transition(direction > 0 ? 1 : -1);
     }
 
     readonly property var today: new Date()
@@ -170,7 +172,7 @@ Item {
                 id: gridSlide
 
                 onReadyToSwap: direction => {
-                    root.displayYear += direction;
+                    root.displayYear = root._targetYear;
                     gridSlide.completeTransition();
                 }
 
