@@ -3,6 +3,7 @@ singleton Colors 1.0 base/Colors.qml
 singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml
 singleton LoadingHost 1.0 base/LoadingHost.qml
+singleton GracefulShutdown 1.0 base/GracefulShutdown.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
@@ -27,6 +28,7 @@ NowPlayingMenu 1.0 menus/NowPlayingMenu.qml
 PowerMenu 1.0 menus/PowerMenu.qml
 TrayContextMenu 1.0 menus/TrayContextMenu.qml
 LoadingScreen 1.0 menus/LoadingScreen.qml
+ShutdownScreen 1.0 menus/ShutdownScreen.qml
 
 VolumeOsd 1.0 osd/VolumeOsd.qml
 BrightnessOsd 1.0 osd/BrightnessOsd.qml

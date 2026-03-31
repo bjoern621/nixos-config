@@ -13,38 +13,20 @@ Item {
     readonly property int buttonWidth: 140
     readonly property int buttonHeight: 36
     function triggerAction(action) {
-        // Show loading screen with appropriate label
-        var label = "";
-        switch (action) {
-        case "shutdown":
-            label = "Shutting down...";
-            break;
-        case "reboot":
-            label = "Rebooting...";
-            break;
-        case "lock":
-            label = "Locking...";
-            break;
-        case "hibernate":
-            label = "Hibernating...";
-            break;
-        }
-
-        LoadingHost.show(label);
-
-        // Execute the action after a brief delay to show the loading screen
         Qt.callLater(() => {
             switch (action) {
             case "shutdown":
-                Quickshell.execDetached(["systemctl", "poweroff"]);
+                GracefulShutdown.start("Herunterfahren...", ["systemctl", "poweroff"]);
                 break;
             case "reboot":
-                Quickshell.execDetached(["systemctl", "reboot"]);
+                GracefulShutdown.start("Neustarten...", ["systemctl", "reboot"]);
                 break;
             case "lock":
+                LoadingHost.show("Sperren...");
                 Quickshell.execDetached(["loginctl", "lock-session"]);
                 break;
             case "hibernate":
+                LoadingHost.show("Hibernieren...");
                 Quickshell.execDetached(["systemctl", "hibernate"]);
                 break;
             }

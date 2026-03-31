@@ -6,14 +6,17 @@ import "../"
 import "../menus"
 
 // Fullscreen loading overlay that captures all input.
-// Shows on all screens when LoadingHost.active is true.
+// Shows on all screens when LoadingHost.active or GracefulShutdown.active is true.
+// Displays ShutdownScreen for shutdown/reboot, LoadingScreen for other actions.
 
 Variants {
     model: Quickshell.screens
 
     PanelWindow {
         id: loadingWindow
-        visible: LoadingHost.active || !hideComplete
+
+        readonly property bool isActive: LoadingHost.active || GracefulShutdown.active
+        visible: isActive || !hideComplete
         property bool hideComplete: true
         required property var modelData
         screen: modelData
@@ -27,17 +30,25 @@ Variants {
 
         exclusiveZone: 0
         focusable: true
-        WlrLayershell.keyboardFocus: LoadingHost.active ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: loadingWindow.isActive ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
         mask: Region {
-            item: LoadingHost.active ? fullArea : emptyMask
+            item: loadingWindow.isActive ? fullArea : emptyMask
         }
 
         Connections {
             target: LoadingHost
             function onActiveChanged() {
                 if (LoadingHost.active)
+                    loadingWindow.hideComplete = false;
+            }
+        }
+
+        Connections {
+            target: GracefulShutdown
+            function onActiveChanged() {
+                if (GracefulShutdown.active)
                     loadingWindow.hideComplete = false;
             }
         }
@@ -52,6 +63,7 @@ Variants {
             id: fullArea
             anchors.fill: parent
 
+            // Generic loading screen (lock, etc.)
             LoadingScreen {
                 id: loadingScreen
                 anchors.fill: parent
@@ -59,6 +71,16 @@ Variants {
                 actionLabel: LoadingHost.label
 
                 onCancelled: LoadingHost.hide()
+                onHidden: if (!GracefulShutdown.active) loadingWindow.hideComplete = true
+            }
+
+            // Shutdown/reboot screen with app list
+            ShutdownScreen {
+                id: shutdownScreen
+                anchors.fill: parent
+                showing: GracefulShutdown.active
+
+                onCancelled: loadingWindow.hideComplete = true
                 onHidden: loadingWindow.hideComplete = true
             }
         }
