@@ -6,5 +6,6 @@
     kdePackages.kate
     gimp
     obsidian
+    element-desktop
   ];
 }
