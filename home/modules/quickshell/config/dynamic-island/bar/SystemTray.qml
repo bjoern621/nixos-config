@@ -67,27 +67,12 @@ Item {
             }
         }
 
-        Item {
+        ExpandSection {
             id: iconsContainer
+            horizontal: true
+            expanded: trayRoot.expanded
+            duration: 600
             anchors.verticalCenter: parent.verticalCenter
-            height: iconRow.implicitHeight
-            width: trayRoot.expanded ? iconRow.implicitWidth : 0
-            clip: true
-
-            Behavior on width {
-                NumberAnimation {
-                    duration: 250
-                    easing.type: trayRoot.expanded ? Easing.OutBack : Easing.InCubic
-                }
-            }
-
-            opacity: trayRoot.expanded ? 1 : 0
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: trayRoot.expanded ? 200 : 120
-                    easing.type: trayRoot.expanded ? Easing.OutCubic : Easing.InCubic
-                }
-            }
 
             Row {
                 id: iconRow

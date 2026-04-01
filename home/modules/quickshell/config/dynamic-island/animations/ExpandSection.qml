@@ -5,29 +5,56 @@ Item {
 
     default property alias content: contentContainer.data
     property bool expanded: false
+    property bool horizontal: false
+    property int duration: 180
 
-    width: parent ? parent.width : 0
-    height: expanded ? contentContainer.childrenRect.height : 0
     clip: true
 
-    Behavior on height {
-        NumberAnimation {
-            duration: 250
-            easing.type: root.expanded ? Easing.OutBack : Easing.InCubic
+    states: [
+        State {
+            name: "collapsed"
+            when: !root.expanded
+            PropertyChanges {
+                root.opacity: 0
+                root.width: root.horizontal ? 0 : (root.parent ? root.parent.width : 0)
+                root.height: root.horizontal ? contentContainer.childrenRect.height : 0
+            }
+        },
+        State {
+            name: "expanded"
+            when: root.expanded
+            PropertyChanges {
+                root.opacity: 1
+                root.width: root.horizontal ? contentContainer.childrenRect.width : (root.parent ? root.parent.width : 0)
+                root.height: contentContainer.childrenRect.height
+            }
         }
-    }
+    ]
 
-    opacity: expanded ? 1 : 0
-    Behavior on opacity {
-        NumberAnimation {
-            duration: root.expanded ? 200 : 120
-            easing.type: root.expanded ? Easing.OutCubic : Easing.InCubic
+    transitions: [
+        Transition {
+            from: "collapsed"
+            to: "expanded"
+            NumberAnimation {
+                properties: root.horizontal ? "width,opacity" : "height,opacity"
+                duration: root.duration
+                easing.type: Easing.OutCubic
+            }
+        },
+        Transition {
+            from: "expanded"
+            to: "collapsed"
+            NumberAnimation {
+                properties: root.horizontal ? "width,opacity" : "height,opacity"
+                duration: root.duration
+                easing.type: Easing.InCubic
+            }
         }
-    }
+    ]
 
     Item {
         id: contentContainer
-        width: parent.width
+        width: root.horizontal ? childrenRect.width : parent.width
         height: childrenRect.height
     }
 }
