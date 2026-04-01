@@ -261,7 +261,7 @@ Item {
                 spacing: Spacing.spacing4
 
                 Text {
-                    text: "Closing applications..."
+                    text: "Apps werden geschlossen..."
                     font.family: Typography.fontFamily
                     font.weight: Font.Normal
                     font.pixelSize: Typography.fontSize12
