@@ -9,7 +9,7 @@
       video = {
         device_path = "/dev/video2"; # Integrated IR camera
         dark_threshold = 85;
-        timeout = 5; # Seconds to wait for a face to be recognized
+        timeout = 3; # Seconds to wait for a face to be recognized
       };
       core = {
         abort_if_lid_closed = true;
