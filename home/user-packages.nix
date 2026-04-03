@@ -7,5 +7,6 @@
     gimp
     obsidian
     element-desktop
+    direnv
   ];
 }

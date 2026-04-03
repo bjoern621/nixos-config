@@ -5,3 +5,5 @@ __pycache__/
 
 # Non-free assets
 modules/fancy-boot/darwin/logo.png
+
+.direnv/
