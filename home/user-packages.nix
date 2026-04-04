@@ -8,5 +8,6 @@
     obsidian
     element-desktop
     direnv
+    kubectl
   ];
 }
