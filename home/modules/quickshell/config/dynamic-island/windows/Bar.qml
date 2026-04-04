@@ -38,7 +38,7 @@ Variants {
         }
         readonly property bool hasMprisPlayer: mprisPlayer !== null
 
-        implicitHeight: !pillHidden ? 1000 : Spacing.spacing8
+        implicitHeight: !pillHidden ? 1000 : 0
 
         mask: Region {
             item: interactionZone
