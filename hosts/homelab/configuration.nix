@@ -29,6 +29,9 @@
     description = "Operations";
     shell = pkgs.zsh;
     initialPassword = "1234";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILZtmzMiCFldBIJpMZAlaTgKOHrZypm7J8YHGnsSzhPC bjoern@nixos"
+    ];
     extraGroups = [
       "wheel"
       "networkmanager"
