@@ -28,6 +28,7 @@
     isNormalUser = true;
     description = "Operations";
     shell = pkgs.zsh;
+    initialPassword = "1234";
     extraGroups = [
       "wheel"
       "networkmanager"
