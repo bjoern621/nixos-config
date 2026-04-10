@@ -11,6 +11,7 @@
     ../../modules/homelab-k3s-vm.nix
     ../../modules/homelab-samba.nix
     ../../modules/homelab-storage.nix
+    ../../modules/homelab-monitoring.nix
     ../../modules/homelab-ssh-hardening.nix
   ];
 
