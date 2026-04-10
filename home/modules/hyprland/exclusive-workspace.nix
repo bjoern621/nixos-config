@@ -64,8 +64,8 @@ in
       "float on, match:workspace 2, match:class negative:^code"
     ];
 
-    exec-once = [
-      "${exclusiveWorkspaceScript}"
-    ];
+    # exec-once = [
+    #   "${exclusiveWorkspaceScript}"
+    # ];
   };
 }
