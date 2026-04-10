@@ -11,7 +11,8 @@ let
     echo "Available commands:"
     echo ""
     echo "  sysconf-reload  - Sync hardware config and rebuild system"
-    echo "                   Usage: sysconf-reload"
+    echo "                   Usage: sysconf-reload [nixos|homelab]"
+    echo "                   No argument: detect host from /etc/hostname"
     echo ""
     echo "  sysconf-update  - Update flake inputs to latest versions"
     echo "                   Usage: sysconf-update"
@@ -28,9 +29,10 @@ let
     echo "                   Usage: sysconf-help"
     echo ""
     echo "Examples:"
-    echo "  sysconf-reload           # Rebuild with current config"
-    echo "  sysconf-update           # Update dependencies and rebuild"
-    echo "  sysconf-pull             # Pull remote changes and rebuild"
+    echo "  sysconf-reload           # Detect host and rebuild"
+    echo "  sysconf-reload homelab   # Rebuild homelab explicitly"
+    echo "  sysconf-update           # Update dependencies and rebuild detected host"
+    echo "  sysconf-pull             # Pull remote changes and rebuild detected host"
     echo ""
   '';
 in

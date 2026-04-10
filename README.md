@@ -8,26 +8,27 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
 
 1. Boot from NixOS ISO and install normally
 2. Generate base config: `sudo nixos-generate-config --root /mnt`
-3. Clone this repository to your user folder:
+3. Temporarily install Git: `nix-shell -p git`
+4. Clone this repository to your user folder:
     ```bash
     git clone https://github.com/YOUR_USERNAME/nixos-config.git ~/git/nixos-config
     cd ~/git/nixos-config
     ```
-4. Create symlink and copy hardware config:
+5. Create symlink and copy hardware config:
     ```bash
     sudo ln -s ~/git/nixos-config /etc/nixos/config
-    sudo cp /mnt/etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/default/
+    sudo cp /mnt/etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
     ```
-5. Install: `sudo nixos-install --flake /etc/nixos/config#nixos`
-6. Reboot
+6. Install: `sudo nixos-install --flake /etc/nixos/config#<host>`
+7. Reboot
 
 ### Add to Existing System
 
 ```bash
 git clone <your-repo> ~/git/nixos-config
 sudo ln -s ~/git/nixos-config /etc/nixos/config
-sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/default/
-sudo nixos-rebuild switch --flake /etc/nixos/config#nixos
+sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
+sudo nixos-rebuild switch --flake /etc/nixos/config#<host>
 ```
 
 ## Usage
@@ -35,13 +36,14 @@ sudo nixos-rebuild switch --flake /etc/nixos/config#nixos
 ### Rebuild System
 
 ```bash
-sudo nixos-rebuild switch --flake /etc/nixos/config#nixos
+sysconf-reload                # auto-detect host from /etc/hostname
+sysconf-reload homelab        # explicit host override
 ```
 
 ### Test Changes (No Reboot Persistence)
 
 ```bash
-sudo nixos-rebuild test --flake /etc/nixos/config#nixos
+sudo nixos-rebuild test --flake /etc/nixos/config#<host>
 ```
 
 ### Update Flake Inputs
@@ -54,10 +56,10 @@ nix flake update /etc/nixos/config
 
 The following scripts are installed system-wide:
 
--   `sysconf-reload` - Sync hardware config and rebuild only
--   `sysconf-update` - Update flake inputs to latest versions
--   `sysconf-pull` - Pull latest changes from git repository
--   `sysconf-help` - Show help for all sysconf commands
+- `sysconf-reload` - Sync hardware config into `hosts/<detected-or-selected-host>/` and rebuild only
+- `sysconf-update` - Update flake inputs to latest versions
+- `sysconf-pull` - Pull latest changes from git repository
+- `sysconf-help` - Show help for all sysconf commands
 
 ## Project Structure
 
