@@ -2,7 +2,9 @@
 
 let
   grafanaDatasources = builtins.fromJSON (builtins.readFile ./monitoring/grafana-datasources.json);
-  grafanaDashboardProviders = builtins.fromJSON (builtins.readFile ./monitoring/grafana-dashboard-providers.json);
+  grafanaDashboardProviders = builtins.fromJSON (
+    builtins.readFile ./monitoring/grafana-dashboard-providers.json
+  );
 in
 
 {
@@ -62,7 +64,8 @@ in
     };
   };
 
-  environment.etc."grafana-dashboards/homelab-health.json".source = ./monitoring/homelab-health-dashboard.json;
+  environment.etc."grafana-dashboards/homelab-health.json".source =
+    ./monitoring/homelab-health-dashboard.json;
 
   networking.firewall.allowedTCPPorts = [
     3000 # Grafana UI
