@@ -9,7 +9,7 @@ let
   vmCpus = 4;
   vmMemoryMiB = 8192;
   vmDiskGiB = 80;
-  bridgeName = "br0";
+  networkName = "default";
   imageStorageDir = "/srv/vm/images";
   vmDiskPath = "${imageStorageDir}/${vmName}.qcow2";
   vmDomainXmlPath = "/etc/homelab/vm/${vmName}/domain.xml";
@@ -19,7 +19,7 @@ let
     VM_CPUS = toString vmCpus;
     QEMU_SYSTEM_X86_64 = "${pkgs.qemu_kvm}/bin/qemu-system-x86_64";
     VM_DISK_PATH = vmDiskPath;
-    VM_BRIDGE = bridgeName;
+    VM_NETWORK = networkName;
   };
 in
 {
@@ -62,7 +62,7 @@ in
     VM_CPUS=${toString vmCpus}
     VM_MEMORY_MIB=${toString vmMemoryMiB}
     VM_DISK_GIB=${toString vmDiskGiB}
-    VM_BRIDGE=${bridgeName}
+    VM_NETWORK=${networkName}
     VM_STORAGE_DIR=${imageStorageDir}
   '';
 

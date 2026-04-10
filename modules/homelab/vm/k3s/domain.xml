@@ -18,8 +18,8 @@
             <source file='@VM_DISK_PATH@' />
             <target dev='vda' bus='virtio' />
         </disk>
-        <interface type='bridge'>
-            <source bridge='@VM_BRIDGE@' />
+        <interface type='network'>
+            <source network='@VM_NETWORK@' />
             <model type='virtio' />
         </interface>
         <console type='pty' />
