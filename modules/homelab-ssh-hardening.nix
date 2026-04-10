@@ -1,18 +1,5 @@
 { ... }:
 
-let
-  allowedUsers = [ "bjoern" ];
-  enableFail2ban = false;
-  allowedTcpPorts = [
-    22
-    139
-    445
-  ];
-  allowedUdpPorts = [
-    137
-    138
-  ];
-in
 {
   services.openssh = {
     enable = true;
@@ -22,17 +9,24 @@ in
       KbdInteractiveAuthentication = false;
       PermitRootLogin = "no";
       PubkeyAuthentication = true;
-      AllowUsers = allowedUsers;
+      AllowUsers = [ "ops" ];
     };
     allowSFTP = true;
   };
 
-  services.fail2ban.enable = enableFail2ban;
+  services.fail2ban.enable = false;
 
   networking.firewall = {
     enable = true;
-    allowedTCPPorts = allowedTcpPorts;
-    allowedUDPPorts = allowedUdpPorts;
+    allowedTCPPorts = [
+      22
+      139
+      445
+    ];
+    allowedUDPPorts = [
+      137
+      138
+    ];
   };
 
   services.journald.extraConfig = ''
