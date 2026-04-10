@@ -6,9 +6,9 @@ in
 {
   systemd.tmpfiles.rules = [
     "d ${root} 0755 root root - -"
-    "d ${root}/vm 0750 root libvirtd - -"
-    "d ${root}/vm/libvirt 0750 root libvirtd - -"
-    "d ${root}/vm/images 0750 root libvirtd - -"
+    "d ${root}/vm 0755 root root - -"
+    "d ${root}/vm/libvirt 0770 root qemu-libvirtd - -"
+    "d ${root}/vm/images 0770 root qemu-libvirtd - -"
     "d ${root}/media 0770 root smbshare - -"
     "d ${root}/backups 0750 root root - -"
     "d ${root}/shared 2770 root smbshare - -"

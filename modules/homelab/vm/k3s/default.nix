@@ -31,10 +31,6 @@ in
     jq
   ];
 
-  systemd.tmpfiles.rules = [
-    "d ${imageStorageDir} 0750 root libvirtd - -"
-  ];
-
   environment.etc."homelab/vm/${vmName}/domain.xml".source = vmDomainXml;
 
   systemd.services.homelab-k3s-vm = {
@@ -52,6 +48,9 @@ in
       if [ ! -f ${lib.escapeShellArg vmDiskPath} ]; then
         ${pkgs.qemu}/bin/qemu-img create -f qcow2 ${lib.escapeShellArg vmDiskPath} ${toString vmDiskGiB}G
       fi
+
+      chown qemu-libvirtd:qemu-libvirtd ${lib.escapeShellArg vmDiskPath}
+      chmod 0660 ${lib.escapeShellArg vmDiskPath}
 
       ${pkgs.libvirt}/bin/virsh define ${lib.escapeShellArg vmDomainXmlPath}
       ${pkgs.libvirt}/bin/virsh autostart ${vmName}
