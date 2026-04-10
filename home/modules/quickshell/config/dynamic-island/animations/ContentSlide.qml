@@ -1,5 +1,4 @@
 import QtQuick
-import "../"
 
 Item {
     id: root
@@ -63,15 +62,15 @@ Item {
     }
 
     function transition(direction) {
-        slideInAnim.stop()
-        fadeOutAnim.stop()
-        root._direction = direction
-        fadeOutSlide.to = -direction * (root.slideOffset / 2)
-        fadeOutAnim.start()
+        slideInAnim.stop();
+        fadeOutAnim.stop();
+        root._direction = direction;
+        fadeOutSlide.to = -direction * (root.slideOffset / 2);
+        fadeOutAnim.start();
     }
 
     function completeTransition() {
-        contentArea.x = root._direction * root.slideOffset
-        slideInAnim.start()
+        contentArea.x = root._direction * root.slideOffset;
+        slideInAnim.start();
     }
 }

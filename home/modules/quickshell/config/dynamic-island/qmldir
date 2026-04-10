@@ -58,3 +58,4 @@ NotificationCard 1.0 widgets/NotificationCard.qml
 NotificationToast 1.0 windows/NotificationToast.qml
 NotificationPanel 1.0 windows/NotificationPanel.qml
 WallpaperChooser 1.0 windows/WallpaperChooser.qml
+WallpaperPersist 1.0 base/WallpaperPersist.qml

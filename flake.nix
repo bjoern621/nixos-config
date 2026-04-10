@@ -38,13 +38,15 @@
       customLib = import ./lib/customLib.nix { inherit pkgs; };
       qs = quickshell.packages.x86_64-linux.default;
       qt = pkgs.qt6.qtdeclarative;
+      qt5compat = pkgs.qt6.qt5compat;
+      sddm = pkgs.kdePackages.sddm.unwrapped;
     in
     {
       devShells.x86_64-linux.default = pkgs.mkShell {
         # Allows qmlls (and the VS Code qt-qml extension) to resolve Qt and Quickshell imports.
         # Without this, qmlls only searches standard FHS paths which don't existon NixOS,
         # resulting in "unknown module" errors for every Qt import.
-        QML_IMPORT_PATH = "${qt}/lib/qt-6/qml:${qs}/lib/qt-6/qml";
+        QML_IMPORT_PATH = "${qt}/lib/qt-6/qml:${qs}/lib/qt-6/qml:${qt5compat}/lib/qt-6/qml:${sddm}/lib/qt-6/qml";
 
         packages = with pkgs; [
           # Python + packages for runtime deps e.g. spotify_api.py
@@ -62,6 +64,8 @@
           # QML qmllint, qmlls, qmlformat + Quickshell modules for import resolution
           qt
           qs
+          qt5compat
+          sddm
         ];
 
         shellHook = ''

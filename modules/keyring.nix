@@ -12,6 +12,6 @@
   programs.seahorse.enable = true;
 
   # pam_gnome_keyring will attempt to automatically unlock the user’s default Gnome keyring upon login.
-  # Using services.>gdm<.enableGnomeKeyring because GDM is the current display manager.
-  security.pam.services.gdm.enableGnomeKeyring = true;
+  # Applied to the login PAM service which SDDM substacks for session management.
+  security.pam.services.login.enableGnomeKeyring = true;
 }

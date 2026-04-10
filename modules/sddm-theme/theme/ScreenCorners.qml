@@ -1,60 +1,37 @@
-import Quickshell
-import Quickshell.Wayland
-import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 
-Scope {
-    Variants {
-        model: Quickshell.screens
+Item {
+    id: root
+    anchors.fill: parent
 
-        PanelWindow {
-            id: root
-            required property var modelData
-            screen: modelData
-            WlrLayershell.namespace: "quickshell-noblur"
-            WlrLayershell.layer: WlrLayer.Overlay
+    property int cornerRadius: 20
 
-            anchors {
-                top: true
-                left: true
-                right: true
-                bottom: true
-            }
+    CornerMask {
+        radius: root.cornerRadius
+        corner: 0
+        x: 0
+        y: 0
+    }
 
-            exclusiveZone: 0
-            color: "transparent"
-            mask: Region {}
+    CornerMask {
+        radius: root.cornerRadius
+        corner: 1
+        x: root.width - width
+        y: 0
+    }
 
-            property int cornerRadius: 20
+    CornerMask {
+        radius: root.cornerRadius
+        corner: 2
+        x: 0
+        y: root.height - height
+    }
 
-            CornerMask {
-                radius: root.cornerRadius
-                corner: 0
-                x: 0
-                y: 0
-            }
-
-            CornerMask {
-                radius: root.cornerRadius
-                corner: 1
-                x: root.width - width
-                y: 0
-            }
-
-            CornerMask {
-                radius: root.cornerRadius
-                corner: 2
-                x: 0
-                y: root.height - height
-            }
-
-            CornerMask {
-                radius: root.cornerRadius
-                corner: 3
-                x: root.width - width
-                y: root.height - height
-            }
-        }
+    CornerMask {
+        radius: root.cornerRadius
+        corner: 3
+        x: root.width - width
+        y: root.height - height
     }
 
     component CornerMask: Item {

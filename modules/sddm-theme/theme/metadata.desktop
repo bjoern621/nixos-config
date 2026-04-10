@@ -1,0 +1,11 @@
+[SddmGreeterTheme]
+Name=Beach Clock
+Description=Minimal lock-screen style greeter with blurred wallpaper, clock, and pill inputs
+Author=bjoern
+Version=1.0
+Type=sddm-theme
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=beach-clock
+Theme-API=2.0
+QtVersion=6

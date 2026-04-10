@@ -18,34 +18,38 @@ Item {
     readonly property int currentVolume: Math.round((audioNode?.volume ?? 0) * 100)
     readonly property bool isMuted: audioNode?.muted ?? false
     readonly property string volumeIcon: {
-        if (isMuted || currentVolume === 0) return "\uf026"
-        if (currentVolume < 50) return "\uf027"
-        return "\uf028"
+        if (isMuted || currentVolume === 0)
+            return "\uf026";
+        if (currentVolume < 50)
+            return "\uf027";
+        return "\uf028";
     }
 
     // --- Filtered node lists ---
     readonly property var sinkNodes: {
-        const nodes = Pipewire.nodes.values
-        const result = []
-        if (!nodes) return result
+        const nodes = Pipewire.nodes.values;
+        const result = [];
+        if (!nodes)
+            return result;
         for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i]
+            const n = nodes[i];
             if (n.isSink && !n.isStream)
-                result.push(n)
+                result.push(n);
         }
-        return result
+        return result;
     }
 
     readonly property var streamNodes: {
-        const nodes = Pipewire.nodes.values
-        const result = []
-        if (!nodes) return result
+        const nodes = Pipewire.nodes.values;
+        const result = [];
+        if (!nodes)
+            return result;
         for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i]
+            const n = nodes[i];
             if (n.isStream && n.audio)
-                result.push(n)
+                result.push(n);
         }
-        return result
+        return result;
     }
 
     property bool outputExpanded: false
@@ -53,13 +57,16 @@ Item {
     // Track all nodes we need audio data from
     PwObjectTracker {
         objects: {
-            var list = []
-            if (Pipewire.defaultAudioSink) list.push(Pipewire.defaultAudioSink)
-            var sinks = root.sinkNodes
-            for (var i = 0; i < sinks.length; i++) list.push(sinks[i])
-            var streams = root.streamNodes
-            for (var i = 0; i < streams.length; i++) list.push(streams[i])
-            return list
+            var list = [];
+            if (Pipewire.defaultAudioSink)
+                list.push(Pipewire.defaultAudioSink);
+            var sinks = root.sinkNodes;
+            for (var i = 0; i < sinks.length; i++)
+                list.push(sinks[i]);
+            var streams = root.streamNodes;
+            for (var i = 0; i < streams.length; i++)
+                list.push(streams[i]);
+            return list;
         }
     }
 
@@ -96,10 +103,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: muteTap.pressed ? Colors.hoverItemPressed
-                             : muteHover.hovered ? Colors.hoverItemHovered
-                             : root.isMuted ? Qt.rgba(1, 1, 1, 0.06)
-                             : "transparent"
+                        color: muteTap.pressed ? Colors.hoverItemPressed : muteHover.hovered ? Colors.hoverItemHovered : root.isMuted ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
                         border.color: muteHover.hovered || muteTap.pressed ? Colors.pillBorder : "transparent"
                     }
 
@@ -128,7 +132,7 @@ Item {
                         id: muteTap
                         onTapped: {
                             if (root.audioNode)
-                                root.audioNode.muted = !root.audioNode.muted
+                                root.audioNode.muted = !root.audioNode.muted;
                         }
                     }
                 }
@@ -142,20 +146,19 @@ Item {
                     stepSize: 0.05
                     isMuted: root.isMuted
 
-                    onMoved: (newValue) => {
+                    onMoved: newValue => {
                         if (root.audioNode)
-                            root.audioNode.volume = newValue
+                            root.audioNode.volume = newValue;
                     }
                 }
 
                 // Percentage label
                 Label {
                     id: pctLabel
-                    text: root.currentVolume + "%"
+                    text: root.currentVolume + " %"
                     width: 40
                     horizontalAlignment: Text.AlignRight
                     anchors.verticalCenter: parent.verticalCenter
-                    font.weight: Font.Normal
                 }
             }
 
@@ -178,9 +181,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: Spacing.spacing8
-                    color: outputTap.pressed ? Colors.hoverItemPressed
-                         : outputHover.hovered ? Colors.hoverItemHovered
-                         : "transparent"
+                    color: outputTap.pressed ? Colors.hoverItemPressed : outputHover.hovered ? Colors.hoverItemHovered : "transparent"
                     border.color: outputHover.hovered || outputTap.pressed ? Colors.pillBorder : "transparent"
                 }
 
@@ -254,13 +255,8 @@ Item {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing8
-                                color: sinkDelegate.isDefault ? Qt.rgba(1, 1, 1, 0.06)
-                                     : sinkTap.pressed ? Colors.hoverItemPressed
-                                     : sinkHover.hovered ? Colors.hoverItemHovered
-                                     : "transparent"
-                                border.color: sinkDelegate.isDefault ? Colors.accentColor
-                                            : sinkHover.hovered || sinkTap.pressed ? Colors.pillBorder
-                                            : "transparent"
+                                color: sinkDelegate.isDefault ? Qt.rgba(1, 1, 1, 0.06) : sinkTap.pressed ? Colors.hoverItemPressed : sinkHover.hovered ? Colors.hoverItemHovered : "transparent"
+                                border.color: sinkDelegate.isDefault ? Colors.accentColor : sinkHover.hovered || sinkTap.pressed ? Colors.pillBorder : "transparent"
                             }
 
                             Row {
@@ -302,8 +298,8 @@ Item {
                             TapHandler {
                                 id: sinkTap
                                 onTapped: {
-                                    Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData
-                                    root.outputExpanded = false
+                                    Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData;
+                                    root.outputExpanded = false;
                                 }
                             }
                         }
@@ -347,9 +343,11 @@ Item {
                         readonly property int appVolume: Math.round((appAudio?.volume ?? 0) * 100)
                         readonly property bool appMuted: appAudio?.muted ?? false
                         readonly property string appIcon: {
-                            if (appMuted || appVolume === 0) return "\uf026"
-                            if (appVolume < 50) return "\uf027"
-                            return "\uf028"
+                            if (appMuted || appVolume === 0)
+                                return "\uf026";
+                            if (appVolume < 50)
+                                return "\uf027";
+                            return "\uf028";
                         }
 
                         // App name + mute button row
@@ -384,10 +382,7 @@ Item {
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: height / 2
-                                    color: appMuteTap.pressed ? Colors.hoverItemPressed
-                                         : appMuteHover.hovered ? Colors.hoverItemHovered
-                                         : appDelegate.appMuted ? Qt.rgba(1, 1, 1, 0.06)
-                                         : "transparent"
+                                    color: appMuteTap.pressed ? Colors.hoverItemPressed : appMuteHover.hovered ? Colors.hoverItemHovered : appDelegate.appMuted ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
                                     border.color: appMuteHover.hovered || appMuteTap.pressed ? Colors.pillBorder : "transparent"
                                 }
 
@@ -407,7 +402,7 @@ Item {
                                     id: appMuteTap
                                     onTapped: {
                                         if (appDelegate.appAudio)
-                                            appDelegate.appAudio.muted = !appDelegate.appAudio.muted
+                                            appDelegate.appAudio.muted = !appDelegate.appAudio.muted;
                                     }
                                 }
                             }
@@ -427,13 +422,15 @@ Item {
                                 isMuted: appDelegate.appMuted
                                 handleVerticalSize: 16
 
-                                onMoved: (newValue) => {
+                                onMoved: newValue => {
                                     if (appDelegate.appAudio)
-                                        appDelegate.appAudio.volume = newValue
+                                        appDelegate.appAudio.volume = newValue;
                                 }
                                 onPressedChanged: {
-                                    if (pressed) root._activeAppSliders++
-                                    else root._activeAppSliders--
+                                    if (pressed)
+                                        root._activeAppSliders++;
+                                    else
+                                        root._activeAppSliders--;
                                 }
                             }
 

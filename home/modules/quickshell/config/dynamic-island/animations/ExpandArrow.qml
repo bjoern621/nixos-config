@@ -1,5 +1,4 @@
 import QtQuick
-import "../"
 
 Text {
     id: root
@@ -17,6 +16,9 @@ Text {
 
     rotation: expanded ? 180 : 0
     Behavior on rotation {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: 200
+            easing.type: Easing.OutCubic
+        }
     }
 }

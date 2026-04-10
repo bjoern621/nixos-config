@@ -21,4 +21,7 @@
 
   # Hint electron apps to use wayland
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
+  # Enable PAM for hyprlock so it can authenticate the user
+  security.pam.services.hyprlock = { };
 }

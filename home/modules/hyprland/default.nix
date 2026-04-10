@@ -28,6 +28,7 @@
     ./exclusive-workspace.nix
     ./smart-gaps.nix
     ./wallpaper-chooser.nix
+    ./hyprlock.nix
   ];
 
   # Auto-start Hyprland uwsm after login

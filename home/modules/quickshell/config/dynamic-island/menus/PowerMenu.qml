@@ -29,6 +29,9 @@ Item {
                 LoadingHost.show("Hibernieren...");
                 Quickshell.execDetached(["systemctl", "hibernate"]);
                 break;
+            case "logout":
+                GracefulShutdown.start("Abmelden...", ["hyprctl", "dispatch", "exit"]);
+                break;
             }
         });
     }
@@ -61,6 +64,11 @@ Item {
                         action: "lock",
                         icon: "\uf023",
                         label: "Lock"
+                    },
+                    {
+                        action: "logout",
+                        icon: "\uf2f5",
+                        label: "Logout"
                     },
                     {
                         action: "hibernate",
