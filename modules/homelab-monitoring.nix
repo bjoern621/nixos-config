@@ -45,6 +45,10 @@
         http_addr = "0.0.0.0";
         http_port = 3000;
       };
+      security = {
+        # Default key. Grafana still requires a stable secret_key to encrypt data source and other stored secrets.
+        secret_key = "SW2YcwTIb9zpOOhoPsMm";
+      };
     };
   };
 
