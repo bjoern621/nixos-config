@@ -4,31 +4,34 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
 
 ## Installation
 
-### Fresh NixOS Install
-
-1. Boot from NixOS ISO and install normally
-2. Generate base config: `sudo nixos-generate-config --root /mnt`
-3. Temporarily install Git: `nix-shell -p git`
-4. Clone this repository to your user folder:
+1. Install NixOS using any preferred method, for example the graphical installer.
+2. Boot into the installed system.
+3. Install Git temporarily:
     ```bash
-    git clone https://github.com/YOUR_USERNAME/nixos-config.git ~/git/nixos-config
+    nix-shell -p git
+    ```
+4. Clone this repository:
+    ```bash
+    git clone https://github.com/bjoern621/nixos-config.git ~/git/nixos-config
     cd ~/git/nixos-config
     ```
-5. Create symlink and copy hardware config:
+5. Link the repository as the NixOS config directory:
     ```bash
     sudo ln -s ~/git/nixos-config /etc/nixos/config
-    sudo cp /mnt/etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
     ```
-6. Install: `sudo nixos-install --flake /etc/nixos/config#<host>`
-7. Reboot
+6. Copy the hardware configuration into the selected host:
+    ```bash
+    sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
+    ```
+7. Apply the flake configuration:
+    ```bash
+    sudo nixos-rebuild switch --flake /etc/nixos/config#<host>
+    ```
 
-### Add to Existing System
+List available host names with:
 
 ```bash
-git clone <your-repo> ~/git/nixos-config
-sudo ln -s ~/git/nixos-config /etc/nixos/config
-sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
-sudo nixos-rebuild switch --flake /etc/nixos/config#<host>
+ls ~/git/nixos-config/hosts
 ```
 
 ## Usage
@@ -40,26 +43,12 @@ sysconf-reload                # auto-detect host from /etc/hostname
 sysconf-reload homelab        # explicit host override
 ```
 
-### Test Changes (No Reboot Persistence)
-
-```bash
-sudo nixos-rebuild test --flake /etc/nixos/config#<host>
-```
-
 ### Update Flake Inputs
 
 ```bash
-nix flake update /etc/nixos/config
+sysconf-update         # update flake inputs to latest revisions, then rebuild
+sysconf-stable-update  # update inputs to revisions at least 7 days old (ensure stability), then rebuild
 ```
-
-## Helper Scripts
-
-The following scripts are installed system-wide:
-
-- `sysconf-reload` - Sync hardware config into `hosts/<detected-or-selected-host>/` and rebuild only
-- `sysconf-update` - Update flake inputs to latest versions
-- `sysconf-pull` - Pull latest changes from git repository
-- `sysconf-help` - Show help for all sysconf commands
 
 ## Project Structure
 
