@@ -118,6 +118,14 @@
         homelab = nixpkgs.lib.nixosSystem {
           modules = [
             ./hosts/homelab/configuration.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "backup";
+              home-manager.users.ops = import ./home/ops.nix;
+              home-manager.extraSpecialArgs = { inherit inputs customLib; };
+            }
           ];
 
           specialArgs = { inherit inputs customLib; };
