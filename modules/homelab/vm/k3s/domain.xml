@@ -1,0 +1,28 @@
+<domain type='kvm'>
+    <name>@VM_NAME@</name>
+    <memory unit='MiB'>@VM_MEMORY_MIB@</memory>
+    <vcpu>@VM_CPUS@</vcpu>
+    <os>
+        <type arch='x86_64'>hvm</type>
+        <boot dev='hd' />
+    </os>
+    <features>
+        <acpi />
+        <apic />
+    </features>
+    <cpu mode='host-passthrough' />
+    <devices>
+        <emulator>@QEMU_SYSTEM_X86_64@</emulator>
+        <disk type='file' device='disk'>
+            <driver name='qemu' type='qcow2' />
+            <source file='@VM_DISK_PATH@' />
+            <target dev='vda' bus='virtio' />
+        </disk>
+        <interface type='bridge'>
+            <source bridge='@VM_BRIDGE@' />
+            <model type='virtio' />
+        </interface>
+        <console type='pty' />
+        <graphics type='spice' autoport='yes' />
+    </devices>
+</domain>

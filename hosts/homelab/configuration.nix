@@ -7,8 +7,8 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
-    ../../modules/homelab/hypervisor.nix
-    ../../modules/homelab/k3s-vm.nix
+    ../../modules/homelab/vm/hypervisor
+    ../../modules/homelab/vm/k3s
     ../../modules/homelab/samba.nix
     ../../modules/homelab/storage.nix
     ../../modules/homelab/monitoring.nix
