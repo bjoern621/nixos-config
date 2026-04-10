@@ -13,8 +13,7 @@ let
   imageStorageDir = "/srv/vm/images";
   vmDiskPath = "${imageStorageDir}/${vmName}.qcow2";
   vmDomainXmlPath = "/etc/homelab/vm/${vmName}/domain.xml";
-  vmDomainXml = pkgs.substituteAll {
-    src = ./domain.xml;
+  vmDomainXml = pkgs.replaceVars ./domain.xml {
     VM_NAME = vmName;
     VM_MEMORY_MIB = toString vmMemoryMiB;
     VM_CPUS = toString vmCpus;
