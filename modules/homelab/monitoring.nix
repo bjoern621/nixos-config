@@ -69,6 +69,6 @@ in
 
   networking.firewall.allowedTCPPorts = [
     3000 # Grafana UI
-    9090 # Prometheus UI
+    # 9090 # Prometheus UI
   ];
 }
