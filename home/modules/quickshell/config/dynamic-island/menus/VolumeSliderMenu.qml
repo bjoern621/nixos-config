@@ -395,15 +395,23 @@ Item {
                                     border.color: appMuteHover.hovered || appMuteTap.pressed ? Colors.pillBorder : "transparent"
                                 }
 
-                                Item {
+                                ContentReplace {
+                                    id: appMuteIconReplace
+                                    contentKey: appDelegate.appIconSource
                                     width: 16
                                     height: 16
                                     anchors.centerIn: parent
 
-                                    TintedIcon {
+                                    Item {
+                                        width: 16
+                                        height: 16
                                         anchors.centerIn: parent
-                                        size: 16
-                                        source: appDelegate.appIconSource
+
+                                        TintedIcon {
+                                            anchors.centerIn: parent
+                                            size: 16
+                                            source: appMuteIconReplace.displayValue
+                                        }
                                     }
                                 }
 
