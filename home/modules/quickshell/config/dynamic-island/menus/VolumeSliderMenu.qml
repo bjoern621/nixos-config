@@ -1,4 +1,8 @@
+pragma ComponentBehavior: Bound
+
+import Quickshell
 import Quickshell.Services.Pipewire
+import Quickshell.Io
 import QtQuick
 import "../"
 import "../base"
@@ -55,7 +59,220 @@ Item {
         return result;
     }
 
+    // Always-visible Bluetooth targets (paired audio devices).
+    readonly property var bluetoothTargets: [
+        {
+            name: "Anker Soundcore Boost",
+            mac: "F4:2B:7D:54:EF:8A"
+        },
+        {
+            name: "LinkBuds S",
+            mac: "F8:4E:17:CB:22:59"
+        }
+    ]
+
+    property string btConnectingMac: ""
+    property string btConnectingName: ""
+    property string btStatusText: ""
+    property string pendingSwitchMac: ""
+    property int pendingSwitchAttempts: 0
+    readonly property int btSwitchMaxAttempts: 120
+    readonly property bool btBusy: btConnectProcess.running || pendingSwitchMac.length > 0
+
+    function _extractBluetoothMacFromNodeName(nodeName) {
+        const name = (nodeName || "").toLowerCase();
+        if (name.indexOf("bluez_output.") !== 0)
+            return "";
+
+        const parts = name.split(".");
+        if (parts.length < 2)
+            return "";
+
+        return parts[1].replace(/_/g, ":").toUpperCase();
+    }
+
+    function _findSinkByBluetoothMac(mac, targetName) {
+        const nodes = Pipewire.nodes.values;
+        if (!nodes)
+            return null;
+
+        const target = (targetName || "").toLowerCase();
+        let fallbackSink = null;
+
+        for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            if (!n || !n.isSink || n.isStream)
+                continue;
+            const sinkMac = root._extractBluetoothMacFromNodeName(n.name);
+            if (!sinkMac)
+                continue;
+
+            if (sinkMac === mac)
+                return n;
+
+            if (target.length > 0 && !fallbackSink) {
+                const description = (n.description || "").toLowerCase();
+                if (description === target || description.indexOf(target) >= 0)
+                    fallbackSink = n;
+            }
+        }
+
+        return fallbackSink;
+    }
+
+    function _isBluetoothSink(node) {
+        return root._extractBluetoothMacFromNodeName(node?.name).length > 0;
+    }
+
+    readonly property var outputDevices: {
+        const result = [];
+        const sinks = root.sinkNodes;
+        const presentTargetMacs = {};
+
+        for (let i = 0; i < sinks.length; i++) {
+            const n = sinks[i];
+            const sinkMac = root._extractBluetoothMacFromNodeName(n.name);
+
+            if (sinkMac.length > 0) {
+                let isKnownTarget = false;
+                for (let t = 0; t < root.bluetoothTargets.length; t++) {
+                    if (root.bluetoothTargets[t].mac === sinkMac) {
+                        isKnownTarget = true;
+                        break;
+                    }
+                }
+
+                if (isKnownTarget) {
+                    if (presentTargetMacs[sinkMac])
+                        continue;
+                    presentTargetMacs[sinkMac] = true;
+                }
+            }
+
+            result.push({
+                type: "sink",
+                node: n,
+                name: n.description || n.name,
+                isBluetooth: root._isBluetoothSink(n),
+                mac: sinkMac
+            });
+        }
+
+        for (let j = 0; j < root.bluetoothTargets.length; j++) {
+            const t = root.bluetoothTargets[j];
+            if (!presentTargetMacs[t.mac]) {
+                result.push({
+                    type: "bt-placeholder",
+                    node: null,
+                    name: t.name,
+                    isBluetooth: true,
+                    mac: t.mac
+                });
+            }
+        }
+        return result;
+    }
+
+    function connectBluetoothDevice(targetName, mac) {
+        if (root.btBusy)
+            return;
+
+        root.btConnectingMac = mac;
+        root.btConnectingName = targetName;
+        root.btStatusText = "Starte Bluetooth-Backend...";
+        btConnectProcess.targetMac = mac;
+        btConnectProcess.running = true;
+    }
+
+    function finishBluetoothStatus(statusText) {
+        root.btStatusText = statusText;
+        btStatusClearTimer.restart();
+    }
+
     property bool outputExpanded: false
+
+    Process {
+        id: btConnectProcess
+        running: false
+        property string targetMac: ""
+
+        command: ["bash", "-lc", "set -u\nBT_MAC=\"$1\"\n\nprintf 'STATUS:Pruefe Bluetooth-Backend...\\n'\nif ! bluetoothctl show >/dev/null 2>&1; then\n  printf 'RESULT:BACKEND_UNAVAILABLE\\n'\n  exit 0\nfi\n\nprintf 'STATUS:Aktiviere Bluetooth...\\n'\n(bluetoothctl power on >/dev/null 2>&1 || true)\n\nprintf 'STATUS:Verbinde mit Geraet...\\n'\n(bluetoothctl trust \"$BT_MAC\" >/dev/null 2>&1 || true)\nCONNECT_OUT=$(bluetoothctl connect \"$BT_MAC\" 2>&1 || true)\nprintf '%s\\n' \"$CONNECT_OUT\"\n\nif bluetoothctl info \"$BT_MAC\" 2>/dev/null | grep -qi 'Connected: yes'; then\n  printf 'RESULT:OK\\n'\nelse\n  printf 'RESULT:FAIL\\n'\nfi\n", "--", targetMac]
+
+        stdout: SplitParser {
+            onRead: data => {
+                const line = data.trim();
+                if (line.indexOf("STATUS:") === 0) {
+                    root.btStatusText = line.substring(7);
+                    return;
+                }
+
+                if (line === "RESULT:OK") {
+                    root.pendingSwitchMac = btConnectProcess.targetMac;
+                    root.pendingSwitchAttempts = 0;
+                    root.btStatusText = "Warte auf Audio-Ausgang...";
+                    btSwitchTimer.start();
+                    return;
+                }
+
+                if (line === "RESULT:FAIL") {
+                    root.pendingSwitchMac = "";
+                    btSwitchTimer.stop();
+                    root.finishBluetoothStatus("Bluetooth-Verbindung fehlgeschlagen");
+                    root.btConnectingMac = "";
+                    return;
+                }
+
+                if (line === "RESULT:BACKEND_UNAVAILABLE") {
+                    root.pendingSwitchMac = "";
+                    btSwitchTimer.stop();
+                    root.finishBluetoothStatus("Bluetooth-Backend ist nicht verfuegbar");
+                    root.btConnectingMac = "";
+                }
+            }
+        }
+    }
+
+    Timer {
+        id: btSwitchTimer
+        interval: 300
+        repeat: true
+        running: false
+        onTriggered: {
+            if (!root.pendingSwitchMac.length) {
+                btSwitchTimer.stop();
+                return;
+            }
+
+            root.pendingSwitchAttempts++;
+            const sink = root._findSinkByBluetoothMac(root.pendingSwitchMac, root.btConnectingName);
+            if (sink) {
+                Pipewire.preferredDefaultAudioSink = sink;
+                const selectedName = root.btConnectingName.length ? root.btConnectingName : "Bluetooth-Geraet";
+                root.pendingSwitchMac = "";
+                root.btConnectingMac = "";
+                btSwitchTimer.stop();
+                root.finishBluetoothStatus("Verbunden: " + selectedName);
+                return;
+            }
+
+            if (root.pendingSwitchAttempts >= root.btSwitchMaxAttempts) {
+                root.pendingSwitchMac = "";
+                root.btConnectingMac = "";
+                btSwitchTimer.stop();
+                root.finishBluetoothStatus("Verbunden, aber kein Audio-Ausgang gefunden");
+            }
+        }
+    }
+
+    Timer {
+        id: btStatusClearTimer
+        interval: 3000
+        repeat: false
+        onTriggered: {
+            if (!root.btBusy)
+                root.btStatusText = "";
+        }
+    }
 
     // Track all nodes we need audio data from
     PwObjectTracker {
@@ -248,8 +465,17 @@ Item {
                     width: parent.width
                     spacing: Spacing.spacing2
 
+                    Label {
+                        visible: root.btStatusText.length > 0
+                        width: parent.width
+                        text: root.btStatusText
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: Colors.textColorMuted
+                    }
+
                     Repeater {
-                        model: root.sinkNodes
+                        model: root.outputDevices
 
                         Item {
                             id: sinkDelegate
@@ -257,7 +483,9 @@ Item {
                             width: parent ? parent.width : 0
                             height: 32
 
-                            readonly property bool isDefault: modelData.id === (Pipewire.defaultAudioSink?.id ?? -1)
+                            readonly property bool isSinkEntry: modelData.type === "sink"
+                            readonly property bool isDefault: isSinkEntry && modelData.node.id === (Pipewire.defaultAudioSink?.id ?? -1)
+                            readonly property bool isBusyTarget: root.btBusy && modelData.isBluetooth && (modelData.mac === root.btConnectingMac)
 
                             scale: sinkTap.pressed ? 0.97 : 1.0
                             SquishBehavior on scale {}
@@ -269,7 +497,7 @@ Item {
                                 border.color: sinkDelegate.isDefault ? Colors.accentColor : sinkHover.hovered || sinkTap.pressed ? Colors.pillBorder : "transparent"
                             }
 
-                            Row {
+                            Item {
                                 anchors {
                                     left: parent.left
                                     leftMargin: Spacing.spacing8
@@ -277,26 +505,76 @@ Item {
                                     rightMargin: Spacing.spacing8
                                     verticalCenter: parent.verticalCenter
                                 }
-                                spacing: Spacing.spacing8
+                                height: parent.height
 
-                                Label {
-                                    text: sinkDelegate.modelData.description || sinkDelegate.modelData.name
-                                    font.pixelSize: Typography.fontSize12
-                                    font.weight: sinkDelegate.isDefault ? Font.Bold : Font.Normal
-                                    color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColor
-                                    width: parent.width - parent.spacing - checkIcon.width
-                                    elide: Text.ElideRight
-                                    anchors.verticalCenter: parent.verticalCenter
+                                Row {
+                                    id: rightStatusIcons
+                                    anchors {
+                                        right: parent.right
+                                        verticalCenter: parent.verticalCenter
+                                    }
+                                    spacing: Spacing.spacing8
+
+                                    TintedIcon {
+                                        id: checkIcon
+                                        source: "../icons/icons8-done.svg"
+                                        size: Typography.fontSize12
+                                        color: Colors.accentColor
+                                        visible: sinkDelegate.isDefault && !sinkDelegate.isBusyTarget
+                                        width: visible ? Typography.fontSize12 : 0
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    TintedIcon {
+                                        id: busyIcon
+                                        source: "../icons/icons8-spinner.svg"
+                                        size: Typography.fontSize12
+                                        color: Colors.textColorMuted
+                                        visible: sinkDelegate.isBusyTarget
+                                        width: visible ? Typography.fontSize12 : 0
+                                        rotation: 0
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        NumberAnimation on rotation {
+                                            from: 0
+                                            to: 360
+                                            duration: 900
+                                            loops: Animation.Infinite
+                                            running: busyIcon.visible
+                                            easing.type: Easing.Linear
+                                        }
+                                    }
                                 }
 
-                                TintedIcon {
-                                    id: checkIcon
-                                    source: "../icons/icons8-done.svg"
-                                    size: Typography.fontSize12
-                                    color: Colors.accentColor
-                                    visible: sinkDelegate.isDefault
-                                    width: visible ? Typography.fontSize12 : 0
-                                    anchors.verticalCenter: parent.verticalCenter
+                                Row {
+                                    id: nameWithBluetooth
+                                    anchors {
+                                        left: parent.left
+                                        right: rightStatusIcons.left
+                                        rightMargin: Spacing.spacing8
+                                        verticalCenter: parent.verticalCenter
+                                    }
+                                    spacing: Spacing.spacing4
+
+                                    Label {
+                                        id: deviceNameLabel
+                                        text: sinkDelegate.modelData.name
+                                        font.pixelSize: Typography.fontSize12
+                                        font.weight: sinkDelegate.isDefault ? Font.Bold : Font.Normal
+                                        color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColor
+                                        elide: Text.ElideRight
+                                        width: Math.min(implicitWidth, nameWithBluetooth.width - (bluetoothIcon.visible ? bluetoothIcon.width + nameWithBluetooth.spacing : 0))
+                                    }
+
+                                    TintedIcon {
+                                        id: bluetoothIcon
+                                        source: "../icons/icons8-bluetooth.svg"
+                                        size: Typography.fontSize12
+                                        color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColorMuted
+                                        visible: sinkDelegate.modelData.isBluetooth
+                                        width: visible ? Typography.fontSize12 : 0
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
                                 }
                             }
 
@@ -306,8 +584,14 @@ Item {
                             }
                             TapHandler {
                                 id: sinkTap
+                                enabled: !root.btBusy
                                 onTapped: {
-                                    Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData;
+                                    if (sinkDelegate.isSinkEntry) {
+                                        Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData.node;
+                                        return;
+                                    }
+
+                                    root.connectBluetoothDevice(sinkDelegate.modelData.name, sinkDelegate.modelData.mac);
                                 }
                             }
                         }
