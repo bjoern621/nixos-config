@@ -177,7 +177,7 @@ Item {
             root.pendingSwitchAttempts++;
             const sink = BluetoothUtils.findSinkByBluetooth(Pipewire.nodes.values, root.pendingSwitchMac, root.btConnectingName);
             if (sink) {
-                const selectedName = root.btConnectingName.length ? root.btConnectingName : "Bluetooth-Gerät";
+                // Bluetooth device is finally ready to be switched to. Do it (if still desired), and stop the timer and pending state.
                 const shouldAutoSwitch = root.btAutoSwitchOnConnect;
                 if (shouldAutoSwitch)
                     Pipewire.preferredDefaultAudioSink = sink;
@@ -185,7 +185,7 @@ Item {
                 root.btConnectingMac = "";
                 root.btAutoSwitchOnConnect = false;
                 btSwitchTimer.stop();
-                root.finishBluetoothStatus(shouldAutoSwitch ? "Verbunden: " + selectedName : "Verbunden im Hintergrund: " + selectedName);
+                root.finishBluetoothStatus(shouldAutoSwitch ? "Verbunden" : "Verbunden im Hintergrund");
                 return;
             }
 
