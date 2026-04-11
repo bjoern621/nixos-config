@@ -447,7 +447,7 @@ Item {
                                     TintedIcon {
                                         id: checkIcon
                                         source: "../icons/icons8-done.svg"
-                                        size: Typography.fontSize12
+                                        size: Typography.fontSize14
                                         color: Colors.accentColor
                                         visible: sinkDelegate.isDefault && !sinkDelegate.isBusyTarget
                                         width: visible ? Typography.fontSize12 : 0
@@ -457,7 +457,7 @@ Item {
                                     TintedIcon {
                                         id: busyIcon
                                         source: "../icons/icons8-spinner.svg"
-                                        size: Typography.fontSize12
+                                        size: Typography.fontSize14
                                         color: Colors.textColorMuted
                                         visible: sinkDelegate.isBusyTarget
                                         width: visible ? Typography.fontSize12 : 0
@@ -503,10 +503,10 @@ Item {
                                         TintedIcon {
                                             id: bluetoothIcon
                                             source: "../icons/icons8-bluetooth.svg"
-                                            size: Typography.fontSize12
+                                            size: Typography.fontSize14
                                             color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColorMuted
                                             visible: sinkDelegate.modelData.isBluetooth
-                                            width: visible ? Typography.fontSize12 : 0
+                                            width: visible ? Typography.fontSize14 : 0
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                     }
