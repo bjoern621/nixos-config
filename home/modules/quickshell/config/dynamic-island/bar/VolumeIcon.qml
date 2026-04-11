@@ -30,7 +30,8 @@ Item {
 
         Item {
             id: volIcon
-            anchors.centerIn: parent
+            x: 0
+            y: 0
             width: Typography.fontSize16
             height: Typography.fontSize16
 

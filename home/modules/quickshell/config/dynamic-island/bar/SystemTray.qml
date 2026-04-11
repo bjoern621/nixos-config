@@ -77,7 +77,6 @@ Item {
             Row {
                 id: iconRow
                 spacing: Spacing.spacing2
-                anchors.verticalCenter: parent.verticalCenter
 
                 HoverHandler {
                     id: iconRowHover
@@ -90,7 +89,6 @@ Item {
                         id: iconItem
                         width: 26
                         height: 26
-                        anchors.verticalCenter: parent.verticalCenter
 
                         required property var modelData
 

@@ -55,6 +55,5 @@ Item {
     Item {
         id: contentContainer
         width: root.horizontal ? childrenRect.width : parent.width
-        height: childrenRect.height
     }
 }

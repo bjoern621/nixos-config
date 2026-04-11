@@ -421,7 +421,7 @@ Scope {
                                 radius: Spacing.spacing8
                                 color: Colors.pillBackground
                                 border.width: 1
-                                border.color: cancelHover.hovered || cancelTap.pressed ? Colors.pillBorder : Colors.pillBorder
+                                border.color: cancelMouse.containsMouse || cancelMouse.pressed ? Colors.pillBorder : Colors.pillBorder
 
                                 Rectangle {
                                     anchors.fill: parent
@@ -457,7 +457,7 @@ Scope {
                                 radius: Spacing.spacing8
                                 color: Colors.pillBackground
                                 border.width: 1
-                                border.color: applyHover.hovered || applyTap.pressed ? Colors.pillBorder : Colors.pillBorder
+                                border.color: applyMouse.containsMouse || applyMouse.pressed ? Colors.pillBorder : Colors.pillBorder
 
                                 Rectangle {
                                     anchors.fill: parent

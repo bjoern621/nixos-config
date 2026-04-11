@@ -92,7 +92,7 @@ Item {
     Item {
         id: contentContainer
         anchors.centerIn: parent
-        width: childrenRect.width
+        width: Math.max(0, root.width - Spacing.spacing12)
         height: parent.height
 
         // DEBUG

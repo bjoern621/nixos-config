@@ -121,7 +121,8 @@ Item {
                             id: muteIconText
                             width: 18
                             height: 18
-                            anchors.centerIn: parent
+                            x: 0
+                            y: 0
 
                             TintedIcon {
                                 anchors.centerIn: parent
@@ -406,7 +407,8 @@ Item {
                                     Item {
                                         width: 16
                                         height: 16
-                                        anchors.centerIn: parent
+                                        x: 0
+                                        y: 0
 
                                         TintedIcon {
                                             anchors.centerIn: parent

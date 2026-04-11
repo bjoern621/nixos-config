@@ -139,7 +139,8 @@ Scope {
                             id: osdIconText
                             width: 22
                             height: 22
-                            anchors.centerIn: parent
+                            x: 1
+                            y: 1
 
                             TintedIcon {
                                 anchors.centerIn: parent
