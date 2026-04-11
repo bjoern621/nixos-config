@@ -30,7 +30,7 @@ Row {
 
         TintedIcon {
             source: "../icons/icons8-monday.svg"
-            size: Typography.fontSize14
+            size: Typography.fontSize20
             anchors.verticalCenter: parent.verticalCenter
         }
 
@@ -49,7 +49,7 @@ Row {
 
         TintedIcon {
             source: "../icons/icons8-time.svg"
-            size: Typography.fontSize14
+            size: Typography.fontSize20
             anchors.verticalCenter: parent.verticalCenter
         }
 

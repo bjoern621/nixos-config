@@ -223,6 +223,8 @@ Item {
 
                     ExpandArrow {
                         expanded: root.outputExpanded
+                        collapsedRotation: 90
+                        expandedRotation: -90
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -286,14 +288,13 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
-                                Text {
+                                TintedIcon {
                                     id: checkIcon
-                                    text: "\uf00c"
-                                    font.family: Typography.iconFontFamily
-                                    font.pixelSize: Typography.fontSize12
+                                    source: "../icons/icons8-done.svg"
+                                    size: Typography.fontSize12
                                     color: Colors.accentColor
                                     visible: sinkDelegate.isDefault
-                                    width: visible ? implicitWidth : 0
+                                    width: visible ? Typography.fontSize12 : 0
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }

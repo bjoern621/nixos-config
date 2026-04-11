@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "../"
+import "../base"
 import "../animations"
 
 Item {
@@ -52,14 +53,11 @@ Item {
             scale: exitTap.pressed ? 0.85 : 1.0
             SquishBehavior on scale {}
 
-            Text {
-                anchors.fill: parent
-                text: "\uf00d"
-                font.family: Typography.iconFontFamily
-                font.pixelSize: Typography.fontSize16
+            TintedIcon {
+                anchors.centerIn: parent
+                source: "../icons/icons8-cross.svg"
+                size: Typography.fontSize16
                 color: Colors.textColor
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
             }
 
             HoverHandler {

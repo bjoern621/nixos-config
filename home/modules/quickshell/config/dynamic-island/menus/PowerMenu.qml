@@ -110,7 +110,7 @@ Item {
 
                         TintedIcon {
                             source: modelData.iconSource
-                            size: Typography.fontSize16
+                            size: Typography.fontSize20
                             anchors.verticalCenter: parent.verticalCenter
                         }
 

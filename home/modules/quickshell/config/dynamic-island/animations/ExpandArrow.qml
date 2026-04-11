@@ -1,20 +1,28 @@
 import QtQuick
+import "../"
+import "../base"
 
-Text {
+Item {
     id: root
 
     property bool expanded: false
-    property alias iconSize: root.font.pixelSize
-    property alias iconColor: root.color
-    property alias iconWeight: root.font.weight
+    property int collapsedRotation: 180
+    property int expandedRotation: 0
+    property int iconSize: Typography.fontSize12
+    property color iconColor: Colors.textColorMuted
 
-    text: "\uf078"
-    font.family: Typography.iconFontFamily
-    font.pixelSize: Typography.fontSize12
-    font.weight: Font.Normal
-    color: Colors.textColorMuted
+    implicitWidth: icon.width
+    implicitHeight: icon.height
 
-    rotation: expanded ? 180 : 0
+    TintedIcon {
+        id: icon
+        anchors.centerIn: parent
+        source: "../icons/icons8-arrow.svg"
+        size: root.iconSize
+        color: root.iconColor
+    }
+
+    rotation: expanded ? expandedRotation : collapsedRotation
     Behavior on rotation {
         NumberAnimation {
             duration: 200

@@ -3,7 +3,6 @@ import QtQuick
 
 QtObject {
     readonly property string fontFamily: "Inter"
-    readonly property string iconFontFamily: "Font Awesome 7 Free Solid"
     readonly property int fontSize12: 12
     readonly property int fontSize14: 14
     readonly property int fontSize16: 16

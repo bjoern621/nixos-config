@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick
 import "../"
+import "../base"
 
 Item {
     id: menuRoot
@@ -90,18 +91,15 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                         }
 
-                        Image {
+                        TintedIcon {
                             id: mainItemIcon
                             source: modelData.icon ?? ""
                             visible: (modelData.icon ?? "") !== ""
-                            width: 16
-                            height: 16
-                            sourceSize: Qt.size(16, 16)
+                            size: 16
+                            color: Colors.textColor
                             anchors.left: mainCheckMark.right
                             anchors.leftMargin: visible ? Spacing.spacing4 : 0
                             anchors.verticalCenter: parent.verticalCenter
-                            smooth: true
-                            mipmap: true
                         }
 
                         Text {
@@ -238,18 +236,15 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                         }
 
-                        Image {
+                        TintedIcon {
                             id: subItemIcon
                             source: modelData.icon ?? ""
                             visible: (modelData.icon ?? "") !== ""
-                            width: 16
-                            height: 16
-                            sourceSize: Qt.size(16, 16)
+                            size: 16
+                            color: Colors.textColor
                             anchors.left: subCheckMark.right
                             anchors.leftMargin: visible ? Spacing.spacing4 : 0
                             anchors.verticalCenter: parent.verticalCenter
-                            smooth: true
-                            mipmap: true
                         }
 
                         Text {

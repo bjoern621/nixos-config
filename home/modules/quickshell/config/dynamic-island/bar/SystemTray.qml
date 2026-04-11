@@ -1,6 +1,7 @@
 import Quickshell.Services.SystemTray
 import QtQuick
 import "../"
+import "../base"
 
 Item {
     id: trayRoot
@@ -55,14 +56,13 @@ Item {
                 anchors.centerIn: parent
                 width: arrow.implicitWidth
                 height: arrow.implicitHeight
-                rotation: -90
 
                 ExpandArrow {
                     id: arrow
                     anchors.centerIn: parent
                     expanded: trayRoot.expanded
+                    iconSize: Typography.fontSize16
                     iconColor: Colors.textColor
-                    iconWeight: Font.Bold
                 }
             }
         }
@@ -101,15 +101,11 @@ Item {
                             border.color: iconMouse.pressed || iconMouse.containsMouse ? Colors.pillBorder : "transparent"
                         }
 
-                        Image {
+                        TintedIcon {
                             source: iconItem.modelData.icon
-                            sourceSize: Qt.size(16, 16)
-                            width: 16
-                            height: 16
+                            size: Typography.fontSize16
+                            color: Colors.textColor
                             anchors.centerIn: parent
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
                         }
 
                         MouseArea {

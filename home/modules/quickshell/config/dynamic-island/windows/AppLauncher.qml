@@ -6,6 +6,7 @@ import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import QtQuick.Controls
 import "../"
+import "../base"
 
 Scope {
     id: launcherScope
@@ -179,7 +180,7 @@ Scope {
                 }
             }
 
-            Keys.onPressed: (event) => {
+            Keys.onPressed: event => {
                 if (event.key === Qt.Key_Escape) {
                     launcherScope.launcherVisible = false;
                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
@@ -207,7 +208,6 @@ Scope {
                 }
                 event.accepted = true;
             }
-
 
             // Click-to-dismiss (transparent, no dim)
             TapHandler {
@@ -258,10 +258,9 @@ Scope {
                             }
                             spacing: Spacing.spacing8
 
-                            Text {
-                                text: "\uf002"
-                                font.family: Typography.iconFontFamily
-                                font.pixelSize: Typography.fontSize14
+                            TintedIcon {
+                                source: "../icons/icons8-search.svg"
+                                size: Typography.fontSize14
                                 color: Colors.textColorMuted
                                 anchors.verticalCenter: parent.verticalCenter
                             }
@@ -347,14 +346,12 @@ Scope {
                                     sourceSize: Qt.size(Typography.fontSize24, Typography.fontSize24)
                                 }
 
-                                Text {
-                                    text: "\uf009"
-                                    font.family: Typography.iconFontFamily
-                                    font.pixelSize: Typography.fontSize16
+                                TintedIcon {
+                                    source: "../icons/icons8-menu.svg"
+                                    size: Typography.fontSize16
                                     color: Colors.textColorMuted
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: Typography.fontSize24
-                                    horizontalAlignment: Text.AlignHCenter
                                     visible: appIcon.status !== Image.Ready
                                 }
 

@@ -31,7 +31,7 @@ Row {
 
     TintedIcon {
         source: batteryIconSource
-        size: Typography.fontSize14
+        size: Typography.fontSize20
         color: batteryColor
         anchors.verticalCenter: parent.verticalCenter
     }

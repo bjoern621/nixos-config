@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import "../"
+import "../base"
 
 Item {
     id: root
@@ -526,12 +527,11 @@ Item {
                     }
 
                     // Fallback icon when no art
-                    Text {
+                    TintedIcon {
                         visible: albumArt.status !== Image.Ready
                         anchors.centerIn: parent
-                        text: "\uf001"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize20
+                        source: "../icons/icons8-audio.svg"
+                        size: Typography.fontSize20
                         color: Colors.textColorMuted
                     }
 
@@ -676,11 +676,10 @@ Item {
                         border.color: prevBtn.hovered || prevBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
-                    Text {
+                    TintedIcon {
                         anchors.centerIn: parent
-                        text: "\uf048"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize20
+                        source: "../icons/icons8-skip-to-start-50.svg"
+                        size: Typography.fontSize24
                         color: root.canGoPrevious ? Colors.textColor : Colors.textColorMuted
                     }
 
@@ -719,11 +718,10 @@ Item {
                         border.color: playBtn.hovered || playBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
-                    Text {
+                    TintedIcon {
                         anchors.centerIn: parent
-                        text: root.isPlaying ? "\uf04c" : "\uf04b"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize20
+                        source: root.isPlaying ? "../icons/icons8-pause-50.svg" : "../icons/icons8-play-50.svg"
+                        size: Typography.fontSize24
                         color: Colors.textColor
                     }
 
@@ -762,11 +760,10 @@ Item {
                         border.color: nextBtn.hovered || nextBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
-                    Text {
+                    TintedIcon {
                         anchors.centerIn: parent
-                        text: "\uf051"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize20
+                        source: "../icons/icons8-end-50.svg"
+                        size: Typography.fontSize24
                         color: root.canGoNext ? Colors.textColor : Colors.textColorMuted
                     }
 
@@ -810,10 +807,9 @@ Item {
                     anchors.centerIn: parent
                     spacing: Spacing.spacing4
 
-                    Text {
-                        text: "\uf0ca"
-                        font.family: Typography.iconFontFamily
-                        font.pixelSize: Typography.fontSize12
+                    TintedIcon {
+                        source: "../icons/icons8-list.svg"
+                        size: Typography.fontSize16
                         color: Colors.textColorMuted
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -824,11 +820,16 @@ Item {
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
                         anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: 1
                     }
 
                     ExpandArrow {
                         id: chevronIcon
                         expanded: root.queueExpanded
+                        collapsedRotation: 90
+                        expandedRotation: -90
+                        iconSize: Typography.fontSize16
+                        iconColor: Colors.textColorMuted
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -1294,12 +1295,11 @@ Item {
                                             anchors.centerIn: parent
                                         }
 
-                                        Text {
+                                        TintedIcon {
                                             visible: !root.isPlaying
                                             anchors.centerIn: parent
-                                            text: "\uf04b"
-                                            font.family: Typography.iconFontFamily
-                                            font.pixelSize: Typography.fontSize12
+                                            source: "../icons/icons8-play-50.svg"
+                                            size: Typography.fontSize12
                                             color: Colors.textColor
                                         }
                                     }

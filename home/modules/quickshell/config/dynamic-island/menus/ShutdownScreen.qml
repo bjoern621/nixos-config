@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../"
+import "../base"
 import "../animations"
 
 // Fullscreen overlay showing the list of apps being gracefully closed
@@ -149,14 +150,11 @@ Item {
             scale: exitTap.pressed ? 0.85 : 1.0
             SquishBehavior on scale {}
 
-            Text {
-                anchors.fill: parent
-                text: "\uf00d"
-                font.family: Typography.iconFontFamily
-                font.pixelSize: Typography.fontSize16
+            TintedIcon {
+                anchors.centerIn: parent
+                source: "../icons/icons8-cross.svg"
+                size: Typography.fontSize16
                 color: Colors.textColor
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
             }
 
             HoverHandler {
@@ -318,15 +316,29 @@ Item {
                         }
 
                         // Checkmark or spinner icon per app
-                        Text {
+                        Item {
                             id: checkmark
                             anchors.right: parent.right
                             anchors.rightMargin: Spacing.spacing8
                             anchors.verticalCenter: parent.verticalCenter
-                            text: modelData.alive ? "\uf110" : "\uf00c"
-                            font.family: Typography.iconFontFamily
-                            font.pixelSize: Typography.fontSize12
-                            color: modelData.alive ? Colors.textColorMuted : Colors.accentColor
+                            width: Typography.fontSize12
+                            height: Typography.fontSize12
+
+                            TintedIcon {
+                                id: checkmarkIcon
+                                anchors.centerIn: parent
+                                source: modelData.alive ? "../icons/icons8-spinner.svg" : "../icons/icons8-done.svg"
+                                size: Typography.fontSize12
+                                color: modelData.alive ? Colors.textColorMuted : Colors.accentColor
+                            }
+
+                            RotationAnimation on rotation {
+                                running: modelData.alive
+                                loops: Animation.Infinite
+                                from: 0
+                                to: 360
+                                duration: 1000
+                            }
                         }
                     }
                 }

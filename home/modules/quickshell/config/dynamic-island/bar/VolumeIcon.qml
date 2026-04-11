@@ -20,8 +20,8 @@ Item {
     }
 
     anchors.verticalCenter: parent.verticalCenter
-    width: 20
-    height: 20
+    width: Typography.fontSize16
+    height: Typography.fontSize16
 
     ContentReplace {
         id: volIconReplace
@@ -31,12 +31,12 @@ Item {
         Item {
             id: volIcon
             anchors.centerIn: parent
-            width: 18
-            height: 18
+            width: Typography.fontSize16
+            height: Typography.fontSize16
 
             TintedIcon {
                 anchors.centerIn: parent
-                size: 18
+                size: Typography.fontSize16
                 source: volIconReplace.displayValue
             }
         }
