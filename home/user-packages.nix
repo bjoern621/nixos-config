@@ -10,5 +10,6 @@
     direnv
     kubectl
     virt-manager
+    kubernetes-helm
   ];
 }
