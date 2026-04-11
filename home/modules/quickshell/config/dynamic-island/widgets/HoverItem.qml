@@ -7,6 +7,7 @@ Item {
     default property alias content: contentContainer.data
     property HoverMenu menu: null
     property bool clickable: true
+    property bool menuOnClick: false
 
     readonly property bool hovered: hoverHandler.hovered
     readonly property bool pressed: tapHandler.pressed
@@ -24,14 +25,20 @@ Item {
     QtObject {
         id: internal
         property bool menuOpen: false
+        property bool clickArmed: false
         readonly property real effectiveMenuHeight: menuOpen && root.menu ? root.menu.implicitHeight : 0
-        readonly property bool shouldShow: root.menu !== null && (root.hovered || (root.menu && root.menu.keepOpen))
+        readonly property bool shouldShow: root.menu !== null && (root.menuOnClick ? (clickArmed && (root.hovered || (root.menu && root.menu.keepOpen))) : (root.hovered || (root.menu && root.menu.keepOpen)))
 
         onShouldShowChanged: {
             if (shouldShow) {
                 menuHideTimer.stop();
                 if (!menuOpen) {
-                    menuShowTimer.restart();
+                    if (root.menuOnClick) {
+                        internal.menuOpen = true;
+                        root.menu.show();
+                    } else {
+                        menuShowTimer.restart();
+                    }
                 }
             } else {
                 menuShowTimer.stop();
@@ -63,6 +70,9 @@ Item {
         target: root.menu
         enabled: root.menu !== null
         function onHidden() {
+            internal.menuOpen = false;
+            if (root.menuOnClick)
+                internal.clickArmed = false;
             root.menuClosed();
         }
     }
@@ -101,6 +111,21 @@ Item {
     TapHandler {
         id: tapHandler
         enabled: root.clickable
-        onTapped: root.clicked()
+        onTapped: {
+            root.clicked();
+
+            if (root.menuOnClick && root.menu) {
+                if (internal.menuOpen) {
+                    internal.clickArmed = false;
+                    menuShowTimer.stop();
+                    menuHideTimer.restart();
+                } else {
+                    internal.clickArmed = true;
+                    menuHideTimer.stop();
+                    internal.menuOpen = true;
+                    root.menu.show();
+                }
+            }
+        }
     }
 }

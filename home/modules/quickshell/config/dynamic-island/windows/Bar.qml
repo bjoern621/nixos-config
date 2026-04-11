@@ -126,7 +126,8 @@ Variants {
 
                     HoverItem {
                         id: calendarHoverItem
-                        clickable: false
+                        clickable: true
+                        menuOnClick: true
                         menu: calendarMenu
                         DateTime {}
                     }
