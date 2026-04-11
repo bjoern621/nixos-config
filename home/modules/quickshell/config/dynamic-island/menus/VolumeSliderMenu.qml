@@ -415,6 +415,7 @@ Item {
                             readonly property bool isSinkEntry: modelData.type === "sink"
                             readonly property bool isDefault: isSinkEntry && modelData.node.id === (Pipewire.defaultAudioSink?.id ?? -1)
                             readonly property bool isBusyTarget: root.btBusy && modelData.isBluetooth && (modelData.mac === root.btConnectingMac)
+                            readonly property bool isBluetoothLocked: !isSinkEntry && modelData.isBluetooth && root.btBusy
 
                             scale: sinkTap.pressed ? 0.97 : 1.0
                             SquishBehavior on scale {}
@@ -422,8 +423,8 @@ Item {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing8
-                                color: sinkDelegate.isDefault ? Qt.rgba(1, 1, 1, 0.06) : sinkTap.pressed ? Colors.hoverItemPressed : sinkHover.hovered ? Colors.hoverItemHovered : "transparent"
-                                border.color: sinkDelegate.isDefault ? Colors.accentColor : sinkHover.hovered || sinkTap.pressed ? Colors.pillBorder : "transparent"
+                                color: sinkDelegate.isDefault ? Qt.rgba(1, 1, 1, 0.06) : sinkDelegate.isBluetoothLocked ? Qt.rgba(1, 1, 1, 0.08) : sinkTap.pressed ? Colors.hoverItemPressed : sinkHover.hovered ? Colors.hoverItemHovered : "transparent"
+                                border.color: sinkDelegate.isDefault ? Colors.accentColor : sinkDelegate.isBluetoothLocked ? Colors.pillBorder : sinkHover.hovered || sinkTap.pressed ? Colors.pillBorder : "transparent"
                             }
 
                             Item {
@@ -443,6 +444,16 @@ Item {
                                         verticalCenter: parent.verticalCenter
                                     }
                                     spacing: Spacing.spacing8
+
+                                    Label {
+                                        id: lockedLabel
+                                        text: "Gesperrt"
+                                        visible: sinkDelegate.isBluetoothLocked
+                                        font.pixelSize: Typography.fontSize12
+                                        font.weight: Font.Normal
+                                        color: Colors.textColorMuted
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
 
                                     TintedIcon {
                                         id: checkIcon
@@ -495,7 +506,7 @@ Item {
                                             text: sinkDelegate.modelData.name
                                             font.pixelSize: Typography.fontSize12
                                             font.weight: sinkDelegate.isDefault ? Font.Bold : Font.Normal
-                                            color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColor
+                                            color: sinkDelegate.isDefault ? Colors.accentColor : sinkDelegate.isBluetoothLocked ? Colors.textColorMuted : Colors.textColor
                                             elide: Text.ElideRight
                                             width: Math.min(implicitWidth, nameWithBluetooth.width - (bluetoothIcon.visible ? bluetoothIcon.width + nameWithBluetooth.spacing : 0))
                                         }
@@ -504,7 +515,7 @@ Item {
                                             id: bluetoothIcon
                                             source: "../icons/icons8-bluetooth.svg"
                                             size: Typography.fontSize14
-                                            color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColorMuted
+                                            color: sinkDelegate.isDefault ? Colors.accentColor : sinkDelegate.isBluetoothLocked ? Colors.textColorMuted : Colors.textColorMuted
                                             visible: sinkDelegate.modelData.isBluetooth
                                             width: visible ? Typography.fontSize14 : 0
                                             anchors.verticalCenter: parent.verticalCenter
@@ -525,7 +536,7 @@ Item {
 
                             HoverHandler {
                                 id: sinkHover
-                                cursorShape: Qt.PointingHandCursor
+                                cursorShape: sinkDelegate.isBluetoothLocked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
                             }
                             TapHandler {
                                 id: sinkTap
