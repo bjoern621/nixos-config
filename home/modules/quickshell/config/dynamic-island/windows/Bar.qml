@@ -223,6 +223,7 @@ Variants {
                 anchors.top: volumeAnchor.top
                 anchors.horizontalCenter: volumeAnchor.horizontalCenter
                 contentInteracting: volumeSlider.sliderActive
+                onHidden: volumeSlider.outputExpanded = false
 
                 VolumeSliderMenu {
                     id: volumeSlider
