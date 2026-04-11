@@ -718,11 +718,26 @@ Item {
                         border.color: playBtn.hovered || playBtn.pressed ? Colors.pillBorder : "transparent"
                     }
 
-                    TintedIcon {
+                    ContentReplace {
+                        id: playIconReplace
+                        contentKey: root.isPlaying ? "../icons/icons8-pause-50.svg" : "../icons/icons8-play-50.svg"
                         anchors.centerIn: parent
-                        source: root.isPlaying ? "../icons/icons8-pause-50.svg" : "../icons/icons8-play-50.svg"
-                        size: Typography.fontSize24
-                        color: Colors.textColor
+                        width: Typography.fontSize24
+                        height: Typography.fontSize24
+
+                        Item {
+                            width: Typography.fontSize24
+                            height: Typography.fontSize24
+                            x: 0
+                            y: 0
+
+                            TintedIcon {
+                                anchors.centerIn: parent
+                                source: playIconReplace.displayValue
+                                size: Typography.fontSize24
+                                color: Colors.textColor
+                            }
+                        }
                     }
 
                     HoverHandler {
