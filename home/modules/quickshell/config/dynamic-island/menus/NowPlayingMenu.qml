@@ -33,6 +33,7 @@ Item {
     property var trackHistory: []
     property int maxHistory: 8
     property bool queueExpanded: false
+    property bool debugToolsEnabled: false
     property bool debugSkeletons: false
     // Spotify API data
     property var spotifyRecentlyPlayed: []
@@ -854,7 +855,7 @@ Item {
             Row {
                 width: parent.width
                 spacing: Spacing.spacing4
-                visible: root.queueExpanded
+                visible: root.queueExpanded && root.debugToolsEnabled
 
                 Item {
                     id: fetchBtn
@@ -989,7 +990,7 @@ Item {
             Row {
                 width: parent.width
                 spacing: Spacing.spacing8
-                visible: root.queueExpanded
+                visible: root.queueExpanded && root.debugToolsEnabled
 
                 // Cooldown countdown
                 Rectangle {
@@ -1377,7 +1378,7 @@ Item {
         color: "#ee1a1a2e"
         border.width: 1
         border.color: "#444"
-        visible: root.debugMergeLog !== ""
+        visible: root.debugToolsEnabled && root.debugMergeLog !== ""
 
         Text {
             id: debugText
