@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
 import "../"
+import "../base"
 
 // Brightness OSD – polls brightnessctl to detect changes.
 Scope {
@@ -43,13 +44,7 @@ Scope {
     }
 
     readonly property int osdValue: Math.max(0, Math.min(100, _brightness))
-    readonly property string osdIcon: {
-        if (osdValue <= 0)
-            return "\uf185";
-        if (osdValue < 50)
-            return "\uf185";
-        return "\uf185";
-    }
+    readonly property string osdIconSource: "../icons/icons8-brightness.svg"
 
     function focusedScreen() {
         const mon = Hyprland.focusedMonitor;
@@ -137,13 +132,13 @@ Scope {
                     }
                     spacing: Spacing.spacing8
 
-                    Icon {
-                        text: brightnessScope.osdIcon
-                        font.pixelSize: Typography.fontSize16
+                    TintedIcon {
+                        source: brightnessScope.osdIconSource
+                        size: Typography.fontSize16
                         width: 24
-                        height: implicitHeight
+                        height: 24
                         anchors.verticalCenter: parent.verticalCenter
-                        horizontalAlignment: Text.AlignHCenter
+                        color: Colors.textColor
                     }
 
                     Column {

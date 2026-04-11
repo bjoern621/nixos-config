@@ -1,5 +1,6 @@
 import QtQuick
 import "../"
+import "../base"
 
 Item {
     id: root
@@ -80,9 +81,11 @@ Item {
                         border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
 
-                    Icon {
+                    TintedIcon {
                         anchors.centerIn: parent
-                        text: "\uf053"
+                        source: "../icons/icons8-arrow.svg"
+                        size: Typography.fontSize14
+                        rotation: 180
                     }
 
                     MouseArea {
@@ -153,9 +156,10 @@ Item {
                         border.color: parent.hovered ? Colors.pillBorder : "transparent"
                     }
 
-                    Icon {
+                    TintedIcon {
                         anchors.centerIn: parent
-                        text: "\uf054"
+                        source: "../icons/icons8-arrow.svg"
+                        size: Typography.fontSize14
                     }
 
                     MouseArea {

@@ -1,29 +1,37 @@
 import Quickshell.Services.UPower
 import QtQuick
 import "../"
+import "../base"
 
 Row {
     anchors.verticalCenter: parent.verticalCenter
     spacing: Spacing.spacing4
 
-    property string batteryIcon: {
-        const pct = UPower.displayDevice.percentage
-        if (pct <= 0.05) return "\uf244"
-        if (pct <= 0.35) return "\uf243"
-        if (pct <= 0.60) return "\uf242"
-        if (pct <= 0.85) return "\uf241"
-        return "\uf240"
+    property string batteryIconSource: {
+        if (UPower.displayDevice.state === UPowerDeviceState.Charging)
+            return "../icons/icons8-battery-charging.svg";
+        const pct = UPower.displayDevice.percentage;
+        if (pct <= 0.25)
+            return "../icons/icons8-battery-25.svg";
+        if (pct <= 0.50)
+            return "../icons/icons8-battery-50.svg";
+        if (pct <= 0.75)
+            return "../icons/icons8-battery-75.svg";
+        return "../icons/icons8-battery-100.svg";
     }
 
     property color batteryColor: {
-        const pct = UPower.displayDevice.percentage
-        if (pct <= 0.10) return Colors.batteryCritical
-        if (pct <= 0.25) return Colors.batteryWarning
-        return Colors.textColor
+        const pct = UPower.displayDevice.percentage;
+        if (pct <= 0.10)
+            return Colors.batteryCritical;
+        if (pct <= 0.25)
+            return Colors.batteryWarning;
+        return Colors.textColor;
     }
 
-    Icon {
-        text: batteryIcon
+    TintedIcon {
+        source: batteryIconSource
+        size: Typography.fontSize14
         color: batteryColor
         anchors.verticalCenter: parent.verticalCenter
     }

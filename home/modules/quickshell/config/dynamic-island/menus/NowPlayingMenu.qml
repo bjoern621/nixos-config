@@ -477,36 +477,6 @@ Item {
         return m + ":" + (s < 10 ? "0" : "") + s;
     }
 
-    // Empty state when no player is available
-    Rectangle {
-        anchors.fill: parent
-        radius: Spacing.spacing12
-        color: Colors.pillBackground
-        border.width: 1
-        border.color: Colors.pillBorder
-        visible: !root.hasPlayer
-
-        Column {
-            anchors.centerIn: parent
-            spacing: Spacing.spacing8
-
-            Icon {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "\uf001"
-                font.pixelSize: Typography.fontSize20
-                color: Colors.textColorMuted
-            }
-
-            Label {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Keine Wiedergabe"
-                font.pixelSize: Typography.fontSize14
-                font.weight: Font.Normal
-                color: Colors.textColorMuted
-            }
-        }
-    }
-
     Rectangle {
         anchors.fill: parent
         radius: Spacing.spacing12

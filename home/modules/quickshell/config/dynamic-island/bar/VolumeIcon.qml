@@ -1,7 +1,7 @@
 import Quickshell.Services.Pipewire
 import QtQuick
-import QtQuick.Effects
 import "../"
+import "../base"
 import "../animations"
 
 Item {
@@ -34,22 +34,10 @@ Item {
             width: 18
             height: 18
 
-            Image {
-                id: volIconImage
-                anchors.fill: parent
+            TintedIcon {
+                anchors.centerIn: parent
+                size: 18
                 source: volIconReplace.displayValue
-                sourceSize: Qt.size(36, 36)
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                antialiasing: true
-                visible: false
-            }
-
-            MultiEffect {
-                anchors.fill: volIconImage
-                source: volIconImage
-                colorization: 1.0
-                colorizationColor: Colors.textColor
             }
         }
     }

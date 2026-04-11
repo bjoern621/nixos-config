@@ -6,6 +6,7 @@ import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import QtQuick.Controls
 import "../"
+import "../base"
 
 Scope {
     id: clipScope
@@ -231,7 +232,7 @@ Scope {
                 onTextChanged: clipScope.updateFilter()
             }
 
-            Keys.onPressed: (event) => {
+            Keys.onPressed: event => {
                 if (event.key === Qt.Key_Escape) {
                     clipScope.clipVisible = false;
                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
@@ -308,8 +309,9 @@ Scope {
                             }
                             spacing: Spacing.spacing8
 
-                            Icon {
-                                text: "\uf002"
+                            TintedIcon {
+                                source: "../icons/icons8-search.svg"
+                                size: Typography.fontSize14
                                 color: Colors.textColorMuted
                                 anchors.verticalCenter: parent.verticalCenter
                             }

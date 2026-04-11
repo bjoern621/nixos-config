@@ -1,6 +1,7 @@
 import Quickshell.Services.Notifications
 import QtQuick
 import "../"
+import "../base"
 
 // Reusable notification card. Used in both toast (compact) and panel (full) modes.
 // Properties: notification (Notification object), compact (bool).
@@ -98,14 +99,6 @@ Item {
                 spacing: Spacing.spacing4
                 anchors.verticalCenter: parent.verticalCenter
 
-                Icon {
-                    text: root.notification && root.notification.appIcon !== "" ? root.notification.appIcon : "\uf0f3"
-                    font.pixelSize: Typography.fontSize12
-                    color: Colors.textColorMuted
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: false // App icon from freedesktop is a name, not a font icon — hide for now
-                }
-
                 Label {
                     id: appNameLabel
                     text: root.notification ? root.notification.appName : ""
@@ -128,9 +121,9 @@ Item {
                 scale: dismissTap.pressed ? 0.85 : 1.0
                 SquishBehavior on scale {}
 
-                Icon {
-                    text: "\uf00d"
-                    font.pixelSize: Typography.fontSize12
+                TintedIcon {
+                    source: "../icons/icons8-cross.svg"
+                    size: Typography.fontSize12
                     color: dismissHover.hovered ? Colors.textColor : Colors.textColorMuted
                     anchors.centerIn: parent
                 }

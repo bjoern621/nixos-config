@@ -2,8 +2,8 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import QtQuick
-import QtQuick.Effects
 import "../"
+import "../base"
 
 // Volume OSD using Quickshell.Services.Pipewire.
 // PwObjectTracker keeps Pipewire.defaultAudioSink alive and data current.
@@ -141,22 +141,10 @@ Scope {
                             height: 22
                             anchors.centerIn: parent
 
-                            Image {
-                                id: osdIconImage
-                                anchors.fill: parent
+                            TintedIcon {
+                                anchors.centerIn: parent
+                                size: 22
                                 source: osdIconReplace.displayValue
-                                sourceSize: Qt.size(44, 44)
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                antialiasing: true
-                                visible: false
-                            }
-
-                            MultiEffect {
-                                anchors.fill: osdIconImage
-                                source: osdIconImage
-                                colorization: 1.0
-                                colorizationColor: Colors.textColor
                             }
                         }
                     }

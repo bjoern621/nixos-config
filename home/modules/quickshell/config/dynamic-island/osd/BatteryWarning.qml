@@ -45,11 +45,11 @@ Scope {
             _criticalShown = true;
             _warningShown = true;
             sendNotification("⚠ Akku fast leer! " + pctInt + " %");
-            PopupHost.show("\uf244", "Akku fast leer!", "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!", Colors.batteryCritical);
+            PopupHost.show("../icons/icons8-battery-25.svg", "Akku fast leer!", "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!", Colors.batteryCritical);
         } else if (isWarning && !isCritical && !_warningShown) {
             _warningShown = true;
             sendNotification("🔋 Akku niedrig: " + pctInt + " %");
-            PopupHost.show("\uf243", "Akku niedrig", "Nur noch " + pctInt + " % Akku übrig.\nBitte bald das Ladegerät anschließen.", Colors.batteryWarning);
+            PopupHost.show("../icons/icons8-battery-50.svg", "Akku niedrig", "Nur noch " + pctInt + " % Akku übrig.\nBitte bald das Ladegerät anschließen.", Colors.batteryWarning);
         }
     }
 

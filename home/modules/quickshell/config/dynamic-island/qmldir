@@ -7,7 +7,7 @@ singleton GracefulShutdown 1.0 base/GracefulShutdown.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
-Icon 1.0 base/Icon.qml
+TintedIcon 1.0 base/TintedIcon.qml
 
 PopReveal 1.0 animations/PopReveal.qml
 SquishBehavior 1.0 animations/SquishBehavior.qml
@@ -51,7 +51,6 @@ WorkspaceIndicator 1.0 bar/WorkspaceIndicator.qml
 SystemTray 1.0 bar/SystemTray.qml
 NowPlaying 1.0 bar/NowPlaying.qml
 MusicBars 1.0 bar/MusicBars.qml
-NotificationIndicator 1.0 bar/NotificationIndicator.qml
 
 NotificationCard 1.0 widgets/NotificationCard.qml
 

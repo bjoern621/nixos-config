@@ -9,5 +9,5 @@ singleton PopupHost 1.0 PopupHost.qml
 WallpaperPersist 1.0 WallpaperPersist.qml
 WallpaperBackend 1.0 WallpaperBackend.qml
 WallpaperAccent 1.0 WallpaperAccent.qml
-Icon 1.0 Icon.qml
+TintedIcon 1.0 TintedIcon.qml
 Label 1.0 Label.qml

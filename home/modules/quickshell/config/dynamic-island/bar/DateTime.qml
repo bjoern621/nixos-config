@@ -1,5 +1,6 @@
 import QtQuick
 import "../"
+import "../base"
 
 Row {
     id: datetime
@@ -27,8 +28,9 @@ Row {
     Row {
         spacing: Spacing.spacing4
 
-        Icon {
-            text: "\uf133"
+        TintedIcon {
+            source: "../icons/icons8-monday.svg"
+            size: Typography.fontSize14
             anchors.verticalCenter: parent.verticalCenter
         }
 
@@ -45,8 +47,9 @@ Row {
     Row {
         spacing: Spacing.spacing4
 
-        Icon {
-            text: "\uf017"
+        TintedIcon {
+            source: "../icons/icons8-time.svg"
+            size: Typography.fontSize14
             anchors.verticalCenter: parent.verticalCenter
         }
 

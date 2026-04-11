@@ -40,7 +40,7 @@ Scope {
         target: "popup"
 
         function test() {
-            PopupHost.show("\uf0a2", "Test", "Dies ist eine Testbenachrichtigung.", Colors.textColor);
+            PopupHost.show("../icons/icons8-settings.svg", "Test", "Dies ist eine Testbenachrichtigung.", Colors.textColor);
         }
     }
 
@@ -112,7 +112,7 @@ Scope {
                 PopupNotification {
                     id: notification
                     anchors.fill: parent
-                    icon: PopupHost.icon
+                    iconSource: PopupHost.iconSource
                     title: PopupHost.title
                     message: PopupHost.message
                     accentColor: PopupHost.accentColor

@@ -2,22 +2,22 @@ pragma Singleton
 import QtQuick
 
 // Singleton managing a queue of dismissable popup notifications.
-// Usage: PopupHost.show("\uf071", "Title", "Message", accentColor)
+// Usage: PopupHost.show("../icons/icons8-settings.svg", "Title", "Message", accentColor)
 QtObject {
     id: root
 
     // Current popup state (bound by PopupWindow)
     property bool visible: false
-    property string icon: ""
+    property url iconSource: ""
     property string title: ""
     property string message: ""
     property color accentColor: "#ffffff"
 
     property var _queue: []
 
-    function show(icon, title, message, accentColor) {
+    function show(iconSource, title, message, accentColor) {
         _queue.push({
-            icon: icon,
+            iconSource: iconSource,
             title: title,
             message: message,
             accentColor: accentColor
@@ -44,7 +44,7 @@ QtObject {
         }
         const item = _queue.shift();
         _queueChanged();
-        icon = item.icon;
+        iconSource = item.iconSource;
         title = item.title;
         message = item.message;
         accentColor = item.accentColor;

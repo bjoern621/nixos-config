@@ -1,7 +1,7 @@
 import Quickshell.Services.Pipewire
 import QtQuick
-import QtQuick.Effects
 import "../"
+import "../base"
 
 Item {
     id: root
@@ -123,22 +123,10 @@ Item {
                             height: 18
                             anchors.centerIn: parent
 
-                            Image {
-                                id: muteIconImage
-                                anchors.fill: parent
+                            TintedIcon {
+                                anchors.centerIn: parent
+                                size: 18
                                 source: muteIconReplace.displayValue
-                                sourceSize: Qt.size(36, 36)
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                antialiasing: true
-                                visible: false
-                            }
-
-                            MultiEffect {
-                                anchors.fill: muteIconImage
-                                source: muteIconImage
-                                colorization: 1.0
-                                colorizationColor: Colors.textColor
                             }
                         }
                     }
@@ -412,22 +400,10 @@ Item {
                                     height: 16
                                     anchors.centerIn: parent
 
-                                    Image {
-                                        id: appMuteIconImage
-                                        anchors.fill: parent
+                                    TintedIcon {
+                                        anchors.centerIn: parent
+                                        size: 16
                                         source: appDelegate.appIconSource
-                                        sourceSize: Qt.size(32, 32)
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        antialiasing: true
-                                        visible: false
-                                    }
-
-                                    MultiEffect {
-                                        anchors.fill: appMuteIconImage
-                                        source: appMuteIconImage
-                                        colorization: 1.0
-                                        colorizationColor: Colors.textColor
                                     }
                                 }
 

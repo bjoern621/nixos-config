@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "../"
+import "../base"
 import "../animations"
 
 Item {
@@ -52,27 +53,27 @@ Item {
                 model: [
                     {
                         action: "shutdown",
-                        icon: "\uf011",
+                        iconSource: "../icons/icons8-shutdown.svg",
                         label: "Shutdown"
                     },
                     {
                         action: "reboot",
-                        icon: "\uf0e2",
+                        iconSource: "../icons/icons8-restart.svg",
                         label: "Reboot"
                     },
                     {
                         action: "lock",
-                        icon: "\uf023",
+                        iconSource: "../icons/icons8-lock.svg",
                         label: "Lock"
                     },
                     {
                         action: "logout",
-                        icon: "\uf2f5",
+                        iconSource: "../icons/icons8-log-out.svg",
                         label: "Logout"
                     },
                     {
                         action: "hibernate",
-                        icon: "\uf2dc",
+                        iconSource: "../icons/icons8-winter.svg",
                         label: "Hibernate"
                     },
                 ]
@@ -107,9 +108,9 @@ Item {
                         x: Spacing.spacing12
                         spacing: Spacing.spacing8
 
-                        Icon {
-                            text: modelData.icon
-                            font.pixelSize: Typography.fontSize16
+                        TintedIcon {
+                            source: modelData.iconSource
+                            size: Typography.fontSize16
                             anchors.verticalCenter: parent.verticalCenter
                         }
 

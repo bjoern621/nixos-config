@@ -1,12 +1,13 @@
 import QtQuick
 import "../"
+import "../base"
 
 // Reusable dismissable popup card. Parent controls visibility via show()/hide().
 // Properties: icon, title, message, accentColor.
 Item {
     id: root
 
-    property string icon: ""
+    property url iconSource: ""
     property string title: ""
     property string message: ""
     property color accentColor: Colors.textColor
@@ -35,12 +36,12 @@ Item {
         }
         spacing: Spacing.spacing12
 
-        Icon {
-            text: root.icon
-            font.pixelSize: 40
+        TintedIcon {
+            source: root.iconSource
+            size: 40
             color: root.accentColor
             anchors.horizontalCenter: parent.horizontalCenter
-            visible: text !== ""
+            visible: source !== ""
         }
 
         Text {
