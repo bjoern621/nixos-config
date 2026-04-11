@@ -106,6 +106,7 @@ Variants {
                     HoverItem {
                         id: nowPlayingHoverItem
                         visible: root.hasMprisPlayer
+                        pressedScale: 0.96
                         menu: nowPlayingMenu
                         onClicked: {
                             if (root.mprisPlayer)
@@ -127,6 +128,7 @@ Variants {
                     HoverItem {
                         id: calendarHoverItem
                         clickable: true
+                        pressedScale: 0.96
                         menuOnClick: true
                         menu: calendarMenu
                         DateTime {}

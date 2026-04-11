@@ -8,6 +8,7 @@ Item {
     property HoverMenu menu: null
     property bool clickable: true
     property bool menuOnClick: false
+    property real pressedScale: 0.85
 
     readonly property bool hovered: hoverHandler.hovered
     readonly property bool pressed: tapHandler.pressed
@@ -77,7 +78,7 @@ Item {
         }
     }
 
-    scale: root.clickable && tapHandler.pressed ? 0.85 : 1.0
+    scale: root.clickable && tapHandler.pressed ? root.pressedScale : 1.0
     SquishBehavior on scale {}
 
     Rectangle {
