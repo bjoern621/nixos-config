@@ -24,7 +24,6 @@ let
       qsPython
     ];
     dataDeps = [
-      pkgs.font-awesome # Icons
       pkgs.inter # Text
     ];
   };
