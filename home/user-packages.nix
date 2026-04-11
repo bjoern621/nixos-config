@@ -9,5 +9,6 @@
     element-desktop
     direnv
     kubectl
+    virt-manager
   ];
 }
