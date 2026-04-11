@@ -75,10 +75,12 @@ Item {
     property string btConnectingMac: ""
     property string btConnectingName: ""
     property string btStatusText: ""
+    property string btStatusMac: ""
+    property bool btAutoSwitchOnConnect: false
     readonly property string btBackendScriptPath: Qt.resolvedUrl("../bluetooth_backend.py").toString().replace("file://", "")
     property string pendingSwitchMac: ""
     property int pendingSwitchAttempts: 0
-    readonly property int btSwitchMaxAttempts: 120
+    readonly property int btSwitchMaxAttempts: 60
     readonly property bool btBusy: btConnectProcess.running || pendingSwitchMac.length > 0
 
     readonly property var outputDevices: {
@@ -91,6 +93,8 @@ Item {
 
         root.btConnectingMac = mac;
         root.btConnectingName = targetName;
+        root.btStatusMac = mac;
+        root.btAutoSwitchOnConnect = true;
         root.btStatusText = "Starte Bluetooth-Backend...";
         btConnectProcess.targetMac = mac;
         btConnectProcess.running = true;
@@ -99,6 +103,19 @@ Item {
     function finishBluetoothStatus(statusText) {
         root.btStatusText = statusText;
         btStatusClearTimer.restart();
+    }
+
+    function statusTextForBackendCode(code) {
+        switch (code) {
+        case "CHECK_BACKEND":
+            return "Prüfe Bluetooth-Backend...";
+        case "POWER_ON":
+            return "Aktiviere Bluetooth...";
+        case "CONNECT_DEVICE":
+            return "Verbinde mit Gerät...";
+        default:
+            return code;
+        }
     }
 
     property bool outputExpanded: false
@@ -114,7 +131,7 @@ Item {
             onRead: data => {
                 const line = data.trim();
                 if (line.indexOf("STATUS:") === 0) {
-                    root.btStatusText = line.substring(7);
+                    root.btStatusText = root.statusTextForBackendCode(line.substring(7));
                     return;
                 }
 
@@ -131,6 +148,7 @@ Item {
                     btSwitchTimer.stop();
                     root.finishBluetoothStatus("Bluetooth-Verbindung fehlgeschlagen");
                     root.btConnectingMac = "";
+                    root.btAutoSwitchOnConnect = false;
                     return;
                 }
 
@@ -139,6 +157,7 @@ Item {
                     btSwitchTimer.stop();
                     root.finishBluetoothStatus("Bluetooth-Backend ist nicht verfuegbar");
                     root.btConnectingMac = "";
+                    root.btAutoSwitchOnConnect = false;
                 }
             }
         }
@@ -146,7 +165,7 @@ Item {
 
     Timer {
         id: btSwitchTimer
-        interval: 300
+        interval: 300 // ms per retry (~18s total with btSwitchMaxAttempts=60)
         repeat: true
         running: false
         onTriggered: {
@@ -158,18 +177,22 @@ Item {
             root.pendingSwitchAttempts++;
             const sink = BluetoothUtils.findSinkByBluetooth(Pipewire.nodes.values, root.pendingSwitchMac, root.btConnectingName);
             if (sink) {
-                Pipewire.preferredDefaultAudioSink = sink;
-                const selectedName = root.btConnectingName.length ? root.btConnectingName : "Bluetooth-Geraet";
+                const selectedName = root.btConnectingName.length ? root.btConnectingName : "Bluetooth-Gerät";
+                const shouldAutoSwitch = root.btAutoSwitchOnConnect;
+                if (shouldAutoSwitch)
+                    Pipewire.preferredDefaultAudioSink = sink;
                 root.pendingSwitchMac = "";
                 root.btConnectingMac = "";
+                root.btAutoSwitchOnConnect = false;
                 btSwitchTimer.stop();
-                root.finishBluetoothStatus("Verbunden: " + selectedName);
+                root.finishBluetoothStatus(shouldAutoSwitch ? "Verbunden: " + selectedName : "Verbunden im Hintergrund: " + selectedName);
                 return;
             }
 
             if (root.pendingSwitchAttempts >= root.btSwitchMaxAttempts) {
                 root.pendingSwitchMac = "";
                 root.btConnectingMac = "";
+                root.btAutoSwitchOnConnect = false;
                 btSwitchTimer.stop();
                 root.finishBluetoothStatus("Verbunden, aber kein Audio-Ausgang gefunden");
             }
@@ -181,8 +204,10 @@ Item {
         interval: 3000
         repeat: false
         onTriggered: {
-            if (!root.btBusy)
+            if (!root.btBusy) {
                 root.btStatusText = "";
+                root.btStatusMac = "";
+            }
         }
     }
 
@@ -377,15 +402,6 @@ Item {
                     width: parent.width
                     spacing: Spacing.spacing2
 
-                    Label {
-                        visible: root.btStatusText.length > 0
-                        width: parent.width
-                        text: root.btStatusText
-                        font.pixelSize: Typography.fontSize12
-                        font.weight: Font.Normal
-                        color: Colors.textColorMuted
-                    }
-
                     Repeater {
                         model: root.outputDevices
 
@@ -393,7 +409,8 @@ Item {
                             id: sinkDelegate
                             required property var modelData
                             width: parent ? parent.width : 0
-                            height: 32
+                            readonly property bool hasBtStatus: modelData.isBluetooth && modelData.mac.length > 0 && (modelData.mac === root.btStatusMac) && root.btStatusText.length > 0
+                            height: hasBtStatus ? 46 : 32
 
                             readonly property bool isSinkEntry: modelData.type === "sink"
                             readonly property bool isDefault: isSinkEntry && modelData.node.id === (Pipewire.defaultAudioSink?.id ?? -1)
@@ -458,34 +475,50 @@ Item {
                                     }
                                 }
 
-                                Row {
-                                    id: nameWithBluetooth
+                                Column {
+                                    id: textBlock
                                     anchors {
                                         left: parent.left
                                         right: rightStatusIcons.left
                                         rightMargin: Spacing.spacing8
                                         verticalCenter: parent.verticalCenter
                                     }
-                                    spacing: Spacing.spacing4
+                                    spacing: Spacing.spacing2
 
-                                    Label {
-                                        id: deviceNameLabel
-                                        text: sinkDelegate.modelData.name
-                                        font.pixelSize: Typography.fontSize12
-                                        font.weight: sinkDelegate.isDefault ? Font.Bold : Font.Normal
-                                        color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColor
-                                        elide: Text.ElideRight
-                                        width: Math.min(implicitWidth, nameWithBluetooth.width - (bluetoothIcon.visible ? bluetoothIcon.width + nameWithBluetooth.spacing : 0))
+                                    Row {
+                                        id: nameWithBluetooth
+                                        width: parent.width
+                                        spacing: Spacing.spacing4
+
+                                        Label {
+                                            id: deviceNameLabel
+                                            text: sinkDelegate.modelData.name
+                                            font.pixelSize: Typography.fontSize12
+                                            font.weight: sinkDelegate.isDefault ? Font.Bold : Font.Normal
+                                            color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColor
+                                            elide: Text.ElideRight
+                                            width: Math.min(implicitWidth, nameWithBluetooth.width - (bluetoothIcon.visible ? bluetoothIcon.width + nameWithBluetooth.spacing : 0))
+                                        }
+
+                                        TintedIcon {
+                                            id: bluetoothIcon
+                                            source: "../icons/icons8-bluetooth.svg"
+                                            size: Typography.fontSize12
+                                            color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColorMuted
+                                            visible: sinkDelegate.modelData.isBluetooth
+                                            width: visible ? Typography.fontSize12 : 0
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
                                     }
 
-                                    TintedIcon {
-                                        id: bluetoothIcon
-                                        source: "../icons/icons8-bluetooth.svg"
-                                        size: Typography.fontSize12
-                                        color: sinkDelegate.isDefault ? Colors.accentColor : Colors.textColorMuted
-                                        visible: sinkDelegate.modelData.isBluetooth
-                                        width: visible ? Typography.fontSize12 : 0
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    Label {
+                                        visible: sinkDelegate.hasBtStatus
+                                        width: parent.width
+                                        text: root.btStatusText
+                                        font.pixelSize: Typography.fontSize12
+                                        font.weight: Font.Normal
+                                        color: Colors.textColorMuted
+                                        elide: Text.ElideRight
                                     }
                                 }
                             }
@@ -496,9 +529,11 @@ Item {
                             }
                             TapHandler {
                                 id: sinkTap
-                                enabled: !root.btBusy
+                                enabled: sinkDelegate.isSinkEntry || !root.btBusy
                                 onTapped: {
                                     if (sinkDelegate.isSinkEntry) {
+                                        if (root.btBusy)
+                                            root.btAutoSwitchOnConnect = false;
                                         Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData.node;
                                         return;
                                     }

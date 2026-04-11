@@ -47,16 +47,16 @@ def _is_connected(mac: str) -> bool:
 
 
 def connect_device(mac: str) -> int:
-    _print_status("Pruefe Bluetooth-Backend...")
+    _print_status("CHECK_BACKEND")
     code, _ = _run_bluetoothctl("show")
     if code != 0:
         _print_result("BACKEND_UNAVAILABLE")
         return 0
 
-    _print_status("Aktiviere Bluetooth...")
+    _print_status("POWER_ON")
     _run_bluetoothctl("power", "on")
 
-    _print_status("Verbinde mit Geraet...")
+    _print_status("CONNECT_DEVICE")
     _run_bluetoothctl("trust", mac)
     _, connect_output = _run_bluetoothctl("connect", mac)
     if connect_output:
