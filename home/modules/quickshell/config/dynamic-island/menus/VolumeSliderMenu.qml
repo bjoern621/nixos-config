@@ -308,7 +308,6 @@ Item {
                                 id: sinkTap
                                 onTapped: {
                                     Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData;
-                                    root.outputExpanded = false;
                                 }
                             }
                         }
