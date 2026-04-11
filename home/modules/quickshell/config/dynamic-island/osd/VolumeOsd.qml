@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import QtQuick
+import QtQuick.Effects
 import "../"
 
 // Volume OSD using Quickshell.Services.Pipewire.
@@ -31,31 +32,37 @@ Scope {
 
     onActualVolumeChanged: triggerShow()
     onIsMutedChanged: triggerShow()
-    readonly property string osdIcon: {
-        if (isMuted || osdValue === 0) return "\uf026"
-        if (osdValue < 50) return "\uf027"
-        return "\uf028"
+    readonly property string osdIconSource: {
+        if (isMuted || osdValue === 0)
+            return "../icons/icons8-sound-speaker.svg";
+        if (osdValue <= 33)
+            return "../icons/icons8-low-volume.svg";
+        if (osdValue <= 66)
+            return "../icons/icons8-volume.svg";
+        return "../icons/icons8-audio.svg";
     }
 
     function focusedScreen() {
-        const mon = Hyprland.focusedMonitor
+        const mon = Hyprland.focusedMonitor;
         if (mon) {
-            const screens = Quickshell.screens
+            const screens = Quickshell.screens;
             for (let i = 0; i < screens.length; i++) {
                 if (screens[i].name === mon.name)
-                    return screens[i]
+                    return screens[i];
             }
         }
-        return null
+        return null;
     }
 
     function triggerShow() {
-        if (suppressOsd || !_startupDone) return
-        const s = focusedScreen()
-        if (s) osdWindow.screen = s
-        osdWindow.visible = true
-        osdHideTimer.restart()
-        osdReveal.show()
+        if (suppressOsd || !_startupDone)
+            return;
+        const s = focusedScreen();
+        if (s)
+            osdWindow.screen = s;
+        osdWindow.visible = true;
+        osdHideTimer.restart();
+        osdReveal.show();
     }
 
     Timer {
@@ -68,7 +75,9 @@ Scope {
         id: osdWindow
         visible: false
 
-        anchors { top: true }
+        anchors {
+            top: true
+        }
         exclusiveZone: 0
         color: "transparent"
 
@@ -78,7 +87,9 @@ Scope {
 
         Connections {
             target: osdReveal
-            function onHidden() { osdWindow.visible = false }
+            function onHidden() {
+                osdWindow.visible = false;
+            }
         }
 
         PopReveal {
@@ -99,7 +110,7 @@ Scope {
                 property int marginLeftRight: Spacing.spacing12
 
                 implicitWidth: 200
-                implicitHeight: contentRow.implicitHeight + 2*marginTopBottom
+                implicitHeight: contentRow.implicitHeight + 2 * marginTopBottom
 
                 radius: implicitHeight / 2
                 color: Colors.pillBackground
@@ -120,17 +131,33 @@ Scope {
                     ContentReplace {
                         id: osdIconReplace
                         width: 24
-                        height: osdIconText.implicitHeight
+                        height: 24
                         anchors.verticalCenter: parent.verticalCenter
-                        contentKey: volumeScope.osdIcon
+                        contentKey: volumeScope.osdIconSource
 
-                        Text {
+                        Item {
                             id: osdIconText
-                            text: osdIconReplace.displayValue
-                            font.family: Typography.iconFontFamily
-                            font.pixelSize: Typography.fontSize16
-                            color: Colors.textColor
+                            width: 22
+                            height: 22
                             anchors.centerIn: parent
+
+                            Image {
+                                id: osdIconImage
+                                anchors.fill: parent
+                                source: osdIconReplace.displayValue
+                                sourceSize: Qt.size(44, 44)
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                antialiasing: true
+                                visible: false
+                            }
+
+                            MultiEffect {
+                                anchors.fill: osdIconImage
+                                source: osdIconImage
+                                colorization: 1.0
+                                colorizationColor: Colors.textColor
+                            }
                         }
                     }
 
@@ -177,7 +204,10 @@ Scope {
                                 color: volumeScope.isMuted ? Colors.progressMuted : Colors.accentColor
 
                                 Behavior on width {
-                                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                    NumberAnimation {
+                                        duration: 120
+                                        easing.type: Easing.OutCubic
+                                    }
                                 }
                             }
 
@@ -188,7 +218,10 @@ Scope {
                                 color: Colors.progressBackground
 
                                 Behavior on width {
-                                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                    NumberAnimation {
+                                        duration: 120
+                                        easing.type: Easing.OutCubic
+                                    }
                                 }
                             }
                         }

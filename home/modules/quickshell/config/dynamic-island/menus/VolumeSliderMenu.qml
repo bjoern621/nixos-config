@@ -1,5 +1,6 @@
 import Quickshell.Services.Pipewire
 import QtQuick
+import QtQuick.Effects
 import "../"
 
 Item {
@@ -17,12 +18,14 @@ Item {
     readonly property var audioNode: Pipewire.defaultAudioSink?.audio ?? null
     readonly property int currentVolume: Math.round((audioNode?.volume ?? 0) * 100)
     readonly property bool isMuted: audioNode?.muted ?? false
-    readonly property string volumeIcon: {
+    readonly property string volumeIconSource: {
         if (isMuted || currentVolume === 0)
-            return "\uf026";
-        if (currentVolume < 50)
-            return "\uf027";
-        return "\uf028";
+            return "../icons/icons8-sound-speaker.svg";
+        if (currentVolume <= 33)
+            return "../icons/icons8-low-volume.svg";
+        if (currentVolume <= 66)
+            return "../icons/icons8-volume.svg";
+        return "../icons/icons8-audio.svg";
     }
 
     // --- Filtered node lists ---
@@ -103,24 +106,40 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: muteTap.pressed ? Colors.hoverItemPressed : muteHover.hovered ? Colors.hoverItemHovered : root.isMuted ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
+                        color: muteTap.pressed ? Colors.hoverItemPressed : muteHover.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: muteHover.hovered || muteTap.pressed ? Colors.pillBorder : "transparent"
                     }
 
                     ContentReplace {
                         id: muteIconReplace
-                        contentKey: root.volumeIcon
+                        contentKey: root.volumeIconSource
                         anchors.centerIn: parent
-                        width: 16
-                        height: muteIconText.implicitHeight
+                        width: 18
+                        height: 18
 
-                        Text {
+                        Item {
                             id: muteIconText
-                            text: muteIconReplace.displayValue
-                            font.family: Typography.iconFontFamily
-                            font.pixelSize: Typography.fontSize14
-                            color: root.isMuted ? Colors.textColorMuted : Colors.textColor
+                            width: 18
+                            height: 18
                             anchors.centerIn: parent
+
+                            Image {
+                                id: muteIconImage
+                                anchors.fill: parent
+                                source: muteIconReplace.displayValue
+                                sourceSize: Qt.size(36, 36)
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                antialiasing: true
+                                visible: false
+                            }
+
+                            MultiEffect {
+                                anchors.fill: muteIconImage
+                                source: muteIconImage
+                                colorization: 1.0
+                                colorizationColor: Colors.textColor
+                            }
                         }
                     }
 
@@ -342,12 +361,14 @@ Item {
                         readonly property var appAudio: modelData.audio
                         readonly property int appVolume: Math.round((appAudio?.volume ?? 0) * 100)
                         readonly property bool appMuted: appAudio?.muted ?? false
-                        readonly property string appIcon: {
+                        readonly property string appIconSource: {
                             if (appMuted || appVolume === 0)
-                                return "\uf026";
-                            if (appVolume < 50)
-                                return "\uf027";
-                            return "\uf028";
+                                return "../icons/icons8-sound-speaker.svg";
+                            if (appVolume <= 33)
+                                return "../icons/icons8-low-volume.svg";
+                            if (appVolume <= 66)
+                                return "../icons/icons8-volume.svg";
+                            return "../icons/icons8-audio.svg";
                         }
 
                         // App name + mute button row
@@ -382,16 +403,32 @@ Item {
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: height / 2
-                                    color: appMuteTap.pressed ? Colors.hoverItemPressed : appMuteHover.hovered ? Colors.hoverItemHovered : appDelegate.appMuted ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
+                                    color: appMuteTap.pressed ? Colors.hoverItemPressed : appMuteHover.hovered ? Colors.hoverItemHovered : "transparent"
                                     border.color: appMuteHover.hovered || appMuteTap.pressed ? Colors.pillBorder : "transparent"
                                 }
 
-                                Text {
-                                    text: appDelegate.appIcon
-                                    font.family: Typography.iconFontFamily
-                                    font.pixelSize: Typography.fontSize12
-                                    color: appDelegate.appMuted ? Colors.textColorMuted : Colors.textColor
+                                Item {
+                                    width: 16
+                                    height: 16
                                     anchors.centerIn: parent
+
+                                    Image {
+                                        id: appMuteIconImage
+                                        anchors.fill: parent
+                                        source: appDelegate.appIconSource
+                                        sourceSize: Qt.size(32, 32)
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        antialiasing: true
+                                        visible: false
+                                    }
+
+                                    MultiEffect {
+                                        anchors.fill: appMuteIconImage
+                                        source: appMuteIconImage
+                                        colorization: 1.0
+                                        colorizationColor: Colors.textColor
+                                    }
                                 }
 
                                 HoverHandler {

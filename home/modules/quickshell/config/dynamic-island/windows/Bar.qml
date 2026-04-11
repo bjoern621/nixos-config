@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Services.Mpris
+import Quickshell.Services.Pipewire
 import QtQuick
 import "../"
 
@@ -153,10 +154,14 @@ Variants {
 
                     HoverItem {
                         id: volumeHoverItem
-                        clickable: false
+                        clickable: true
                         menu: volumeMenu
                         onMenuOpenChanged: {
                             Globals.volumeSliderOpen = menuOpen;
+                        }
+                        onClicked: {
+                            if (Pipewire.defaultAudioSink?.audio)
+                                Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
                         }
                         VolumeIcon {
                             id: volumeIcon
