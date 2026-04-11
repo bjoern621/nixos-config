@@ -11,5 +11,6 @@
     kubectl
     virt-manager
     kubernetes-helm
+    ripgrep
   ];
 }
