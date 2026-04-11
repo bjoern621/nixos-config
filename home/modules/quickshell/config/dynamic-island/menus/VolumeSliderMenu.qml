@@ -6,6 +6,7 @@ import Quickshell.Io
 import QtQuick
 import "../"
 import "../base"
+import "BluetoothUtils.js" as BluetoothUtils
 
 Item {
     id: root
@@ -74,103 +75,14 @@ Item {
     property string btConnectingMac: ""
     property string btConnectingName: ""
     property string btStatusText: ""
+    readonly property string btBackendScriptPath: Qt.resolvedUrl("../bluetooth_backend.py").toString().replace("file://", "")
     property string pendingSwitchMac: ""
     property int pendingSwitchAttempts: 0
     readonly property int btSwitchMaxAttempts: 120
     readonly property bool btBusy: btConnectProcess.running || pendingSwitchMac.length > 0
 
-    function _extractBluetoothMacFromNodeName(nodeName) {
-        const name = (nodeName || "").toLowerCase();
-        if (name.indexOf("bluez_output.") !== 0)
-            return "";
-
-        const parts = name.split(".");
-        if (parts.length < 2)
-            return "";
-
-        return parts[1].replace(/_/g, ":").toUpperCase();
-    }
-
-    function _findSinkByBluetoothMac(mac, targetName) {
-        const nodes = Pipewire.nodes.values;
-        if (!nodes)
-            return null;
-
-        const target = (targetName || "").toLowerCase();
-        let fallbackSink = null;
-
-        for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i];
-            if (!n || !n.isSink || n.isStream)
-                continue;
-            const sinkMac = root._extractBluetoothMacFromNodeName(n.name);
-            if (!sinkMac)
-                continue;
-
-            if (sinkMac === mac)
-                return n;
-
-            if (target.length > 0 && !fallbackSink) {
-                const description = (n.description || "").toLowerCase();
-                if (description === target || description.indexOf(target) >= 0)
-                    fallbackSink = n;
-            }
-        }
-
-        return fallbackSink;
-    }
-
-    function _isBluetoothSink(node) {
-        return root._extractBluetoothMacFromNodeName(node?.name).length > 0;
-    }
-
     readonly property var outputDevices: {
-        const result = [];
-        const sinks = root.sinkNodes;
-        const presentTargetMacs = {};
-
-        for (let i = 0; i < sinks.length; i++) {
-            const n = sinks[i];
-            const sinkMac = root._extractBluetoothMacFromNodeName(n.name);
-
-            if (sinkMac.length > 0) {
-                let isKnownTarget = false;
-                for (let t = 0; t < root.bluetoothTargets.length; t++) {
-                    if (root.bluetoothTargets[t].mac === sinkMac) {
-                        isKnownTarget = true;
-                        break;
-                    }
-                }
-
-                if (isKnownTarget) {
-                    if (presentTargetMacs[sinkMac])
-                        continue;
-                    presentTargetMacs[sinkMac] = true;
-                }
-            }
-
-            result.push({
-                type: "sink",
-                node: n,
-                name: n.description || n.name,
-                isBluetooth: root._isBluetoothSink(n),
-                mac: sinkMac
-            });
-        }
-
-        for (let j = 0; j < root.bluetoothTargets.length; j++) {
-            const t = root.bluetoothTargets[j];
-            if (!presentTargetMacs[t.mac]) {
-                result.push({
-                    type: "bt-placeholder",
-                    node: null,
-                    name: t.name,
-                    isBluetooth: true,
-                    mac: t.mac
-                });
-            }
-        }
-        return result;
+        return BluetoothUtils.buildOutputDevices(root.sinkNodes, root.bluetoothTargets);
     }
 
     function connectBluetoothDevice(targetName, mac) {
@@ -196,7 +108,7 @@ Item {
         running: false
         property string targetMac: ""
 
-        command: ["bash", "-lc", "set -u\nBT_MAC=\"$1\"\n\nprintf 'STATUS:Pruefe Bluetooth-Backend...\\n'\nif ! bluetoothctl show >/dev/null 2>&1; then\n  printf 'RESULT:BACKEND_UNAVAILABLE\\n'\n  exit 0\nfi\n\nprintf 'STATUS:Aktiviere Bluetooth...\\n'\n(bluetoothctl power on >/dev/null 2>&1 || true)\n\nprintf 'STATUS:Verbinde mit Geraet...\\n'\n(bluetoothctl trust \"$BT_MAC\" >/dev/null 2>&1 || true)\nCONNECT_OUT=$(bluetoothctl connect \"$BT_MAC\" 2>&1 || true)\nprintf '%s\\n' \"$CONNECT_OUT\"\n\nif bluetoothctl info \"$BT_MAC\" 2>/dev/null | grep -qi 'Connected: yes'; then\n  printf 'RESULT:OK\\n'\nelse\n  printf 'RESULT:FAIL\\n'\nfi\n", "--", targetMac]
+        command: ["python3", root.btBackendScriptPath, "connect", targetMac]
 
         stdout: SplitParser {
             onRead: data => {
@@ -244,7 +156,7 @@ Item {
             }
 
             root.pendingSwitchAttempts++;
-            const sink = root._findSinkByBluetoothMac(root.pendingSwitchMac, root.btConnectingName);
+            const sink = BluetoothUtils.findSinkByBluetooth(Pipewire.nodes.values, root.pendingSwitchMac, root.btConnectingName);
             if (sink) {
                 Pipewire.preferredDefaultAudioSink = sink;
                 const selectedName = root.btConnectingName.length ? root.btConnectingName : "Bluetooth-Geraet";
