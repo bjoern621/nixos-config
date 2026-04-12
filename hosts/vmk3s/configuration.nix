@@ -42,6 +42,9 @@
 
   services.openssh.enable = true;
 
+  # Kubernetes API server for remote kubectl and GitOps controllers.
+  networking.firewall.allowedTCPPorts = [ 6443 ];
+
   services.k3s = {
     enable = true;
     role = "server";
