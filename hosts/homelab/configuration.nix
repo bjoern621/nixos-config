@@ -8,7 +8,6 @@
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
     ../../modules/homelab/vm/hypervisor
-    ../../modules/homelab/vm/k3s
     ../../modules/homelab/samba.nix
     ../../modules/homelab/mounts.nix
     ../../modules/homelab/storage.nix
