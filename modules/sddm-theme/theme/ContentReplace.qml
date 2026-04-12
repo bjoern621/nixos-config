@@ -18,7 +18,7 @@ Item {
 
     default property alias content: contentArea.data
     property var contentKey
-    property var displayValue: contentKey
+    property var displayValue
     property int duration: 150
 
     clip: true
@@ -82,6 +82,7 @@ Item {
     onContentKeyChanged: {
         if (_prevKey === undefined) {
             _prevKey = contentKey;
+            displayValue = contentKey;
             return;
         }
         _prevKey = contentKey;

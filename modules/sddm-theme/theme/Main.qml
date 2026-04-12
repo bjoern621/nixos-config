@@ -13,8 +13,8 @@ Rectangle {
     // are inlined manually and should stay in sync with their Quickshell counterparts.
 
     readonly property color pillBg: Qt.rgba(1, 1, 1, 0.5)
-    readonly property color pillBorder: Qt.rgba(0, 0, 0, 0.2)
-    readonly property color pillBorderFocus: Qt.rgba(0, 0, 0, 0.4)
+    readonly property color pillBorder: Qt.rgba(1, 1, 1, 0.2)
+    readonly property color pillBorderFocus: Qt.rgba(1, 1, 1, 0.35)
     readonly property color textWhite: "#ffffff"
     readonly property color textDark: "#111111"
     readonly property color textMuted: "#555555"
@@ -26,14 +26,16 @@ Rectangle {
     readonly property int inputWidth: 280
     readonly property int inputHeight: 48
     readonly property int faceButtonSize: inputHeight
+    property int autoLoginIntervalMs: 500
 
     property int currentUserIndex: userModel.lastIndex
-    property bool manualAttempt: false
-    property bool faceAuthActive: false
-    property bool isLoading: false
-    property bool errorVisible: false
-    property string errorMessageText: ""
+    readonly property string instanceId: "screen-" + Math.floor(Math.random() * 1000000000)
+    readonly property bool isLoading: Globals.authLoading
+    readonly property bool errorVisible: Globals.authErrorVisible
+    readonly property string errorMessageText: Globals.authErrorMessage
     readonly property bool autoSilentLogin: config.autoSilentLogin === "true"
+    readonly property string loadingMessage: Globals.authAttemptKind === "face" ? "Gesicht wird erkannt..." : "Bitte warten..."
+    property bool syncingPasswordFromGlobals: false
 
     readonly property var dayNames: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]
     readonly property var monthNames: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
@@ -44,6 +46,68 @@ Rectangle {
 
     function germanDate(d) {
         return dayNames[d.getDay()] + ", " + d.getDate() + ". " + monthNames[d.getMonth()];
+    }
+
+    function clearError() {
+        Globals.authErrorVisible = false;
+        Globals.authErrorMessage = "";
+        errorTimer.stop();
+    }
+
+    function showError(message) {
+        Globals.authErrorMessage = message;
+        Globals.authErrorVisible = true;
+        errorTimer.restart();
+    }
+
+    function scheduleAutoSubmit() {
+        autoLoginTimer.stop();
+        if (!root.autoSilentLogin || Globals.authLoading)
+            return;
+        if (Globals.authInputOwner !== root.instanceId) {
+            if (passwordField.activeFocus) {
+                Globals.authInputOwner = root.instanceId;
+            } else {
+                return;
+            }
+        }
+        if (Globals.authPassword.length === 0)
+            return;
+        autoLoginTimer.restart();
+    }
+
+    function submitAuth(kind, password) {
+        if (Globals.authLoading)
+            return false;
+        if (kind !== "face" && (!password || password.length === 0))
+            return false;
+
+        autoLoginTimer.stop();
+        Globals.authInputOwner = root.instanceId;
+        Globals.authLoading = true;
+        Globals.authAttemptKind = kind;
+        Globals.authQueuedAttemptKind = "";
+        Globals.authQueuedPassword = "";
+        root.clearError();
+
+        sddm.login(root.userName(), kind === "face" ? "" : password, sessionModel.lastIndex);
+        return true;
+    }
+
+    function queueFaceAuth() {
+        autoLoginTimer.stop();
+        Globals.authInputOwner = root.instanceId;
+
+        if (!Globals.authLoading) {
+            Globals.authPassword = "";
+            root.submitAuth("face", "");
+            return;
+        }
+
+        if (Globals.authAttemptKind === "auto") {
+            Globals.authQueuedAttemptKind = "face";
+            Globals.authQueuedPassword = "";
+        }
     }
 
     // Background wallpaper
@@ -111,7 +175,7 @@ Rectangle {
             radius: height / 2
             color: root.isLoading ? Qt.rgba(0.9, 0.9, 0.9, 0.3) : root.pillBg
             border.width: 1
-            border.color: root.isLoading ? Qt.rgba(0, 0, 0, 0.1) : (passwordField.activeFocus ? root.pillBorderFocus : root.pillBorder)
+            border.color: root.isLoading ? Qt.rgba(1, 1, 1, 0.18) : (passwordField.activeFocus ? root.pillBorderFocus : root.pillBorder)
             opacity: root.isLoading ? 0.6 : 1.0
 
             // Lock icon
@@ -120,7 +184,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 18
                 anchors.verticalCenter: parent.verticalCenter
-                source: "icons/icons8-lock.svg"
+                source: "icons/icons8-lock-2.svg"
                 sourceSize: Qt.size(24, 24)
                 width: 24
                 height: 24
@@ -146,52 +210,25 @@ Rectangle {
                 clip: true
                 enabled: !root.isLoading
 
-                transformOrigin: Item.Left
-                scale: 1.0
-                SquishBehavior on scale {
-                    enabled: !root.isLoading
-                    duration: 120
-                    bouncy: true
-                }
-
                 onAccepted: {
-                    if (text.length === 0 || root.isLoading)
-                        return;
-                    root.isLoading = true;
-                    autoLoginTimer.stop();
-                    root.manualAttempt = true;
-                    root.errorVisible = false;
-                    sddm.login(root.userName(), text, sessionModel.lastIndex);
+                    root.submitAuth("manual", text);
                 }
 
                 onTextChanged: {
-                    if (root.isLoading)
-                        return;
-                    scale = 0.95;
-                    scaleTimer.restart();
-                    if (root.autoSilentLogin && text.length > 0) {
-                        autoLoginTimer.restart();
-                    } else {
-                        autoLoginTimer.stop();
+                    if (!root.syncingPasswordFromGlobals) {
+                        Globals.authInputOwner = root.instanceId;
+                        Globals.authPassword = text;
+                        root.clearError();
                     }
-                }
-
-                Timer {
-                    id: scaleTimer
-                    interval: 20
-                    onTriggered: passwordField.scale = 1.0
+                    root.scheduleAutoSubmit();
                 }
             }
 
             Timer {
                 id: autoLoginTimer
-                interval: 500
+                interval: root.autoLoginIntervalMs
                 onTriggered: {
-                    if (passwordField.text.length > 0 && !root.isLoading) {
-                        root.manualAttempt = false;
-                        root.errorVisible = false;
-                        sddm.login(root.userName(), passwordField.text, sessionModel.lastIndex);
-                    }
+                    root.submitAuth("auto", Globals.authPassword);
                 }
             }
 
@@ -218,7 +255,7 @@ Rectangle {
                 radius: height / 2
                 color: root.isLoading ? Qt.rgba(0.9, 0.9, 0.9, 0.3) : (faceArea.pressed && !root.isLoading ? Qt.tint(root.pillBg, root.hoverPressed) : (faceArea.containsMouse && !root.isLoading ? Qt.tint(root.pillBg, root.hoverHovered) : root.pillBg))
                 border.width: 1
-                border.color: root.isLoading ? Qt.rgba(0, 0, 0, 0.1) : (faceArea.containsMouse ? root.pillBorderFocus : root.pillBorder)
+                border.color: root.isLoading ? Qt.rgba(1, 1, 1, 0.18) : (faceArea.containsMouse ? root.pillBorderFocus : root.pillBorder)
                 opacity: root.isLoading ? 0.6 : 1.0
 
                 scale: faceArea.pressed && !root.isLoading ? 0.85 : 1.0
@@ -246,18 +283,10 @@ Rectangle {
                     id: faceArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    cursorShape: root.isLoading ? Qt.ArrowCursor : Qt.PointingHandCursor
-                    enabled: !root.isLoading
+                    cursorShape: Qt.PointingHandCursor
+                    enabled: true
                     onClicked: {
-                        if (root.isLoading)
-                            return;
-                        root.isLoading = true;
-                        autoLoginTimer.stop();
-                        passwordField.text = "";
-                        root.faceAuthActive = true;
-                        root.manualAttempt = true;
-                        root.errorVisible = false;
-                        sddm.login(root.userName(), "", sessionModel.lastIndex);
+                        root.queueFaceAuth();
                     }
                 }
             }
@@ -269,61 +298,49 @@ Rectangle {
             width: root.inputWidth
             height: 24
 
-            ContentReplace {
-                id: statusReplace
+            Label {
+                id: errorMessage
                 anchors.centerIn: parent
-                contentKey: root.isLoading ? "loading" : (root.errorVisible ? root.errorMessageText : "")
+                text: root.errorMessageText
+                visible: !root.isLoading && root.errorVisible && root.errorMessageText !== ""
+                font.pixelSize: Typography.fontSize18
+                color: root.textError
+            }
 
-                Item {
-                    anchors.centerIn: parent
-                    width: Math.max(errorMessage.width, loadingRow.width)
+            Row {
+                id: loadingRow
+                anchors.centerIn: parent
+                spacing: 12
+                visible: root.isLoading
+
+                Label {
+                    text: root.loadingMessage
+                    font.pixelSize: Typography.fontSize18
+                    color: root.textWhite
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Image {
+                    id: spinnerIconSource
+                    source: "icons/icons8-spinner.svg"
+                    sourceSize: Qt.size(24, 24)
+                    width: 24
                     height: 24
+                    visible: false
+                }
+                ColorOverlay {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 24
+                    height: 24
+                    source: spinnerIconSource
+                    color: root.textWhite
 
-                    Label {
-                        id: errorMessage
-                        anchors.centerIn: parent
-                        text: statusReplace.displayValue !== "loading" ? statusReplace.displayValue : ""
-                        visible: statusReplace.displayValue !== "loading" && statusReplace.displayValue !== ""
-                        font.pixelSize: Typography.fontSize18
-                        color: root.textError
-                    }
-
-                    Row {
-                        id: loadingRow
-                        anchors.centerIn: parent
-                        spacing: 12
-                        visible: statusReplace.displayValue === "loading"
-
-                        Label {
-                            text: "Bitte warten..."
-                            font.pixelSize: Typography.fontSize18
-                            color: root.textWhite
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Image {
-                            id: spinnerIconSource
-                            source: "icons/icons8-spinner.svg"
-                            sourceSize: Qt.size(24, 24)
-                            width: 24
-                            height: 24
-                            visible: false
-                        }
-                        ColorOverlay {
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 24
-                            height: 24
-                            source: spinnerIconSource
-                            color: root.textWhite
-
-                            NumberAnimation on rotation {
-                                from: 0
-                                to: 360
-                                duration: 800
-                                loops: Animation.Infinite
-                                running: root.isLoading || statusReplace.displayValue === "loading"
-                            }
-                        }
+                    NumberAnimation on rotation {
+                        from: 0
+                        to: 360
+                        duration: 800
+                        loops: Animation.Infinite
+                        running: root.isLoading
                     }
                 }
             }
@@ -331,7 +348,7 @@ Rectangle {
             Timer {
                 id: errorTimer
                 interval: 3000
-                onTriggered: root.errorVisible = false
+                onTriggered: Globals.authErrorVisible = false
             }
         }
     }
@@ -350,26 +367,68 @@ Rectangle {
     Connections {
         target: sddm
         function onLoginFailed() {
-            root.isLoading = false;
-            // Delay clear active focus out of the disabled state
-            if (root.faceAuthActive) {
-                root.errorMessageText = "Gesicht nicht erkannt";
-                root.faceAuthActive = false;
-            } else if (root.manualAttempt) {
-                root.errorMessageText = "Falsches Passwort";
+            if (!Globals.authLoading)
+                return;
+
+            var failedKind = Globals.authAttemptKind;
+            var queuedKind = Globals.authQueuedAttemptKind;
+            var queuedPassword = Globals.authQueuedPassword;
+
+            Globals.authLoading = false;
+            Globals.authAttemptKind = "";
+            Globals.authQueuedAttemptKind = "";
+            Globals.authQueuedPassword = "";
+
+            if (queuedKind !== "") {
+                if (queuedKind === "face")
+                    Globals.authPassword = "";
+                root.submitAuth(queuedKind, queuedPassword);
+                return;
             }
-            root.errorVisible = true;
-            errorTimer.restart();
+
+            if (failedKind === "face") {
+                root.showError("Gesicht nicht erkannt");
+            } else if (failedKind === "manual") {
+                root.showError("Falsches Passwort");
+            } else {
+                root.showError("Falsches Passwort");
+            }
+
             passwordField.forceActiveFocus();
         }
         function onLoginSucceeded() {
             // Keep loading true till the session starts to prevent user clicking
-            root.errorVisible = false;
-            root.faceAuthActive = false;
+            root.clearError();
+            Globals.authAttemptKind = "";
+            Globals.authQueuedAttemptKind = "";
+            Globals.authQueuedPassword = "";
+        }
+    }
+
+    Connections {
+        target: Globals
+        function onAuthPasswordChanged() {
+            if (passwordField.text === Globals.authPassword)
+                return;
+
+            var keepAtEnd = passwordField.cursorPosition === passwordField.text.length;
+            var cursorPosition = passwordField.cursorPosition;
+            root.syncingPasswordFromGlobals = true;
+            passwordField.text = Globals.authPassword;
+            root.syncingPasswordFromGlobals = false;
+            if (keepAtEnd) {
+                passwordField.cursorPosition = passwordField.text.length;
+            } else {
+                passwordField.cursorPosition = Math.min(cursorPosition, passwordField.text.length);
+            }
+            root.scheduleAutoSubmit();
         }
     }
 
     Component.onCompleted: {
+        if (Globals.authInputOwner === "")
+            Globals.authInputOwner = root.instanceId;
+        passwordField.text = Globals.authPassword;
         passwordField.forceActiveFocus();
     }
 
