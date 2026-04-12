@@ -69,6 +69,10 @@ Item {
         {
             name: "LinkBuds S",
             mac: "F8:4E:17:CB:22:59"
+        },
+        {
+            name: "Fractal Scape",
+            mac: "98:FD:B4:6F:2E:B3"
         }
     ]
 
@@ -109,6 +113,8 @@ Item {
         switch (code) {
         case "CHECK_BACKEND":
             return "Prüfe Bluetooth-Backend...";
+        case "UNBLOCK_BLUETOOTH":
+            return "Entsperre Bluetooth...";
         case "POWER_ON":
             return "Aktiviere Bluetooth...";
         case "CONNECT_DEVICE":

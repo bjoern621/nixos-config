@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import time
 
 
 def _run_bluetoothctl(*args: str) -> tuple[int, str]:
@@ -27,6 +28,24 @@ def _run_bluetoothctl(*args: str) -> tuple[int, str]:
         text=True,
         check=False,
     )
+    output = (proc.stdout or "") + (proc.stderr or "")
+    return proc.returncode, output.strip()
+
+
+# rfkill is the Linux interface that globally allows/blocks radio devices.
+# "Soft blocked" means Bluetooth is disabled by software policy, so
+# bluetoothctl power on can fail until rfkill unblock is executed.
+# Return code 127 when rfkill is not installed so callers can handle that case safely.
+def _run_rfkill(*args: str) -> tuple[int, str]:
+    try:
+        proc = subprocess.run(
+            ["rfkill", *args],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return 127, "rfkill not found"
     output = (proc.stdout or "") + (proc.stderr or "")
     return proc.returncode, output.strip()
 
@@ -46,6 +65,39 @@ def _is_connected(mac: str) -> bool:
     return "connected: yes" in info.lower()
 
 
+def _is_powered() -> bool:
+    code, info = _run_bluetoothctl("show")
+    if code != 0:
+        return False
+    return "powered: yes" in info.lower()
+
+
+def _ensure_powered() -> bool:
+    if _is_powered():
+        return True
+
+    _print_status("UNBLOCK_BLUETOOTH")
+    _run_rfkill("unblock", "bluetooth")
+
+    if _is_powered():
+        return True
+
+    _print_status("POWER_ON")
+    code, output = _run_bluetoothctl("power", "on")
+    if output:
+        print(output, flush=True)
+    if code == 0 and _is_powered():
+        return True
+
+    # bluetoothd can take a moment to report the new power state.
+    for _ in range(20):
+        if _is_powered():
+            return True
+        time.sleep(0.2)
+
+    return False
+
+
 def connect_device(mac: str) -> int:
     _print_status("CHECK_BACKEND")
     code, _ = _run_bluetoothctl("show")
@@ -53,8 +105,9 @@ def connect_device(mac: str) -> int:
         _print_result("BACKEND_UNAVAILABLE")
         return 0
 
-    _print_status("POWER_ON")
-    _run_bluetoothctl("power", "on")
+    if not _ensure_powered():
+        _print_result("FAIL")
+        return 0
 
     _print_status("CONNECT_DEVICE")
     _run_bluetoothctl("trust", mac)
