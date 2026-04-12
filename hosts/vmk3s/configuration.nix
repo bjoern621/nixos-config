@@ -15,8 +15,6 @@
   i18n.defaultLocale = "de_DE.UTF-8";
   console.keyMap = "de";
 
-  services.openssh.enable = true;
-
   users.users.ops = {
     isNormalUser = true;
     description = "Operations";
@@ -30,7 +28,17 @@
     ];
   };
 
-  programs.zsh.enable = true;
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+
+  nixpkgs.config.allowUnfree = true;
+  system.stateVersion = "25.11";
+
+  # Additional configuration:
+
+  services.openssh.enable = true;
 
   services.k3s = {
     enable = true;
@@ -42,12 +50,4 @@
     kubectl
     tldr
   ];
-
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
-
-  nixpkgs.config.allowUnfree = true;
-  system.stateVersion = "25.11";
 }
