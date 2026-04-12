@@ -10,7 +10,7 @@ let
   imageStorageDir = "/var/lib/libvirt/images";
   vmDiskPath = "${imageStorageDir}/${vmName}.qcow2";
   vmInstallerIsoPath = "${imageStorageDir}/${vmName}-installer.iso";
-  vmInstallerIsoUrl = "https://channels.nixos.org/nixos-unstable/latest-nixos-minimal-x86_64-linux.iso";
+  vmInstallerIsoUrl = "https://channels.nixos.org/nixos-unstable/latest-nixos-graphical-x86_64-linux.iso";
   vmDomainXml = pkgs.replaceVars ./domain.xml {
     QEMU_SYSTEM_X86_64 = "${pkgs.qemu_kvm}/bin/qemu-system-x86_64";
     VM_DISK_PATH = vmDiskPath;
