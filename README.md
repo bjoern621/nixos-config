@@ -13,7 +13,6 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
 4. Clone this repository:
     ```bash
     git clone https://github.com/bjoern621/nixos-config.git ~/git/nixos-config
-    cd ~/git/nixos-config
     ```
 5. Link the repository as the NixOS config directory:
     ```bash
