@@ -4,6 +4,12 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
 
 ## Installation
 
+> [!IMPORTANT]
+> Create the correct username during installation based on the selected host profile.
+> For `default`, use user `bjoern`. For `homelab` or `vmk3s`, use user `ops`.
+> Using a different username can cause the previous home files to be replaced after rebuild,
+> which means cloning this repo and recreating symlinks must be done again.
+
 1. Install NixOS using any preferred method, for example the graphical installer.
 2. Boot into the installed system.
 3. Install Git temporarily:
