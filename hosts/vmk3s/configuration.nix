@@ -3,6 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ../../modules/scripts/default.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
