@@ -38,6 +38,8 @@
 
   # Additional configuration:
 
+  programs.zsh.enable = true;
+
   services.openssh.enable = true;
 
   services.k3s = {
