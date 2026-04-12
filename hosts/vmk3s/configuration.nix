@@ -44,7 +44,8 @@
   services.openssh.enable = true;
 
   # Kubernetes API server for remote kubectl and GitOps controllers.
-  networking.firewall.allowedTCPPorts = [ 6443 ];
+  # Argo CD UI is exposed as NodePort on 32443.
+  networking.firewall.allowedTCPPorts = [ 6443 32443 ];
 
   services.k3s = {
     enable = true;
