@@ -30,6 +30,13 @@
             <source bridge='br0' />
             <model type='virtio' />
         </interface>
+        <input type='tablet' bus='usb' />
+        <video>
+            <model type='virtio' heads='1' primary='yes' />
+        </video>
+        <channel type='spicevmc'>
+            <target type='virtio' name='com.redhat.spice.0' />
+        </channel>
         <console type='pty' />
         <graphics type='spice' autoport='yes' />
     </devices>
