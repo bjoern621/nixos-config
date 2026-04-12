@@ -131,9 +131,9 @@
           specialArgs = { inherit inputs customLib; };
         };
 
-        vm-k3s = nixpkgs.lib.nixosSystem {
+        vmk3s = nixpkgs.lib.nixosSystem {
           modules = [
-            ./hosts/vm-k3s/configuration.nix
+            ./hosts/vmk3s/configuration.nix
           ];
 
           specialArgs = { inherit inputs customLib; };

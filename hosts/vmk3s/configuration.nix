@@ -9,7 +9,7 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
 
-  networking.hostName = "vm-k3s";
+  networking.hostName = "vmk3s";
 
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "de_DE.UTF-8";
