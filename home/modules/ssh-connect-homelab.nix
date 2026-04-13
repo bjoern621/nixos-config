@@ -21,7 +21,7 @@
         identitiesOnly = true;
       };
 
-      k3s = {
+      vmk3s = {
         hostname = "192.168.178.80";
         user = "ops";
         identityFile = "/home/bjoern/.ssh/id_ed25519";
