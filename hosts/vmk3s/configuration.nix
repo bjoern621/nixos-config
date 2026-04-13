@@ -45,7 +45,7 @@
 
   # Kubernetes API server for remote kubectl and GitOps controllers.
   # Argo CD UI is exposed as NodePort on 32443.
-  networking.firewall.allowedTCPPorts = [ 6443 32443 ];
+  networking.firewall.allowedTCPPorts = [ 6443 32443 31478 31553 ];
 
   services.k3s = {
     enable = true;
