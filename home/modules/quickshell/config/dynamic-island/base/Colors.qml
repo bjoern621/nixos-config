@@ -21,6 +21,6 @@ QtObject {
     readonly property color progressMuted: "#666666"
 
     // Battery warning colors
-    readonly property color batteryWarning: "#e3a600"
-    readonly property color batteryCritical: "#c0392b"
+    readonly property color batteryWarning: "#fed330"
+    readonly property color batteryCritical: "#fc5c65"
 }

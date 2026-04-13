@@ -46,6 +46,5 @@ Row {
     Label {
         text: Math.round(UPower.displayDevice.percentage * 100) + " %"
         anchors.verticalCenter: parent.verticalCenter
-        color: batteryColor
     }
 }
