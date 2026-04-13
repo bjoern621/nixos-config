@@ -11,7 +11,7 @@ Item {
 
     readonly property string volumeIconSource: {
         if (isMuted || volume === 0)
-            return "../icons/icons8-sound-speaker.svg";
+            return "../icons/icons8-audio-muted.svg";
         if (volume <= 33)
             return "../icons/icons8-low-volume.svg";
         if (volume <= 66)

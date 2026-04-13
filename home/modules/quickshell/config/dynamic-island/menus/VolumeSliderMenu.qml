@@ -25,7 +25,7 @@ Item {
     readonly property bool isMuted: audioNode?.muted ?? false
     readonly property string volumeIconSource: {
         if (isMuted || currentVolume === 0)
-            return "../icons/icons8-sound-speaker.svg";
+            return "../icons/icons8-audio-muted.svg";
         if (currentVolume <= 33)
             return "../icons/icons8-low-volume.svg";
         if (currentVolume <= 66)
@@ -600,7 +600,7 @@ Item {
                         readonly property bool appMuted: appAudio?.muted ?? false
                         readonly property string appIconSource: {
                             if (appMuted || appVolume === 0)
-                                return "../icons/icons8-sound-speaker.svg";
+                                return "../icons/icons8-audio-muted.svg";
                             if (appVolume <= 33)
                                 return "../icons/icons8-low-volume.svg";
                             if (appVolume <= 66)

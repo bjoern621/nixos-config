@@ -8,9 +8,16 @@ Row {
     spacing: Spacing.spacing4
 
     property string batteryIconSource: {
-        if (UPower.displayDevice.state === UPowerDeviceState.Charging)
-            return "../icons/icons8-battery-charging.svg";
         const pct = UPower.displayDevice.percentage;
+        if (UPower.displayDevice.state === UPowerDeviceState.Charging) {
+            if (pct <= 0.25)
+                return "../icons/icons8-battery-25-loading.svg";
+            if (pct <= 0.50)
+                return "../icons/icons8-battery-50-loading.svg";
+            if (pct <= 0.75)
+                return "../icons/icons8-battery-75-loading.svg";
+            return "../icons/icons8-battery-100-loading.svg";
+        }
         if (pct <= 0.25)
             return "../icons/icons8-battery-25.svg";
         if (pct <= 0.50)

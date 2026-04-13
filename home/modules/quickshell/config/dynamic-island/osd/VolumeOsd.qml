@@ -34,7 +34,7 @@ Scope {
     onIsMutedChanged: triggerShow()
     readonly property string osdIconSource: {
         if (isMuted || osdValue === 0)
-            return "../icons/icons8-sound-speaker.svg";
+            return "../icons/icons8-audio-muted.svg";
         if (osdValue <= 33)
             return "../icons/icons8-low-volume.svg";
         if (osdValue <= 66)
