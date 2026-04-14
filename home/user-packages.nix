@@ -12,6 +12,5 @@
     virt-manager
     kubernetes-helm
     ripgrep
-    kubeseal
   ];
 }
