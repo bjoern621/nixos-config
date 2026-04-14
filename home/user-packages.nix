@@ -12,5 +12,6 @@
     virt-manager
     kubernetes-helm
     ripgrep
+    bruno
   ];
 }
