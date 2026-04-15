@@ -78,10 +78,6 @@ Item {
                 id: iconRow
                 spacing: Spacing.spacing2
 
-                HoverHandler {
-                    id: iconRowHover
-                }
-
                 Repeater {
                     model: SystemTray.items
 
@@ -224,45 +220,17 @@ Item {
             anchors.fill: parent
             menuHandle: internal.activeMenuHandle
             panelWindow: trayRoot.panelWindow
-            onItemTriggered: trayRoot.closeMenu()
         }
     }
 
     // --- Menu open/close logic ---
 
-    readonly property bool anyHovered: trayMenuContent.hovered || iconRowHover.hovered
-
-    onAnyHoveredChanged: {
-        if (internal.menuOpen) {
-            if (anyHovered) {
-                closeTimer.stop();
-            } else {
-                closeTimer.restart();
-            }
-        }
-    }
-
-    Timer {
-        id: closeTimer
-        interval: 300
-        onTriggered: {
-            if (internal.menuOpen && !trayRoot.anyHovered) {
-                trayRoot.closeMenu();
-            }
-        }
-    }
-
     Connections {
         target: internal
         function onMenuOpenChanged() {
             if (internal.menuOpen) {
-                closeTimer.stop();
                 trayMenuContainer.show();
-                // Start close timer immediately — if the user never hovers the menu,
-                // the timer will fire and close it. If they do hover, it gets canceled.
-                closeTimer.restart();
             } else {
-                closeTimer.stop();
                 trayMenuContainer.hide();
             }
         }
