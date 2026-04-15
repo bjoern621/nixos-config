@@ -29,6 +29,7 @@
     ./modules/keyring.nix
     ./modules/image-viewer.nix
     ./modules/mpv.nix
+    ./modules/tailscale-client.nix
   ];
 
   home.username = "bjoern";

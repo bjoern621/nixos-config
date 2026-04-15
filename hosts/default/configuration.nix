@@ -26,6 +26,7 @@
     ../../modules/auto-update.nix
     ../../modules/howdy.nix
     ../../modules/fonts.nix
+    ../../modules/tailscale-client.nix
   ];
 
   # Bootloader.
