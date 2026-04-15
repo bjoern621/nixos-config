@@ -73,7 +73,7 @@ Item {
                     },
                     {
                         action: "hibernate",
-                        iconSource: "../icons/icons8-winter.svg",
+                        iconSource: "../icons/icons8-sleep.svg",
                         label: "Hibernate"
                     },
                 ]

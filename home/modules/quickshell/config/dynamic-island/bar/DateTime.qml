@@ -29,7 +29,7 @@ Row {
         spacing: Spacing.spacing4
 
         TintedIcon {
-            source: "../icons/icons8-monday.svg"
+            source: "../icons/icons8-calendar-15.svg"
             size: Typography.fontSize20
             anchors.verticalCenter: parent.verticalCenter
         }
@@ -48,7 +48,7 @@ Row {
         spacing: Spacing.spacing4
 
         TintedIcon {
-            source: "../icons/icons8-time.svg"
+            source: "../icons/icons8-clock.svg"
             size: Typography.fontSize20
             anchors.verticalCenter: parent.verticalCenter
         }
