@@ -13,5 +13,6 @@
     kubernetes-helm
     ripgrep
     bruno
+    eduvpn-client
   ];
 }
