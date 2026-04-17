@@ -69,6 +69,32 @@
   ];
 
   networking.hostName = "nixos"; # Define your hostname.
+  networking.extraHosts = ''
+    # HAW ITS 26s
+    # Innerhalb des HAW-Netzes / per HAW-VPN erreichbar
+    141.22.167.200 vm101.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm102.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm103.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm104.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm105.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm106.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm107.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm108.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm109.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm110.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm111.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm112.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm113.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm114.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm115.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm116.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm117.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm118.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm119.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm120.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm121.kss.ful.inf.haw-hamburg.de
+    141.22.167.200 vm122.kss.ful.inf.haw-hamburg.de
+  '';
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Enable networking
