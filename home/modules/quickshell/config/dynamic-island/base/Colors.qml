@@ -11,8 +11,8 @@ QtObject {
     readonly property color pillBackground: Qt.rgba(0, 0, 0, 0.5)
     readonly property color pillBorder: Qt.rgba(1, 1, 1, 0.2)
     readonly property color separatorColor: Qt.rgba(1, 1, 1, 0.2)
-    readonly property color hoverItemHovered: Qt.rgba((1 - 0.65) + (accentColor.r * 0.65), (1 - 0.65) + (accentColor.g * 0.65), (1 - 0.65) + (accentColor.b * 0.65), 0.08)
-    readonly property color hoverItemPressed: Qt.rgba((1 - 0.75) + (accentColor.r * 0.75), (1 - 0.75) + (accentColor.g * 0.75), (1 - 0.75) + (accentColor.b * 0.75), 0.15)
+    readonly property color hoverItemHovered: Qt.rgba((1 - 0.75) + (accentColor.r * 0.75), (1 - 0.75) + (accentColor.g * 0.75), (1 - 0.75) + (accentColor.b * 0.75), 0.12)
+    readonly property color hoverItemPressed: Qt.rgba((1 - 0.75) + (accentColor.r * 0.75), (1 - 0.75) + (accentColor.g * 0.75), (1 - 0.75) + (accentColor.b * 0.75), 0.19)
 
     // Accent / progress colors
     readonly property color calendarToday: "#d5071b"
