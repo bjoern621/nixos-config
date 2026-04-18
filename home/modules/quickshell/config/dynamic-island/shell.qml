@@ -24,7 +24,7 @@ ShellRoot {
     VolumeOsd {}
     BrightnessOsd {}
     BatteryWarning {}
-    PopupWindow {}
+    ModalOverlay {}
     AppLauncher {}
     ClipboardHistory {}
     WallpaperChooser {}

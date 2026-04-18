@@ -1,12 +1,10 @@
 pragma Singleton
 import QtQuick
 
-// Singleton managing a queue of dismissable popup notifications.
-// Usage: PopupHost.show("../icons/icons8-settings.svg", "Title", "Message", accentColor)
 QtObject {
     id: root
 
-    // Current popup state (bound by PopupWindow)
+    // Current modal state (bound by ModalOverlay)
     property bool visible: false
     property url iconSource: ""
     property string title: ""
