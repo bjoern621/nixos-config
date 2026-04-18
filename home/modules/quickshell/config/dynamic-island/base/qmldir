@@ -4,7 +4,6 @@ singleton Typography 1.0 Typography.qml
 singleton Globals 1.0 Globals.qml
 singleton GracefulShutdown 1.0 GracefulShutdown.qml
 singleton LoadingHost 1.0 LoadingHost.qml
-singleton NotificationHost 1.0 NotificationHost.qml
 singleton PopupHost 1.0 PopupHost.qml
 WallpaperPersist 1.0 WallpaperPersist.qml
 WallpaperBackend 1.0 WallpaperBackend.qml
