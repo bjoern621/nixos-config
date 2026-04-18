@@ -1,7 +1,5 @@
 pragma ComponentBehavior: Bound
 import Quickshell
-import Quickshell.Wayland
-import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import "../"
 
@@ -115,44 +113,6 @@ Scope {
                     width: toastScope.cardWidth
                     height: card.implicitHeight
                     clip: true
-                    opacity: 0
-
-                    ParallelAnimation {
-                        id: slideInAnim
-                        NumberAnimation {
-                            target: card
-                            property: "x"
-                            to: 0
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                        NumberAnimation {
-                            target: toastDelegate
-                            property: "opacity"
-                            to: 1
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    ParallelAnimation {
-                        id: slideOutAnim
-                        NumberAnimation {
-                            target: card
-                            property: "x"
-                            to: toastScope.cardWidth + toastScope.sideMargin
-                            duration: 150
-                            easing.type: Easing.InCubic
-                        }
-                        NumberAnimation {
-                            target: toastDelegate
-                            property: "opacity"
-                            to: 0
-                            duration: 150
-                            easing.type: Easing.InCubic
-                        }
-                        onFinished: collapseAnim.start()
-                    }
 
                     NumberAnimation {
                         id: collapseAnim
@@ -164,14 +124,11 @@ Scope {
                         onFinished: toastScope._removeEntry(toastDelegate.notifId)
                     }
 
-                    Component.onCompleted: slideInAnim.start()
+                    Component.onCompleted: popReveal.show()
 
                     onActiveChanged: {
-                        if (!active) {
-                            slideInAnim.stop();
-                            collapseAnim.stop();
-                            slideOutAnim.start();
-                        }
+                        if (!active)
+                            popReveal.hide();
                     }
 
                     Timer {
@@ -180,85 +137,95 @@ Scope {
                         onTriggered: toastScope._hideEntry(toastDelegate.notifId)
                     }
 
-                    Rectangle {
-                        id: card
-                        x: toastScope.cardWidth + toastScope.sideMargin
-                        width: toastScope.cardWidth
-                        implicitHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
-                        height: implicitHeight
-                        color: cardTap.pressed ? Colors.hoverItemPressed : cardHover.hovered ? Colors.hoverItemHovered : Colors.pillBackground
-                        border.width: 1
-                        border.color: Colors.pillBorder
-                        radius: Spacing.spacing8
-
-                        scale: cardTap.pressed ? 0.97 : 1.0
-                        SquishBehavior on scale {}
-
-                        HoverHandler {
-                            id: cardHover
-                            cursorShape: Qt.PointingHandCursor
-                        }
-
-                        TapHandler {
-                            id: cardTap
-                            onTapped: toastScope._hideEntry(toastDelegate.notifId)
-                        }
+                    PopReveal {
+                        id: popReveal
+                        edge: Qt.RightEdge
+                        showDuration: 250
+                        hideDuration: 150
+                        width: parent.width
+                        height: card.implicitHeight
+                        onHidden: collapseAnim.start()
 
                         Rectangle {
-                            id: urgencyStripe
-                            anchors {
-                                left: parent.left
-                                top: parent.top
-                                bottom: parent.bottom
-                                leftMargin: Spacing.spacing8
-                                topMargin: Spacing.spacing8
-                                bottomMargin: Spacing.spacing8
-                            }
-                            width: 3
-                            radius: 2
-                            color: toastDelegate.urgency === 2 ? Colors.batteryCritical : Colors.textColorMuted
-                        }
+                            id: card
+                            x: 0
+                            width: toastScope.cardWidth
+                            implicitHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
+                            height: implicitHeight
+                            color: cardTap.pressed ? Colors.hoverItemPressed : cardHover.hovered ? Colors.hoverItemHovered : Colors.pillBackground
+                            border.width: 1
+                            border.color: Colors.pillBorder
+                            radius: Spacing.spacing8
 
-                        Column {
-                            id: cardContent
-                            anchors {
-                                top: parent.top
-                                topMargin: Spacing.spacing12
-                                left: urgencyStripe.right
-                                leftMargin: Spacing.spacing8
-                                right: parent.right
-                                rightMargin: Spacing.spacing12
-                            }
-                            spacing: Spacing.spacing4
+                            scale: cardTap.pressed ? 0.97 : 1.0
+                            SquishBehavior on scale {}
 
-                            Text {
-                                text: toastDelegate.appName
-                                font.family: Typography.fontFamily
-                                font.pixelSize: Typography.fontSize12
-                                font.weight: Font.Normal
-                                color: Colors.textColorMuted
-                                width: parent.width
-                                elide: Text.ElideRight
+                            HoverHandler {
+                                id: cardHover
+                                cursorShape: Qt.PointingHandCursor
                             }
 
-                            Label {
-                                text: toastDelegate.summary
-                                width: parent.width
-                                elide: Text.ElideRight
-                                visible: text !== ""
+                            TapHandler {
+                                id: cardTap
+                                onTapped: toastScope._hideEntry(toastDelegate.notifId)
                             }
 
-                            Text {
-                                text: toastDelegate.body
-                                font.family: Typography.fontFamily
-                                font.pixelSize: Typography.fontSize12
-                                font.weight: Font.Normal
-                                color: Colors.textColorMuted
-                                width: parent.width
-                                wrapMode: Text.WordWrap
-                                maximumLineCount: 3
-                                elide: Text.ElideRight
-                                visible: text !== ""
+                            Rectangle {
+                                id: urgencyStripe
+                                anchors {
+                                    left: parent.left
+                                    top: parent.top
+                                    bottom: parent.bottom
+                                    leftMargin: Spacing.spacing8
+                                    topMargin: Spacing.spacing8
+                                    bottomMargin: Spacing.spacing8
+                                }
+                                width: 3
+                                radius: 2
+                                color: toastDelegate.urgency === 2 ? Colors.batteryCritical : Colors.textColorMuted
+                            }
+
+                            Column {
+                                id: cardContent
+                                anchors {
+                                    top: parent.top
+                                    topMargin: Spacing.spacing12
+                                    left: urgencyStripe.right
+                                    leftMargin: Spacing.spacing8
+                                    right: parent.right
+                                    rightMargin: Spacing.spacing12
+                                }
+                                spacing: Spacing.spacing4
+
+                                Text {
+                                    text: toastDelegate.appName
+                                    font.family: Typography.fontFamily
+                                    font.pixelSize: Typography.fontSize12
+                                    font.weight: Font.Normal
+                                    color: Colors.textColorMuted
+                                    width: parent.width
+                                    elide: Text.ElideRight
+                                }
+
+                                Label {
+                                    text: toastDelegate.summary
+                                    width: parent.width
+                                    elide: Text.ElideRight
+                                    visible: text !== ""
+                                }
+
+                                Text {
+                                    text: toastDelegate.body
+                                    font.family: Typography.fontFamily
+                                    font.pixelSize: Typography.fontSize12
+                                    font.weight: Font.Normal
+                                    color: Colors.textColorMuted
+                                    width: parent.width
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 3
+                                    elide: Text.ElideRight
+                                    visible: text !== ""
+                                }
                             }
                         }
                     }
