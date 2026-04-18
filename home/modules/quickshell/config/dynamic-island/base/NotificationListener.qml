@@ -14,12 +14,7 @@ Singleton {
 
         onNotification: n => {
             n.tracked = true;
-            console.log("[Notification] id=" + n.id
-                + " app=" + n.appName
-                + " summary=" + n.summary
-                + " body=" + n.body
-                + " urgency=" + n.urgency
-                + " timeout=" + n.expireTimeout);
+            // console.log("[Notification] id=" + n.id + " app=" + n.appName + " summary=" + n.summary + " body=" + n.body + " urgency=" + n.urgency + " timeout=" + n.expireTimeout);
             root.notificationReceived(n);
         }
     }
