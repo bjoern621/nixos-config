@@ -9,12 +9,30 @@ Singleton {
 
     signal notificationReceived(var notification)
 
+    ListModel {
+        id: _history
+    }
+
+    readonly property alias history: _history
+
+    function clearHistory() {
+        _history.clear();
+    }
+
     NotificationServer {
         keepOnReload: false
 
         onNotification: n => {
             n.tracked = true;
-            // console.log("[Notification] id=" + n.id + " app=" + n.appName + " summary=" + n.summary + " body=" + n.body + " urgency=" + n.urgency + " timeout=" + n.expireTimeout);
+            if (_history.count >= 50)
+                _history.remove(_history.count - 1);
+            _history.insert(0, {
+                notifId: n.id,
+                appName: n.appName || "",
+                summary: n.summary || "",
+                body: n.body || "",
+                urgency: n.urgency ?? 1
+            });
             root.notificationReceived(n);
         }
     }

@@ -29,4 +29,5 @@ ShellRoot {
     ClipboardHistory {}
     WallpaperChooser {}
     NotificationToast {}
+    NotificationCenter {}
 }

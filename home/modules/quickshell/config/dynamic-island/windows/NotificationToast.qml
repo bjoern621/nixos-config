@@ -24,6 +24,8 @@ Scope {
     }
 
     function _addEntry(n) {
+        if (Globals.doNotDisturb)
+            return;
         if (notifModel.count >= 5)
             _hideEntryInstant(notifModel.get(0).notifId);
 
