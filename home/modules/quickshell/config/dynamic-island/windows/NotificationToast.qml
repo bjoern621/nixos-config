@@ -123,14 +123,14 @@ Scope {
                             target: card
                             property: "x"
                             to: 0
-                            duration: 2000
+                            duration: 200
                             easing.type: Easing.OutCubic
                         }
                         NumberAnimation {
                             target: toastDelegate
                             property: "opacity"
                             to: 1
-                            duration: 2000
+                            duration: 200
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -141,14 +141,14 @@ Scope {
                             target: card
                             property: "x"
                             to: toastScope.cardWidth + toastScope.sideMargin
-                            duration: 2000
+                            duration: 150
                             easing.type: Easing.InCubic
                         }
                         NumberAnimation {
                             target: toastDelegate
                             property: "opacity"
                             to: 0
-                            duration: 2000
+                            duration: 150
                             easing.type: Easing.InCubic
                         }
                         onFinished: collapseAnim.start()
@@ -159,7 +159,7 @@ Scope {
                         target: toastDelegate
                         property: "height"
                         to: 0
-                        duration: 2000
+                        duration: 150
                         easing.type: Easing.InCubic
                         onFinished: toastScope._removeEntry(toastDelegate.notifId)
                     }
