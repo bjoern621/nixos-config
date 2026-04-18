@@ -12,7 +12,7 @@ Scope {
     readonly property int sideMargin: Spacing.spacing16
     readonly property int topOffset: 52
     readonly property int maxVisibleToasts: 5
-    readonly property int toastSlotHeight: 120
+    readonly property int toastSlotReservedHeight: 120
 
     ListModel {
         id: notifModel
@@ -72,7 +72,7 @@ Scope {
         color: "green"
 
         implicitWidth: toastScope.cardWidth + toastScope.sideMargin * 2
-        implicitHeight: toastScope.topOffset + toastScope.maxVisibleToasts * (toastScope.toastSlotHeight + Spacing.spacing8) + Spacing.spacing8
+        implicitHeight: toastScope.topOffset + toastScope.maxVisibleToasts * (toastScope.toastSlotReservedHeight + Spacing.spacing8) + Spacing.spacing8
 
         mask: Region {
             item: notifColumn
