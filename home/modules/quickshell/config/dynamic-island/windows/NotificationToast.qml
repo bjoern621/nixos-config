@@ -27,7 +27,8 @@ Scope {
 
     function _addEntry(n) {
         if (notifModel.count >= 5)
-            _hideEntry(notifModel.get(0).notifId);
+            _hideEntryInstant(notifModel.get(0).notifId);
+
         notifModel.append({
             notifId: n.id,
             appName: n.appName || "",
@@ -44,6 +45,16 @@ Scope {
         for (let i = 0; i < notifModel.count; i++) {
             if (notifModel.get(i).notifId === notifId) {
                 notifModel.setProperty(i, "active", false);
+                return;
+            }
+        }
+    }
+
+    function _hideEntryInstant(notifId) {
+        for (let i = 0; i < notifModel.count; i++) {
+            if (notifModel.get(i).notifId === notifId) {
+                const n = notifModel.get(i).notifObj;
+                notifModel.remove(i);
                 return;
             }
         }
@@ -69,7 +80,7 @@ Scope {
             right: true
         }
         exclusiveZone: 0
-        color: "green"
+        color: "transparent"
 
         implicitWidth: toastScope.cardWidth + toastScope.sideMargin * 2
         implicitHeight: toastScope.topOffset + toastScope.maxVisibleToasts * (toastScope.toastSlotReservedHeight + Spacing.spacing8) + Spacing.spacing8
