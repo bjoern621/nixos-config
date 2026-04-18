@@ -14,5 +14,6 @@
     ripgrep
     bruno
     eduvpn-client
+    mkchromecast
   ];
 }
