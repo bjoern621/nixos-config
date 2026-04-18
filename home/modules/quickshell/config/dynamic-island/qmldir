@@ -4,6 +4,7 @@ singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml
 singleton LoadingHost 1.0 base/LoadingHost.qml
 singleton GracefulShutdown 1.0 base/GracefulShutdown.qml
+singleton NotificationListener 1.0 base/NotificationListener.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml

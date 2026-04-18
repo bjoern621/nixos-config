@@ -10,8 +10,9 @@ import "widgets"
 import "windows"
 
 ShellRoot {
-    // Force-load LoadingHost so it's ready when needed.
+    // Force-load singletons so they're ready when needed.
     property var _loadingHost: LoadingHost
+    property var _notificationListener: NotificationListener
 
     WallpaperPersist { id: wallpaperPersist }
     WallpaperBackend {}
