@@ -39,6 +39,7 @@ Bar 1.0 windows/Bar.qml
 ScreenCorners 1.0 windows/ScreenCorners.qml
 PowerCorner 1.0 windows/PowerCorner.qml
 LoadingOverlay 1.0 windows/LoadingOverlay.qml
+singleton NotificationListener 1.0 base/NotificationListener.qml
 singleton PopupHost 1.0 base/PopupHost.qml
 PopupWindow 1.0 windows/PopupWindow.qml
 AppLauncher 1.0 windows/AppLauncher.qml
@@ -53,5 +54,6 @@ SystemTray 1.0 bar/SystemTray.qml
 NowPlaying 1.0 bar/NowPlaying.qml
 MusicBars 1.0 bar/MusicBars.qml
 
+NotificationToast 1.0 windows/NotificationToast.qml
 WallpaperChooser 1.0 windows/WallpaperChooser.qml
 WallpaperPersist 1.0 base/WallpaperPersist.qml

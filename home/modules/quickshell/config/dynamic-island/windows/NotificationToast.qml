@@ -88,7 +88,6 @@ Scope {
 
                     width: toastScope.cardWidth
                     height: cardReveal.height
-                    visible: cardReveal.visible
 
                     PopReveal {
                         id: cardReveal
