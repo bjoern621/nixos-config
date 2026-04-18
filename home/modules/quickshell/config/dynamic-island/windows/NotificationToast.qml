@@ -11,12 +11,18 @@ Scope {
     readonly property int cardWidth: 340
     readonly property int sideMargin: Spacing.spacing16
     readonly property int topOffset: 52
+    readonly property int maxVisibleToasts: 5
+    readonly property int toastSlotHeight: 120
 
-    ListModel { id: notifModel }
+    ListModel {
+        id: notifModel
+    }
 
     Connections {
         target: NotificationListener
-        function onNotificationReceived(n) { toastScope._addEntry(n); }
+        function onNotificationReceived(n) {
+            toastScope._addEntry(n);
+        }
     }
 
     function _addEntry(n) {
@@ -48,7 +54,8 @@ Scope {
             if (notifModel.get(i).notifId === notifId) {
                 const n = notifModel.get(i).notifObj;
                 notifModel.remove(i);
-                if (n && n.tracked) n.dismiss();
+                if (n && n.tracked)
+                    n.dismiss();
                 return;
             }
         }
@@ -62,17 +69,23 @@ Scope {
             right: true
         }
         exclusiveZone: 0
-        color: "transparent"
+        color: "green"
 
         implicitWidth: toastScope.cardWidth + toastScope.sideMargin * 2
-        implicitHeight: toastScope.topOffset + notifColumn.implicitHeight + Spacing.spacing8
+        implicitHeight: toastScope.topOffset + toastScope.maxVisibleToasts * (toastScope.toastSlotHeight + Spacing.spacing8) + Spacing.spacing8
 
-        mask: Region { item: notifColumn }
+        mask: Region {
+            item: notifColumn
+        }
 
         Column {
             id: notifColumn
-            x: toastScope.sideMargin
-            y: toastScope.topOffset
+            anchors {
+                top: parent.top
+                topMargin: toastScope.topOffset
+                right: parent.right
+                rightMargin: toastScope.sideMargin
+            }
             width: toastScope.cardWidth
             spacing: Spacing.spacing8
 
@@ -95,14 +108,38 @@ Scope {
 
                     ParallelAnimation {
                         id: slideInAnim
-                        NumberAnimation { target: card; property: "x"; to: 0; duration: 2000; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: toastDelegate; property: "opacity"; to: 1; duration: 2000; easing.type: Easing.OutCubic }
+                        NumberAnimation {
+                            target: card
+                            property: "x"
+                            to: 0
+                            duration: 2000
+                            easing.type: Easing.OutCubic
+                        }
+                        NumberAnimation {
+                            target: toastDelegate
+                            property: "opacity"
+                            to: 1
+                            duration: 2000
+                            easing.type: Easing.OutCubic
+                        }
                     }
 
                     ParallelAnimation {
                         id: slideOutAnim
-                        NumberAnimation { target: card; property: "x"; to: toastScope.cardWidth + toastScope.sideMargin; duration: 2000; easing.type: Easing.InCubic }
-                        NumberAnimation { target: toastDelegate; property: "opacity"; to: 0; duration: 2000; easing.type: Easing.InCubic }
+                        NumberAnimation {
+                            target: card
+                            property: "x"
+                            to: toastScope.cardWidth + toastScope.sideMargin
+                            duration: 2000
+                            easing.type: Easing.InCubic
+                        }
+                        NumberAnimation {
+                            target: toastDelegate
+                            property: "opacity"
+                            to: 0
+                            duration: 2000
+                            easing.type: Easing.InCubic
+                        }
                         onFinished: collapseAnim.start()
                     }
 
@@ -138,9 +175,7 @@ Scope {
                         width: toastScope.cardWidth
                         implicitHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
                         height: implicitHeight
-                        color: cardTap.pressed ? Colors.hoverItemPressed
-                             : cardHover.hovered ? Colors.hoverItemHovered
-                             : Colors.pillBackground
+                        color: cardTap.pressed ? Colors.hoverItemPressed : cardHover.hovered ? Colors.hoverItemHovered : Colors.pillBackground
                         border.width: 1
                         border.color: Colors.pillBorder
                         radius: Spacing.spacing8
