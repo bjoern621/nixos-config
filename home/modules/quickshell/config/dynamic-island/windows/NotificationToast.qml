@@ -175,14 +175,21 @@ Scope {
                                 anchors {
                                     left: parent.left
                                     top: parent.top
-                                    bottom: parent.bottom
                                     leftMargin: Spacing.spacing8
                                     topMargin: Spacing.spacing8
-                                    bottomMargin: Spacing.spacing8
                                 }
                                 width: 3
+                                height: card.height - Spacing.spacing8 * 2
                                 radius: 2
                                 color: toastDelegate.urgency === 2 ? Colors.batteryCritical : Colors.textColorMuted
+
+                                NumberAnimation on height {
+                                    from: card.height - Spacing.spacing8 * 2
+                                    to: 0
+                                    duration: toastDelegate.expireTimeout > 0 ? toastDelegate.expireTimeout * 1000 : 5000
+                                    running: toastDelegate.active
+                                    easing.type: Easing.Linear
+                                }
                             }
 
                             Column {
