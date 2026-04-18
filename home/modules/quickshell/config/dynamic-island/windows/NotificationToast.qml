@@ -95,14 +95,24 @@ Scope {
 
                     ParallelAnimation {
                         id: slideInAnim
-                        NumberAnimation { target: card; property: "x"; to: 0; duration: 120; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: toastDelegate; property: "opacity"; to: 1; duration: 80; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: card; property: "x"; to: 0; duration: 2000; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: toastDelegate; property: "opacity"; to: 1; duration: 2000; easing.type: Easing.OutCubic }
                     }
 
                     ParallelAnimation {
                         id: slideOutAnim
-                        NumberAnimation { target: card; property: "x"; to: toastScope.cardWidth + toastScope.sideMargin; duration: 120; easing.type: Easing.InCubic }
-                        NumberAnimation { target: toastDelegate; property: "opacity"; to: 0; duration: 100; easing.type: Easing.InCubic }
+                        NumberAnimation { target: card; property: "x"; to: toastScope.cardWidth + toastScope.sideMargin; duration: 2000; easing.type: Easing.InCubic }
+                        NumberAnimation { target: toastDelegate; property: "opacity"; to: 0; duration: 2000; easing.type: Easing.InCubic }
+                        onFinished: collapseAnim.start()
+                    }
+
+                    NumberAnimation {
+                        id: collapseAnim
+                        target: toastDelegate
+                        property: "height"
+                        to: 0
+                        duration: 2000
+                        easing.type: Easing.InCubic
                         onFinished: toastScope._removeEntry(toastDelegate.notifId)
                     }
 
@@ -111,6 +121,7 @@ Scope {
                     onActiveChanged: {
                         if (!active) {
                             slideInAnim.stop();
+                            collapseAnim.stop();
                             slideOutAnim.start();
                         }
                     }
