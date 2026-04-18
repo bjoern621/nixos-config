@@ -7,18 +7,20 @@ import Quickshell.Services.Notifications
 Singleton {
     id: root
 
+    signal notificationReceived(var notification)
+
     NotificationServer {
-        id: server
+        keepOnReload: false
 
-        keepOnReload: true
-
-        onNotification: notification => {
-            console.log("[Notification] id=" + notification.id
-                + " app=" + notification.appName
-                + " summary=" + notification.summary
-                + " body=" + notification.body
-                + " urgency=" + notification.urgency
-                + " timeout=" + notification.expireTimeout);
+        onNotification: n => {
+            n.tracked = true;
+            console.log("[Notification] id=" + n.id
+                + " app=" + n.appName
+                + " summary=" + n.summary
+                + " body=" + n.body
+                + " urgency=" + n.urgency
+                + " timeout=" + n.expireTimeout);
+            root.notificationReceived(n);
         }
     }
 }

@@ -43,6 +43,7 @@ singleton PopupHost 1.0 base/PopupHost.qml
 PopupWindow 1.0 windows/PopupWindow.qml
 AppLauncher 1.0 windows/AppLauncher.qml
 ClipboardHistory 1.0 windows/ClipboardHistory.qml
+NotificationToast 1.0 windows/NotificationToast.qml
 
 Battery 1.0 bar/Battery.qml
 VolumeIcon 1.0 bar/VolumeIcon.qml

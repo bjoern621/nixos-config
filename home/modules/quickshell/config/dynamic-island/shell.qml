@@ -28,4 +28,5 @@ ShellRoot {
     AppLauncher {}
     ClipboardHistory {}
     WallpaperChooser {}
+    NotificationToast {}
 }
