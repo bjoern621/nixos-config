@@ -20,7 +20,7 @@ ExpandArrow 1.0 animations/ExpandArrow.qml
 HoverItem 1.0 widgets/HoverItem.qml
 HoverMenu 1.0 widgets/HoverMenu.qml
 StepSlider 1.0 widgets/StepSlider.qml
-PopupNotification 1.0 widgets/PopupNotification.qml
+ModalCard 1.0 widgets/ModalCard.qml
 
 VolumeSliderMenu 1.0 menus/VolumeSliderMenu.qml
 CalendarMenu 1.0 menus/CalendarMenu.qml

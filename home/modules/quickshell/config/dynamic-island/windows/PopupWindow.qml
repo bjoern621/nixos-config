@@ -109,7 +109,7 @@ Scope {
                 showDuration: 100
                 hideDuration: 80
 
-                PopupNotification {
+                ModalCard {
                     id: notification
                     anchors.fill: parent
                     iconSource: PopupHost.iconSource
