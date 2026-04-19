@@ -103,7 +103,7 @@ Variants {
 
                     Rectangle {
                         id: dndPill
-                        implicitWidth: dndLabel.implicitWidth + Spacing.spacing12 * 2
+                        implicitWidth: dndRow.implicitWidth + Spacing.spacing12 * 2
                         implicitHeight: 26
                         width: implicitWidth
                         height: implicitHeight
@@ -124,14 +124,31 @@ Variants {
                             onTapped: Globals.doNotDisturb = !Globals.doNotDisturb
                         }
 
-                        Text {
-                            id: dndLabel
+                        Row {
+                            id: dndRow
                             anchors.centerIn: parent
-                            text: "Nicht stören"
-                            font.family: Typography.fontFamily
-                            font.pixelSize: Typography.fontSize12
-                            font.weight: Font.Normal
-                            color: Globals.doNotDisturb ? Colors.textColor : Colors.textColorMuted
+                            spacing: Spacing.spacing4
+
+                            Label {
+                                id: dndLabel
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "Nicht stören"
+                                font.family: Typography.fontFamily
+                                font.pixelSize: Typography.fontSize12
+                                color: Globals.doNotDisturb ? Colors.textColor : Colors.textColorMuted
+                                font.bold: Globals.doNotDisturb
+                            }
+
+                            ContentReplace {
+                                id: dndIconReplace
+                                contentKey: Globals.doNotDisturb ? "../icons/icons8-do-not-disturb-filled" : "../icons/icons8-bell-filled.svg"
+
+                                TintedIcon {
+                                    anchors.centerIn: parent
+                                    size: Typography.fontSize16
+                                    source: dndIconReplace.displayValue
+                                }
+                            }
                         }
                     }
                 }
