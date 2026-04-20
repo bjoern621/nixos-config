@@ -203,14 +203,23 @@ Variants {
                             onTapped: NotificationListener.clearHistory()
                         }
 
-                        Text {
-                            id: clearLabel
+                        Row {
                             anchors.centerIn: parent
-                            text: "Alle löschen"
-                            font.family: Typography.fontFamily
-                            font.pixelSize: Typography.fontSize12
-                            font.weight: Font.Normal
-                            color: Colors.textColorMuted
+
+                            TintedIcon {
+                                size: Typography.fontSize16
+                                source: "../icons/icons8-trash.svg"
+                                color: Colors.textColorMuted
+                            }
+
+                            Text {
+                                id: clearLabel
+                                text: "Alle löschen"
+                                font.family: Typography.fontFamily
+                                font.pixelSize: Typography.fontSize12
+                                font.weight: Font.Normal
+                                color: Colors.textColorMuted
+                            }
                         }
                     }
                 }
