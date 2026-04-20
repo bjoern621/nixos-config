@@ -19,6 +19,10 @@ Singleton {
         _history.clear();
     }
 
+    function removeAt(index) {
+        _history.remove(index);
+    }
+
     NotificationServer {
         keepOnReload: false
 

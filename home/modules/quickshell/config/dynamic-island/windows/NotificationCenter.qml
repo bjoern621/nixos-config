@@ -258,7 +258,6 @@ Variants {
                         Column {
                             id: notifCol
                             width: notifFlick.width
-                            spacing: Spacing.spacing2
 
                             Repeater {
                                 model: NotificationListener.history
@@ -269,6 +268,7 @@ Variants {
                                     required property string summary
                                     required property string body
                                     required property int urgency
+                                    required property int index
 
                                     width: notifCol.width
                                     implicitHeight: entryContent.implicitHeight + Spacing.spacing12 * 2
@@ -302,6 +302,48 @@ Variants {
                                         summary: histEntry.summary
                                         body: histEntry.body
                                         urgency: histEntry.urgency
+                                    }
+
+                                    Rectangle {
+                                        id: deleteBtn
+                                        anchors {
+                                            right: parent.right
+                                            rightMargin: Spacing.spacing8
+                                            top: parent.top
+                                            topMargin: Spacing.spacing8
+                                        }
+                                        width: Spacing.spacing24
+                                        height: Spacing.spacing24
+                                        radius: height / 2
+                                        color: deleteTap.pressed ? Colors.hoverItemPressed : deleteHover.hovered ? Colors.hoverItemHovered : "transparent"
+                                        border.color: deleteHover.hovered ? Colors.pillBorder : "transparent"
+                                        opacity: entryHover.hovered ? 1.0 : 0.0
+
+                                        Behavior on opacity {
+                                            NumberAnimation {
+                                                duration: 80
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
+
+                                        scale: deleteTap.pressed ? 0.85 : 1.0
+                                        SquishBehavior on scale {}
+
+                                        HoverHandler {
+                                            id: deleteHover
+                                            cursorShape: Qt.PointingHandCursor
+                                        }
+                                        TapHandler {
+                                            id: deleteTap
+                                            onTapped: NotificationListener.removeAt(histEntry.index)
+                                        }
+
+                                        TintedIcon {
+                                            anchors.centerIn: parent
+                                            size: Spacing.spacing12
+                                            source: "../icons/icons8-cross.svg"
+                                            color: Colors.textColorMuted
+                                        }
                                     }
                                 }
                             }
