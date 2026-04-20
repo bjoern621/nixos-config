@@ -12,6 +12,11 @@ in
   options.services.nixos-auto-update = {
     enable = lib.mkEnableOption "automatic weekly NixOS updates using delayed stable strategy";
 
+    user = lib.mkOption {
+      type = lib.types.str;
+      description = "User that owns the config repo (runs nix flake update as this user)";
+    };
+
     delayDays = lib.mkOption {
       type = lib.types.int;
       default = 7;
@@ -26,12 +31,25 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Allow the repo owner to run nixos-rebuild as root without a password,
+    # so the service can do the full update + rebuild without running as root.
+    security.sudo.extraRules = [
+      {
+        users = [ cfg.user ];
+        commands = [
+          {
+            command = "/run/current-system/sw/bin/nixos-rebuild";
+            options = [ "NOPASSWD" ];
+          }
+        ];
+      }
+    ];
+
     systemd.services.nixos-stable-update = {
       description = "Update NixOS to stable (week-old) nixpkgs revision";
       serviceConfig = {
         Type = "oneshot";
-        # Run as root since we need sudo for nix flake update and nixos-rebuild
-        User = "root";
+        User = cfg.user;
         WorkingDirectory = "/etc/nixos/config";
       };
       path = [
@@ -51,9 +69,6 @@ in
           echo "Missing source repo: $NIXOS_CONFIG" >&2
           exit 1
         fi
-
-        # Service runs as root but repo is owned by user, so we need to allow git to operate on it
-        ${pkgs.git}/bin/git config --global --add safe.directory "$NIXOS_CONFIG"
 
         cd "$NIXOS_CONFIG"
 
@@ -182,8 +197,8 @@ in
         # Copy hardware config first (like sysconf-reload does)
         cp /etc/nixos/hardware-configuration.nix "$NIXOS_CONFIG/hosts/default/hardware-configuration.nix"
 
-        # Rebuild and switch
-        nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
+        # Rebuild requires root; use NixOS setuid wrapper and full nixos-rebuild path
+        /run/wrappers/bin/sudo /run/current-system/sw/bin/nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
 
         echo "System updated successfully"
       '';

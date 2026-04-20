@@ -188,8 +188,9 @@
   # Automatic weekly updates using 7-day delayed stable strategy
   # Updates all flake inputs to revisions that have "baked" for at least a week
   services.nixos-auto-update = {
-    enable = true; # Automatic weekly updates enabled
-    delayDays = 7; # Only apply updates that are 7+ days old
+    enable = true;
+    user = "bjoern";
+    delayDays = 7;
     schedule = "Mon 03:00";
   };
 }
