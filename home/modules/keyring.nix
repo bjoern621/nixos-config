@@ -1,6 +1,12 @@
 { ... }:
 
 {
+  # Allow loopback when callers request it explicitly,
+  # modules/keyring.nix provides pinentry-gnome3.
+  home.file.".gnupg/gpg-agent.conf".text = ''
+    allow-loopback-pinentry
+  '';
+
   xdg.desktopEntries."org.gnome.seahorse.Application" = {
     name = "Schlüsselbund";
     genericName = "Passwörter und Schlüssel";
