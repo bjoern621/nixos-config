@@ -150,7 +150,6 @@ Scope {
 
                         Rectangle {
                             id: card
-                            x: 0
                             width: toastScope.cardWidth
                             implicitHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
                             height: implicitHeight
@@ -172,69 +171,22 @@ Scope {
                                 onTapped: toastScope._hideEntry(toastDelegate.notifId)
                             }
 
-                            Rectangle {
-                                id: urgencyStripe
-                                anchors {
-                                    left: parent.left
-                                    top: parent.top
-                                    leftMargin: Spacing.spacing8
-                                    topMargin: Spacing.spacing8
-                                }
-                                width: 3
-                                height: card.height - Spacing.spacing8 * 2
-                                radius: 2
-                                color: toastDelegate.urgency === 2 ? Colors.batteryCritical : Colors.textColorMuted
-
-                                NumberAnimation on height {
-                                    from: card.height - Spacing.spacing8 * 2
-                                    to: 0
-                                    duration: toastDelegate.expireTimeout > 0 ? toastDelegate.expireTimeout * 1000 : 5000
-                                    running: toastDelegate.active
-                                    easing.type: Easing.Linear
-                                }
-                            }
-
-                            Column {
+                            NotificationContent {
                                 id: cardContent
                                 anchors {
                                     top: parent.top
                                     topMargin: Spacing.spacing12
-                                    left: urgencyStripe.right
+                                    left: parent.left
                                     leftMargin: Spacing.spacing8
                                     right: parent.right
                                     rightMargin: Spacing.spacing12
                                 }
-                                spacing: Spacing.spacing4
-
-                                Text {
-                                    text: toastDelegate.appName
-                                    font.family: Typography.fontFamily
-                                    font.pixelSize: Typography.fontSize12
-                                    font.weight: Font.Normal
-                                    color: Colors.textColorMuted
-                                    width: parent.width
-                                    elide: Text.ElideRight
-                                }
-
-                                Label {
-                                    text: toastDelegate.summary
-                                    width: parent.width
-                                    elide: Text.ElideRight
-                                    visible: text !== ""
-                                }
-
-                                Text {
-                                    text: toastDelegate.body
-                                    font.family: Typography.fontFamily
-                                    font.pixelSize: Typography.fontSize12
-                                    font.weight: Font.Normal
-                                    color: Colors.textColorMuted
-                                    width: parent.width
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 3
-                                    elide: Text.ElideRight
-                                    visible: text !== ""
-                                }
+                                appName: toastDelegate.appName
+                                summary: toastDelegate.summary
+                                body: toastDelegate.body
+                                urgency: toastDelegate.urgency
+                                expiryAnimationRunning: toastDelegate.active
+                                expiryDuration: toastDelegate.expireTimeout > 0 ? toastDelegate.expireTimeout * 1000 : 5000
                             }
                         }
                     }

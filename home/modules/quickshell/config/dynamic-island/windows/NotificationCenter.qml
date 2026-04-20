@@ -288,62 +288,20 @@ Variants {
                                         id: entryTap
                                     }
 
-                                    Rectangle {
-                                        id: urgencyStripe
-                                        anchors {
-                                            left: parent.left
-                                            top: parent.top
-                                            leftMargin: Spacing.spacing8
-                                            topMargin: Spacing.spacing8
-                                        }
-                                        width: 3
-                                        height: histEntry.height - Spacing.spacing8 * 2
-                                        radius: 2
-                                        color: histEntry.urgency === 2 ? Colors.batteryCritical : Colors.textColorMuted
-                                    }
-
-                                    Column {
+                                    NotificationContent {
                                         id: entryContent
                                         anchors {
                                             top: parent.top
                                             topMargin: Spacing.spacing12
-                                            left: urgencyStripe.right
+                                            left: parent.left
                                             leftMargin: Spacing.spacing8
                                             right: parent.right
                                             rightMargin: Spacing.spacing12
                                         }
-                                        spacing: Spacing.spacing4
-
-                                        Text {
-                                            text: histEntry.appName
-                                            font.family: Typography.fontFamily
-                                            font.pixelSize: Typography.fontSize12
-                                            font.weight: Font.Normal
-                                            color: Colors.textColorMuted
-                                            width: parent.width
-                                            elide: Text.ElideRight
-                                            visible: text !== ""
-                                        }
-
-                                        Label {
-                                            text: histEntry.summary
-                                            width: parent.width
-                                            elide: Text.ElideRight
-                                            visible: text !== ""
-                                        }
-
-                                        Text {
-                                            text: histEntry.body
-                                            font.family: Typography.fontFamily
-                                            font.pixelSize: Typography.fontSize12
-                                            font.weight: Font.Normal
-                                            color: Colors.textColorMuted
-                                            width: parent.width
-                                            wrapMode: Text.WordWrap
-                                            maximumLineCount: 2
-                                            elide: Text.ElideRight
-                                            visible: text !== ""
-                                        }
+                                        appName: histEntry.appName
+                                        summary: histEntry.summary
+                                        body: histEntry.body
+                                        urgency: histEntry.urgency
                                     }
                                 }
                             }
