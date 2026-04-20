@@ -6,10 +6,8 @@ import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import "../"
 
-// Displays dismissable popup notifications from the PopupHost singleton queue.
-// Also provides an IPC handler for sending test popups.
 Scope {
-    id: popupScope
+    id: modalScope
 
     function focusedScreen() {
         const mon = Hyprland.focusedMonitor;
@@ -27,10 +25,10 @@ Scope {
         target: PopupHost
         function onVisibleChanged() {
             if (PopupHost.visible) {
-                popupWindow.hideComplete = false;
-                const s = popupScope.focusedScreen();
+                modalWindow.hideComplete = false;
+                const s = modalScope.focusedScreen();
                 if (s)
-                    popupWindow.screen = s;
+                    modalWindow.screen = s;
             }
         }
     }
@@ -45,7 +43,7 @@ Scope {
     }
 
     PanelWindow {
-        id: popupWindow
+        id: modalWindow
         visible: PopupHost.visible || !hideComplete
         property bool hideComplete: true
 
@@ -66,9 +64,9 @@ Scope {
         }
 
         Connections {
-            target: popupReveal
+            target: modalReveal
             function onHidden() {
-                popupWindow.hideComplete = true;
+                modalWindow.hideComplete = true;
             }
         }
 
@@ -99,9 +97,9 @@ Scope {
             }
 
             PopReveal {
-                id: popupReveal
+                id: modalReveal
                 width: 340
-                height: notification.implicitHeight
+                height: modalCard.implicitHeight
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 showing: PopupHost.visible
@@ -109,8 +107,8 @@ Scope {
                 showDuration: 100
                 hideDuration: 80
 
-                PopupNotification {
-                    id: notification
+                ModalCard {
+                    id: modalCard
                     anchors.fill: parent
                     iconSource: PopupHost.iconSource
                     title: PopupHost.title
