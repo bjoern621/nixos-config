@@ -33,7 +33,7 @@ Scope {
     }
 
     function sendNotification(summary, body, urgency) {
-        notifyProc.command = ["notify-send", "-u", urgency, "-a", "Quickshell", "-t", "10000", summary, body];
+        notifyProc.command = ["notify-send", "-u", urgency, "-a", "Quickshell", "-t", "15", summary, body];
         notifyProc.running = true;
     }
 
