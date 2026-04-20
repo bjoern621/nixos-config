@@ -254,54 +254,16 @@ Item {
                 spacing: Spacing.spacing8
 
                 // Mute toggle button
-                Item {
+                VolumeMuteButton {
                     id: muteButton
                     width: 32
                     height: 32
                     anchors.verticalCenter: parent.verticalCenter
 
-                    scale: muteTap.pressed ? 0.85 : 1.0
-                    SquishBehavior on scale {}
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: height / 2
-                        color: muteTap.pressed ? Colors.hoverItemPressed : muteHover.hovered ? Colors.hoverItemHovered : "transparent"
-                        border.color: muteHover.hovered || muteTap.pressed ? Colors.pillBorder : "transparent"
-                    }
-
-                    ContentReplace {
-                        id: muteIconReplace
-                        contentKey: root.volumeIconSource
-                        anchors.centerIn: parent
-                        width: 18
-                        height: 18
-
-                        Item {
-                            id: muteIconText
-                            width: 18
-                            height: 18
-                            x: 0
-                            y: 0
-
-                            TintedIcon {
-                                anchors.centerIn: parent
-                                size: 18
-                                source: muteIconReplace.displayValue
-                            }
-                        }
-                    }
-
-                    HoverHandler {
-                        id: muteHover
-                        cursorShape: Qt.PointingHandCursor
-                    }
-                    TapHandler {
-                        id: muteTap
-                        onTapped: {
-                            if (root.audioNode)
-                                root.audioNode.muted = !root.audioNode.muted;
-                        }
+                    iconSource: root.volumeIconSource
+                    onTapped: {
+                        if (root.audioNode)
+                            root.audioNode.muted = !root.audioNode.muted;
                     }
                 }
 
@@ -410,151 +372,22 @@ Item {
                     Repeater {
                         model: root.outputDevices
 
-                        Item {
-                            id: sinkDelegate
+                        VolumeOutputDeviceRow {
                             required property var modelData
-                            width: parent ? parent.width : 0
-                            readonly property bool hasBtStatus: modelData.isBluetooth && modelData.mac.length > 0 && (modelData.mac === root.btStatusMac) && root.btStatusText.length > 0
-                            height: hasBtStatus ? 46 : 32
+                            outputDevice: modelData
+                            defaultSinkId: Pipewire.defaultAudioSink?.id ?? -1
+                            btBusy: root.btBusy
+                            btConnectingMac: root.btConnectingMac
+                            btStatusMac: root.btStatusMac
+                            btStatusText: root.btStatusText
 
-                            readonly property bool isSinkEntry: modelData.type === "sink"
-                            readonly property bool isDefault: isSinkEntry && modelData.node.id === (Pipewire.defaultAudioSink?.id ?? -1)
-                            readonly property bool isBusyTarget: root.btBusy && modelData.isBluetooth && (modelData.mac === root.btConnectingMac)
-                            readonly property bool isBluetoothLocked: !isSinkEntry && modelData.isBluetooth && root.btBusy
-
-                            scale: sinkTap.pressed ? 0.97 : 1.0
-                            SquishBehavior on scale {}
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: Spacing.spacing8
-                                color: sinkDelegate.isDefault ? Qt.rgba(1, 1, 1, 0.06) : sinkDelegate.isBluetoothLocked ? Qt.rgba(1, 1, 1, 0.08) : sinkTap.pressed ? Colors.hoverItemPressed : sinkHover.hovered ? Colors.hoverItemHovered : "transparent"
-                                border.color: sinkDelegate.isDefault ? Colors.accentColor : sinkDelegate.isBluetoothLocked ? Colors.pillBorder : sinkHover.hovered || sinkTap.pressed ? Colors.pillBorder : "transparent"
+                            onSinkActivated: sinkNode => {
+                                if (root.btBusy)
+                                    root.btAutoSwitchOnConnect = false;
+                                Pipewire.preferredDefaultAudioSink = sinkNode;
                             }
-
-                            Item {
-                                anchors {
-                                    left: parent.left
-                                    leftMargin: Spacing.spacing8
-                                    right: parent.right
-                                    rightMargin: Spacing.spacing8
-                                    verticalCenter: parent.verticalCenter
-                                }
-                                height: parent.height
-
-                                Row {
-                                    id: rightStatusIcons
-                                    anchors {
-                                        right: parent.right
-                                        verticalCenter: parent.verticalCenter
-                                    }
-                                    spacing: Spacing.spacing8
-
-                                    Label {
-                                        id: lockedLabel
-                                        text: "Gesperrt"
-                                        visible: sinkDelegate.isBluetoothLocked
-                                        font.pixelSize: Typography.fontSize12
-                                        font.weight: Font.Normal
-                                        color: Colors.textColorMuted
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    TintedIcon {
-                                        id: checkIcon
-                                        source: "../icons/icons8-done.svg"
-                                        size: Typography.fontSize14
-                                        color: Colors.accentColor
-                                        visible: sinkDelegate.isDefault && !sinkDelegate.isBusyTarget
-                                        width: visible ? Typography.fontSize12 : 0
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    TintedIcon {
-                                        id: busyIcon
-                                        source: "../icons/icons8-spinner.svg"
-                                        size: Typography.fontSize14
-                                        color: Colors.textColorMuted
-                                        visible: sinkDelegate.isBusyTarget
-                                        width: visible ? Typography.fontSize12 : 0
-                                        rotation: 0
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        NumberAnimation on rotation {
-                                            from: 0
-                                            to: 360
-                                            duration: 900
-                                            loops: Animation.Infinite
-                                            running: busyIcon.visible
-                                            easing.type: Easing.Linear
-                                        }
-                                    }
-                                }
-
-                                Column {
-                                    id: textBlock
-                                    anchors {
-                                        left: parent.left
-                                        right: rightStatusIcons.left
-                                        rightMargin: Spacing.spacing8
-                                        verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Row {
-                                        id: nameWithBluetooth
-                                        width: parent.width
-                                        spacing: Spacing.spacing4
-
-                                        Label {
-                                            id: deviceNameLabel
-                                            text: sinkDelegate.modelData.name
-                                            font.pixelSize: Typography.fontSize12
-                                            font.weight: sinkDelegate.isDefault ? Font.Bold : Font.Normal
-                                            color: sinkDelegate.isDefault ? Colors.accentColor : sinkDelegate.isBluetoothLocked ? Colors.textColorMuted : Colors.textColor
-                                            elide: Text.ElideRight
-                                            width: Math.min(implicitWidth, nameWithBluetooth.width - (bluetoothIcon.visible ? bluetoothIcon.width + nameWithBluetooth.spacing : 0))
-                                        }
-
-                                        TintedIcon {
-                                            id: bluetoothIcon
-                                            source: "../icons/icons8-bluetooth.svg"
-                                            size: Typography.fontSize14
-                                            color: sinkDelegate.isDefault ? Colors.accentColor : sinkDelegate.isBluetoothLocked ? Colors.textColorMuted : Colors.textColorMuted
-                                            visible: sinkDelegate.modelData.isBluetooth
-                                            width: visible ? Typography.fontSize14 : 0
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                    }
-
-                                    Label {
-                                        visible: sinkDelegate.hasBtStatus
-                                        width: parent.width
-                                        text: root.btStatusText
-                                        font.pixelSize: Typography.fontSize12
-                                        font.weight: Font.Normal
-                                        color: Colors.textColorMuted
-                                        elide: Text.ElideRight
-                                    }
-                                }
-                            }
-
-                            HoverHandler {
-                                id: sinkHover
-                                cursorShape: sinkDelegate.isBluetoothLocked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-                            }
-                            TapHandler {
-                                id: sinkTap
-                                enabled: sinkDelegate.isSinkEntry || !root.btBusy
-                                onTapped: {
-                                    if (sinkDelegate.isSinkEntry) {
-                                        if (root.btBusy)
-                                            root.btAutoSwitchOnConnect = false;
-                                        Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData.node;
-                                        return;
-                                    }
-
-                                    root.connectBluetoothDevice(sinkDelegate.modelData.name, sinkDelegate.modelData.mac);
-                                }
+                            onBluetoothActivated: (deviceName, mac) => {
+                                root.connectBluetoothDevice(deviceName, mac);
                             }
                         }
                     }
@@ -587,131 +420,14 @@ Item {
                 Repeater {
                     model: root.streamNodes
 
-                    Column {
-                        id: appDelegate
+                    VolumeApplicationVolumeRow {
                         required property var modelData
-                        width: parent ? parent.width : 0
-                        spacing: Spacing.spacing4
-
-                        readonly property var appAudio: modelData.audio
-                        readonly property int appVolume: Math.round((appAudio?.volume ?? 0) * 100)
-                        readonly property bool appMuted: appAudio?.muted ?? false
-                        readonly property string appIconSource: {
-                            if (appMuted || appVolume === 0)
-                                return "../icons/icons8-audio-muted.svg";
-                            if (appVolume <= 33)
-                                return "../icons/icons8-low-volume.svg";
-                            if (appVolume <= 66)
-                                return "../icons/icons8-volume.svg";
-                            return "../icons/icons8-audio.svg";
-                        }
-
-                        // App name + mute button row
-                        Item {
-                            width: parent.width
-                            height: 24
-
-                            Label {
-                                text: appDelegate.modelData.description || appDelegate.modelData.name
-                                font.pixelSize: Typography.fontSize12
-                                elide: Text.ElideRight
-                                anchors {
-                                    left: parent.left
-                                    right: appMuteBtn.left
-                                    rightMargin: Spacing.spacing8
-                                    verticalCenter: parent.verticalCenter
-                                }
-                            }
-
-                            Item {
-                                id: appMuteBtn
-                                width: 24
-                                height: 24
-                                anchors {
-                                    right: parent.right
-                                    verticalCenter: parent.verticalCenter
-                                }
-
-                                scale: appMuteTap.pressed ? 0.85 : 1.0
-                                SquishBehavior on scale {}
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: height / 2
-                                    color: appMuteTap.pressed ? Colors.hoverItemPressed : appMuteHover.hovered ? Colors.hoverItemHovered : "transparent"
-                                    border.color: appMuteHover.hovered || appMuteTap.pressed ? Colors.pillBorder : "transparent"
-                                }
-
-                                ContentReplace {
-                                    id: appMuteIconReplace
-                                    contentKey: appDelegate.appIconSource
-                                    width: 16
-                                    height: 16
-                                    anchors.centerIn: parent
-
-                                    Item {
-                                        width: 16
-                                        height: 16
-                                        x: 0
-                                        y: 0
-
-                                        TintedIcon {
-                                            anchors.centerIn: parent
-                                            size: 16
-                                            source: appMuteIconReplace.displayValue
-                                        }
-                                    }
-                                }
-
-                                HoverHandler {
-                                    id: appMuteHover
-                                    cursorShape: Qt.PointingHandCursor
-                                }
-                                TapHandler {
-                                    id: appMuteTap
-                                    onTapped: {
-                                        if (appDelegate.appAudio)
-                                            appDelegate.appAudio.muted = !appDelegate.appAudio.muted;
-                                    }
-                                }
-                            }
-                        }
-
-                        // App slider + percentage row
-                        Row {
-                            width: parent.width
-                            spacing: Spacing.spacing8
-
-                            StepSlider {
-                                id: appSlider
-                                width: parent.width - appPct.width - parent.spacing
-                                anchors.verticalCenter: parent.verticalCenter
-                                externalValue: appDelegate.appAudio?.volume ?? 0
-                                stepSize: 0.05
-                                isMuted: appDelegate.appMuted
-                                handleVerticalSize: 16
-
-                                onMoved: newValue => {
-                                    if (appDelegate.appAudio)
-                                        appDelegate.appAudio.volume = newValue;
-                                }
-                                onPressedChanged: {
-                                    if (pressed)
-                                        root._activeAppSliders++;
-                                    else
-                                        root._activeAppSliders--;
-                                }
-                            }
-
-                            Label {
-                                id: appPct
-                                text: appDelegate.appVolume + "%"
-                                width: 36
-                                horizontalAlignment: Text.AlignRight
-                                font.pixelSize: Typography.fontSize12
-                                font.weight: Font.Normal
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                        streamNode: modelData
+                        onSliderPressedChanged: pressed => {
+                            if (pressed)
+                                root._activeAppSliders++;
+                            else
+                                root._activeAppSliders--;
                         }
                     }
                 }
