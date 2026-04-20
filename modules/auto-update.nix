@@ -58,6 +58,7 @@ in
         pkgs.curl
         pkgs.jq
         pkgs.coreutils
+        pkgs.libnotify
       ];
       script = ''
         set -euo pipefail
@@ -140,6 +141,40 @@ in
         UPDATED_COUNT=0
         SKIPPED_COUNT=0
         DOWNGRADE_COUNT=0
+        STATUS_LINES=()
+        NOTIFY_BIN="${pkgs.libnotify}/bin/notify-send"
+
+        add_status_line() {
+          STATUS_LINES+=("$1")
+        }
+
+        send_update_notification() {
+          local uid runtime_dir body shown_count
+
+          uid=$(id -u)
+          runtime_dir="/run/user/$uid"
+          if [[ ! -S "$runtime_dir/bus" ]]; then
+            return 0
+          fi
+
+          shown_count=''${#STATUS_LINES[@]}
+          if (( shown_count > 12 )); then
+            shown_count=12
+          fi
+
+          body=$(printf '%s\n' "''${STATUS_LINES[@]:0:$shown_count}")
+          if (( ''${#STATUS_LINES[@]} > shown_count )); then
+            body+=$'...\n'
+          fi
+
+          XDG_RUNTIME_DIR="$runtime_dir" \
+          DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus" \
+          "$NOTIFY_BIN" \
+            --app-name "sysconf-stable-update" \
+            --urgency normal \
+            "Stable update summary" \
+            "$body" || true
+        }
 
         for input_name in "''${!FLAKE_INPUTS[@]}"; do
           IFS=':' read -r owner_repo branch <<< "''${FLAKE_INPUTS[$input_name]}"
@@ -148,12 +183,14 @@ in
 
           target_sha=$(get_delayed_revision "$owner_repo" "$branch") || {
             echo "  Skipping: failed to fetch revision"
+            add_status_line "$input_name: skipped (fetch failed)"
             SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
             continue
           }
 
           if [[ -z "$target_sha" ]]; then
             echo "  Skipping: no suitable revision found"
+            add_status_line "$input_name: skipped (no delayed revision)"
             SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
             continue
           fi
@@ -168,6 +205,7 @@ in
 
             if [[ "$current_sha" == "$target_sha" ]]; then
               echo "  Already at target revision: $target_sha_short"
+              add_status_line "$input_name: unchanged ($target_sha_short)"
               SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
               continue
             fi
@@ -181,11 +219,18 @@ in
                 echo "  Warning: current revision ($current_sha_short from $current_date) is NEWER than target"
                 echo "  Downgrading to $target_sha_short (from $target_date) for stability"
                 DOWNGRADE_COUNT=$((DOWNGRADE_COUNT + 1))
+                add_status_line "$input_name: $current_sha_short -> $target_sha_short (downgrade)"
+              else
+                add_status_line "$input_name: $current_sha_short -> $target_sha_short"
               fi
+            else
+              add_status_line "$input_name: $current_sha_short -> $target_sha_short"
             fi
+          else
+            add_status_line "$input_name: unlocked -> $target_sha_short"
           fi
 
-          echo "  Updating to revision: $target_sha_short (from $target_date)"
+          echo "  Updating to revision: $target_sha_short"
           nix flake update --override-input "$input_name" "github:$owner_repo/$target_sha"
           UPDATED_COUNT=$((UPDATED_COUNT + 1))
         done
@@ -199,6 +244,8 @@ in
 
         # Rebuild requires root; use NixOS setuid wrapper and full nixos-rebuild path
         /run/wrappers/bin/sudo /run/current-system/sw/bin/nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
+
+        send_update_notification
 
         echo "System updated successfully"
       '';
