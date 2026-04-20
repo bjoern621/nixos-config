@@ -70,12 +70,3 @@ sysconf-stable-update  # update inputs to revisions at least 7 days old (ensure 
 │   └── modules/
 └── README.md
 ```
-
-## Adding Applications
-
-**System packages**: Edit `hosts/default/configuration.nix`
-**User packages**: Edit `home/bjoern.nix` or create modules in `home/modules/`
-
-## License
-
-MIT
