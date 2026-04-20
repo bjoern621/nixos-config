@@ -406,7 +406,6 @@ Item {
 
                 Column {
                     width: parent.width
-                    spacing: Spacing.spacing2
 
                     Repeater {
                         model: root.outputDevices
@@ -500,7 +499,6 @@ Item {
                                         rightMargin: Spacing.spacing8
                                         verticalCenter: parent.verticalCenter
                                     }
-                                    spacing: Spacing.spacing2
 
                                     Row {
                                         id: nameWithBluetooth
