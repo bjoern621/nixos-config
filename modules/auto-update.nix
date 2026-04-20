@@ -52,6 +52,9 @@ in
           exit 1
         fi
 
+        # Service runs as root but repo is owned by user, so we need to allow git to operate on it
+        ${pkgs.git}/bin/git config --global --add safe.directory "$NIXOS_CONFIG"
+
         cd "$NIXOS_CONFIG"
 
         # Calculate the date threshold
