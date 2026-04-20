@@ -4,26 +4,27 @@ import Quickshell.Services.UPower
 import QtQuick
 import "../"
 
-// Pure battery monitoring logic. Sends popups via PopupHost and
-// libnotify desktop notifications when battery drops below thresholds.
+// Battery monitoring. Sends popups via PopupHost and libnotify  when battery drops below thresholds.
 Scope {
     id: batteryScope
 
     property bool _startupDone: false
-    property bool _warningShown: false
-    property bool _criticalShown: false
+    property real _lastPct: UPower.displayDevice.percentage
 
     readonly property real pct: UPower.displayDevice.percentage
     readonly property bool charging: UPower.displayDevice.state === UPowerDeviceState.Charging
     readonly property bool fullyCharged: UPower.displayDevice.state === UPowerDeviceState.FullyCharged
 
-    readonly property bool isCritical: !charging && !fullyCharged && pct == 0.10
-    readonly property bool isWarning: !charging && !fullyCharged && pct == 0.25
+    readonly property real criticalThreshold: 0.10
+    readonly property real warningThreshold: 0.25
 
     Timer {
         interval: 2000
         running: true
-        onTriggered: batteryScope._startupDone = true
+        onTriggered: {
+            batteryScope._lastPct = batteryScope.pct;
+            batteryScope._startupDone = true;
+        }
     }
 
     Process {
@@ -36,35 +37,40 @@ Scope {
         notifyProc.running = true;
     }
 
+    function crossedBelow(threshold) {
+        return _lastPct > threshold && pct <= threshold;
+    }
+
     onPctChanged: {
-        if (!_startupDone)
+        if (!_startupDone) {
+            _lastPct = pct;
             return;
+        }
+
+        if (charging || fullyCharged) {
+            _lastPct = pct;
+            return;
+        }
+
         const pctInt = Math.round(pct * 100);
 
-        if (isCritical && !_criticalShown) {
-            _criticalShown = true;
-            _warningShown = true;
+        if (crossedBelow(criticalThreshold)) {
             sendNotification("Akku fast leer", "Nur noch " + pctInt + " % Akku übrig. Bitte sofort Ladegerät anschließen!", "critical");
             PopupHost.show("../icons/icons8-battery-25.svg", "Akku fast leer!", "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!", Colors.batteryCritical);
-        } else if (isWarning && !isCritical && !_warningShown) {
-            _warningShown = true;
+        } else if (crossedBelow(warningThreshold)) {
             sendNotification("Akku niedrig", "Nur noch " + pctInt + " % Akku übrig. Bitte bald das Ladegerät anschließen.", "normal");
             PopupHost.show("../icons/icons8-battery-50.svg", "Akku niedrig", "Nur noch " + pctInt + " % Akku übrig.\nBitte bald das Ladegerät anschließen.", Colors.batteryWarning);
         }
+
+        _lastPct = pct;
     }
 
-    // Reset thresholds when charger is connected
+    // Keep previous value aligned when power state changes.
     onChargingChanged: {
-        if (charging) {
-            _warningShown = false;
-            _criticalShown = false;
-        }
+        _lastPct = pct;
     }
 
     onFullyChargedChanged: {
-        if (fullyCharged) {
-            _warningShown = false;
-            _criticalShown = false;
-        }
+        _lastPct = pct;
     }
 }
