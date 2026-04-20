@@ -5,7 +5,7 @@ import QtQuick
 import "../"
 
 // Pure battery monitoring logic. Sends popups via PopupHost and
-// hyprctl notifications when battery drops below thresholds.
+// libnotify desktop notifications when battery drops below thresholds.
 Scope {
     id: batteryScope
 
@@ -28,11 +28,11 @@ Scope {
 
     Process {
         id: notifyProc
-        command: ["hyprctl", "notify", "-1", "10000", "0", ""]
+        command: ["notify-send", "", ""]
     }
 
-    function sendNotification(msg) {
-        notifyProc.command = ["hyprctl", "notify", "-1", "10000", "0", msg];
+    function sendNotification(summary, body, urgency) {
+        notifyProc.command = ["notify-send", "-u", urgency, "-a", "Quickshell", "-t", "10000", summary, body];
         notifyProc.running = true;
     }
 
@@ -44,11 +44,11 @@ Scope {
         if (isCritical && !_criticalShown) {
             _criticalShown = true;
             _warningShown = true;
-            sendNotification("⚠ Akku fast leer! " + pctInt + " %");
+            sendNotification("Akku fast leer", "Nur noch " + pctInt + " % Akku übrig. Bitte sofort Ladegerät anschließen!", "critical");
             PopupHost.show("../icons/icons8-battery-25.svg", "Akku fast leer!", "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!", Colors.batteryCritical);
         } else if (isWarning && !isCritical && !_warningShown) {
             _warningShown = true;
-            sendNotification("🔋 Akku niedrig: " + pctInt + " %");
+            sendNotification("Akku niedrig", "Nur noch " + pctInt + " % Akku übrig. Bitte bald das Ladegerät anschließen.", "normal");
             PopupHost.show("../icons/icons8-battery-50.svg", "Akku niedrig", "Nur noch " + pctInt + " % Akku übrig.\nBitte bald das Ladegerät anschließen.", Colors.batteryWarning);
         }
     }

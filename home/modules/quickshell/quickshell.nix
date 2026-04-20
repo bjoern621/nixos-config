@@ -21,6 +21,7 @@ let
     bin = "quickshell";
     binDeps = [
       pkgs.imagemagick # WallpaperAccent color extraction
+      pkgs.libnotify # notify-send for desktop notifications
       qsPython
     ];
     dataDeps = [
