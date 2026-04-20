@@ -35,7 +35,8 @@ Singleton {
                 appName: n.appName || "",
                 summary: n.summary || "",
                 body: n.body || "",
-                urgency: n.urgency ?? 1
+                urgency: n.urgency ?? 1,
+                timestamp: Date.now()
             });
             root.notificationReceived(n);
         }

@@ -50,6 +50,7 @@ Item {
                     required property string body
                     required property int urgency
                     required property int index
+                    required property var timestamp
 
                     width: notifCol.width
                     implicitHeight: entryContent.implicitHeight + Spacing.spacing12 * 2
@@ -76,6 +77,19 @@ Item {
                         summary: histEntry.summary
                         body: histEntry.body
                         urgency: histEntry.urgency
+                    }
+
+                    Text {
+                        anchors {
+                            right: deleteBtn.left
+                            rightMargin: Spacing.spacing4
+                            verticalCenter: deleteBtn.verticalCenter
+                        }
+                        text: Qt.formatTime(new Date(histEntry.timestamp), "hh:mm")
+                        font.family: Typography.fontFamily
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: Colors.textColorMuted
                     }
 
                     Rectangle {
