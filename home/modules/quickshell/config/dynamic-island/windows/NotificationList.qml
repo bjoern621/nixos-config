@@ -54,19 +54,12 @@ Item {
                     width: notifCol.width
                     implicitHeight: entryContent.implicitHeight + Spacing.spacing12 * 2
                     height: implicitHeight
-                    color: entryTap.pressed ? Colors.hoverItemPressed : entryHover.hovered ? Colors.hoverItemHovered : "transparent"
+                    color: entryHover.hovered ? Colors.hoverItemHovered : "transparent"
                     border.color: entryHover.hovered ? Colors.pillBorder : "transparent"
                     radius: Spacing.spacing8
 
-                    scale: entryTap.pressed ? 0.97 : 1.0
-                    SquishBehavior on scale {}
-
                     HoverHandler {
                         id: entryHover
-                        cursorShape: Qt.PointingHandCursor
-                    }
-                    TapHandler {
-                        id: entryTap
                     }
 
                     NotificationContent {

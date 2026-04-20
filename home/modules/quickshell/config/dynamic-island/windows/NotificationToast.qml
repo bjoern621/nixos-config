@@ -153,23 +153,10 @@ Scope {
                             width: toastScope.cardWidth
                             implicitHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
                             height: implicitHeight
-                            color: cardTap.pressed ? Colors.hoverItemPressed : cardHover.hovered ? Colors.hoverItemHovered : Colors.pillBackground
+                            color: Colors.pillBackground
                             border.width: 1
                             border.color: Colors.pillBorder
                             radius: Spacing.spacing8
-
-                            scale: cardTap.pressed ? 0.97 : 1.0
-                            SquishBehavior on scale {}
-
-                            HoverHandler {
-                                id: cardHover
-                                cursorShape: Qt.PointingHandCursor
-                            }
-
-                            TapHandler {
-                                id: cardTap
-                                onTapped: toastScope._hideEntry(toastDelegate.notifId)
-                            }
 
                             NotificationContent {
                                 id: cardContent
