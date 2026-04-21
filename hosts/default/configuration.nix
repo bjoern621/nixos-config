@@ -14,6 +14,7 @@
     ../../modules/power-management.nix
     ../../modules/fancy-boot/fancy-boot.nix
     ../../modules/file-manager.nix
+    ../../modules/printing.nix
     ../../modules/cleanup.nix
     # ../../modules/autologin.nix
     ../../modules/nix-search-tv.nix
@@ -120,9 +121,6 @@
 
   # Configure console keymap
   console.keyMap = "de";
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
 
   # Define a user account. Don’t forget to set a password with ‘passwd’.
   users.users.bjoern = {
