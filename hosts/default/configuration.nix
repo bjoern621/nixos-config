@@ -20,6 +20,7 @@
     ../../modules/nix-search-tv.nix
     ../../modules/display-manager.nix
     ../../modules/wireguard.nix
+    ../../modules/eduvpn-escape.nix
     ../../modules/networkmanager-openvpn.nix
     ../../modules/quickshell.nix
     ../../modules/hibernate.nix
