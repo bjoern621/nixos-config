@@ -20,15 +20,15 @@
 {
   dconf.settings."org/gnome/desktop/interface" = {
     color-scheme = "prefer-dark";
-    gtk-theme = "Flat-Remix-GTK-Grey-Darkest";
+    gtk-theme = "Adwaita-dark";
   };
 
   gtk = {
     enable = true;
 
     theme = {
-      package = pkgs.flat-remix-gtk;
-      name = "Flat-Remix-GTK-Grey-Darkest";
+      package = pkgs.gnome-themes-extra;
+      name = "Adwaita-dark";
     };
 
     iconTheme = {
@@ -39,6 +39,11 @@
     font = {
       name = "Inter";
       size = 11;
+    };
+
+    gtk4.theme = {
+      package = pkgs.gnome-themes-extra;
+      name = "Adwaita-dark";
     };
   };
 
