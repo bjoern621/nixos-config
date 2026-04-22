@@ -29,6 +29,7 @@
     ../../modules/howdy.nix
     ../../modules/fonts.nix
     ../../modules/tailscale-client.nix
+    ../../modules/miracast.nix
   ];
 
   # Bootloader.
