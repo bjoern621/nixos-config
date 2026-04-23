@@ -89,7 +89,7 @@
       nixosConfigurations = {
         nixos = nixpkgs.lib.nixosSystem {
           modules = [
-            ./hosts/default/configuration.nix
+            ./hosts/nixos/configuration.nix
 
             {
               # https://wiki.hypr.land/Nix/Cachix/
