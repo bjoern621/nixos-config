@@ -7,3 +7,6 @@ __pycache__/
 modules/fancy-boot/darwin/logo.png
 
 .direnv/
+
+modules/sddm-theme/theme/icons/
+home/modules/quickshell/config/dynamic-island/icons/
