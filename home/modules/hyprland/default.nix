@@ -10,6 +10,7 @@
     ./hyprpaper.nix
     ./app-launcher.nix
     ./keybinds.nix
+    ./pin.nix
     ./animations.nix
     ./clipboard-history.nix
     ./preferred-workspaces.nix
