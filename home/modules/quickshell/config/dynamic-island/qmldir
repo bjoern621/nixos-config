@@ -26,6 +26,7 @@ LauncherSearchBar 1.0 widgets/LauncherSearchBar.qml
 LauncherListView 1.0 widgets/LauncherListView.qml
 LauncherGridView 1.0 widgets/LauncherGridView.qml
 LauncherDelegateBg 1.0 widgets/LauncherDelegateBg.qml
+Tooltip 1.0 widgets/Tooltip.qml
 
 VolumeSliderMenu 1.0 menus/VolumeSliderMenu.qml
 CalendarMenu 1.0 menus/CalendarMenu.qml

@@ -27,6 +27,11 @@ Scope {
     property var indexedEmojis: []
     property var filteredEmojis: []
 
+    // Tooltip target: set by hovered emoji/category delegate, cleared on exit.
+    property Item hoveredCell: null
+    property string hoveredText: ""
+    property string hoveredSubtitle: ""
+
     onEmojiVisibleChanged: {
         if (emojiVisible) {
             searchText = "";
@@ -34,11 +39,17 @@ Scope {
             emojiGrid.contentY = 0;
             emojiGrid.currentIndex = 0;
             emojiGrid.keyboardNav = false;
+        } else {
+            hoveredCell = null;
         }
     }
 
-    onSearchTextChanged: updateFilter()
+    onSearchTextChanged: {
+        hoveredCell = null;
+        updateFilter();
+    }
     onSelectedGroupChanged: {
+        hoveredCell = null;
         if (searchText === "")
             updateFilter();
         emojiGrid.contentY = 0;
@@ -65,6 +76,7 @@ Scope {
                 out[i] = {
                     c: e.c,
                     n: e.n,
+                    k: e.k || "",
                     g: e.g,
                     lower: combined.toLowerCase()
                 };
@@ -167,6 +179,29 @@ Scope {
         WlrLayershell.keyboardFocus: emojiScope.emojiVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
+        Tooltip {
+            id: emojiTooltip
+            z: 100
+            text: emojiScope.hoveredCell ? emojiScope.hoveredText : ""
+            subtitle: emojiScope.hoveredCell ? emojiScope.hoveredSubtitle : ""
+            x: {
+                const cell = emojiScope.hoveredCell;
+                if (!cell) return 0;
+                const _ = emojiGrid.contentY;
+                const p = cell.mapToItem(emojiTooltip.parent, cell.width / 2, 0);
+                const min = Spacing.spacing8;
+                const max = emojiTooltip.parent.width - emojiTooltip.width - Spacing.spacing8;
+                return Math.max(min, Math.min(max, p.x - emojiTooltip.width / 2));
+            }
+            y: {
+                const cell = emojiScope.hoveredCell;
+                if (!cell) return 0;
+                const _ = emojiGrid.contentY;
+                const p = cell.mapToItem(emojiTooltip.parent, 0, 0);
+                return p.y - emojiTooltip.height - Spacing.spacing4;
+            }
+        }
+
         LauncherPanel {
             anchors.fill: parent
             searchText: emojiScope.searchText
@@ -237,8 +272,16 @@ Scope {
                             id: emojiCellHover
                             cursorShape: Qt.PointingHandCursor
                             onHoveredChanged: {
-                                if (hovered && !emojiGrid.keyboardNav)
-                                    emojiGrid.currentIndex = emojiCell.index;
+                                if (hovered) {
+                                    if (!emojiGrid.keyboardNav)
+                                        emojiGrid.currentIndex = emojiCell.index;
+                                    emojiScope.hoveredText = emojiCell.modelData.n;
+                                    const k = emojiCell.modelData.k || "";
+                                    emojiScope.hoveredSubtitle = k ? k.split("|").join(", ") : "";
+                                    emojiScope.hoveredCell = emojiCell;
+                                } else if (emojiScope.hoveredCell === emojiCell) {
+                                    emojiScope.hoveredCell = null;
+                                }
                             }
                         }
 
@@ -280,6 +323,15 @@ Scope {
                             HoverHandler {
                                 id: catHover
                                 cursorShape: Qt.PointingHandCursor
+                                onHoveredChanged: {
+                                    if (hovered) {
+                                        emojiScope.hoveredText = catCell.modelData.name || "";
+                                        emojiScope.hoveredSubtitle = "";
+                                        emojiScope.hoveredCell = catCell;
+                                    } else if (emojiScope.hoveredCell === catCell) {
+                                        emojiScope.hoveredCell = null;
+                                    }
+                                }
                             }
                             TapHandler {
                                 id: catTap
