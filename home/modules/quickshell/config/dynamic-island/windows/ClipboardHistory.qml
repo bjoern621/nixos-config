@@ -8,6 +8,7 @@ import QtQuick
 import "../"
 import "../base"
 import "../lib/fzf.js" as FzfLib
+import "../lib/secret-mask.js" as SecretMask
 
 Scope {
     id: clipScope
@@ -25,6 +26,9 @@ Scope {
     // Map clipId -> integer version (bumped each decode). Used to bust Image cache.
     property var imageVersions: ({})
     property var imageDecodeQueue: []
+    // Map clipId -> true for entries flagged as sensitive by the source-side
+    // wrapper (KDE password-manager hint). Loaded from ~/.cache/cliphist/sensitive-ids.
+    property var sensitiveIds: ({})
 
     onClipVisibleChanged: {
         if (clipVisible) {
@@ -42,8 +46,9 @@ Scope {
     onSearchTextChanged: updateFilter()
 
     function refresh() {
-        listProc.pending = [];
-        listProc.running = true;
+        // Load sensitive-id sidecar first; on its completion, listProc runs.
+        sensitiveProc.pending = ({});
+        sensitiveProc.running = true;
     }
 
     function updateFilter() {
@@ -123,6 +128,27 @@ Scope {
     }
 
     Process {
+        id: sensitiveProc
+        property var pending: ({})
+        command: ["bash", "-c", "cat \"${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/sensitive-ids\" 2>/dev/null || true"]
+        running: false
+
+        stdout: SplitParser {
+            onRead: data => {
+                const id = data.trim();
+                if (id)
+                    sensitiveProc.pending[id] = true;
+            }
+        }
+
+        onExited: {
+            clipScope.sensitiveIds = sensitiveProc.pending;
+            listProc.pending = [];
+            listProc.running = true;
+        }
+    }
+
+    Process {
         id: listProc
         property var pending: []
         command: ["cliphist", "list"]
@@ -133,18 +159,22 @@ Scope {
                 const tabIdx = data.indexOf('\t');
                 if (tabIdx < 0)
                     return;
-                const display = data.substring(tabIdx + 1).trim();
-                if (display.length === 0)
+                const rawDisplay = data.substring(tabIdx + 1).trim();
+                if (rawDisplay.length === 0)
                     return;
-                const isImage = display.startsWith("[[ binary data");
+                const isImage = rawDisplay.startsWith("[[ binary data");
                 const clipId = data.substring(0, tabIdx).trim();
+                const masked = isImage
+                    ? { display: rawDisplay, masked: false }
+                    : SecretMask.maskEntry(rawDisplay, !!clipScope.sensitiveIds[clipId]);
                 listProc.pending.push({
                     raw: data,
-                    display: display,
-                    lower: display.toLowerCase(),
+                    display: masked.display,
+                    lower: masked.display.toLowerCase(),
                     isImage: isImage,
                     imagePath: isImage ? "/tmp/cliphist_preview_" + clipId + ".png" : "",
-                    clipId: clipId
+                    clipId: clipId,
+                    masked: masked.masked
                 });
             }
         }
@@ -288,14 +318,26 @@ Scope {
                         color: Colors.textColorMuted
                     }
 
+                    TintedIcon {
+                        visible: !clipDelegate.modelData.isImage && clipDelegate.modelData.masked
+                        anchors {
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
+                            rightMargin: Spacing.spacing12
+                        }
+                        source: "../icons/icons8-lock.svg"
+                        size: Typography.fontSize16
+                        color: Colors.textColorMuted
+                    }
+
                     Text {
-                        visible: !modelData.isImage
+                        visible: !clipDelegate.modelData.isImage
                         anchors {
                             fill: parent
                             leftMargin: Spacing.spacing12
-                            rightMargin: Spacing.spacing12
+                            rightMargin: clipDelegate.modelData.masked ? Spacing.spacing12 + Typography.fontSize16 + Spacing.spacing8 : Spacing.spacing12
                         }
-                        text: modelData.display
+                        text: clipDelegate.modelData.display
                         font.family: Typography.fontFamily
                         font.pixelSize: Typography.fontSize14
                         font.weight: Font.Normal
