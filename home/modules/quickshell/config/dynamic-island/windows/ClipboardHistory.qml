@@ -213,7 +213,14 @@ Scope {
         WlrLayershell.keyboardFocus: clipScope.clipVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
+        AutoCloseOnFocusLoss {
+            watch: panel
+            armed: clipScope.clipVisible
+            onLost: clipScope.clipVisible = false
+        }
+
         LauncherPanel {
+            id: panel
             anchors.fill: parent
             searchText: clipScope.searchText
             placeholder: "Zwischenablage durchsuchen..."

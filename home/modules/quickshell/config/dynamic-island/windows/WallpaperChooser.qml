@@ -174,6 +174,13 @@ Scope {
         WlrLayershell.namespace: "quickshell-noblur"
         color: "transparent"
 
+        // Use cancel() so the workspace switch is properly reverted.
+        AutoCloseOnFocusLoss {
+            watch: fullArea
+            armed: chooserScope.chooserVisible
+            onLost: chooserScope.cancel()
+        }
+
         mask: Region {
             item: chooserScope.chooserVisible ? fullArea : emptyMask
         }

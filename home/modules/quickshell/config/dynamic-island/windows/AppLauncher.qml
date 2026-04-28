@@ -154,7 +154,14 @@ Scope {
         WlrLayershell.keyboardFocus: launcherScope.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
+        AutoCloseOnFocusLoss {
+            watch: panel
+            armed: launcherScope.launcherVisible
+            onLost: launcherScope.launcherVisible = false
+        }
+
         LauncherPanel {
+            id: panel
             anchors.fill: parent
             searchText: launcherScope.searchText
             placeholder: "Suchen..."

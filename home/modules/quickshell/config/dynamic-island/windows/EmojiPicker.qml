@@ -179,6 +179,12 @@ Scope {
         WlrLayershell.keyboardFocus: emojiScope.emojiVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
+        AutoCloseOnFocusLoss {
+            watch: panel
+            armed: emojiScope.emojiVisible
+            onLost: emojiScope.emojiVisible = false
+        }
+
         Tooltip {
             id: emojiTooltip
             z: 100
@@ -203,6 +209,7 @@ Scope {
         }
 
         LauncherPanel {
+            id: panel
             anchors.fill: parent
             searchText: emojiScope.searchText
             placeholder: "Emoji suchen..."
