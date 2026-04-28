@@ -22,7 +22,7 @@ Scope {
     onLauncherVisibleChanged: {
         Globals.launcherVisible = launcherVisible;
         if (launcherVisible) {
-            searchInput.text = "";
+            launcherWindow.searchText = "";
             resultsList.contentY = 0;
             resultsList.keyboardNav = false;
             launcherWindow.updateFilter();
@@ -70,46 +70,55 @@ Scope {
         WlrLayershell.keyboardFocus: launcherScope.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
-        property var allApps: []
+        readonly property int rowHeight: 44
+        readonly property int maxVisibleRows: 8
+
+        property string searchText: ""
+        // Each entry: { app, fields: [string,string,string,string], lower: [string,string,string,string] }
+        property var indexedApps: []
         property var filteredApps: []
 
+        onSearchTextChanged: updateFilter()
+
         function rebuildAppList() {
-            allApps = DesktopEntries.applications.values
+            const apps = DesktopEntries.applications.values
                 .filter(a => !a.noDisplay)
                 .sort((a, b) => a.name.localeCompare(b.name));
-        }
-
-        function appFields(app) {
-            const kw = app.keywords;
-            const keywords = Array.isArray(kw) ? kw.join(" ") : (typeof kw === "string" ? kw : "");
-            return [app.name || "", app.genericName || "", keywords, app.comment || ""];
+            indexedApps = apps.map(app => {
+                const kw = app.keywords;
+                const keywords = Array.isArray(kw) ? kw.join(" ") : (typeof kw === "string" ? kw : "");
+                const fields = [app.name || "", app.genericName || "", keywords, app.comment || ""];
+                return { app, fields, lower: fields.map(f => f.toLowerCase()) };
+            });
         }
 
         function updateFilter() {
-            const query = searchInput.text.toLowerCase();
+            const query = searchText.toLowerCase();
             if (query === "") {
-                filteredApps = allApps.slice(0, launcherScope.maxResults);
+                filteredApps = indexedApps.slice(0, launcherScope.maxResults).map(e => e.app);
                 resultsList.currentIndex = 0;
                 return;
             }
 
             const weights = launcherScope.fieldWeights;
-            const scored = allApps
-                .map(app => {
-                    let best = -Infinity;
-                    const fields = appFields(app);
-                    for (let f = 0; f < fields.length; f++) {
-                        const raw = FzfLib.scoreText(fields[f], query);
-                        if (raw === -Infinity) continue;
-                        const weighted = raw * weights[f];
-                        if (weighted > best) best = weighted;
-                    }
-                    return { app, score: best };
-                })
-                .filter(x => x.score > -Infinity)
-                .sort((a, b) => b.score - a.score || a.app.name.localeCompare(b.app.name));
+            const scored = [];
+            for (let i = 0; i < indexedApps.length; i++) {
+                const e = indexedApps[i];
+                let best = -Infinity;
+                for (let f = 0; f < e.fields.length; f++) {
+                    const raw = FzfLib.scoreLower(e.fields[f], e.lower[f], query);
+                    if (raw === -Infinity) continue;
+                    const weighted = raw * weights[f];
+                    if (weighted > best) best = weighted;
+                }
+                if (best > -Infinity) scored.push({ app: e.app, score: best });
+            }
+            scored.sort((a, b) => b.score - a.score || a.app.name.localeCompare(b.app.name));
 
-            filteredApps = scored.slice(0, launcherScope.maxResults).map(x => x.app);
+            const out = [];
+            const limit = Math.min(scored.length, launcherScope.maxResults);
+            for (let i = 0; i < limit; i++) out.push(scored[i].app);
+            filteredApps = out;
             resultsList.currentIndex = 0;
         }
 
@@ -132,14 +141,6 @@ Scope {
             anchors.fill: parent
             focus: true
 
-            // Hidden TextInput for text editing logic (never rendered, no surface association)
-            TextInput {
-                id: searchInput
-                visible: false
-                focus: false
-                onTextChanged: launcherWindow.updateFilter()
-            }
-
             Keys.onPressed: event => {
                 const k = event.key;
                 const ctrl = event.modifiers & Qt.ControlModifier;
@@ -155,13 +156,13 @@ Scope {
                     if (next >= 0 && next < launcherWindow.filteredApps.length)
                         resultsList.currentIndex = next;
                 } else if (k === Qt.Key_Backspace) {
-                    searchInput.text = ctrl
-                        ? searchInput.text.replace(/\S+\s*$/, "")
-                        : searchInput.text.slice(0, -1);
+                    launcherWindow.searchText = ctrl
+                        ? launcherWindow.searchText.replace(/\S+\s*$/, "")
+                        : launcherWindow.searchText.slice(0, -1);
                 } else if (k === Qt.Key_Delete || (k === Qt.Key_A && ctrl)) {
-                    searchInput.text = "";
+                    launcherWindow.searchText = "";
                 } else if (event.text && event.text.length > 0 && !ctrl) {
-                    searchInput.text += event.text;
+                    launcherWindow.searchText += event.text;
                 }
                 event.accepted = true;
             }
@@ -176,7 +177,6 @@ Scope {
                 width: 500
                 height: contentColumn.implicitHeight + 2 * Spacing.spacing12
                 anchors.centerIn: parent
-                visible: launcherScope.launcherVisible
 
                 radius: Spacing.spacing12
                 color: Colors.pillBackground
@@ -194,7 +194,7 @@ Scope {
                         radius: Spacing.spacing8
                         color: Colors.hoverItemHovered
                         border.width: 1
-                        border.color: launcherScope.launcherVisible ? Colors.accentColor : Colors.pillBorder
+                        border.color: Colors.accentColor
 
                         TintedIcon {
                             id: searchIcon
@@ -212,9 +212,9 @@ Scope {
                             anchors.right: parent.right
                             anchors.rightMargin: Spacing.spacing12
                             anchors.verticalCenter: parent.verticalCenter
-                            color: searchInput.text ? Colors.textColor : Colors.textColorMuted
+                            color: launcherWindow.searchText ? Colors.textColor : Colors.textColorMuted
                             clip: true
-                            text: searchInput.text || "Suchen..."
+                            text: launcherWindow.searchText || "Suchen..."
                             verticalAlignment: Text.AlignVCenter
                         }
                     }
@@ -222,7 +222,7 @@ Scope {
                     ListView {
                         id: resultsList
                         width: parent.width
-                        height: Math.min(contentHeight, 8 * 44)
+                        height: Math.min(contentHeight, launcherWindow.maxVisibleRows * launcherWindow.rowHeight)
                         clip: true
                         currentIndex: 0
                         model: launcherWindow.filteredApps
@@ -257,7 +257,7 @@ Scope {
                             required property int index
                             readonly property bool active: resultsList.currentIndex === index || delegateHover.hovered
                             width: resultsList.width
-                            height: 44
+                            height: launcherWindow.rowHeight
 
                             Rectangle {
                                 anchors.fill: parent
@@ -271,12 +271,12 @@ Scope {
                             Image {
                                 id: appIcon
                                 width: Typography.fontSize24
-                                height: Typography.fontSize24
+                                height: width
                                 anchors.left: parent.left
                                 anchors.leftMargin: Spacing.spacing12
                                 anchors.verticalCenter: parent.verticalCenter
                                 source: modelData.icon ? ("image://icon/" + modelData.icon) : ""
-                                sourceSize: Qt.size(Typography.fontSize24, Typography.fontSize24)
+                                sourceSize: Qt.size(width, width)
                             }
 
                             TintedIcon {
@@ -329,7 +329,7 @@ Scope {
                     }
 
                     Label {
-                        visible: launcherWindow.filteredApps.length === 0 && searchInput.text !== ""
+                        visible: launcherWindow.filteredApps.length === 0 && launcherWindow.searchText !== ""
                         text: "Keine Ergebnisse"
                         font.weight: Font.Normal
                         color: Colors.textColorMuted

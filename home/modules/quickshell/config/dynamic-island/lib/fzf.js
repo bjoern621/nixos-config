@@ -48,12 +48,16 @@ function bonusFor(prev, curr) {
 // Caller must pre-lowercase `pattern`.
 function scoreText(text, pattern) {
     text = (text == null) ? "" : String(text);
+    return scoreLower(text, text.toLowerCase(), pattern);
+}
+
+// Same as scoreText but caller supplies already-lowercased `lowerText`.
+// Hot-path entry point: avoids re-lowercasing on every keystroke.
+function scoreLower(text, lowerText, pattern) {
     var pl = pattern.length;
     if (pl === 0) return 0;
     var tl = text.length;
     if (pl > tl) return -Infinity;
-
-    var lowerText = text.toLowerCase();
 
     var pi = 0;
     var firstIdx = -1;
