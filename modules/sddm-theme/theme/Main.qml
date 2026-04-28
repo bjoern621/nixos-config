@@ -215,129 +215,123 @@ Rectangle {
         }
 
         // Password pill + face button row
-        Item {
-            id: pillRow
+        Rectangle {
+            id: passwordPill
             anchors.horizontalCenter: parent.horizontalCenter
-            width: root.inputWidth + Spacing.spacing8 + root.faceButtonSize
+            width: root.inputWidth
             height: root.inputHeight
+            radius: height / 2
+            color: root.isLoading ? Colors.pillBackgroundLoading : Colors.pillBackground
+            border.width: 1
+            border.color: root.isLoading
+                ? Colors.pillBorderFocus
+                : (passwordField.activeFocus ? Colors.pillBorderFocus : Colors.pillBorder)
 
-            Rectangle {
-                id: passwordPill
+            TintedIcon {
+                id: lockIcon
                 anchors.left: parent.left
+                anchors.leftMargin: Spacing.spacing16 + Spacing.spacing2
                 anchors.verticalCenter: parent.verticalCenter
-                width: root.inputWidth
-                height: root.inputHeight
-                radius: height / 2
-                color: root.isLoading ? Colors.pillBackgroundLoading : Colors.pillBackground
-                border.width: 1
-                border.color: root.isLoading
-                    ? Colors.pillBorderFocus
-                    : (passwordField.activeFocus ? Colors.pillBorderFocus : Colors.pillBorder)
+                source: "icons/icons8-lock-2.svg"
+                size: Typography.fontSize24
+                color: Colors.textColor
+            }
 
-                TintedIcon {
-                    id: lockIcon
-                    anchors.left: parent.left
-                    anchors.leftMargin: Spacing.spacing16 + Spacing.spacing2
-                    anchors.verticalCenter: parent.verticalCenter
-                    source: "icons/icons8-lock-2.svg"
-                    size: Typography.fontSize24
-                    color: Colors.textColor
+            TextInput {
+                id: passwordField
+                anchors.left: lockIcon.right
+                anchors.leftMargin: Spacing.spacing8
+                anchors.right: parent.right
+                anchors.rightMargin: Spacing.spacing16 + Spacing.spacing4
+                anchors.verticalCenter: parent.verticalCenter
+                height: parent.height
+                verticalAlignment: TextInput.AlignVCenter
+                font.pixelSize: Typography.fontSize14
+                font.family: Typography.fontFamily
+                color: Colors.textColor
+                echoMode: TextInput.Password
+                focus: true
+                clip: true
+                enabled: !root.isLoading
+                opacity: root.isLoading ? 0 : 1
+                Behavior on opacity {
+                    NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
                 }
 
-                TextInput {
-                    id: passwordField
-                    anchors.left: lockIcon.right
-                    anchors.leftMargin: Spacing.spacing8
-                    anchors.right: parent.right
-                    anchors.rightMargin: Spacing.spacing16 + Spacing.spacing4
-                    anchors.verticalCenter: parent.verticalCenter
-                    height: parent.height
-                    verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: Typography.fontSize14
-                    font.family: Typography.fontFamily
-                    color: Colors.textColor
-                    echoMode: TextInput.Password
-                    focus: true
-                    clip: true
-                    enabled: !root.isLoading
-                    opacity: root.isLoading ? 0 : 1
-                    Behavior on opacity {
-                        NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
-                    }
-
-                    onAccepted: {
-                        root.submitAuth("manual", text);
-                    }
-
-                    onTextChanged: {
-                        if (!root.syncingPasswordFromGlobals) {
-                            Globals.authInputOwner = root.instanceId;
-                            Globals.authPassword = text;
-                            root.clearError();
-                        }
-                        root.scheduleAutoSubmit();
-                    }
+                onAccepted: {
+                    root.submitAuth("manual", text);
                 }
 
-                // Placeholder
-                Label {
-                    anchors.fill: passwordField
-                    verticalAlignment: Text.AlignVCenter
-                    text: "Passwort"
-                    font.weight: Font.Normal
-                    color: Colors.textColorMuted
-                    visible: passwordField.text.length === 0
-                        && !passwordField.activeFocus
-                        && !root.isLoading
-                }
-
-                // Loading overlay — replaces the input content while authenticating.
-                // Mirrors the bluetooth-row pattern: inline status + spinner.
-                Row {
-                    anchors.left: lockIcon.right
-                    anchors.leftMargin: Spacing.spacing8
-                    anchors.right: parent.right
-                    anchors.rightMargin: Spacing.spacing16
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: Spacing.spacing8
-                    visible: root.isLoading
-                    opacity: root.isLoading ? 1 : 0
-                    Behavior on opacity {
-                        NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+                onTextChanged: {
+                    if (!root.syncingPasswordFromGlobals) {
+                        Globals.authInputOwner = root.instanceId;
+                        Globals.authPassword = text;
+                        root.clearError();
                     }
-
-                    Label {
-                        text: root.loadingMessage
-                        font.weight: Font.Normal
-                        color: Colors.textColor
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Item { width: 1; height: 1 }
-                }
-
-                Spinner {
-                    id: pillSpinner
-                    anchors.right: parent.right
-                    anchors.rightMargin: Spacing.spacing16
-                    anchors.verticalCenter: parent.verticalCenter
-                    size: Typography.fontSize20
-                    visible: root.isLoading
-                    spinning: root.isLoading
-                }
-
-                Timer {
-                    id: autoLoginTimer
-                    interval: root.autoLoginIntervalMs
-                    onTriggered: {
-                        root.submitAuth("auto", Globals.authPassword);
-                    }
+                    root.scheduleAutoSubmit();
                 }
             }
 
+            // Placeholder
+            Label {
+                anchors.fill: passwordField
+                verticalAlignment: Text.AlignVCenter
+                text: "Passwort"
+                font.weight: Font.Normal
+                color: Colors.textColorMuted
+                visible: passwordField.text.length === 0
+                    && !passwordField.activeFocus
+                    && !root.isLoading
+            }
+
+            // Loading overlay — replaces the input content while authenticating.
+            // Mirrors the bluetooth-row pattern: inline status + spinner.
+            Row {
+                anchors.left: lockIcon.right
+                anchors.leftMargin: Spacing.spacing8
+                anchors.right: parent.right
+                anchors.rightMargin: Spacing.spacing16
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Spacing.spacing8
+                visible: root.isLoading
+                opacity: root.isLoading ? 1 : 0
+                Behavior on opacity {
+                    NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+                }
+
+                Label {
+                    text: root.loadingMessage
+                    font.weight: Font.Normal
+                    color: Colors.textColor
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Item { width: 1; height: 1 }
+            }
+
+            Spinner {
+                id: pillSpinner
+                anchors.right: parent.right
+                anchors.rightMargin: Spacing.spacing16
+                anchors.verticalCenter: parent.verticalCenter
+                size: Typography.fontSize20
+                visible: root.isLoading
+                spinning: root.isLoading
+            }
+
+            Timer {
+                id: autoLoginTimer
+                interval: root.autoLoginIntervalMs
+                onTriggered: {
+                    root.submitAuth("auto", Globals.authPassword);
+                }
+            }
+
+            // Face unlock button — anchored to the pill's right side, overflows
+            // outside the pill so the pill itself stays centered on screen.
             Rectangle {
                 id: faceButton
-                anchors.left: passwordPill.right
+                anchors.left: parent.right
                 anchors.leftMargin: Spacing.spacing8
                 anchors.verticalCenter: parent.verticalCenter
                 width: root.faceButtonSize
