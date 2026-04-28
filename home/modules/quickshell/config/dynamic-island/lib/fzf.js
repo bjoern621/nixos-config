@@ -153,6 +153,44 @@ function scoreLower(text, lowerText, pattern) {
     return maxScore <= 0 ? -Infinity : maxScore;
 }
 
+// Greedy left-to-right subsequence match. Returns array of indices in `text`
+// where `pattern` chars were found, or [] if not a subsequence. Cheap; not
+// the same positions the DP would pick, but good enough for UI highlighting.
+function matchPositions(text, lowerText, pattern) {
+    var pl = pattern.length;
+    if (pl === 0) return [];
+    var tl = text.length;
+    var out = [];
+    var pi = 0;
+    for (var i = 0; i < tl && pi < pl; i++) {
+        if (lowerText.charCodeAt(i) === pattern.charCodeAt(pi)) {
+            out.push(i);
+            pi++;
+        }
+    }
+    return pi === pl ? out : [];
+}
+
+// HTML-escape and wrap matched indices in <b>. Caller passes lowercased pattern.
+function highlightHtml(text, pattern) {
+    var lower = (text == null ? "" : String(text)).toLowerCase();
+    var positions = matchPositions(text, lower, pattern);
+    var s = (text == null ? "" : String(text));
+    if (positions.length === 0) return escapeHtml(s);
+    var out = "";
+    var pi = 0;
+    for (var i = 0; i < s.length; i++) {
+        var inMatch = pi < positions.length && positions[pi] === i;
+        if (inMatch) { out += "<u>" + escapeHtml(s.charAt(i)) + "</u>"; pi++; }
+        else out += escapeHtml(s.charAt(i));
+    }
+    return out;
+}
+
+function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 // fzf-for-js compatible API: `new Fzf(items, { selector, limit }).find(query)`
 function Fzf(items, options) {
     options = options || {};

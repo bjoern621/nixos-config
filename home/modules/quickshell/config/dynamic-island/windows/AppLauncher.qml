@@ -107,7 +107,10 @@ Scope {
         function updateFilter() {
             const query = searchText.toLowerCase();
             if (query === "") {
-                filteredApps = indexedApps.slice(0, launcherScope.maxResults).map(e => e.app);
+                filteredApps = indexedApps.slice(0, launcherScope.maxResults).map(e => ({
+                    app: e.app,
+                    query: ""
+                }));
                 resultsList.currentIndex = 0;
                 return;
             }
@@ -136,7 +139,10 @@ Scope {
             const out = [];
             const limit = Math.min(scored.length, launcherScope.maxResults);
             for (let i = 0; i < limit; i++)
-                out.push(scored[i].app);
+                out.push({
+                    app: scored[i].app,
+                    query: query
+                });
             filteredApps = out;
             resultsList.currentIndex = 0;
         }
@@ -168,7 +174,7 @@ Scope {
                 } else if (k === Qt.Key_Return || k === Qt.Key_Enter) {
                     const apps = launcherWindow.filteredApps;
                     if (apps.length > 0)
-                        launcherWindow.launchApp(apps[resultsList.currentIndex]);
+                        launcherWindow.launchApp(apps[resultsList.currentIndex].app);
                 } else if (k === Qt.Key_Down || k === Qt.Key_Up) {
                     resultsList.keyboardNav = true;
                     const next = resultsList.currentIndex + (k === Qt.Key_Down ? 1 : -1);
@@ -234,6 +240,7 @@ Scope {
                             anchors.verticalCenter: parent.verticalCenter
                             color: launcherWindow.searchText ? Colors.textColor : Colors.textColorMuted
                             clip: true
+                            font.weight: Font.Medium
                             text: launcherWindow.searchText || "Suchen..."
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -252,12 +259,21 @@ Scope {
                         property bool keyboardNav: false
 
                         MouseArea {
+                            id: hoverArea
                             anchors.fill: parent
                             acceptedButtons: Qt.NoButton
                             hoverEnabled: true
-                            onPositionChanged: resultsList.keyboardNav = false
+                            propagateComposedEvents: true
+                            function syncHover() {
+                                resultsList.keyboardNav = false;
+                                const item = resultsList.itemAt(resultsList.contentX + mouseX, resultsList.contentY + mouseY);
+                                if (item && item.index !== undefined)
+                                    resultsList.currentIndex = item.index;
+                            }
+                            onPositionChanged: syncHover()
                             onWheel: wheel => {
-                                resultsList.contentY = Math.max(0, Math.min(resultsList.contentHeight - resultsList.height, resultsList.contentY - wheel.angleDelta.y * 2));
+                                resultsList.contentY = Math.max(0, Math.min(Math.max(0, resultsList.contentHeight - resultsList.height), resultsList.contentY - wheel.angleDelta.y * 2));
+                                syncHover();
                             }
                         }
 
@@ -293,7 +309,7 @@ Scope {
                                 anchors.left: parent.left
                                 anchors.leftMargin: Spacing.spacing12
                                 anchors.verticalCenter: parent.verticalCenter
-                                source: modelData.icon ? ("image://icon/" + modelData.icon) : ""
+                                source: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
                                 sourceSize: Qt.size(width, width)
                             }
 
@@ -314,19 +330,21 @@ Scope {
                                 spacing: Spacing.spacing2
 
                                 Label {
-                                    text: modelData.name
+                                    text: modelData.query ? FzfLib.highlightHtml(modelData.app.name, modelData.query) : (modelData.app.name || "")
+                                    textFormat: modelData.query ? Text.RichText : Text.PlainText
                                     width: parent.width
                                     elide: Text.ElideRight
                                 }
 
                                 Label {
-                                    text: modelData.comment || ""
+                                    text: modelData.query && modelData.app.comment ? FzfLib.highlightHtml(modelData.app.comment, modelData.query) : (modelData.app.comment || "")
+                                    textFormat: modelData.query ? Text.RichText : Text.PlainText
                                     font.pixelSize: Typography.fontSize12
                                     font.weight: Font.Normal
                                     color: Colors.textColorMuted
                                     width: parent.width
                                     elide: Text.ElideRight
-                                    visible: text !== ""
+                                    visible: (modelData.app.comment || "") !== ""
                                 }
                             }
 
@@ -341,7 +359,7 @@ Scope {
 
                             TapHandler {
                                 id: delegateTap
-                                onTapped: launcherWindow.launchApp(delegateRoot.modelData)
+                                onTapped: launcherWindow.launchApp(delegateRoot.modelData.app)
                             }
                         }
                     }
