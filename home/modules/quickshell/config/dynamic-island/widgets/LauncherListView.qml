@@ -20,6 +20,9 @@ ListView {
 
     property bool keyboardNav: false
 
+    // Snap into view on selection change. ListView's built-in scroll-to-keep-current-visible animates contentY (~250ms) which is jarring with variable-height rows (e.g. 180px image vs 40px text in clipboard). positionViewAtIndex is synchronous and only scrolls the minimum needed.
+    onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+
     MouseArea {
         id: hoverArea
         anchors.fill: parent
