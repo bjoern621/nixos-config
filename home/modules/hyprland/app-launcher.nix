@@ -3,7 +3,7 @@
 {
   wayland.windowManager.hyprland.settings = {
     bind = [
-      ", Super_L, global, quickshell:launcher"
+      "SUPER, Super_L, global, quickshell:launcher"
     ];
 
     layerrule = [
