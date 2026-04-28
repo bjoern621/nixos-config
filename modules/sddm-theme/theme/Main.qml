@@ -6,12 +6,13 @@ Rectangle {
     id: root
     width: Screen.width
     height: Screen.height
-    color: "#000000"
+    color: Colors.background
 
     readonly property int inputWidth: 280
     readonly property int inputHeight: 48
     readonly property int faceButtonSize: inputHeight
-    property int autoLoginIntervalMs: 500
+    readonly property int autoLoginIntervalMs: 500
+    readonly property int errorAutoHideMs: 3000
 
     property int currentUserIndex: userModel.lastIndex
     readonly property string instanceId: "screen-" + Math.floor(Math.random() * 1000000000)
@@ -95,6 +96,28 @@ Rectangle {
         }
     }
 
+    // Non-visual root-scope timers — kept here so they're easy to find.
+    Timer {
+        id: clockTicker
+        property date time: new Date()
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: time = new Date()
+    }
+
+    Timer {
+        id: autoLoginTimer
+        interval: root.autoLoginIntervalMs
+        onTriggered: root.submitAuth("auto", Globals.authPassword)
+    }
+
+    Timer {
+        id: errorTimer
+        interval: root.errorAutoHideMs
+        onTriggered: Globals.authErrorVisible = false
+    }
+
     // webOS-inspired analog clock — bottom-half arc with hour, minute, second hands.
     Item {
         id: clockColumn
@@ -103,6 +126,13 @@ Rectangle {
         height: 360
 
         readonly property int clockSize: 280
+        readonly property int hourHandWidth: 4
+        readonly property int hourHandHeight: 70
+        readonly property int minuteHandWidth: 3
+        readonly property int minuteHandHeight: 105
+        readonly property real secondHandWidth: 1.5
+        readonly property int secondHandHeight: 115
+        readonly property int centerCapSize: 8
 
         Item {
             id: clockFace
@@ -128,7 +158,6 @@ Rectangle {
                 }
 
                 Canvas {
-                    id: arcCanvas
                     anchors.fill: parent
                     antialiasing: true
                     onPaint: {
@@ -147,41 +176,41 @@ Rectangle {
             }
 
             Rectangle {
-                width: 4
-                height: 70
-                radius: 2
+                width: clockColumn.hourHandWidth
+                height: clockColumn.hourHandHeight
+                radius: width / 2
                 color: Colors.textColor
                 x: clockFace.cx - width / 2
                 y: clockFace.cy - height
                 transformOrigin: Item.Bottom
-                rotation: (timeModel.time.getHours() % 12) * 30 + timeModel.time.getMinutes() * 0.5
+                rotation: (clockTicker.time.getHours() % 12) * 30 + clockTicker.time.getMinutes() * 0.5
             }
 
             Rectangle {
-                width: 3
-                height: 105
-                radius: 1.5
+                width: clockColumn.minuteHandWidth
+                height: clockColumn.minuteHandHeight
+                radius: width / 2
                 color: Colors.textColor
                 x: clockFace.cx - width / 2
                 y: clockFace.cy - height
                 transformOrigin: Item.Bottom
-                rotation: timeModel.time.getMinutes() * 6 + timeModel.time.getSeconds() * 0.1
+                rotation: clockTicker.time.getMinutes() * 6 + clockTicker.time.getSeconds() * 0.1
             }
 
             Rectangle {
-                width: 1.5
-                height: 115
+                width: clockColumn.secondHandWidth
+                height: clockColumn.secondHandHeight
                 color: Colors.textColor
                 x: clockFace.cx - width / 2
                 y: clockFace.cy - height
                 transformOrigin: Item.Bottom
-                rotation: timeModel.time.getSeconds() * 6
+                rotation: clockTicker.time.getSeconds() * 6
             }
 
             Rectangle {
-                width: 8
-                height: 8
-                radius: 4
+                width: clockColumn.centerCapSize
+                height: width
+                radius: width / 2
                 color: Colors.textColor
                 x: clockFace.cx - width / 2
                 y: clockFace.cy - height / 2
@@ -192,13 +221,12 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: clockFace.bottom
             anchors.topMargin: Spacing.spacing24 + Spacing.spacing4
-            text: root.germanDate(timeModel.time)
+            text: root.germanDate(clockTicker.time)
             font.pixelSize: Typography.fontSize20
             font.weight: Font.DemiBold
         }
     }
 
-    // Input area — anchored to bottom of screen
     Column {
         id: inputColumn
         anchors.horizontalCenter: parent.horizontalCenter
@@ -207,14 +235,14 @@ Rectangle {
         spacing: Spacing.spacing12
 
         Label {
-            id: usernameLabel
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.userName()
             font.pixelSize: Typography.fontSize16
             font.weight: Font.DemiBold
         }
 
-        // Password pill + face button row
+        // Password pill. Centered on screen via its own width — face button overflows
+        // outside on the right and does not affect centering.
         Rectangle {
             id: passwordPill
             anchors.horizontalCenter: parent.horizontalCenter
@@ -223,9 +251,7 @@ Rectangle {
             radius: height / 2
             color: root.isLoading ? Colors.pillBackgroundLoading : Colors.pillBackground
             border.width: 1
-            border.color: root.isLoading
-                ? Colors.pillBorderFocus
-                : (passwordField.activeFocus ? Colors.pillBorderFocus : Colors.pillBorder)
+            border.color: root.isLoading || passwordField.activeFocus ? Colors.pillBorderFocus : Colors.pillBorder
 
             TintedIcon {
                 id: lockIcon
@@ -254,13 +280,9 @@ Rectangle {
                 clip: true
                 enabled: !root.isLoading
                 opacity: root.isLoading ? 0 : 1
-                Behavior on opacity {
-                    NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
-                }
+                FadeBehavior on opacity {}
 
-                onAccepted: {
-                    root.submitAuth("manual", text);
-                }
+                onAccepted: root.submitAuth("manual", text)
 
                 onTextChanged: {
                     if (!root.syncingPasswordFromGlobals) {
@@ -272,20 +294,19 @@ Rectangle {
                 }
             }
 
-            // Placeholder
+            // Placeholder.
             Label {
                 anchors.fill: passwordField
                 verticalAlignment: Text.AlignVCenter
                 text: "Passwort"
                 font.weight: Font.Normal
                 color: Colors.textColorMuted
-                visible: passwordField.text.length === 0
-                    && !passwordField.activeFocus
-                    && !root.isLoading
+                visible: passwordField.text.length === 0 && !passwordField.activeFocus && !root.isLoading
             }
 
             // Loading overlay — replaces the input content while authenticating.
             // Mirrors the bluetooth-row pattern: inline status + spinner.
+            // visible follows opacity so the fade actually plays.
             Row {
                 anchors.left: lockIcon.right
                 anchors.leftMargin: Spacing.spacing8
@@ -293,11 +314,9 @@ Rectangle {
                 anchors.rightMargin: Spacing.spacing16
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Spacing.spacing8
-                visible: root.isLoading
                 opacity: root.isLoading ? 1 : 0
-                Behavior on opacity {
-                    NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
-                }
+                visible: opacity > 0
+                FadeBehavior on opacity {}
 
                 Label {
                     text: root.loadingMessage
@@ -305,30 +324,18 @@ Rectangle {
                     color: Colors.textColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
-
-                Item { width: 1; height: 1 }
             }
 
             Spinner {
-                id: pillSpinner
                 anchors.right: parent.right
                 anchors.rightMargin: Spacing.spacing16
                 anchors.verticalCenter: parent.verticalCenter
                 size: Typography.fontSize20
                 visible: root.isLoading
-                spinning: root.isLoading
             }
 
-            Timer {
-                id: autoLoginTimer
-                interval: root.autoLoginIntervalMs
-                onTriggered: {
-                    root.submitAuth("auto", Globals.authPassword);
-                }
-            }
-
-            // Face unlock button — anchored to the pill's right side, overflows
-            // outside the pill so the pill itself stays centered on screen.
+            // Face unlock button — anchored to the pill's right edge, overflowing
+            // outside so the pill itself stays centered on screen.
             Rectangle {
                 id: faceButton
                 anchors.left: parent.right
@@ -338,24 +345,18 @@ Rectangle {
                 height: root.faceButtonSize
                 radius: height / 2
                 opacity: root.isLoading ? 0.4 : 1.0
-                Behavior on opacity {
-                    NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
-                }
+                FadeBehavior on opacity {}
 
-                color: root.isLoading
-                    ? Colors.pillBackground
-                    : faceArea.pressed ? Colors.hoverItemPressed
+                // MouseArea is disabled while loading, so pressed/containsMouse
+                // stay false — no need to gate these branches on isLoading.
+                color: faceArea.pressed ? Colors.hoverItemPressed
                     : faceArea.containsMouse ? Colors.hoverItemHovered
                     : Colors.pillBackground
                 border.width: 1
-                border.color: root.isLoading
-                    ? Colors.pillBorder
-                    : faceArea.containsMouse ? Colors.pillBorderFocus : Colors.pillBorder
+                border.color: faceArea.containsMouse ? Colors.pillBorderFocus : Colors.pillBorder
 
-                scale: faceArea.pressed && !root.isLoading ? 0.85 : 1.0
-                SquishBehavior on scale {
-                    enabled: !root.isLoading
-                }
+                scale: faceArea.pressed ? 0.85 : 1.0
+                SquishBehavior on scale {}
 
                 TintedIcon {
                     anchors.centerIn: parent
@@ -370,21 +371,19 @@ Rectangle {
                     hoverEnabled: true
                     cursorShape: root.isLoading ? Qt.ForbiddenCursor : Qt.PointingHandCursor
                     enabled: !root.isLoading
-                    onClicked: {
-                        root.queueFaceAuth();
-                    }
+                    onClicked: root.queueFaceAuth()
                 }
             }
         }
 
-        // Error message (loading is now inside the pill).
+        // Error message slot — fixed height reserves layout space so the
+        // pill doesn't shift when an error appears.
         Item {
             anchors.horizontalCenter: parent.horizontalCenter
             width: root.inputWidth
             height: Typography.fontSize24
 
             Label {
-                id: errorMessage
                 anchors.centerIn: parent
                 text: root.errorMessageText
                 visible: !root.isLoading && root.errorVisible && root.errorMessageText !== ""
@@ -392,22 +391,7 @@ Rectangle {
                 font.weight: Font.Normal
                 color: Colors.textError
             }
-
-            Timer {
-                id: errorTimer
-                interval: 3000
-                onTriggered: Globals.authErrorVisible = false
-            }
         }
-    }
-
-    Timer {
-        id: timeModel
-        property date time: new Date()
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: time = new Date()
     }
 
     Connections {
@@ -432,16 +416,11 @@ Rectangle {
                 return;
             }
 
-            if (failedKind === "face") {
-                root.showError("Gesicht nicht erkannt");
-            } else {
-                root.showError("Falsches Passwort");
-            }
-
+            root.showError(failedKind === "face" ? "Gesicht nicht erkannt" : "Falsches Passwort");
             passwordField.forceActiveFocus();
         }
         function onLoginSucceeded() {
-            // Keep loading true till the session starts to prevent user clicking
+            // Keep loading true until the session starts so the user can't click again.
             root.clearError();
             Globals.authAttemptKind = "";
             Globals.authQueuedAttemptKind = "";
@@ -460,11 +439,7 @@ Rectangle {
             root.syncingPasswordFromGlobals = true;
             passwordField.text = Globals.authPassword;
             root.syncingPasswordFromGlobals = false;
-            if (keepAtEnd) {
-                passwordField.cursorPosition = passwordField.text.length;
-            } else {
-                passwordField.cursorPosition = Math.min(cursorPosition, passwordField.text.length);
-            }
+            passwordField.cursorPosition = keepAtEnd ? passwordField.text.length : Math.min(cursorPosition, passwordField.text.length);
             root.scheduleAutoSubmit();
         }
     }

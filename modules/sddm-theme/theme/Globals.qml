@@ -2,10 +2,10 @@ pragma Singleton
 
 import QtQuick
 
+// Shared SDDM auth state — multiple Main.qml instances render per screen
+// (Variants pattern), so password text + loading flag live here so they stay
+// in sync across screens.
 QtObject {
-    property color accentColor: "#ffffff"
-
-    // Shared SDDM auth state across all screen instances.
     property string authPassword: ""
     property bool authLoading: false
     property bool authErrorVisible: false
