@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Hyprland._GlobalShortcuts
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
@@ -7,6 +8,7 @@ import QtQuick
 import QtQuick.Controls
 import "../"
 import "../base"
+import "../lib/fzf.js" as FzfLib
 
 Scope {
     id: launcherScope
@@ -26,51 +28,38 @@ Scope {
         return null;
     }
 
-    property var appIndexMap: ({})
-
-    Process {
-        id: fzfProc
-        command: ["bash", "-c", "printf '%s\\n' \"$APP_LIST\" | fzf --delimiter='\t' --nth=2.. --filter=\"$QUERY\" | cut -f1"]
-        environment: ({
-                APP_LIST: "",
-                QUERY: ""
-            })
-        running: false
-
-        property var results: []
-
-        stdout: SplitParser {
-            onRead: data => {
-                const line = data.trim();
-                if (line.length > 0 && line in launcherScope.appIndexMap) {
-                    fzfProc.results.push(launcherScope.appIndexMap[line]);
-                }
-            }
+    function toggle() {
+        if (!launcherScope.launcherVisible) {
+            const s = launcherScope.focusedScreen();
+            if (s)
+                launcherWindow.screen = s;
         }
+        launcherScope.launcherVisible = !launcherScope.launcherVisible;
+    }
 
-        onExited: (code, status) => {
-            launcherWindow.filteredApps = fzfProc.results.slice(0, 50);
-            resultsList.currentIndex = 0;
-        }
+    // Hyprland delivers SUPER tap directly to this running quickshell process
+    // via the wlr global-shortcuts protocol. Bypasses the `qs ipc` CLI which
+    // costs ~125ms per call (Qt binary cold start).
+    // Bound from app-launcher.nix as: bind = SUPER, Super_L, global, quickshell:launcher
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "launcher"
+        description: "Toggle the app launcher"
+        onPressed: launcherScope.toggle()
     }
 
     IpcHandler {
         target: "launcher"
 
         function toggle() {
-            if (!launcherScope.launcherVisible) {
-                const s = launcherScope.focusedScreen();
-                if (s)
-                    launcherWindow.screen = s;
-            }
-            launcherScope.launcherVisible = !launcherScope.launcherVisible;
+            launcherScope.toggle();
         }
     }
 
     PanelWindow {
         id: launcherWindow
-        visible: launcherScope.launcherVisible || !hideComplete
-        property bool hideComplete: true
+        visible: launcherScope.launcherVisible
+        WlrLayershell.namespace: "quickshell-launcher"
 
         anchors {
             top: true
@@ -97,6 +86,9 @@ Scope {
         property var allApps: []
         property var filteredApps: []
 
+        // Per-field weights. Name dominates, comment is tiebreaker only.
+        readonly property var fieldWeights: [3.0, 1.5, 1.2, 0.7]
+
         function rebuildAppList() {
             const apps = DesktopEntries.applications;
             let list = [];
@@ -112,6 +104,19 @@ Scope {
             allApps = list;
         }
 
+        function appFields(app) {
+            let keywords = "";
+            const kw = app.keywords;
+            if (kw && typeof kw !== "string" && kw.length !== undefined) {
+                const arr = [];
+                for (let i = 0; i < kw.length; i++) arr.push(kw[i]);
+                keywords = arr.join(" ");
+            } else if (typeof kw === "string") {
+                keywords = kw;
+            }
+            return [app.name || "", app.genericName || "", keywords, app.comment || ""];
+        }
+
         function updateFilter() {
             const query = searchInput.text.toLowerCase();
             if (query === "") {
@@ -120,28 +125,28 @@ Scope {
                 return;
             }
 
-            let lines = [];
-            let indexMap = {};
+            const weights = fieldWeights;
+            let scored = [];
             for (let i = 0; i < allApps.length; i++) {
                 const app = allApps[i];
-                const id = app.id;
-                const name = app.name || "";
-                const genericName = app.genericName || "";
-                const comment = app.comment || "";
-                const keywords = Array.isArray(app.keywords) ? app.keywords.join(" ") : (app.keywords || "");
-                const searchable = [name, genericName, comment, keywords].join(" ");
-
-                lines.push([id, name, searchable].join("\t"));
-                indexMap[id] = app;
+                const fields = appFields(app);
+                let best = -Infinity;
+                for (let f = 0; f < fields.length; f++) {
+                    const raw = FzfLib.scoreText(fields[f], query);
+                    if (raw === -Infinity) continue;
+                    const weighted = raw * weights[f];
+                    if (weighted > best) best = weighted;
+                }
+                if (best > -Infinity) scored.push([best, app]);
             }
-            launcherScope.appIndexMap = indexMap;
-
-            fzfProc.results = [];
-            fzfProc.environment = {
-                APP_LIST: lines.join("\n"),
-                QUERY: query
-            };
-            fzfProc.running = true;
+            scored.sort((a, b) => {
+                if (b[0] !== a[0]) return b[0] - a[0];
+                return a[1].name.localeCompare(b[1].name);
+            });
+            const out = [];
+            for (let i = 0; i < scored.length && i < 50; i++) out.push(scored[i][1]);
+            filteredApps = out;
+            resultsList.currentIndex = 0;
         }
 
         function launchApp(app) {
@@ -170,14 +175,7 @@ Scope {
                 visible: false
                 focus: false
 
-                onTextChanged: {
-                    if (text === "") {
-                        searchDebounce.stop();
-                        launcherWindow.updateFilter();
-                    } else {
-                        searchDebounce.restart();
-                    }
-                }
+                onTextChanged: launcherWindow.updateFilter()
             }
 
             Keys.onPressed: event => {
@@ -214,14 +212,13 @@ Scope {
                 onTapped: launcherScope.launcherVisible = false
             }
 
-            PopReveal {
+            Item {
                 id: panelReveal
                 width: 500
                 height: panel.implicitHeight
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                showing: launcherScope.launcherVisible
-                slideOffset: 0
+                visible: launcherScope.launcherVisible
 
                 Rectangle {
                     id: panel
@@ -308,11 +305,6 @@ Scope {
                                 radius: width / 2
                                 color: Colors.textColorMuted
                                 opacity: parent.active ? 0.6 : 0.3
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 120
-                                    }
-                                }
                             }
                         }
 
@@ -415,23 +407,9 @@ Scope {
         }
 
         Connections {
-            target: panelReveal
-            function onHidden() {
-                launcherWindow.hideComplete = true;
-            }
-        }
-
-        Timer {
-            id: searchDebounce
-            interval: 80
-            onTriggered: launcherWindow.updateFilter()
-        }
-
-        Connections {
             target: launcherScope
             function onLauncherVisibleChanged() {
                 if (launcherScope.launcherVisible) {
-                    launcherWindow.hideComplete = false;
                     searchInput.text = "";
                     resultsList.contentY = 0;
                     resultsList.keyboardNav = false;

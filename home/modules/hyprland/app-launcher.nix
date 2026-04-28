@@ -1,11 +1,15 @@
 { ... }:
 
 {
-  # SUPER key alone toggles the Quickshell app launcher (bindr = bind on key release)
-  # The launcher uses IPC to toggle visibility within the already-running quickshell process.
-  # Apps are launched via 'uwsm app --' for proper systemd unit management.
-  # See: https://github.com/Vladimir-csp/uwsm#3-applications-and-slices
-  wayland.windowManager.hyprland.settings.bind = [
-    "SUPER, Super_L, exec, qs ipc call launcher toggle"
-  ];
+  wayland.windowManager.hyprland.settings = {
+    bind = [
+      ", Super_L, global, quickshell:launcher"
+    ];
+
+    layerrule = [
+      "blur on, match:namespace quickshell-launcher"
+      "ignore_alpha 0.01, match:namespace quickshell-launcher"
+      "no_anim on, match:namespace quickshell-launcher"
+    ];
+  };
 }
