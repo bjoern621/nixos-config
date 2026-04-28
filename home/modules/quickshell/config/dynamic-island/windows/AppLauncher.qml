@@ -37,7 +37,8 @@ Scope {
     function toggle() {
         if (!launcherVisible) {
             const s = focusedScreen();
-            if (s) launcherWindow.screen = s;
+            if (s)
+                launcherWindow.screen = s;
         }
         launcherVisible = !launcherVisible;
     }
@@ -45,7 +46,9 @@ Scope {
     // Hyprland delivers SUPER tap directly to this running quickshell process
     // via the wlr global-shortcuts protocol. Bypasses the `qs ipc` CLI which
     // costs ~125ms per call (Qt binary cold start).
-    // Bound from app-launcher.nix as: bind = SUPER, Super_L, global, quickshell:launcher
+    // Bound from app-launcher.nix as: bind = , Super_L, global, quickshell:launcher
+    // No SUPER mod prefix: Hyprland only dispatches the bare Super_L keycode on
+    // solo press; combos like SUPER+q route through the SUPER+keycode path instead.
     GlobalShortcut {
         appid: "quickshell"
         name: "launcher"
@@ -55,7 +58,9 @@ Scope {
 
     IpcHandler {
         target: "launcher"
-        function toggle() { launcherScope.toggle(); }
+        function toggle() {
+            launcherScope.toggle();
+        }
     }
 
     PanelWindow {
@@ -63,7 +68,12 @@ Scope {
         visible: launcherScope.launcherVisible
         WlrLayershell.namespace: "quickshell-launcher"
 
-        anchors { top: true; left: true; right: true; bottom: true }
+        anchors {
+            top: true
+            left: true
+            right: true
+            bottom: true
+        }
 
         exclusiveZone: 0
         focusable: true
@@ -81,14 +91,16 @@ Scope {
         onSearchTextChanged: updateFilter()
 
         function rebuildAppList() {
-            const apps = DesktopEntries.applications.values
-                .filter(a => !a.noDisplay)
-                .sort((a, b) => a.name.localeCompare(b.name));
+            const apps = DesktopEntries.applications.values.filter(a => !a.noDisplay).sort((a, b) => a.name.localeCompare(b.name));
             indexedApps = apps.map(app => {
                 const kw = app.keywords;
                 const keywords = Array.isArray(kw) ? kw.join(" ") : (typeof kw === "string" ? kw : "");
                 const fields = [app.name || "", app.genericName || "", keywords, app.comment || ""];
-                return { app, fields, lower: fields.map(f => f.toLowerCase()) };
+                return {
+                    app,
+                    fields,
+                    lower: fields.map(f => f.toLowerCase())
+                };
             });
         }
 
@@ -107,17 +119,24 @@ Scope {
                 let best = -Infinity;
                 for (let f = 0; f < e.fields.length; f++) {
                     const raw = FzfLib.scoreLower(e.fields[f], e.lower[f], query);
-                    if (raw === -Infinity) continue;
+                    if (raw === -Infinity)
+                        continue;
                     const weighted = raw * weights[f];
-                    if (weighted > best) best = weighted;
+                    if (weighted > best)
+                        best = weighted;
                 }
-                if (best > -Infinity) scored.push({ app: e.app, score: best });
+                if (best > -Infinity)
+                    scored.push({
+                        app: e.app,
+                        score: best
+                    });
             }
             scored.sort((a, b) => b.score - a.score || a.app.name.localeCompare(b.app.name));
 
             const out = [];
             const limit = Math.min(scored.length, launcherScope.maxResults);
-            for (let i = 0; i < limit; i++) out.push(scored[i].app);
+            for (let i = 0; i < limit; i++)
+                out.push(scored[i].app);
             filteredApps = out;
             resultsList.currentIndex = 0;
         }
@@ -156,9 +175,7 @@ Scope {
                     if (next >= 0 && next < launcherWindow.filteredApps.length)
                         resultsList.currentIndex = next;
                 } else if (k === Qt.Key_Backspace) {
-                    launcherWindow.searchText = ctrl
-                        ? launcherWindow.searchText.replace(/\S+\s*$/, "")
-                        : launcherWindow.searchText.slice(0, -1);
+                    launcherWindow.searchText = ctrl ? launcherWindow.searchText.replace(/\S+\s*$/, "") : launcherWindow.searchText.slice(0, -1);
                 } else if (k === Qt.Key_Delete || (k === Qt.Key_A && ctrl)) {
                     launcherWindow.searchText = "";
                 } else if (event.text && event.text.length > 0 && !ctrl) {
@@ -185,7 +202,10 @@ Scope {
 
                 Column {
                     id: contentColumn
-                    anchors { fill: parent; margins: Spacing.spacing12 }
+                    anchors {
+                        fill: parent
+                        margins: Spacing.spacing12
+                    }
                     spacing: Spacing.spacing8
 
                     Rectangle {
@@ -262,9 +282,7 @@ Scope {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Spacing.spacing8
-                                color: delegateTap.pressed ? Colors.hoverItemPressed
-                                     : delegateRoot.active ? Colors.hoverItemHovered
-                                     : "transparent"
+                                color: delegateTap.pressed ? Colors.hoverItemPressed : delegateRoot.active ? Colors.hoverItemHovered : "transparent"
                                 border.color: delegateRoot.active || delegateTap.pressed ? Colors.pillBorder : "transparent"
                             }
 
