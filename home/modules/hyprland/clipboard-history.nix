@@ -6,7 +6,13 @@ let
   # id in a sidecar file so the Quickshell UI can mask the entry.
   cliphistStoreFiltered = pkgs.writeShellApplication {
     name = "cliphist-store-filtered";
-    runtimeInputs = with pkgs; [ cliphist wl-clipboard coreutils gnugrep gawk ];
+    runtimeInputs = with pkgs; [
+      cliphist
+      wl-clipboard
+      coreutils
+      gnugrep
+      gawk
+    ];
     text = ''
       set -u
       sidecar="''${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/sensitive-ids"
