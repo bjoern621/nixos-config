@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Hyprland._GlobalShortcuts
@@ -26,9 +28,14 @@ Scope {
     // Map clipId -> integer version (bumped each decode). Used to bust Image cache.
     property var imageVersions: ({})
     property var imageDecodeQueue: []
-    // Map clipId -> true for entries flagged as sensitive by the source-side
-    // wrapper (KDE password-manager hint). Loaded from ~/.cache/cliphist/sensitive-ids.
+    // Map clipId -> reason string for entries flagged as sensitive by the
+    // source-side wrapper (KDE password-manager hint, Bitwarden source URL,
+    // ...). Loaded from ~/.cache/cliphist/sensitive-ids.
     property var sensitiveIds: ({})
+
+    // Tracking for the mask-reason tooltip on the lock icon.
+    property Item hoveredLockItem: null
+    property string hoveredLockReason: ""
 
     onClipVisibleChanged: {
         if (clipVisible) {
@@ -140,9 +147,14 @@ Scope {
 
         stdout: SplitParser {
             onRead: data => {
-                const id = data.trim();
+                const line = data.replace(/[\r\n]+$/, "");
+                if (!line)
+                    return;
+                const tabIdx = line.indexOf('\t');
+                const id = (tabIdx < 0 ? line : line.substring(0, tabIdx)).trim();
+                const reason = tabIdx < 0 ? "" : line.substring(tabIdx + 1).trim();
                 if (id)
-                    sensitiveProc.pending[id] = true;
+                    sensitiveProc.pending[id] = reason || "Quelle markiert";
             }
         }
 
@@ -169,10 +181,12 @@ Scope {
                     return;
                 const isImage = rawDisplay.startsWith("[[ binary data");
                 const clipId = data.substring(0, tabIdx).trim();
+                const sourceReason = clipScope.sensitiveIds[clipId] || "";
                 const masked = isImage ? {
                     display: rawDisplay,
-                    masked: false
-                } : SecretMask.maskEntry(rawDisplay, !!clipScope.sensitiveIds[clipId]);
+                    masked: false,
+                    reason: ""
+                } : SecretMask.maskEntry(rawDisplay, sourceReason);
                 listProc.pending.push({
                     raw: data,
                     display: masked.display,
@@ -180,7 +194,8 @@ Scope {
                     isImage: isImage,
                     imagePath: isImage ? "/tmp/cliphist_preview_" + clipId + ".png" : "",
                     clipId: clipId,
-                    masked: masked.masked
+                    masked: masked.masked,
+                    maskReason: masked.reason || ""
                 });
             }
         }
@@ -325,6 +340,7 @@ Scope {
                     }
 
                     TintedIcon {
+                        id: lockIcon
                         visible: !clipDelegate.modelData.isImage && clipDelegate.modelData.masked
                         anchors {
                             right: parent.right
@@ -334,6 +350,21 @@ Scope {
                         source: "../icons/icons8-lock.svg"
                         size: Typography.fontSize16
                         color: Colors.textColorMuted
+
+                        HoverHandler {
+                            id: lockHover
+                            enabled: lockIcon.visible
+                            cursorShape: Qt.ArrowCursor
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    clipScope.hoveredLockItem = lockIcon;
+                                    clipScope.hoveredLockReason = clipDelegate.modelData.maskReason || "Maskiert";
+                                } else if (clipScope.hoveredLockItem === lockIcon) {
+                                    clipScope.hoveredLockItem = null;
+                                    clipScope.hoveredLockReason = "";
+                                }
+                            }
+                        }
                     }
 
                     Text {
@@ -366,6 +397,29 @@ Scope {
                         onTapped: clipScope.selectEntry(clipDelegate.modelData)
                     }
                 }
+            }
+        }
+
+        Tooltip {
+            id: maskTooltip
+            z: 100
+            text: clipScope.hoveredLockItem ? "Maskiert" : ""
+            subtitle: clipScope.hoveredLockReason
+            x: {
+                const item = clipScope.hoveredLockItem;
+                if (!item) return 0;
+                const _ = clipList.contentY;
+                const p = item.mapToItem(maskTooltip.parent, item.width / 2, 0);
+                const min = Spacing.spacing8;
+                const max = maskTooltip.parent.width - maskTooltip.width - Spacing.spacing8;
+                return Math.max(min, Math.min(max, p.x - maskTooltip.width / 2));
+            }
+            y: {
+                const item = clipScope.hoveredLockItem;
+                if (!item) return 0;
+                const _ = clipList.contentY;
+                const p = item.mapToItem(maskTooltip.parent, 0, 0);
+                return p.y - maskTooltip.height - Spacing.spacing4;
             }
         }
     }

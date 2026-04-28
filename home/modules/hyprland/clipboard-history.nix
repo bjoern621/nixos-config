@@ -18,9 +18,34 @@ let
       sidecar="''${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/sensitive-ids"
       mkdir -p "$(dirname "$sidecar")"
 
+      # Sidecar format: <id>\t<reason>\n
+      # Detection paths (in priority order):
+      #   1. KDE password-manager hint MIME (Bitwarden Desktop, KeePassXC, ...)
+      #   2. chromium/x-source-url matching a known password-manager origin
+      #      (Bitwarden browser extension cannot set custom MIME types,
+      #      so we sniff the Chromium source-url instead).
       sensitive=0
-      if wl-paste --list-types 2>/dev/null | grep -qi 'x-kde-passwordManagerHint'; then
+      reason=""
+
+      types="$(wl-paste --list-types 2>/dev/null || true)"
+
+      if printf '%s\n' "$types" | grep -qi 'x-kde-passwordManagerHint'; then
         sensitive=1
+        reason="KDE-Passwort-Hinweis"
+      elif printf '%s\n' "$types" | grep -qx 'chromium/x-source-url'; then
+        src="$(wl-paste --type chromium/x-source-url 2>/dev/null || true)"
+        case "$src" in
+          # Bitwarden browser extension (Chrome/Chromium ID).
+          chrome-extension://nngceckbapebfimnlniiiahkandclblb/*)
+            sensitive=1
+            reason="Bitwarden-Browser-Erweiterung"
+            ;;
+          # Bitwarden web vault.
+          *://vault.bitwarden.com/*|*://*.bitwarden.com/*)
+            sensitive=1
+            reason="Bitwarden Web-Vault"
+            ;;
+        esac
       fi
 
       tmp="$(mktemp)"
@@ -32,7 +57,7 @@ let
       if [ "$sensitive" = "1" ]; then
         id="$(cliphist list | head -n1 | awk -F'\t' '{print $1}')"
         if [ -n "$id" ]; then
-          printf '%s\n' "$id" >> "$sidecar"
+          printf '%s\t%s\n' "$id" "$reason" >> "$sidecar"
         fi
       fi
     '';
