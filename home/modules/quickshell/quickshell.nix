@@ -34,6 +34,19 @@ let
   spotifyCli = pkgs.writeShellScriptBin "quickshell-spotify" ''
     exec ${qsPython}/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
   '';
+
+  # Emoji dataset for the EmojiPicker (Super+.). Built from Unicode's
+  # emoji-test.txt + CLDR annotations (en + de) at home-manager rebuild,
+  # so updating nixpkgs auto-bumps the dataset.
+  emojiData = pkgs.runCommand "quickshell-emoji-data.json" {
+    nativeBuildInputs = [ pkgs.python3 ];
+  } ''
+    python3 ${./gen-emoji.py} \
+      ${pkgs.unicode-emoji}/share/unicode/emoji/emoji-test.txt \
+      ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/en.xml \
+      ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/de.xml \
+      > $out
+  '';
 in
 
 {
@@ -65,7 +78,10 @@ in
       RestartSec = 1;
       # Without a platform theme, Qt defaults to hicolor icons.
       # gtk3 makes Qt read the icon theme from GTK settings (gtk.iconTheme).
-      Environment = [ "QT_QPA_PLATFORMTHEME=gtk3" ];
+      Environment = [
+        "QT_QPA_PLATFORMTHEME=gtk3"
+        "QUICKSHELL_EMOJI_DATA=${emojiData}"
+      ];
     };
     Install = {
       WantedBy = [ "graphical-session.target" ];

@@ -8,19 +8,22 @@ import QtQuick
 import "../"
 import "../base"
 import "../lib/fzf.js" as FzfLib
-import "../lib/emoji.js" as EmojiData
 
 Scope {
     id: emojiScope
 
-    readonly property int maxResults: 200
-    readonly property int cellSize: 48
-    readonly property int gridCols: 8
-    readonly property int gridRows: 6
+    readonly property int maxResults: 400
+    readonly property int cellSize: 44
+    readonly property int gridCols: 9
+    readonly property int gridRows: 8
+    readonly property int categorySize: 36
 
     property bool emojiVisible: false
     property string searchText: ""
-    // Each item: { c, n, k, lower } where lower combines name + keywords
+    property int selectedGroup: 0
+    // Loaded from $QUICKSHELL_EMOJI_DATA (built at home-manager rebuild).
+    property var groups: []
+    // Each indexed entry: { c, n, k, g, lower }
     property var indexedEmojis: []
     property var filteredEmojis: []
 
@@ -35,27 +38,50 @@ Scope {
     }
 
     onSearchTextChanged: updateFilter()
+    onSelectedGroupChanged: {
+        if (searchText === "")
+            updateFilter();
+        emojiGrid.contentY = 0;
+        emojiGrid.currentIndex = 0;
+    }
 
-    Component.onCompleted: {
-        const src = EmojiData.EMOJIS;
-        const out = new Array(src.length);
-        for (let i = 0; i < src.length; i++) {
-            const e = src[i];
-            const combined = e.k ? (e.n + " " + e.k) : e.n;
-            out[i] = {
-                c: e.c,
-                n: e.n,
-                lower: combined.toLowerCase()
-            };
+    FileView {
+        id: emojiDataFile
+        path: Quickshell.env("QUICKSHELL_EMOJI_DATA") || ""
+        blockLoading: false
+        onLoaded: emojiScope.parseData(emojiDataFile.text())
+        onLoadFailed: error => console.warn("[EmojiPicker] failed to load:", error)
+    }
+
+    function parseData(text) {
+        try {
+            const data = JSON.parse(text);
+            emojiScope.groups = data.groups || [];
+            const src = data.emojis || [];
+            const out = new Array(src.length);
+            for (let i = 0; i < src.length; i++) {
+                const e = src[i];
+                const combined = e.k ? (e.n + " " + e.k) : e.n;
+                out[i] = {
+                    c: e.c,
+                    n: e.n,
+                    g: e.g,
+                    lower: combined.toLowerCase()
+                };
+            }
+            emojiScope.indexedEmojis = out;
+            emojiScope.updateFilter();
+        } catch (err) {
+            console.warn("[EmojiPicker] failed to parse:", err);
         }
-        indexedEmojis = out;
-        updateFilter();
     }
 
     function updateFilter() {
         const query = searchText.toLowerCase();
         if (query === "") {
-            filteredEmojis = indexedEmojis.slice(0, maxResults);
+            // No search: filter to selected group, keep CLDR order.
+            const g = selectedGroup;
+            filteredEmojis = indexedEmojis.filter(e => e.g === g);
             emojiGrid.currentIndex = 0;
             return;
         }
@@ -80,9 +106,6 @@ Scope {
 
     function selectEmoji(emoji) {
         emojiVisible = false;
-        // Type the emoji directly: works in any app with focus, no clipboard
-        // pollution. Small delay so the launcher window has fully unmapped and
-        // keyboard focus has returned to the previously focused client.
         typeProc.emoji = emoji.c;
         typeProc.running = true;
     }
@@ -149,7 +172,7 @@ Scope {
             searchText: emojiScope.searchText
             placeholder: "Emoji suchen..."
             panelWidth: emojiScope.cellSize * emojiScope.gridCols + 2 * Spacing.spacing12
-            emptyVisible: emojiScope.filteredEmojis.length === 0 && emojiScope.searchText !== ""
+            emptyVisible: emojiScope.indexedEmojis.length > 0 && emojiScope.filteredEmojis.length === 0 && emojiScope.searchText !== ""
 
             onSearchEdited: text => emojiScope.searchText = text
             onEscaped: emojiScope.emojiVisible = false
@@ -179,45 +202,90 @@ Scope {
                 emojiGrid.currentIndex = next;
             }
 
-            LauncherGridView {
-                id: emojiGrid
+            Column {
                 width: parent.width
-                height: Math.min(contentHeight, emojiScope.cellSize * emojiScope.gridRows)
-                cellWidth: emojiScope.cellSize
-                cellHeight: emojiScope.cellSize
-                model: emojiScope.filteredEmojis
+                spacing: Spacing.spacing8
 
-                delegate: Item {
-                    id: emojiCell
-                    required property var modelData
-                    required property int index
-                    readonly property bool active: emojiGrid.currentIndex === index || emojiCellHover.hovered
-                    width: emojiGrid.cellWidth
-                    height: emojiGrid.cellHeight
+                LauncherGridView {
+                    id: emojiGrid
+                    width: parent.width
+                    height: Math.min(contentHeight, emojiScope.cellSize * emojiScope.gridRows)
+                    cellWidth: emojiScope.cellSize
+                    cellHeight: emojiScope.cellSize
+                    model: emojiScope.filteredEmojis
 
-                    LauncherDelegateBg {
-                        active: emojiCell.active
-                        pressed: emojiCellTap.pressed
-                    }
+                    delegate: Item {
+                        id: emojiCell
+                        required property var modelData
+                        required property int index
+                        readonly property bool active: emojiGrid.currentIndex === index || emojiCellHover.hovered
+                        width: emojiGrid.cellWidth
+                        height: emojiGrid.cellHeight
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData.c
-                        font.pixelSize: Typography.fontSize24
-                    }
+                        LauncherDelegateBg {
+                            active: emojiCell.active
+                            pressed: emojiCellTap.pressed
+                        }
 
-                    HoverHandler {
-                        id: emojiCellHover
-                        cursorShape: Qt.PointingHandCursor
-                        onHoveredChanged: {
-                            if (hovered && !emojiGrid.keyboardNav)
-                                emojiGrid.currentIndex = emojiCell.index;
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData.c
+                            font.pixelSize: Typography.fontSize24
+                        }
+
+                        HoverHandler {
+                            id: emojiCellHover
+                            cursorShape: Qt.PointingHandCursor
+                            onHoveredChanged: {
+                                if (hovered && !emojiGrid.keyboardNav)
+                                    emojiGrid.currentIndex = emojiCell.index;
+                            }
+                        }
+
+                        TapHandler {
+                            id: emojiCellTap
+                            onTapped: emojiScope.selectEmoji(emojiCell.modelData)
                         }
                     }
+                }
 
-                    TapHandler {
-                        id: emojiCellTap
-                        onTapped: emojiScope.selectEmoji(emojiCell.modelData)
+                // Category strip: hidden during search (results span all groups).
+                Row {
+                    visible: emojiScope.searchText === "" && emojiScope.groups.length > 0
+                    width: parent.width
+                    spacing: 0
+
+                    Repeater {
+                        model: emojiScope.groups
+                        delegate: Item {
+                            id: catCell
+                            required property var modelData
+                            required property int index
+                            readonly property bool active: emojiScope.selectedGroup === index
+                            width: parent.width / emojiScope.groups.length
+                            height: emojiScope.categorySize
+
+                            LauncherDelegateBg {
+                                active: catCell.active || catHover.hovered
+                                pressed: catTap.pressed
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.icon
+                                font.pixelSize: Typography.fontSize20
+                                opacity: catCell.active ? 1.0 : 0.7
+                            }
+
+                            HoverHandler {
+                                id: catHover
+                                cursorShape: Qt.PointingHandCursor
+                            }
+                            TapHandler {
+                                id: catTap
+                                onTapped: emojiScope.selectedGroup = catCell.index
+                            }
+                        }
                     }
                 }
             }
