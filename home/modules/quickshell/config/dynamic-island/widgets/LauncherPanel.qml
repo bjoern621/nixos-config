@@ -71,8 +71,16 @@ Item {
         event.accepted = true;
     }
 
-    TapHandler {
-        onTapped: root.escaped()
+    // Dismiss on click outside the panel. Sits underneath the panel so the
+    // panel's own MouseArea (below) consumes clicks within the panel before
+    // they reach this layer. Using MouseArea (not TapHandler) here is
+    // intentional: PointerHandlers attached to a parent fire even when a
+    // descendant has handled the gesture, which would close the panel on
+    // every legit click (delegate, category button, ...). MouseArea props
+    // ("eventually accept" model) give us proper hit-testing.
+    MouseArea {
+        anchors.fill: parent
+        onClicked: root.escaped()
     }
 
     Rectangle {
@@ -85,6 +93,14 @@ Item {
         color: Colors.pillBackground
         border.width: 1
         border.color: Colors.pillBorder
+
+        // Click-eater: clicks landing on panel padding/empty space (i.e. not
+        // on a child MouseArea/PointerHandler) are absorbed here so they
+        // don't bubble out to the dismiss MouseArea above. Descendant
+        // TapHandlers (delegates, category cells) still fire normally.
+        MouseArea {
+            anchors.fill: parent
+        }
 
         Column {
             id: contentColumn
