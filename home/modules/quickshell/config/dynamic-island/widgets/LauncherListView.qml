@@ -3,14 +3,11 @@ import QtQuick.Controls as QQC
 import "../base"
 
 // Reusable ListView for launchers. Wires up:
-//  - keyboardNav flag (mouse motion clears it; arrow keys set it)
-//  - syncHover(): finds the delegate under the cursor via itemAt() and sets
-//    currentIndex. Required because HoverHandler only fires on enter/leave;
-//    after wheel-scroll the row under the static cursor changes without any
-//    pointer event, and the highlight would otherwise lag.
-//  - flush wheel scrolling (no bounce)
+//  - keyboardNav flag (set true by parent on arrow-key nav; delegates gate hover-driven currentIndex updates on it so keyboard selection isn't fought by a static cursor)
+//  - synchronous positionViewAtIndex on currentIndex change (avoids the built-in animated scroll, jarring with variable-height rows)
+//  - fast wheel scrolling via flick() with multiplied velocity (keeps Flickable's StopAtBounds + realization machinery in charge — no dead zones from manual contentHeight math)
 //  - styled vertical scrollbar
-// Parent supplies model, delegate, and rowHeight (via height calculation).
+// Hover sync (cursor moves, items moving under static cursor during scroll, initial show under cursor) is handled by per-delegate HoverHandlers in the parent's delegate definition. Parent supplies model, delegate, and height calculation.
 ListView {
     id: root
     clip: true
@@ -23,24 +20,11 @@ ListView {
     // Snap into view on selection change. ListView's built-in scroll-to-keep-current-visible animates contentY (~250ms) which is jarring with variable-height rows (e.g. 180px image vs 40px text in clipboard). positionViewAtIndex is synchronous and only scrolls the minimum needed.
     onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-    MouseArea {
-        id: hoverArea
-        anchors.fill: parent
-        acceptedButtons: Qt.NoButton
-        hoverEnabled: true
-        propagateComposedEvents: true
-        function syncHover() {
-            root.keyboardNav = false;
-            const item = root.itemAt(root.contentX + mouseX, root.contentY + mouseY);
-            if (item && item.index !== undefined)
-                root.currentIndex = item.index;
-        }
-        onPositionChanged: syncHover()
-        onWheel: wheel => {
-            const max = Math.max(0, root.contentHeight - root.height);
-            root.contentY = Math.max(0, Math.min(max, root.contentY - wheel.angleDelta.y * 2));
-            syncHover();
-        }
+    // Speed up wheel scrolling by triggering Flickable's flick() with a multiplied velocity. Going through flick() (instead of writing contentY directly) keeps Flickable's StopAtBounds + animation/realization machinery in charge — no dead zones from our own bounds math against an estimated contentHeight.
+    WheelHandler {
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        property real speed: 300
+        onWheel: event => root.flick(0, event.angleDelta.y * speed)
     }
 
     QQC.ScrollBar.vertical: QQC.ScrollBar {

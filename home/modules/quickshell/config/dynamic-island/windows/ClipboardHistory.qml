@@ -34,7 +34,9 @@ Scope {
         if (clipVisible) {
             searchText = "";
             updateFilter();
-            clipList.contentY = 0;
+            // cancelFlick() kills any in-flight wheel-flick momentum from the previous open; positionViewAtBeginning() handles originY correctly (setting contentY = 0 directly leaves blank space above row 0 if a flick was still animating).
+            clipList.cancelFlick();
+            clipList.positionViewAtBeginning();
             clipList.currentIndex = 0;
             clipList.keyboardNav = false;
             // Background refresh: cached list shown immediately, new entries
@@ -51,11 +53,13 @@ Scope {
         sensitiveProc.running = true;
     }
 
-    function updateFilter() {
+    // resetIndex=false skips the `currentIndex = 0` write so background refreshes (sensitiveProc → listProc) don't clobber a hover-set selection from MouseArea. User-driven calls (open, search) keep the default reset.
+    function updateFilter(resetIndex = true) {
         const query = searchText.toLowerCase();
         if (query === "") {
             filteredEntries = allEntries;
-            clipList.currentIndex = 0;
+            if (resetIndex)
+                clipList.currentIndex = 0;
             return;
         }
         const scored = [];
@@ -74,7 +78,8 @@ Scope {
         for (let i = 0; i < limit; i++)
             out[i] = scored[i].e;
         filteredEntries = out;
-        clipList.currentIndex = 0;
+        if (resetIndex)
+            clipList.currentIndex = 0;
     }
 
     function selectEntry(entry) {
@@ -164,9 +169,10 @@ Scope {
                     return;
                 const isImage = rawDisplay.startsWith("[[ binary data");
                 const clipId = data.substring(0, tabIdx).trim();
-                const masked = isImage
-                    ? { display: rawDisplay, masked: false }
-                    : SecretMask.maskEntry(rawDisplay, !!clipScope.sensitiveIds[clipId]);
+                const masked = isImage ? {
+                    display: rawDisplay,
+                    masked: false
+                } : SecretMask.maskEntry(rawDisplay, !!clipScope.sensitiveIds[clipId]);
                 listProc.pending.push({
                     raw: data,
                     display: masked.display,
@@ -181,7 +187,7 @@ Scope {
 
         onExited: {
             clipScope.allEntries = listProc.pending;
-            clipScope.updateFilter();
+            clipScope.updateFilter(false);
             // Queue images that haven't been decoded this session.
             const versions = clipScope.imageVersions;
             const queue = listProc.pending.filter(e => e.isImage && !(e.clipId in versions));
