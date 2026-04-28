@@ -1,90 +1,79 @@
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Hyprland._GlobalShortcuts
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
 import QtQuick
-import QtQuick.Controls
 import "../"
 import "../base"
+import "../lib/fzf.js" as FzfLib
 
 Scope {
     id: clipScope
 
+    readonly property int maxResults: 100
+    readonly property int textRowHeight: 40
+    readonly property int imageRowHeight: 180
+    readonly property int maxVisibleHeight: 8 * 40
+
     property bool clipVisible: false
-
-    function focusedScreen() {
-        const mon = Hyprland.focusedMonitor;
-        if (mon) {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++) {
-                if (screens[i].name === mon.name)
-                    return screens[i];
-            }
-        }
-        return null;
-    }
-
+    property string searchText: ""
+    // Each entry: { raw, display, lower, isImage, imagePath, clipId }
     property var allEntries: []
     property var filteredEntries: []
+    // Map clipId -> integer version (bumped each decode). Used to bust Image cache.
+    property var imageVersions: ({})
     property var imageDecodeQueue: []
-    property int decodedCount: 0
 
-    Process {
-        id: fzfProc
-        command: ["bash", "-c", "printf '%s\\n' \"$CLIP_LIST\" | fzf --filter=\"$QUERY\""]
-        environment: ({
-                CLIP_LIST: "",
-                QUERY: ""
-            })
-        running: false
-
-        property var results: []
-
-        stdout: SplitParser {
-            onRead: data => {
-                const line = data.trim();
-                if (line.length > 0 && line in clipScope.entryIndexMap) {
-                    fzfProc.results.push(clipScope.entryIndexMap[line]);
-                }
-            }
-        }
-
-        onExited: (code, status) => {
-            clipScope.filteredEntries = fzfProc.results;
+    onClipVisibleChanged: {
+        if (clipVisible) {
+            searchText = "";
+            updateFilter();
+            clipList.contentY = 0;
             clipList.currentIndex = 0;
+            clipList.keyboardNav = false;
+            // Background refresh: cached list shown immediately, new entries
+            // replace once listProc finishes (usually <50ms).
+            refresh();
         }
     }
 
-    property var entryIndexMap: ({})
+    onSearchTextChanged: updateFilter()
+
+    function refresh() {
+        listProc.pending = [];
+        listProc.running = true;
+    }
 
     function updateFilter() {
-        const query = clipSearch.text.toLowerCase();
+        const query = searchText.toLowerCase();
         if (query === "") {
             filteredEntries = allEntries;
             clipList.currentIndex = 0;
             return;
         }
-
-        let lines = [];
-        let indexMap = {};
+        const scored = [];
         for (let i = 0; i < allEntries.length; i++) {
-            const key = i + "\t" + allEntries[i].display;
-            lines.push(key);
-            indexMap[key] = allEntries[i];
+            const e = allEntries[i];
+            const s = FzfLib.scoreLower(e.display, e.lower, query);
+            if (s > -Infinity)
+                scored.push({
+                    e,
+                    score: s
+                });
         }
-        entryIndexMap = indexMap;
-
-        fzfProc.results = [];
-        fzfProc.environment = {
-            CLIP_LIST: lines.join("\n"),
-            QUERY: query
-        };
-        fzfProc.running = true;
+        scored.sort((a, b) => b.score - a.score);
+        const limit = Math.min(scored.length, maxResults);
+        const out = new Array(limit);
+        for (let i = 0; i < limit; i++)
+            out[i] = scored[i].e;
+        filteredEntries = out;
+        clipList.currentIndex = 0;
     }
 
     function selectEntry(entry) {
-        clipScope.clipVisible = false;
+        clipVisible = false;
         decodeProc.entry = entry.raw;
         decodeProc.isImage = entry.isImage;
         decodeProc.running = true;
@@ -93,8 +82,9 @@ Scope {
     function decodeNextImage() {
         if (imageDecodeQueue.length === 0)
             return;
-        const entry = imageDecodeQueue.shift();
-        imageDecodeProc.entry = entry;
+        const entry = imageDecodeQueue[0];
+        imageDecodeQueue = imageDecodeQueue.slice(1);
+        imageDecodeProc.clipId = entry.clipId;
         imageDecodeProc.environment = {
             CLIP_ENTRY: entry.raw,
             OUT_PATH: entry.imagePath
@@ -102,9 +92,77 @@ Scope {
         imageDecodeProc.running = true;
     }
 
+    function focusedScreen() {
+        const mon = Hyprland.focusedMonitor;
+        return mon ? (Quickshell.screens.find(s => s.name === mon.name) ?? null) : null;
+    }
+
+    function toggle() {
+        if (!clipVisible) {
+            const s = focusedScreen();
+            if (s)
+                clipWindow.screen = s;
+        }
+        clipVisible = !clipVisible;
+    }
+
+    Component.onCompleted: refresh()
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "clipboard"
+        description: "Toggle the clipboard history"
+        onPressed: clipScope.toggle()
+    }
+
+    IpcHandler {
+        target: "clipboard"
+        function toggle() {
+            clipScope.toggle();
+        }
+    }
+
+    Process {
+        id: listProc
+        property var pending: []
+        command: ["cliphist", "list"]
+        running: false
+
+        stdout: SplitParser {
+            onRead: data => {
+                const tabIdx = data.indexOf('\t');
+                if (tabIdx < 0)
+                    return;
+                const display = data.substring(tabIdx + 1).trim();
+                if (display.length === 0)
+                    return;
+                const isImage = display.startsWith("[[ binary data");
+                const clipId = data.substring(0, tabIdx).trim();
+                listProc.pending.push({
+                    raw: data,
+                    display: display,
+                    lower: display.toLowerCase(),
+                    isImage: isImage,
+                    imagePath: isImage ? "/tmp/cliphist_preview_" + clipId + ".png" : "",
+                    clipId: clipId
+                });
+            }
+        }
+
+        onExited: {
+            clipScope.allEntries = listProc.pending;
+            clipScope.updateFilter();
+            // Queue images that haven't been decoded this session.
+            const versions = clipScope.imageVersions;
+            const queue = listProc.pending.filter(e => e.isImage && !(e.clipId in versions));
+            clipScope.imageDecodeQueue = queue;
+            clipScope.decodeNextImage();
+        }
+    }
+
     Process {
         id: imageDecodeProc
-        property var entry: null
+        property string clipId: ""
         command: ["bash", "-c", "printf '%s' \"$CLIP_ENTRY\" | cliphist decode > \"$OUT_PATH\""]
         environment: ({
                 CLIP_ENTRY: "",
@@ -112,59 +170,17 @@ Scope {
             })
         running: false
 
-        onExited: (code, status) => {
-            if (code === 0 && imageDecodeProc.entry) {
-                // Bump decodedCount to trigger image reloads
-                clipScope.decodedCount++;
+        onExited: code => {
+            if (code === 0 && imageDecodeProc.clipId) {
+                const v = clipScope.imageVersions;
+                clipScope.imageVersions = Object.assign({}, v, {
+                    [imageDecodeProc.clipId]: (v[imageDecodeProc.clipId] || 0) + 1
+                });
             }
             clipScope.decodeNextImage();
         }
     }
 
-    // Fetch clipboard history
-    Process {
-        id: listProc
-        command: ["cliphist", "list"]
-        running: false
-
-        stdout: SplitParser {
-            onRead: data => {
-                const tabIdx = data.indexOf('\t');
-                if (tabIdx >= 0) {
-                    const display = data.substring(tabIdx + 1).trim();
-                    if (display.length > 0) {
-                        const isImage = display.startsWith("[[ binary data");
-                        const entry = {
-                            raw: data,
-                            display: display,
-                            isImage: isImage,
-                            imagePath: ""
-                        };
-                        if (isImage) {
-                            const clipId = data.substring(0, tabIdx).trim();
-                            entry.imagePath = "/tmp/cliphist_preview_" + clipId + ".png";
-                        }
-                        clipScope.allEntries = [...clipScope.allEntries, entry];
-                    }
-                }
-            }
-        }
-
-        onExited: (code, status) => {
-            clipScope.filteredEntries = clipScope.allEntries;
-            // Queue image entries for decoding
-            let queue = [];
-            for (let i = 0; i < clipScope.allEntries.length; i++) {
-                if (clipScope.allEntries[i].isImage) {
-                    queue.push(clipScope.allEntries[i]);
-                }
-            }
-            clipScope.imageDecodeQueue = queue;
-            clipScope.decodeNextImage();
-        }
-    }
-
-    // Decode + copy selected entry
     Process {
         id: decodeProc
         property string entry: ""
@@ -175,28 +191,15 @@ Scope {
             })
         running: false
 
-        onExited: (code, status) => {
+        onExited: {
             Quickshell.execDetached(["wtype", "-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"]);
-        }
-    }
-
-    IpcHandler {
-        target: "clipboard"
-
-        function toggle() {
-            if (!clipScope.clipVisible) {
-                const s = clipScope.focusedScreen();
-                if (s)
-                    clipWindow.screen = s;
-            }
-            clipScope.clipVisible = !clipScope.clipVisible;
         }
     }
 
     PanelWindow {
         id: clipWindow
-        visible: clipScope.clipVisible || !hideComplete
-        property bool hideComplete: true
+        visible: clipScope.clipVisible
+        WlrLayershell.namespace: "quickshell-clipboard"
 
         anchors {
             top: true
@@ -210,257 +213,103 @@ Scope {
         WlrLayershell.keyboardFocus: clipScope.clipVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
-        mask: Region {
-            item: clipScope.clipVisible ? clipFullArea : clipEmptyMask
-        }
-
-        Item {
-            id: clipEmptyMask
-            width: 0
-            height: 0
-        }
-
-        Item {
-            id: clipFullArea
+        LauncherPanel {
             anchors.fill: parent
-            focus: true
+            searchText: clipScope.searchText
+            placeholder: "Zwischenablage durchsuchen..."
+            emptyVisible: clipScope.filteredEntries.length === 0 && clipScope.searchText !== ""
 
-            TextInput {
-                id: clipSearch
-                visible: false
-                focus: false
-                onTextChanged: clipScope.updateFilter()
+            onSearchEdited: text => clipScope.searchText = text
+            onEscaped: clipScope.clipVisible = false
+            onAccepted: {
+                if (clipScope.filteredEntries.length > 0)
+                    clipScope.selectEntry(clipScope.filteredEntries[clipList.currentIndex]);
+            }
+            onNavigated: (dx, dy) => {
+                if (dy === 0)
+                    return;
+                clipList.keyboardNav = true;
+                const next = clipList.currentIndex + dy;
+                if (next >= 0 && next < clipScope.filteredEntries.length)
+                    clipList.currentIndex = next;
             }
 
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) {
-                    clipScope.clipVisible = false;
-                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                    if (clipScope.filteredEntries.length > 0)
-                        clipScope.selectEntry(clipScope.filteredEntries[clipList.currentIndex]);
-                } else if (event.key === Qt.Key_Down) {
-                    clipList.keyboardNav = true;
-                    if (clipList.currentIndex < clipScope.filteredEntries.length - 1)
-                        clipList.currentIndex++;
-                } else if (event.key === Qt.Key_Up) {
-                    clipList.keyboardNav = true;
-                    if (clipList.currentIndex > 0)
-                        clipList.currentIndex--;
-                } else if (event.key === Qt.Key_Backspace) {
-                    if (event.modifiers & Qt.ControlModifier)
-                        clipSearch.text = clipSearch.text.replace(/\S+\s*$/, "");
-                    else
-                        clipSearch.text = clipSearch.text.slice(0, -1);
-                } else if (event.key === Qt.Key_Delete) {
-                    clipSearch.text = "";
-                } else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
-                    clipSearch.text = "";
-                } else if (event.text && event.text.length > 0 && !(event.modifiers & Qt.ControlModifier)) {
-                    clipSearch.text += event.text;
-                }
-                event.accepted = true;
-            }
+            LauncherListView {
+                id: clipList
+                width: parent.width
+                height: Math.min(contentHeight, clipScope.maxVisibleHeight)
+                model: clipScope.filteredEntries
 
-            TapHandler {
-                onTapped: clipScope.clipVisible = false
-            }
+                delegate: Item {
+                    id: clipDelegate
+                    required property var modelData
+                    required property int index
+                    readonly property bool active: clipList.currentIndex === index || clipDelegateHover.hovered
+                    width: clipList.width
+                    height: modelData.isImage ? clipScope.imageRowHeight : clipScope.textRowHeight
 
-            PopReveal {
-                id: clipPanelReveal
-                width: 500
-                height: clipPanel.implicitHeight
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                showing: clipScope.clipVisible
-                slideOffset: 0
-
-                Rectangle {
-                    id: clipPanel
-                    anchors.fill: parent
-                    implicitHeight: clipContent.implicitHeight + 2 * Spacing.spacing12
-
-                    radius: Spacing.spacing12
-                    color: Colors.pillBackground
-                    border.width: 1
-                    border.color: Colors.pillBorder
-                }
-
-                Column {
-                    id: clipContent
-                    anchors {
-                        fill: parent
-                        margins: Spacing.spacing12
-                    }
-                    spacing: Spacing.spacing8
-
-                    Rectangle {
-                        width: parent.width
-                        height: 40
-                        radius: Spacing.spacing8
-                        color: Colors.hoverItemHovered
-                        border.width: 1
-                        border.color: clipScope.clipVisible ? Colors.accentColor : Colors.pillBorder
-
-                        Row {
-                            anchors {
-                                fill: parent
-                                leftMargin: Spacing.spacing12
-                                rightMargin: Spacing.spacing12
-                            }
-                            spacing: Spacing.spacing8
-
-                            TintedIcon {
-                                source: "../icons/icons8-search.svg"
-                                size: Typography.fontSize14
-                                color: Colors.textColorMuted
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-
-                            Text {
-                                width: parent.width - Typography.fontSize14 - Spacing.spacing8 - 2 * Spacing.spacing12
-                                anchors.verticalCenter: parent.verticalCenter
-                                font.family: Typography.fontFamily
-                                font.pixelSize: Typography.fontSize14
-                                font.weight: Font.Bold
-                                color: clipSearch.text ? Colors.textColor : Colors.textColorMuted
-                                clip: true
-                                text: clipSearch.text || "Zwischenablage durchsuchen..."
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
+                    LauncherDelegateBg {
+                        active: clipDelegate.active
+                        pressed: clipDelegateTap.pressed
                     }
 
-                    ListView {
-                        id: clipList
-                        width: parent.width
-                        height: Math.min(contentHeight, 8 * 40)
-                        clip: true
-                        currentIndex: 0
-                        model: clipScope.filteredEntries
-                        boundsBehavior: Flickable.StopAtBounds
-                        highlightMoveDuration: 0
-
-                        property bool keyboardNav: false
-
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.NoButton
-                            hoverEnabled: true
-                            onPositionChanged: clipList.keyboardNav = false
-                            onWheel: wheel => {
-                                clipList.contentY = Math.max(0, Math.min(clipList.contentHeight - clipList.height, clipList.contentY - wheel.angleDelta.y * 2));
-                            }
+                    Image {
+                        visible: modelData.isImage
+                        anchors {
+                            fill: parent
+                            margins: Spacing.spacing4
                         }
-
-                        ScrollBar.vertical: ScrollBar {
-                            policy: clipList.contentHeight > clipList.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
-                            contentItem: Rectangle {
-                                implicitWidth: 4
-                                radius: width / 2
-                                color: Colors.textColorMuted
-                                opacity: parent.active ? 0.6 : 0.3
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 120
-                                    }
-                                }
-                            }
+                        source: {
+                            if (!modelData.isImage)
+                                return "";
+                            const v = clipScope.imageVersions[modelData.clipId];
+                            return v ? "file://" + modelData.imagePath + "?v=" + v : "";
                         }
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        cache: true
+                        smooth: true
+                        sourceSize.height: clipScope.imageRowHeight * 2
+                    }
 
-                        delegate: Item {
-                            required property var modelData
-                            required property int index
-                            width: clipList.width
-                            height: modelData.isImage ? 100 : 40
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: Spacing.spacing8
-                                color: clipDelegateTap.pressed ? Colors.hoverItemPressed : clipList.currentIndex === index || clipDelegateHover.hovered ? Colors.hoverItemHovered : "transparent"
-                                border.color: clipList.currentIndex === index || clipDelegateHover.hovered || clipDelegateTap.pressed ? Colors.pillBorder : "transparent"
-                            }
-
-                            Image {
-                                visible: modelData.isImage
-                                anchors {
-                                    fill: parent
-                                    margins: Spacing.spacing4
-                                }
-                                // Use decodedCount to refresh after decode completes
-                                source: modelData.isImage && clipScope.decodedCount >= 0 ? "file://" + modelData.imagePath : ""
-                                fillMode: Image.PreserveAspectFit
-                                asynchronous: true
-                                cache: false
-                            }
-
-                            Text {
-                                visible: !modelData.isImage
-                                anchors {
-                                    fill: parent
-                                    leftMargin: Spacing.spacing12
-                                    rightMargin: Spacing.spacing12
-                                }
-                                text: modelData.display
-                                font.family: Typography.fontFamily
-                                font.pixelSize: Typography.fontSize14
-                                font.weight: Font.Normal
-                                color: Colors.textColor
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
-                            HoverHandler {
-                                id: clipDelegateHover
-                                cursorShape: Qt.PointingHandCursor
-                                onHoveredChanged: {
-                                    if (hovered && !clipList.keyboardNav)
-                                        clipList.currentIndex = index;
-                                }
-                            }
-
-                            TapHandler {
-                                id: clipDelegateTap
-                                onTapped: clipScope.selectEntry(modelData)
-                            }
-                        }
+                    TintedIcon {
+                        // Placeholder while image decode pending
+                        visible: modelData.isImage && !clipScope.imageVersions[modelData.clipId]
+                        anchors.centerIn: parent
+                        source: "../icons/icons8-menu.svg"
+                        size: Typography.fontSize24
+                        color: Colors.textColorMuted
                     }
 
                     Text {
-                        visible: clipScope.filteredEntries.length === 0 && clipSearch.text !== ""
-                        text: "Keine Ergebnisse"
+                        visible: !modelData.isImage
+                        anchors {
+                            fill: parent
+                            leftMargin: Spacing.spacing12
+                            rightMargin: Spacing.spacing12
+                        }
+                        text: modelData.display
                         font.family: Typography.fontFamily
                         font.pixelSize: Typography.fontSize14
                         font.weight: Font.Normal
-                        color: Colors.textColorMuted
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        topPadding: Spacing.spacing8
-                        bottomPadding: Spacing.spacing8
+                        color: Colors.textColor
+                        elide: Text.ElideRight
+                        verticalAlignment: Text.AlignVCenter
                     }
-                }
-            }
-        }
 
-        Connections {
-            target: clipPanelReveal
-            function onHidden() {
-                clipWindow.hideComplete = true;
-            }
-        }
+                    HoverHandler {
+                        id: clipDelegateHover
+                        cursorShape: Qt.PointingHandCursor
+                        onHoveredChanged: {
+                            if (hovered && !clipList.keyboardNav)
+                                clipList.currentIndex = clipDelegate.index;
+                        }
+                    }
 
-        Connections {
-            target: clipScope
-            function onClipVisibleChanged() {
-                if (clipScope.clipVisible) {
-                    clipWindow.hideComplete = false;
-                    clipSearch.text = "";
-                    clipScope.allEntries = [];
-                    clipScope.filteredEntries = [];
-                    clipScope.imageDecodeQueue = [];
-                    clipScope.decodedCount = 0;
-                    clipList.contentY = 0;
-                    clipList.keyboardNav = false;
-                    listProc.running = true;
-                    clipList.currentIndex = 0;
+                    TapHandler {
+                        id: clipDelegateTap
+                        onTapped: clipScope.selectEntry(clipDelegate.modelData)
+                    }
                 }
             }
         }

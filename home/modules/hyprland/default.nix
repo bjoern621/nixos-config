@@ -13,6 +13,7 @@
     ./pin.nix
     ./animations.nix
     ./clipboard-history.nix
+    ./emoji-picker.nix
     ./preferred-workspaces.nix
     ./hyprpolkit.nix
     ./monitors.nix

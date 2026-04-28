@@ -27,6 +27,7 @@ ShellRoot {
     ModalOverlay {}
     AppLauncher {}
     ClipboardHistory {}
+    EmojiPicker {}
     WallpaperChooser {}
     NotificationToast {}
     NotificationCenter {}
