@@ -598,7 +598,21 @@
         "hyprland": "hyprland",
         "nix-search-tv": "nix-search-tv",
         "nixpkgs": "nixpkgs_2",
-        "quickshell": "quickshell_2"
+        "quickshell": "quickshell_2",
+        "sddmIcons": "sddmIcons"
+      }
+    },
+    "sddmIcons": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777403239,
+        "narHash": "sha256-+W9LJvlXbaR3hRcK0E76oXbIwUpwbUUTSbRmhSNJlkc=",
+        "path": "/home/bjoern/.local/share/sddm-beach-icons",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/bjoern/.local/share/sddm-beach-icons",
+        "type": "path"
       }
     },
     "systems": {

@@ -2,14 +2,12 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 
 let
-  wallpaper = ../home/wallpapers/Sky.jpg;
-
-  adwaitaIcons = pkgs.adwaita-icon-theme;
-
+  # Icons come from the `sddmIcons` flake input (licensed, kept out of repo).
   sddm-beach-theme = pkgs.stdenvNoCC.mkDerivation {
     pname = "sddm-beach-theme";
     version = "1.0";
@@ -18,16 +16,7 @@ let
     installPhase = ''
       mkdir -p $out/share/sddm/themes/beach-clock/icons
       cp -r $src/* $out/share/sddm/themes/beach-clock/
-
-      cp ${wallpaper} $out/share/sddm/themes/beach-clock/background.jpg
-      substituteInPlace $out/share/sddm/themes/beach-clock/theme.conf \
-        --replace-warn "background=" "background=background.jpg"
-
-      # Copy Adwaita icons used by the theme (filled symbolic variants)
-      cp ${adwaitaIcons}/share/icons/Adwaita/symbolic/status/system-lock-screen-symbolic.svg \
-        $out/share/sddm/themes/beach-clock/icons/lock.svg
-      cp ${adwaitaIcons}/share/icons/Adwaita/symbolic/emotes/face-smile-symbolic.svg \
-        $out/share/sddm/themes/beach-clock/icons/face.svg
+      cp -r ${inputs.sddmIcons}/*.svg $out/share/sddm/themes/beach-clock/icons/
     '';
   };
 

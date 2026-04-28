@@ -1,27 +1,26 @@
 import QtQuick 2.0
-import Qt5Compat.GraphicalEffects
 import SddmComponents 2.0
 
 Rectangle {
     id: root
     width: Screen.width
     height: Screen.height
-    color: "#1a1a2e"
+    color: "#000000"
 
-    // Design tokens mirroring the Quickshell singletons (Colors, Typography, Spacing).
-    // SDDM runs outside Quickshell so those singletons are unavailable here — values
-    // are inlined manually and should stay in sync with their Quickshell counterparts.
+    // Design tokens. SDDM runs outside Quickshell so values are inlined here.
+    // Black background, frosted-white pill, white text/icons.
 
-    readonly property color pillBg: Qt.rgba(1, 1, 1, 0.5)
+    readonly property color pillBg: Qt.rgba(1, 1, 1, 0.06)
     readonly property color pillBorder: Qt.rgba(1, 1, 1, 0.2)
-    readonly property color pillBorderFocus: Qt.rgba(1, 1, 1, 0.35)
+    readonly property color pillBorderFocus: Qt.rgba(1, 1, 1, 0.5)
     readonly property color textWhite: "#ffffff"
-    readonly property color textDark: "#111111"
-    readonly property color textMuted: "#555555"
-    readonly property color iconColor: "#111111"
-    readonly property color hoverHovered: Qt.rgba(0, 0, 0, 0.08)
-    readonly property color hoverPressed: Qt.rgba(0, 0, 0, 0.15)
-    readonly property color textError: "#ff3b3b"
+    readonly property color textDark: "#ffffff"
+    readonly property color textMuted: Qt.rgba(1, 1, 1, 0.5)
+    readonly property color iconColor: "#ffffff"
+    readonly property color hoverHovered: Qt.rgba(1, 1, 1, 0.08)
+    readonly property color hoverPressed: Qt.rgba(1, 1, 1, 0.15)
+    readonly property color textError: "#ff5e5e"
+    readonly property color clockHandColor: "#ffffff"
 
     readonly property int inputWidth: 280
     readonly property int inputHeight: 48
@@ -110,40 +109,110 @@ Rectangle {
         }
     }
 
-    // Background wallpaper
-    Image {
-        id: wallpaper
-        anchors.fill: parent
-        source: config.background || ""
-        fillMode: Image.PreserveAspectCrop
-        visible: false
-    }
-
-    // Full-screen blurred background
-    FastBlur {
-        anchors.fill: parent
-        source: wallpaper
-        radius: 64
-        visible: wallpaper.status === Image.Ready
-    }
-
-    // Clock + date — centered on screen
-    Column {
+    // webOS-inspired analog clock — bottom-half arc with hour, minute, second hands.
+    Item {
         id: clockColumn
         anchors.centerIn: parent
-        spacing: 4
+        width: 320
+        height: 360
 
-        Label {
+        readonly property int clockSize: 280
+
+        Item {
+            id: clockFace
+            width: parent.clockSize
+            height: parent.clockSize
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatTime(timeModel.time, "HH:mm")
-            font.pixelSize: 120
-            color: root.textWhite
+            anchors.top: parent.top
+
+            readonly property real cx: width / 2
+            readonly property real cy: height / 2
+
+            // Bottom semicircle arc (the "smile") — continuously sweeps once per minute.
+            Item {
+                id: arcRotor
+                anchors.fill: parent
+                transformOrigin: Item.Center
+
+                NumberAnimation on rotation {
+                    from: 0
+                    to: 360
+                    duration: 4000
+                    loops: Animation.Infinite
+                    running: true
+                }
+
+                Canvas {
+                    id: arcCanvas
+                    anchors.fill: parent
+                    antialiasing: true
+                    onPaint: {
+                        var ctx = getContext("2d");
+                        ctx.reset();
+                        ctx.lineWidth = 3;
+                        ctx.strokeStyle = root.clockHandColor;
+                        ctx.lineCap = "round";
+                        ctx.beginPath();
+                        var sweep = Math.PI * 2 * 0.4;
+                        var start = (Math.PI - sweep) / 2;
+                        ctx.arc(clockFace.cx, clockFace.cy, clockFace.width / 2 - 4, start, start + sweep, false);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Hour hand
+            Rectangle {
+                width: 4
+                height: 70
+                radius: 2
+                color: root.clockHandColor
+                x: clockFace.cx - width / 2
+                y: clockFace.cy - height
+                transformOrigin: Item.Bottom
+                rotation: (timeModel.time.getHours() % 12) * 30 + timeModel.time.getMinutes() * 0.5
+            }
+
+            // Minute hand
+            Rectangle {
+                width: 3
+                height: 105
+                radius: 1.5
+                color: root.clockHandColor
+                x: clockFace.cx - width / 2
+                y: clockFace.cy - height
+                transformOrigin: Item.Bottom
+                rotation: timeModel.time.getMinutes() * 6 + timeModel.time.getSeconds() * 0.1
+            }
+
+            // Second hand
+            Rectangle {
+                width: 1.5
+                height: 115
+                color: root.clockHandColor
+                x: clockFace.cx - width / 2
+                y: clockFace.cy - height
+                transformOrigin: Item.Bottom
+                rotation: timeModel.time.getSeconds() * 6
+            }
+
+            // Center cap
+            Rectangle {
+                width: 8
+                height: 8
+                radius: 4
+                color: root.clockHandColor
+                x: clockFace.cx - width / 2
+                y: clockFace.cy - height / 2
+            }
         }
 
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: clockFace.bottom
+            anchors.topMargin: 28
             text: root.germanDate(timeModel.time)
-            font.pixelSize: Typography.fontSize24
+            font.pixelSize: 22
             font.weight: Font.DemiBold
             color: root.textWhite
         }
@@ -162,6 +231,7 @@ Rectangle {
             id: usernameLabel
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.userName()
+            font.pixelSize: 15
             font.weight: Font.DemiBold
             color: root.textWhite
         }
@@ -179,20 +249,12 @@ Rectangle {
             opacity: root.isLoading ? 0.6 : 1.0
 
             // Lock icon
-            Image {
-                id: lockIconSource
+            TintedIcon {
                 anchors.left: parent.left
                 anchors.leftMargin: 18
                 anchors.verticalCenter: parent.verticalCenter
                 source: "icons/icons8-lock-2.svg"
-                sourceSize: Qt.size(24, 24)
-                width: 24
-                height: 24
-                visible: false
-            }
-            ColorOverlay {
-                anchors.fill: lockIconSource
-                source: lockIconSource
+                size: 24
                 color: root.iconColor
             }
 
@@ -264,18 +326,10 @@ Rectangle {
                     duration: 100
                 }
 
-                Image {
-                    id: faceIconSource
+                TintedIcon {
                     anchors.centerIn: parent
                     source: "icons/icons8-face-id.svg"
-                    sourceSize: Qt.size(28, 28)
-                    width: 28
-                    height: 28
-                    visible: false
-                }
-                ColorOverlay {
-                    anchors.fill: faceIconSource
-                    source: faceIconSource
+                    size: 28
                     color: root.iconColor
                 }
 
@@ -320,19 +374,10 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Image {
-                    id: spinnerIconSource
-                    source: "icons/icons8-spinner.svg"
-                    sourceSize: Qt.size(24, 24)
-                    width: 24
-                    height: 24
-                    visible: false
-                }
-                ColorOverlay {
+                TintedIcon {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 24
-                    height: 24
-                    source: spinnerIconSource
+                    source: "icons/icons8-spinner.svg"
+                    size: 24
                     color: root.textWhite
 
                     NumberAnimation on rotation {
@@ -431,6 +476,4 @@ Rectangle {
         passwordField.text = Globals.authPassword;
         passwordField.forceActiveFocus();
     }
-
-    ScreenCorners {}
 }
