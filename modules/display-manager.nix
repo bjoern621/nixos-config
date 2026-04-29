@@ -27,18 +27,15 @@ let
     [ -z "$password" ]
   '';
 
-  # PAM session helper: decrypts login password from TPM and unlocks GNOME Keyring.
-  # This handles keyring unlock after face authentication (where no password is available).
-  # For password logins, pam_gnome_keyring in the auth phase already handles this.
-  # Runs as the authenticating user via pam_exec seteuid.
-  # All status goes to the journal under tag `sddm-keyring-tpm` so failures are diagnosable.
-  # See docs/keyring-auto-unlock.md for setup instructions.
+  # PAM session helper: unlocks the GNOME Keyring after face login by decrypting
+  # the login password from TPM. Status logged under journal tag `sddm-keyring-tpm`.
+  # Setup: docs/keyring-auto-unlock.md.
   unlockKeyringTpm = pkgs.writeShellScript "sddm-unlock-keyring-tpm" ''
     TAG=sddm-keyring-tpm
     log() { ${pkgs.util-linux}/bin/logger -t "$TAG" -- "$1"; }
     fail() { log "FAIL: $1"; exit 0; }  # exit 0: never block login
 
-    TPM_DIR="$HOME/.tpm"
+    TPM_DIR="''${XDG_DATA_HOME:-$HOME/.local/share}/sddm/keyring-tpm"
     if [ ! -d "$TPM_DIR" ]; then
       fail "$TPM_DIR missing. See docs/keyring-auto-unlock.md to seal login password into TPM."
     fi
@@ -61,7 +58,11 @@ let
       fail "tpm2_encryptdecrypt: $(cat "$TMP/err")."
     fi
 
-    if ! ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --unlock < "$TMP/password.txt" >"$TMP/out" 2>&1; then
+    # pam_exec runs us as root; gnome-keyring would abort with
+    # "failed dropping capabilities -9". runuser drops to PAM_USER and zeroes caps.
+    [ -n "$PAM_USER" ] || fail "PAM_USER not set."
+    if ! ${pkgs.util-linux}/bin/runuser -u "$PAM_USER" -- \
+        ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --unlock < "$TMP/password.txt" >"$TMP/out" 2>&1; then
       fail "gnome-keyring-daemon --unlock: $(cat "$TMP/out"). Stored password may not match current login password; re-seal after password change."
     fi
     log "OK: keyring unlocked via TPM-sealed password"
@@ -89,8 +90,8 @@ in
     };
   };
 
-  # Weston (SDDM's Wayland compositor) needs these exported in its service environment
-  # to actually know what cursor to draw, since it doesn't read SDDM's Theme block directly.
+  # Weston (SDDM's Wayland compositor) doesn't read SDDM's Theme block, so
+  # export the cursor here too.
   systemd.services.display-manager.environment = {
     XCURSOR_THEME = "Bibata-Modern-Ice";
     XCURSOR_SIZE = "24";
@@ -102,26 +103,17 @@ in
     pkgs.bibata-cursors
   ];
 
-  # User needs tss group for TPM access (keyring unlock after face login).
+  # `tss` group + udev rules for /dev/tpmrm0 access (TPM keyring unlock).
+  security.tpm2.enable = true;
   users.users.bjoern.extraGroups = [ "tss" ];
 
-  # Custom SDDM PAM configuration.
-  # Replaces the default "auth substack login" which runs howdy before password check.
-  # Routes authentication based on whether a password was provided:
-  #   - Empty password (face button) → howdy face recognition
-  #   - Non-empty password (typed)   → unix password auth only (no howdy)
+  # SDDM PAM: route on empty vs non-empty password.
+  #   Empty password (face button) → howdy face recognition
+  #   Non-empty password (typed)   → unix password auth, no howdy
+  # The final `required pam_unix` is unreachable during auth but is called by
+  # pam_setcred() to establish initgroups credentials (howdy and pam_exec both
+  # return PAM_CRED_INSUFFICIENT from setcred).
   security.pam.services.sddm.text = lib.mkForce ''
-    # Authentication: branch on empty vs non-empty password.
-    #
-    # pam_exec checks if the password is empty:
-    #   Empty → exit 0 → success=2 skips gnome_keyring + pam_unix verify → lands on howdy.
-    #   Non-empty → exit 1 → default=ignore → falls through to password verification.
-    #
-    # The final `required pam_unix` is never reached during auth (the chain always
-    # stops earlier via done/die), but IS called during pam_setcred() for all modules.
-    # It reliably provides initgroups() credentials for both auth paths.
-    # howdy and pam_exec both return PAM_CRED_INSUFFICIENT from pam_sm_setcred()
-    # so they cannot be relied upon to establish credentials.
     auth  optional                    ${pamUnix} likeauth nullok
     auth  [success=2 default=ignore]  ${pamExec} quiet expose_authtok ${isPasswordEmpty}
     auth  optional                    ${pamGnomeKeyring}
@@ -135,8 +127,8 @@ in
     session   optional  ${pamExec} seteuid quiet ${unlockKeyringTpm}
   '';
 
-  # Clear SDDM's QML cache on every activation so theme changes always apply
-  # Also disable KWin's shakecursor effect for the sddm user.
+  # Clear SDDM's QML cache so theme changes apply, and disable KWin's
+  # shakecursor effect for the sddm user.
   system.activationScripts.sddm-clear-cache = ''
         rm -rf /var/lib/sddm/.cache/sddm-greeter-qt6/qmlcache
 
