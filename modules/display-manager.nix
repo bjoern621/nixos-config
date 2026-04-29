@@ -31,17 +31,40 @@ let
   # This handles keyring unlock after face authentication (where no password is available).
   # For password logins, pam_gnome_keyring in the auth phase already handles this.
   # Runs as the authenticating user via pam_exec seteuid.
+  # All status goes to the journal under tag `sddm-keyring-tpm` so failures are diagnosable.
+  # See docs/keyring-auto-unlock.md for setup instructions.
   unlockKeyringTpm = pkgs.writeShellScript "sddm-unlock-keyring-tpm" ''
+    TAG=sddm-keyring-tpm
+    log() { ${pkgs.util-linux}/bin/logger -t "$TAG" -- "$1"; }
+    fail() { log "FAIL: $1"; exit 0; }  # exit 0: never block login
+
     TPM_DIR="$HOME/.tpm"
-    [ -f "$TPM_DIR/password.enc" ] || exit 0
-    TMP=$(mktemp -d)
+    if [ ! -d "$TPM_DIR" ]; then
+      fail "$TPM_DIR missing. See docs/keyring-auto-unlock.md to seal login password into TPM."
+    fi
+    for f in password.enc key.pub key.priv; do
+      [ -f "$TPM_DIR/$f" ] || fail "$TPM_DIR/$f missing. Re-run setup (docs/keyring-auto-unlock.md)."
+    done
+
+    TMP=$(mktemp -d) || fail "mktemp failed"
     trap 'rm -rf "$TMP"' EXIT
-    ${pkgs.tpm2-tools}/bin/tpm2_createprimary -Q -c "$TMP/primary.ctx" 2>/dev/null || exit 0
-    ${pkgs.tpm2-tools}/bin/tpm2_load -Q -C "$TMP/primary.ctx" \
-      -u "$TPM_DIR/key.pub" -r "$TPM_DIR/key.priv" -c "$TMP/key.ctx" 2>/dev/null || exit 0
-    ${pkgs.tpm2-tools}/bin/tpm2_encryptdecrypt -Qd -c "$TMP/key.ctx" \
-      "$TPM_DIR/password.enc" 2>/dev/null | \
-      ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --unlock > /dev/null 2>&1
+
+    if ! ${pkgs.tpm2-tools}/bin/tpm2_createprimary -Q -c "$TMP/primary.ctx" 2>"$TMP/err"; then
+      fail "tpm2_createprimary: $(cat "$TMP/err"). Check tss group membership and /dev/tpmrm0 access."
+    fi
+    if ! ${pkgs.tpm2-tools}/bin/tpm2_load -Q -C "$TMP/primary.ctx" \
+        -u "$TPM_DIR/key.pub" -r "$TPM_DIR/key.priv" -c "$TMP/key.ctx" 2>"$TMP/err"; then
+      fail "tpm2_load: $(cat "$TMP/err"). Key files may be from a different TPM/primary; re-seal."
+    fi
+    if ! ${pkgs.tpm2-tools}/bin/tpm2_encryptdecrypt -Qd -c "$TMP/key.ctx" \
+        -o "$TMP/password.txt" "$TPM_DIR/password.enc" 2>"$TMP/err"; then
+      fail "tpm2_encryptdecrypt: $(cat "$TMP/err")."
+    fi
+
+    if ! ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --unlock < "$TMP/password.txt" >"$TMP/out" 2>&1; then
+      fail "gnome-keyring-daemon --unlock: $(cat "$TMP/out"). Stored password may not match current login password; re-seal after password change."
+    fi
+    log "OK: keyring unlocked via TPM-sealed password"
   '';
 
   pamUnix = "${pkgs.linux-pam}/lib/security/pam_unix.so";
