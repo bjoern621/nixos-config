@@ -57,15 +57,17 @@ let
   '';
 in
 {
-  wayland.windowManager.hyprland.settings = {
-    # Float non-VSCode windows on workspace 2 at creation time (static rule,
-    # applied before the window is tiled) so they never disrupt the layout.
-    windowrule = [
-      "float on, match:workspace 2, match:class negative:^code"
-    ];
+  # Named windowrule so it runs before anonymous `tile on` rules in preferred-workspaces.nix, which then overwrite floating for apps that don't want float.
+  wayland.windowManager.hyprland.extraConfig = ''
+    windowrule {
+      name = exclusive-ws2-float
+      match:workspace = 2
+      match:class = negative:^code
+      float = on
+    }
+  '';
 
-    # exec-once = [
-    #   "${exclusiveWorkspaceScript}"
-    # ];
-  };
+  # exec-once = [
+  #   "${exclusiveWorkspaceScript}"
+  # ];
 }
