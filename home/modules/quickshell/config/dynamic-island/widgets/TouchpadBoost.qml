@@ -15,8 +15,6 @@ MouseArea {
     property real _velocity: 0
     property double _lastTs: 0
 
-    Component.onCompleted: console.log("[TouchpadBoost] attached, flickable=" + flickable)
-
     onWheel: wheel => {
         // Mouse wheel: hand off to Flickable.
         if (wheel.phase === Qt.NoScrollPhase) {
@@ -32,7 +30,6 @@ MouseArea {
         if (wheel.phase === Qt.ScrollEnd) {
             // Begin/End fire twice; only flick once when we still have velocity.
             if (_velocity !== 0) {
-                console.log("[TouchpadBoost] ScrollEnd, flick velocity=" + _velocity);
                 flickable.flick(0, _velocity);
                 _velocity = 0;
             }
