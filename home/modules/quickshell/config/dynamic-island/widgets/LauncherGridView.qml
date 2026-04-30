@@ -13,7 +13,6 @@ GridView {
 
     property bool keyboardNav: false
 
-    // HoverHandler (not MouseArea) so per-cell HoverHandlers (e.g. emoji tooltip) still receive hover.
     HoverHandler {
         id: hoverArea
     }
@@ -23,13 +22,12 @@ GridView {
             return;
         root.keyboardNav = false;
         const pos = hoverArea.point.position;
-        // HoverHandler is parented to the scrolling content, so pos is already in content coordinates — no contentX/Y offset.
         const item = root.itemAt(pos.x, pos.y);
         if (item && item.index !== undefined)
             root.currentIndex = item.index;
     }
 
-    // Mouse motion → selection follows. Bind to point.position so the change signal fires on every move.
+    // Re-runs syncHover on every mouse move.
     readonly property point hoverPos: hoverArea.point.position
     onHoverPosChanged: syncHover()
 
