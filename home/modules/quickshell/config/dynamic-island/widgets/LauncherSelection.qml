@@ -20,10 +20,9 @@ Item {
     }
 
     function syncHover() {
-        if (!hoverArea.hovered) {
-            hoveredIndex = -1;
+        // On hover-leave, keep hoveredIndex as a phantom selection so effectiveIndex stays pinned to the last hovered item.
+        if (!hoverArea.hovered)
             return;
-        }
         keyboardNav = false;
         // Use scenePosition (window-relative, stable across scroll) and map into the view's content coordinates so itemAt works regardless of where the handler's parent currently sits.
         const scenePos = hoverArea.point.scenePosition;
