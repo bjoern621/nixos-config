@@ -26,8 +26,16 @@ GridView {
     onContentYChanged: if (!keyboardNav)
         selection.syncHover()
 
+    // Single wheel-event source shared by TouchpadBoost (inertia) and the selection-mode switch.
+    WheelSource {
+        id: wheelSource
+        // Any wheel input switches back from keyboard nav to mouse selection.
+        onWheelReceived: selection.keyboardNav = false
+    }
+
     TouchpadBoost {
         flickable: root
+        wheelSource: wheelSource
     }
 
     QQC.ScrollBar.vertical: ThinScrollBar {}

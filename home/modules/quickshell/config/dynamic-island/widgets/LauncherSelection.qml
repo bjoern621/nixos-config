@@ -8,9 +8,6 @@ Item {
     id: selection
     required property Flickable view
 
-    anchors.fill: parent
-    z: 1000  // sit above TouchpadBoost so the wheelCatcher MouseArea below catches wheel first
-
     property bool keyboardNav: false
     property int hoveredIndex: -1
     readonly property int effectiveIndex: keyboardNav ? view.currentIndex : (hoveredIndex >= 0 ? hoveredIndex : view.currentIndex)
@@ -35,24 +32,12 @@ Item {
         hoveredIndex = (item && item.index !== undefined) ? item.index : -1;
     }
 
+    // HoverHandler attaches to the view root (not to this Item). If it were a child of this Item, the Flickable would reparent the Item into its contentItem alongside delegates, where the wrapping Item's hover-aware area swallows hover events meant for delegate HoverHandlers (per-cell tooltips break).
     HoverHandler {
         id: hoverArea
+        parent: selection.view
         // Fires when hover state flips, including when the view re-appears under a static cursor (e.g. closing and re-opening the launcher without moving the mouse).
         onHoveredChanged: selection.syncHover()
-    }
-
-    // Catches every wheel event (mouse and touchpad) and exits keyboard mode immediately. Declines the event so TouchpadBoost / Flickable still handle the actual scroll.
-    MouseArea {
-        id: wheelCatcher
-        anchors.fill: parent
-        acceptedButtons: Qt.NoButton
-        hoverEnabled: false
-        propagateComposedEvents: true
-        z: 1000
-        onWheel: wheel => {
-            selection.keyboardNav = false;
-            wheel.accepted = false;
-        }
     }
 
     // Re-runs syncHover on every mouse move. Uses scenePosition (window-relative) so it doesn't fire when the view scrolls under a static cursor.
