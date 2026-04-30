@@ -3,8 +3,9 @@ import QtQuick.Controls as QQC
 import ".."
 
 // Reusable list for launchers. One selection at a time:
-//  - mouse motion: selection follows the row under the cursor
-//  - keyboard nav: parent sets keyboardNav=true; selection stays where keys put it
+//  - mouse motion: hoveredIndex follows the row under the cursor (no auto-scroll)
+//  - keyboard nav: parent sets keyboardNav=true and writes currentIndex (auto-scrolls into view)
+// effectiveIndex = which one is currently "selected" (for Enter etc.).
 ListView {
     id: root
     clip: true
@@ -13,19 +14,29 @@ ListView {
     highlightMoveDuration: 0
 
     property bool keyboardNav: false
+    property int hoveredIndex: -1
+    readonly property int effectiveIndex: keyboardNav ? currentIndex : (hoveredIndex >= 0 ? hoveredIndex : currentIndex)
+
+    // Clears all selection state. Call when opening the view or reloading the model so a stale hover or keyboard selection from before doesn't carry over.
+    function reset() {
+        currentIndex = 0;
+        hoveredIndex = -1;
+        keyboardNav = false;
+    }
 
     HoverHandler {
         id: hoverArea
     }
 
     function syncHover() {
-        if (!hoverArea.hovered)
+        if (!hoverArea.hovered) {
+            root.hoveredIndex = -1;
             return;
+        }
         root.keyboardNav = false;
         const pos = hoverArea.point.position;
         const item = root.itemAt(pos.x, pos.y);
-        if (item && item.index !== undefined)
-            root.currentIndex = item.index;
+        root.hoveredIndex = (item && item.index !== undefined) ? item.index : -1;
     }
 
     // Re-runs syncHover on every mouse move. Uses scenePosition (window-relative) so it doesn't fire when the view scrolls under a static cursor.

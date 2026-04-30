@@ -37,8 +37,7 @@ Scope {
             searchText = "";
             updateFilter();
             emojiGrid.contentY = 0;
-            emojiGrid.currentIndex = 0;
-            emojiGrid.keyboardNav = false;
+            emojiGrid.reset();
         } else {
             hoveredCell = null;
         }
@@ -54,6 +53,7 @@ Scope {
             updateFilter();
         emojiGrid.contentY = 0;
         emojiGrid.currentIndex = 0;
+        emojiGrid.hoveredIndex = -1;
     }
 
     FileView {
@@ -220,13 +220,13 @@ Scope {
             onEscaped: emojiScope.emojiVisible = false
             onAccepted: {
                 if (emojiScope.filteredEmojis.length > 0)
-                    emojiScope.selectEmoji(emojiScope.filteredEmojis[emojiGrid.currentIndex]);
+                    emojiScope.selectEmoji(emojiScope.filteredEmojis[emojiGrid.effectiveIndex]);
             }
             onNavigated: (dx, dy) => {
-                emojiGrid.keyboardNav = true;
                 const cols = emojiScope.gridCols;
                 const total = emojiScope.filteredEmojis.length;
-                let next = emojiGrid.currentIndex + dx + dy * cols;
+                let next = emojiGrid.effectiveIndex + dx + dy * cols;
+                emojiGrid.keyboardNav = true;
                 if (next < 0)
                     next = 0;
                 if (next >= total)
@@ -234,9 +234,9 @@ Scope {
                 emojiGrid.currentIndex = next;
             }
             onPageChange: dy => {
-                emojiGrid.keyboardNav = true;
                 const total = emojiScope.filteredEmojis.length;
-                let next = emojiGrid.currentIndex + dy * emojiScope.gridCols * emojiScope.gridRows;
+                let next = emojiGrid.effectiveIndex + dy * emojiScope.gridCols * emojiScope.gridRows;
+                emojiGrid.keyboardNav = true;
                 if (next < 0)
                     next = 0;
                 if (next >= total)
@@ -260,7 +260,7 @@ Scope {
                         id: emojiCell
                         required property var modelData
                         required property int index
-                        readonly property bool active: emojiGrid.currentIndex === index
+                        readonly property bool active: emojiGrid.effectiveIndex === index
                         width: emojiGrid.cellWidth
                         height: emojiGrid.cellHeight
 

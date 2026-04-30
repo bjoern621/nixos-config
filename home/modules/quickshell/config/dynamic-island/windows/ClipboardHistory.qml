@@ -44,8 +44,7 @@ Scope {
             // cancelFlick() kills any in-flight wheel-flick momentum from the previous open; positionViewAtBeginning() handles originY correctly (setting contentY = 0 directly leaves blank space above row 0 if a flick was still animating).
             clipList.cancelFlick();
             clipList.positionViewAtBeginning();
-            clipList.currentIndex = 0;
-            clipList.keyboardNav = false;
+            clipList.reset();
             // Background refresh: cached list shown immediately, new entries
             // replace once listProc finishes (usually <50ms).
             refresh();
@@ -281,13 +280,13 @@ Scope {
             onEscaped: clipScope.clipVisible = false
             onAccepted: {
                 if (clipScope.filteredEntries.length > 0)
-                    clipScope.selectEntry(clipScope.filteredEntries[clipList.currentIndex]);
+                    clipScope.selectEntry(clipScope.filteredEntries[clipList.effectiveIndex]);
             }
             onNavigated: (dx, dy) => {
                 if (dy === 0)
                     return;
+                const next = clipList.effectiveIndex + dy;
                 clipList.keyboardNav = true;
-                const next = clipList.currentIndex + dy;
                 if (next >= 0 && next < clipScope.filteredEntries.length)
                     clipList.currentIndex = next;
             }
@@ -302,7 +301,7 @@ Scope {
                     id: clipDelegate
                     required property var modelData
                     required property int index
-                    readonly property bool active: clipList.currentIndex === index
+                    readonly property bool active: clipList.effectiveIndex === index
                     width: clipList.width
                     height: modelData.isImage ? clipScope.imageRowHeight : clipScope.textRowHeight
 

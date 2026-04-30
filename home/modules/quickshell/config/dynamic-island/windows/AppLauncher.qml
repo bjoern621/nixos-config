@@ -56,6 +56,7 @@ Scope {
                 query: ""
             }));
             resultsList.currentIndex = 0;
+            resultsList.hoveredIndex = -1;
             return;
         }
 
@@ -89,6 +90,7 @@ Scope {
             };
         filteredApps = out;
         resultsList.currentIndex = 0;
+        resultsList.hoveredIndex = -1;
     }
 
     function launchApp(app) {
@@ -172,13 +174,13 @@ Scope {
             onAccepted: {
                 const apps = launcherScope.filteredApps;
                 if (apps.length > 0)
-                    launcherScope.launchApp(apps[resultsList.currentIndex].app);
+                    launcherScope.launchApp(apps[resultsList.effectiveIndex].app);
             }
             onNavigated: (dx, dy) => {
                 if (dy === 0)
                     return;
+                const next = resultsList.effectiveIndex + dy;
                 resultsList.keyboardNav = true;
-                const next = resultsList.currentIndex + dy;
                 if (next >= 0 && next < launcherScope.filteredApps.length)
                     resultsList.currentIndex = next;
             }
@@ -193,7 +195,7 @@ Scope {
                     id: delegateRoot
                     required property var modelData
                     required property int index
-                    readonly property bool active: resultsList.currentIndex === index
+                    readonly property bool active: resultsList.effectiveIndex === index
                     width: resultsList.width
                     height: launcherScope.rowHeight
 

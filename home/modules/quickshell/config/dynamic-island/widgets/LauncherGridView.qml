@@ -2,8 +2,7 @@ import QtQuick
 import QtQuick.Controls as QQC
 import ".."
 
-// Reusable grid for launchers. Same selection model as LauncherListView: one
-// selection at a time, mouse motion or keyboard nav owns it.
+// Reusable grid for launchers. Same selection model as LauncherListView.
 GridView {
     id: root
     clip: true
@@ -12,19 +11,29 @@ GridView {
     highlightMoveDuration: 0
 
     property bool keyboardNav: false
+    property int hoveredIndex: -1
+    readonly property int effectiveIndex: keyboardNav ? currentIndex : (hoveredIndex >= 0 ? hoveredIndex : currentIndex)
+
+    // Clears all selection state. Call when opening the view or reloading the model so a stale hover or keyboard selection from before doesn't carry over.
+    function reset() {
+        currentIndex = 0;
+        hoveredIndex = -1;
+        keyboardNav = false;
+    }
 
     HoverHandler {
         id: hoverArea
     }
 
     function syncHover() {
-        if (!hoverArea.hovered)
+        if (!hoverArea.hovered) {
+            root.hoveredIndex = -1;
             return;
+        }
         root.keyboardNav = false;
         const pos = hoverArea.point.position;
         const item = root.itemAt(pos.x, pos.y);
-        if (item && item.index !== undefined)
-            root.currentIndex = item.index;
+        root.hoveredIndex = (item && item.index !== undefined) ? item.index : -1;
     }
 
     // Re-runs syncHover on every mouse move. Uses scenePosition (window-relative) so it doesn't fire when the view scrolls under a static cursor.
