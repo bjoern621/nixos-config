@@ -29,15 +29,7 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         visible: NotificationListener.history.count > 0
 
-        QQC.ScrollBar.vertical: QQC.ScrollBar {
-            policy: notifFlick.contentHeight > notifFlick.height ? QQC.ScrollBar.AsNeeded : QQC.ScrollBar.AlwaysOff
-            contentItem: Rectangle {
-                implicitWidth: 4
-                radius: width / 2
-                color: Colors.textColorMuted
-                opacity: parent.active ? 0.6 : 0.3
-            }
-        }
+        QQC.ScrollBar.vertical: ThinScrollBar {}
 
         Column {
             id: notifCol

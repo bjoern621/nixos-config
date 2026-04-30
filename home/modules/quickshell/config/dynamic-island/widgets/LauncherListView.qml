@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls as QQC
-import "../base"
+import ".."
 
 // Reusable list for launchers. One selection at a time:
 //  - mouse motion: selection follows the row under the cursor (keyboardNav=false)
@@ -33,13 +33,5 @@ ListView {
     // Only sync the selection to the mouse during mouse-driven scroll. Without this, a keyboard nav that scrolls the view would immediately reset the selection back to whatever's under the cursor.
     onContentYChanged: if (!keyboardNav) hoverArea.syncHover()
 
-    QQC.ScrollBar.vertical: QQC.ScrollBar {
-        policy: root.contentHeight > root.height ? QQC.ScrollBar.AsNeeded : QQC.ScrollBar.AlwaysOff
-        contentItem: Rectangle {
-            implicitWidth: 4
-            radius: width / 2
-            color: Colors.textColorMuted
-            opacity: parent.active ? 0.6 : 0.3
-        }
-    }
+    QQC.ScrollBar.vertical: ThinScrollBar {}
 }
