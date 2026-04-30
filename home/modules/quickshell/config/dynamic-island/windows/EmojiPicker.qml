@@ -276,12 +276,9 @@ Scope {
                         }
 
                         HoverHandler {
-                            id: emojiCellHover
                             cursorShape: Qt.PointingHandCursor
                             onHoveredChanged: {
                                 if (hovered) {
-                                    if (!emojiGrid.keyboardNav)
-                                        emojiGrid.currentIndex = emojiCell.index;
                                     emojiScope.hoveredText = emojiCell.modelData.n;
                                     const k = emojiCell.modelData.k || "";
                                     emojiScope.hoveredSubtitle = k ? k.split("|").join(", ") : "";

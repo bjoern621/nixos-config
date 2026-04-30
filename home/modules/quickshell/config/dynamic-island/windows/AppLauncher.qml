@@ -249,12 +249,7 @@ Scope {
                     }
 
                     HoverHandler {
-                        id: delegateHover
                         cursorShape: Qt.PointingHandCursor
-                        onHoveredChanged: {
-                            if (hovered && !resultsList.keyboardNav)
-                                resultsList.currentIndex = delegateRoot.index;
-                        }
                     }
 
                     TapHandler {
