@@ -27,9 +27,9 @@ GridView {
             root.currentIndex = item.index;
     }
 
-    // Re-runs syncHover on every mouse move.
-    readonly property point hoverPos: hoverArea.point.position
-    onHoverPosChanged: syncHover()
+    // Re-runs syncHover on every mouse move. Uses scenePosition (window-relative) so it doesn't fire when the view scrolls under a static cursor.
+    readonly property point hoverScenePos: hoverArea.point.scenePosition
+    onHoverScenePosChanged: syncHover()
 
     // Only sync the selection to the mouse during mouse-driven scroll. Without this, a keyboard nav that scrolls the view would immediately reset the selection back to whatever's under the cursor.
     onContentYChanged: if (!keyboardNav) syncHover()
