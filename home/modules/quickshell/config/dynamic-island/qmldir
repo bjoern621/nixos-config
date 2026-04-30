@@ -25,6 +25,7 @@ LauncherPanel 1.0 widgets/LauncherPanel.qml
 LauncherSearchBar 1.0 widgets/LauncherSearchBar.qml
 LauncherListView 1.0 widgets/LauncherListView.qml
 LauncherGridView 1.0 widgets/LauncherGridView.qml
+LauncherSelection 1.0 widgets/LauncherSelection.qml
 LauncherDelegateBg 1.0 widgets/LauncherDelegateBg.qml
 ThinScrollBar 1.0 widgets/ThinScrollBar.qml
 TouchpadBoost 1.0 widgets/TouchpadBoost.qml
