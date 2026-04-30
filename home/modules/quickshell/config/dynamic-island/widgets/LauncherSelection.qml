@@ -9,6 +9,7 @@ Item {
     required property Flickable view
 
     anchors.fill: parent
+    z: 1000  // sit above TouchpadBoost so the wheelCatcher MouseArea below catches wheel first
 
     property bool keyboardNav: false
     property int hoveredIndex: -1
@@ -40,8 +41,21 @@ Item {
         onHoveredChanged: selection.syncHover()
     }
 
+    // Catches every wheel event (mouse and touchpad) and exits keyboard mode immediately. Declines the event so TouchpadBoost / Flickable still handle the actual scroll.
+    MouseArea {
+        id: wheelCatcher
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        hoverEnabled: false
+        propagateComposedEvents: true
+        z: 1000
+        onWheel: wheel => {
+            selection.keyboardNav = false;
+            wheel.accepted = false;
+        }
+    }
+
     // Re-runs syncHover on every mouse move. Uses scenePosition (window-relative) so it doesn't fire when the view scrolls under a static cursor.
     readonly property point hoverScenePos: hoverArea.point.scenePosition
     onHoverScenePosChanged: syncHover()
-
 }
