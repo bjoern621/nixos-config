@@ -100,7 +100,9 @@ Scope {
         const scored = [];
         for (let i = 0; i < indexedEmojis.length; i++) {
             const e = indexedEmojis[i];
-            const s = FzfLib.scoreLower(e.n, e.lower, query);
+            // Match against combined name+keywords (e.lower); pass it as `text`
+            // too because scoreLower's outer loop bounds by text.length.
+            const s = FzfLib.scoreLower(e.lower, e.lower, query);
             if (s > -Infinity)
                 scored.push({
                     e,
@@ -256,9 +258,12 @@ Scope {
                             cursorShape: Qt.PointingHandCursor
                             onHoveredChanged: {
                                 if (hovered) {
-                                    emojiScope.hoveredText = emojiCell.modelData.n;
+                                    const q = emojiScope.searchText.toLowerCase();
+                                    const name = emojiCell.modelData.n;
                                     const k = emojiCell.modelData.k || "";
-                                    emojiScope.hoveredSubtitle = k ? k.split("|").join(", ") : "";
+                                    const sub = k ? k.split("|").join(", ") : "";
+                                    emojiScope.hoveredText = q ? FzfLib.highlightHtml(name, q) : name;
+                                    emojiScope.hoveredSubtitle = (q && sub) ? FzfLib.highlightHtml(sub, q) : sub;
                                     emojiScope.hoveredCell = emojiCell;
                                 } else if (emojiScope.hoveredCell === emojiCell) {
                                     emojiScope.hoveredCell = null;
@@ -329,6 +334,7 @@ Scope {
         anchorItem: emojiScope.hoveredCell
         text: emojiScope.hoveredCell ? emojiScope.hoveredText : ""
         subtitle: emojiScope.hoveredCell ? emojiScope.hoveredSubtitle : ""
+        textFormat: Text.StyledText
         screen: emojiWindow.screen
         recalcKey: emojiGrid.contentY
     }

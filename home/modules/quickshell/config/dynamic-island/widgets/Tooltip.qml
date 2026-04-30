@@ -26,6 +26,7 @@ Scope {
 
     property string text: ""
     property string subtitle: ""
+    property int textFormat: Text.PlainText
     property int maxContentWidth: 260
     property Item anchorItem: null
     property var screen: null
@@ -114,6 +115,7 @@ Scope {
                     Label {
                         id: titleLabel
                         text: root.text
+                        textFormat: root.textFormat
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
@@ -123,6 +125,7 @@ Scope {
                         id: subLabel
                         visible: root.subtitle !== ""
                         text: root.subtitle
+                        textFormat: root.textFormat
                         font.weight: Font.Normal
                         font.pixelSize: Typography.fontSize12
                         color: Colors.textColorMuted
