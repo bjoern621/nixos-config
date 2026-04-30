@@ -15,23 +15,28 @@ ListView {
 
     property bool keyboardNav: false
 
-    MouseArea {
+    // HoverHandler (not MouseArea) so per-delegate HoverHandlers (e.g. lock icon tooltip) still receive hover.
+    HoverHandler {
         id: hoverArea
-        anchors.fill: parent
-        acceptedButtons: Qt.NoButton
-        hoverEnabled: true
-        propagateComposedEvents: true
-        function syncHover() {
-            root.keyboardNav = false;
-            const item = root.itemAt(root.contentX + mouseX, root.contentY + mouseY);
-            if (item && item.index !== undefined)
-                root.currentIndex = item.index;
-        }
-        onPositionChanged: syncHover()
     }
 
+    function syncHover() {
+        if (!hoverArea.hovered)
+            return;
+        root.keyboardNav = false;
+        const pos = hoverArea.point.position;
+        // HoverHandler is parented to the scrolling content, so pos is already in content coordinates — no contentX/Y offset.
+        const item = root.itemAt(pos.x, pos.y);
+        if (item && item.index !== undefined)
+            root.currentIndex = item.index;
+    }
+
+    // Mouse motion → selection follows. Bind to point.position so the change signal fires on every move.
+    readonly property point hoverPos: hoverArea.point.position
+    onHoverPosChanged: syncHover()
+
     // Only sync the selection to the mouse during mouse-driven scroll. Without this, a keyboard nav that scrolls the view would immediately reset the selection back to whatever's under the cursor.
-    onContentYChanged: if (!keyboardNav) hoverArea.syncHover()
+    onContentYChanged: if (!keyboardNav) syncHover()
 
     QQC.ScrollBar.vertical: ThinScrollBar {}
 }
