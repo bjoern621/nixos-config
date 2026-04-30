@@ -393,28 +393,13 @@ Scope {
                 }
             }
         }
+    }
 
-        Tooltip {
-            id: maskTooltip
-            z: 100
-            text: clipScope.hoveredLockItem ? "Maskiert" : ""
-            subtitle: clipScope.hoveredLockReason
-            x: {
-                const item = clipScope.hoveredLockItem;
-                if (!item) return 0;
-                const _ = clipList.contentY;
-                const p = item.mapToItem(maskTooltip.parent, item.width / 2, 0);
-                const min = Spacing.spacing8;
-                const max = maskTooltip.parent.width - maskTooltip.width - Spacing.spacing8;
-                return Math.max(min, Math.min(max, p.x - maskTooltip.width / 2));
-            }
-            y: {
-                const item = clipScope.hoveredLockItem;
-                if (!item) return 0;
-                const _ = clipList.contentY;
-                const p = item.mapToItem(maskTooltip.parent, 0, 0);
-                return p.y - maskTooltip.height - Spacing.spacing4;
-            }
-        }
+    Tooltip {
+        anchorItem: clipScope.hoveredLockItem
+        text: clipScope.hoveredLockItem ? "Maskiert" : ""
+        subtitle: clipScope.hoveredLockReason
+        screen: clipWindow.screen
+        recalcKey: clipList.contentY
     }
 }

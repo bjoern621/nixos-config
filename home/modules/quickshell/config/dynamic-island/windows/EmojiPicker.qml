@@ -185,29 +185,6 @@ Scope {
             onLost: emojiScope.emojiVisible = false
         }
 
-        Tooltip {
-            id: emojiTooltip
-            z: 100
-            text: emojiScope.hoveredCell ? emojiScope.hoveredText : ""
-            subtitle: emojiScope.hoveredCell ? emojiScope.hoveredSubtitle : ""
-            x: {
-                const cell = emojiScope.hoveredCell;
-                if (!cell) return 0;
-                const _ = emojiGrid.contentY;
-                const p = cell.mapToItem(emojiTooltip.parent, cell.width / 2, 0);
-                const min = Spacing.spacing8;
-                const max = emojiTooltip.parent.width - emojiTooltip.width - Spacing.spacing8;
-                return Math.max(min, Math.min(max, p.x - emojiTooltip.width / 2));
-            }
-            y: {
-                const cell = emojiScope.hoveredCell;
-                if (!cell) return 0;
-                const _ = emojiGrid.contentY;
-                const p = cell.mapToItem(emojiTooltip.parent, 0, 0);
-                return p.y - emojiTooltip.height - Spacing.spacing4;
-            }
-        }
-
         LauncherPanel {
             id: panel
             anchors.fill: parent
@@ -346,5 +323,13 @@ Scope {
                 }
             }
         }
+    }
+
+    Tooltip {
+        anchorItem: emojiScope.hoveredCell
+        text: emojiScope.hoveredCell ? emojiScope.hoveredText : ""
+        subtitle: emojiScope.hoveredCell ? emojiScope.hoveredSubtitle : ""
+        screen: emojiWindow.screen
+        recalcKey: emojiGrid.contentY
     }
 }
