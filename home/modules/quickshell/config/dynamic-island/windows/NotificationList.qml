@@ -4,9 +4,7 @@ import QtQuick.Controls as QQC
 import "../"
 
 Item {
-    implicitHeight: NotificationListener.history.count === 0
-        ? emptyText.implicitHeight + Spacing.spacing8
-        : Math.min(340, notifFlick.contentHeight)
+    implicitHeight: NotificationListener.history.count === 0 ? emptyText.implicitHeight + Spacing.spacing8 : Math.min(340, notifFlick.contentHeight)
 
     clip: true
 
@@ -28,6 +26,10 @@ Item {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         visible: NotificationListener.history.count > 0
+
+        TouchpadBoost {
+            flickable: notifFlick
+        }
 
         QQC.ScrollBar.vertical: ThinScrollBar {}
 

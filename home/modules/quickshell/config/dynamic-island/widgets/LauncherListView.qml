@@ -33,7 +33,12 @@ ListView {
     onHoverScenePosChanged: syncHover()
 
     // Only sync the selection to the mouse during mouse-driven scroll. Without this, a keyboard nav that scrolls the view would immediately reset the selection back to whatever's under the cursor.
-    onContentYChanged: if (!keyboardNav) syncHover()
+    onContentYChanged: if (!keyboardNav)
+        syncHover()
+
+    TouchpadBoost {
+        flickable: root
+    }
 
     QQC.ScrollBar.vertical: ThinScrollBar {}
 }
