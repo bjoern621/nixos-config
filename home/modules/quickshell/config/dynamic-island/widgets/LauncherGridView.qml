@@ -23,6 +23,8 @@ GridView {
 
     HoverHandler {
         id: hoverArea
+        // Fires when hover state flips, including when the view re-appears under a static cursor (e.g. closing and re-opening the launcher without moving the mouse).
+        onHoveredChanged: root.syncHover()
     }
 
     function syncHover() {
