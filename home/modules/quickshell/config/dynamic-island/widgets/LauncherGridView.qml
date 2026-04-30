@@ -27,12 +27,10 @@ GridView {
                 root.currentIndex = item.index;
         }
         onPositionChanged: syncHover()
-        onWheel: wheel => {
-            const max = Math.max(0, root.contentHeight - root.height);
-            root.contentY = Math.max(0, Math.min(max, root.contentY - wheel.angleDelta.y * 2));
-            syncHover();
-        }
     }
+
+    // Re-track the cell under the (static) cursor while Flickable's built-in kinetic wheel scroll glides items past it.
+    onContentYChanged: hoverArea.syncHover()
 
     QQC.ScrollBar.vertical: QQC.ScrollBar {
         policy: root.contentHeight > root.height ? QQC.ScrollBar.AsNeeded : QQC.ScrollBar.AlwaysOff

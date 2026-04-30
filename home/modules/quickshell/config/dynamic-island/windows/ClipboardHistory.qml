@@ -302,7 +302,7 @@ Scope {
                     id: clipDelegate
                     required property var modelData
                     required property int index
-                    readonly property bool active: clipList.currentIndex === index || clipDelegateHover.hovered
+                    readonly property bool active: clipList.currentIndex === index
                     width: clipList.width
                     height: modelData.isImage ? clipScope.imageRowHeight : clipScope.textRowHeight
 

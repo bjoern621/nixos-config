@@ -260,7 +260,7 @@ Scope {
                         id: emojiCell
                         required property var modelData
                         required property int index
-                        readonly property bool active: emojiGrid.currentIndex === index || emojiCellHover.hovered
+                        readonly property bool active: emojiGrid.currentIndex === index
                         width: emojiGrid.cellWidth
                         height: emojiGrid.cellHeight
 

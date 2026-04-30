@@ -193,7 +193,7 @@ Scope {
                     id: delegateRoot
                     required property var modelData
                     required property int index
-                    readonly property bool active: resultsList.currentIndex === index || delegateHover.hovered
+                    readonly property bool active: resultsList.currentIndex === index
                     width: resultsList.width
                     height: launcherScope.rowHeight
 
