@@ -349,9 +349,7 @@ Rectangle {
 
                 // MouseArea is disabled while loading, so pressed/containsMouse
                 // stay false — no need to gate these branches on isLoading.
-                color: faceArea.pressed ? Colors.hoverItemPressed
-                    : faceArea.containsMouse ? Colors.hoverItemHovered
-                    : Colors.pillBackground
+                color: faceArea.pressed ? Colors.hoverItemPressed : faceArea.containsMouse ? Colors.hoverItemHovered : Colors.pillBackground
                 border.width: 1
                 border.color: faceArea.containsMouse ? Colors.pillBorderFocus : Colors.pillBorder
 
@@ -444,10 +442,22 @@ Rectangle {
         }
     }
 
+    // Fire face unlock automatically when the greeter opens. Only the first screen actually triggers it (Globals.authLoading gate); others no-op.
+    Timer {
+        id: autoFaceTimer
+        interval: 100
+        repeat: false
+        onTriggered: {
+            if (!Globals.authLoading && Globals.authPassword.length === 0)
+                root.queueFaceAuth();
+        }
+    }
+
     Component.onCompleted: {
         if (Globals.authInputOwner === "")
             Globals.authInputOwner = root.instanceId;
         passwordField.text = Globals.authPassword;
         passwordField.forceActiveFocus();
+        autoFaceTimer.start();
     }
 }
