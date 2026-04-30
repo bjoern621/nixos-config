@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import QtQuick.Controls as QQC
 import "../"
 
 Item {
@@ -25,14 +26,16 @@ Item {
         anchors.fill: parent
         contentHeight: notifCol.implicitHeight
         clip: true
+        boundsBehavior: Flickable.StopAtBounds
         visible: NotificationListener.history.count > 0
 
-        WheelHandler {
-            onWheel: event => {
-                notifFlick.contentY = Math.max(0, Math.min(
-                    notifFlick.contentHeight - notifFlick.height,
-                    notifFlick.contentY - event.angleDelta.y * 2
-                ))
+        QQC.ScrollBar.vertical: QQC.ScrollBar {
+            policy: notifFlick.contentHeight > notifFlick.height ? QQC.ScrollBar.AsNeeded : QQC.ScrollBar.AlwaysOff
+            contentItem: Rectangle {
+                implicitWidth: 4
+                radius: width / 2
+                color: Colors.textColorMuted
+                opacity: parent.active ? 0.6 : 0.3
             }
         }
 
