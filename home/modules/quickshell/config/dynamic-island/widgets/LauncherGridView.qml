@@ -2,9 +2,8 @@ import QtQuick
 import QtQuick.Controls as QQC
 import "../base"
 
-// Reusable GridView for launchers (e.g. EmojiPicker). Same syncHover pattern
-// as LauncherListView so mouse hover keeps tracking the cell under the cursor
-// after wheel scrolls.
+// Reusable grid for launchers. Same selection model as LauncherListView: one
+// selection at a time, mouse motion or keyboard nav owns it.
 GridView {
     id: root
     clip: true
@@ -29,8 +28,8 @@ GridView {
         onPositionChanged: syncHover()
     }
 
-    // Re-track the cell under the (static) cursor while Flickable's built-in kinetic wheel scroll glides items past it.
-    onContentYChanged: hoverArea.syncHover()
+    // Only sync the selection to the mouse during mouse-driven scroll. Without this, a keyboard nav that scrolls the view would immediately reset the selection back to whatever's under the cursor.
+    onContentYChanged: if (!keyboardNav) hoverArea.syncHover()
 
     QQC.ScrollBar.vertical: QQC.ScrollBar {
         policy: root.contentHeight > root.height ? QQC.ScrollBar.AsNeeded : QQC.ScrollBar.AlwaysOff

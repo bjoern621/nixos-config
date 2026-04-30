@@ -2,13 +2,10 @@ import QtQuick
 import QtQuick.Controls as QQC
 import "../base"
 
-// Reusable ListView for launchers. Wires up:
-//  - keyboardNav flag (true while arrow keys drove the last selection change; cleared by mouse motion below)
-//  - top-level hover MouseArea: any mouse motion sets keyboardNav=false and writes currentIndex to the row under the cursor → keyboard-vs-mouse stays a single source of truth (no "two selections")
-//  - onContentYChanged: re-sync hover after wheel/kinetic scroll so the row gliding under the static cursor becomes selected
-//  - styled vertical scrollbar
-// Wheel scrolling is left to Flickable's built-in handler (kinetic deceleration, handles touchpad pixelDelta correctly).
-// Keyboard selection stays in view via ListView's built-in current-item tracking (highlightMoveDuration: 0 makes it instant).
+// Reusable list for launchers. One selection at a time:
+//  - mouse motion: selection follows the row under the cursor (keyboardNav=false)
+//  - keyboard nav: parent sets keyboardNav=true; selection stays where keys put it
+// Wheel scrolling and keep-selection-in-view are left to the built-in behaviour.
 ListView {
     id: root
     clip: true
@@ -33,7 +30,8 @@ ListView {
         onPositionChanged: syncHover()
     }
 
-    onContentYChanged: hoverArea.syncHover()
+    // Only sync the selection to the mouse during mouse-driven scroll. Without this, a keyboard nav that scrolls the view would immediately reset the selection back to whatever's under the cursor.
+    onContentYChanged: if (!keyboardNav) hoverArea.syncHover()
 
     QQC.ScrollBar.vertical: QQC.ScrollBar {
         policy: root.contentHeight > root.height ? QQC.ScrollBar.AsNeeded : QQC.ScrollBar.AlwaysOff
