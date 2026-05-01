@@ -17,10 +17,10 @@ Item {
         Qt.callLater(() => {
             switch (action) {
             case "shutdown":
-                GracefulShutdown.start("Herunterfahren...", ["systemctl", "poweroff"]);
+                GracefulShutdown.start("Herunterfahren...", ["systemctl", "--no-wall", "poweroff"]);
                 break;
             case "reboot":
-                GracefulShutdown.start("Neustarten...", ["systemctl", "reboot"]);
+                GracefulShutdown.start("Neustarten...", ["systemctl", "--no-wall", "reboot"]);
                 break;
             case "lock":
                 LoadingHost.show("Sperren...");
