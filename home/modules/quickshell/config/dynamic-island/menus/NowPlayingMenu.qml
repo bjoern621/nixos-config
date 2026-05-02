@@ -1092,7 +1092,6 @@ Item {
                 Column {
                     id: trackListColumn
                     width: parent.width
-                    spacing: 0
 
                     // Skeleton row component
                     Component {
@@ -1180,7 +1179,6 @@ Item {
                         height: contentHeight
                         interactive: false
                         clip: true
-                        spacing: Spacing.spacing2
                         model: root.debugSkeletons ? 0 : trackListModel
 
                         Behavior on height {
