@@ -27,8 +27,13 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         visible: NotificationListener.history.count > 0
 
+        WheelSource {
+            id: wheelSource
+        }
+
         TouchpadBoost {
             flickable: notifFlick
+            wheelSource: wheelSource
         }
 
         QQC.ScrollBar.vertical: ThinScrollBar {}
