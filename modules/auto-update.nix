@@ -128,14 +128,26 @@ in
           echo "$commits_json" | ${pkgs.jq}/bin/jq -r '.commit.committer.date // empty' 2>/dev/null || true
         }
 
-        # Known flake inputs: "name" "owner/repo" "branch"
-        declare -A FLAKE_INPUTS=(
-          ["nixpkgs"]="nixos/nixpkgs:nixos-unstable"
-          ["home-manager"]="nix-community/home-manager:master"
-          ["hyprland"]="hyprwm/Hyprland:main"
-          ["quickshell"]="quickshell-mirror/quickshell:master"
-          ["nix-search-tv"]="3timeslazy/nix-search-tv:main"
-        )
+        # Discover root flake inputs from flake.lock (only github-typed inputs).
+        if [[ ! -f "flake.lock" ]]; then
+          echo "Missing flake.lock in $NIXOS_CONFIG" >&2
+          exit 1
+        fi
+
+        mapfile -t FLAKE_INPUT_LINES < <(${pkgs.jq}/bin/jq -r '
+          . as $r
+          | $r.nodes.root.inputs
+          | to_entries[]
+          | . as $e
+          | $r.nodes[.value].original
+          | select(.type == "github")
+          | "\($e.key)\t\(.owner)/\(.repo)\t\(.ref // "HEAD")"
+        ' flake.lock)
+
+        if [[ ''${#FLAKE_INPUT_LINES[@]} -eq 0 ]]; then
+          echo "No github-typed flake inputs found in flake.lock" >&2
+          exit 1
+        fi
 
         UPDATED_COUNT=0
         SKIPPED_COUNT=0
@@ -175,8 +187,8 @@ in
             "$body" || true
         }
 
-        for input_name in "''${!FLAKE_INPUTS[@]}"; do
-          IFS=':' read -r owner_repo branch <<< "''${FLAKE_INPUTS[$input_name]}"
+        for line in "''${FLAKE_INPUT_LINES[@]}"; do
+          IFS=$'\t' read -r input_name owner_repo branch <<< "$line"
 
           echo "Checking $input_name ($owner_repo @ $branch)..."
 
