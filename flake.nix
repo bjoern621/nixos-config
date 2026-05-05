@@ -20,11 +20,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    caelestia-shell = {
-      url = "github:caelestia-dots/shell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Licensed icons8 SVGs for the SDDM theme. Drop new icons into ~/.local/share/sddm-beach-icons/. Kept out of the repo; `path:` + `flake = false` skips git filtering.
     sddmIcons = {
       url = "path:/home/bjoern/.local/share/sddm-beach-icons";

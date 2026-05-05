@@ -78,7 +78,6 @@ let
       ["hyprland"]="hyprwm/Hyprland:main"
       ["quickshell"]="quickshell-mirror/quickshell:master"
       ["nix-search-tv"]="3timeslazy/nix-search-tv:main"
-      ["caelestia-shell"]="caelestia-dots/shell:main"
     )
 
     UPDATED_COUNT=0
@@ -140,28 +139,29 @@ let
       fi
 
       target_sha_short=''${target_sha:0:7}
+      target_date=$(get_commit_date "$owner_repo" "$target_sha") || true
+      target_date_short=''${target_date:0:10}
 
       # Check if we already have a newer revision locked
       current_sha=$(get_current_revision "$input_name")
 
       if [[ -n "$current_sha" ]]; then
         current_sha_short=''${current_sha:0:7}
+        current_date=$(get_commit_date "$owner_repo" "$current_sha") || true
+        current_date_short=''${current_date:0:10}
+
+        echo "  Current revision: $current_sha_short (''${current_date_short:-unknown})"
 
         if [[ "$current_sha" == "$target_sha" ]]; then
-          echo "  Already at target revision: $target_sha_short"
+          echo "  Already at target revision: $target_sha_short (''${target_date_short:-unknown})"
           add_status_line "$input_name: unchanged ($target_sha_short)"
           SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
           continue
         fi
 
-        # Compare commit dates to detect downgrade
-        current_date=$(get_commit_date "$owner_repo" "$current_sha") || true
-        target_date=$(get_commit_date "$owner_repo" "$target_sha") || true
-
         if [[ -n "$current_date" && -n "$target_date" ]]; then
           if [[ "$current_date" > "$target_date" ]]; then
-            echo "  Warning: current revision ($current_sha_short from $current_date) is NEWER than target"
-            echo "  Downgrading to $target_sha_short (from $target_date) for stability"
+            echo "  Warning: current revision is NEWER than target, downgrading for stability"
             DOWNGRADE_COUNT=$((DOWNGRADE_COUNT + 1))
             add_status_line "$input_name: $current_sha_short -> $target_sha_short (downgrade)"
           else
@@ -171,10 +171,11 @@ let
           add_status_line "$input_name: $current_sha_short -> $target_sha_short"
         fi
       else
+        echo "  Current revision: (unlocked)"
         add_status_line "$input_name: unlocked -> $target_sha_short"
       fi
 
-      echo "  Will update to revision: $target_sha_short"
+      echo "  Will update to revision: $target_sha_short (''${target_date_short:-unknown})"
       OVERRIDE_ARGS+=(--override-input "$input_name" "github:$owner_repo/$target_sha")
       UPDATED_COUNT=$((UPDATED_COUNT + 1))
     done

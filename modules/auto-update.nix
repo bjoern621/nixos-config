@@ -135,7 +135,6 @@ in
           ["hyprland"]="hyprwm/Hyprland:main"
           ["quickshell"]="quickshell-mirror/quickshell:master"
           ["nix-search-tv"]="3timeslazy/nix-search-tv:main"
-          ["caelestia-shell"]="caelestia-dots/shell:main"
         )
 
         UPDATED_COUNT=0

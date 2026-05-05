@@ -57,7 +57,6 @@ in
   home.packages = with pkgs; [
     qsWrapped # quickshell + private PATH/fonts (imagemagick, python3+keyring, font-awesome, inter)
     spotifyCli # quickshell-spotify: user-facing CLI for setup/auth/clear
-    # inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   # Link quickshell config to ~/.config/quickshell via an out-of-store symlink
