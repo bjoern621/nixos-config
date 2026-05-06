@@ -6,7 +6,6 @@
     gimp
     obsidian
     element-desktop
-    direnv
     kubectl
     virt-manager
     kubernetes-helm

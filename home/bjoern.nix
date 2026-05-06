@@ -31,6 +31,7 @@
     ./modules/mpv.nix
     ./modules/tailscale-client.nix
     ./modules/eduvpn.nix
+    ./modules/direnv.nix
   ];
 
   home.username = "bjoern";
