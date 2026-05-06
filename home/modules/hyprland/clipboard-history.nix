@@ -27,6 +27,18 @@ let
       sensitive=0
       reason=""
 
+      tmp="$(mktemp)"
+      trap 'rm -f "$tmp"' EXIT
+      cat > "$tmp"
+
+      # Bypass filter for large payloads: re-querying wl-paste for MIME
+      # detection stalls on big clipboards. Password manager entries are
+      # tiny, so size > 8 KiB is safe to treat as non-sensitive.
+      size="$(wc -c < "$tmp")"
+      if [ "$size" -gt 8192 ]; then
+        exec cliphist store "$@" < "$tmp"
+      fi
+
       types="$(wl-paste --list-types 2>/dev/null || true)"
 
       if printf '%s\n' "$types" | grep -qi 'x-kde-passwordManagerHint'; then
@@ -47,10 +59,6 @@ let
             ;;
         esac
       fi
-
-      tmp="$(mktemp)"
-      trap 'rm -f "$tmp"' EXIT
-      cat > "$tmp"
 
       cliphist store "$@" < "$tmp"
 
