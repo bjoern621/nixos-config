@@ -30,7 +30,10 @@
     ../../modules/fonts.nix
     ../../modules/tailscale-client.nix
     ../../modules/miracast.nix
+    ../../modules/amdgpu-force-hbr3.nix
   ];
+
+  services.amdgpuForceHbr3.enable = true;
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
