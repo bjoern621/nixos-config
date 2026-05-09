@@ -22,8 +22,8 @@
       "$mainMod, down, movefocus, d"
 
       # Move current workspace to another monitor (cycles between monitors)
-      "$mainMod CTRL, left, movecurrentworkspacetomonitor, -1"
-      "$mainMod CTRL, right, movecurrentworkspacetomonitor, +1"
+      "$mainMod SHIFT, left, movecurrentworkspacetomonitor, -1"
+      "$mainMod SHIFT, right, movecurrentworkspacetomonitor, +1"
 
       # Switch workspaces with mainMod + [0-9]
       "$mainMod, 1, workspace, 1"
