@@ -30,10 +30,8 @@
     ../../modules/fonts.nix
     ../../modules/tailscale-client.nix
     ../../modules/miracast.nix
-    ../../modules/amdgpu-force-hbr3.nix
+    ../../modules/external-monitors.nix
   ];
-
-  services.amdgpuForceHbr3.enable = true;
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -43,8 +41,6 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_6;
 
-  # Add kernel modules (thunderbolt early for proper USB4 initialization)
-  boot.initrd.kernelModules = [ "thunderbolt" ];
   boot.kernelModules = [
     "thunderbolt"
     "nvme"
@@ -52,30 +48,6 @@
     "xhci_hcd"
     "usb_storage"
     "sd_mod"
-  ];
-
-  # USB4/Thunderbolt and AMDGPU kernel parameters for DisplayPort tunneling
-  #
-  # thunderbolt.dprx_timeout=-1    - Wait indefinitely for DP RX capability read
-  #                                  (mitigates DPIA AUX timeout fallback to HBR/RBR)
-  # amdgpu.mst=1                   - Enable DisplayPort MST
-  # amdgpu.dcdebugmask=0x10        - Workaround for flip_done timeout issues
-  # pci=hpbussize=0x33,hpmemsize=256M - Increase hot-plug bus/memory size for USB4
-  #
-  # Removed:
-  # - thunderbolt.bw_alloc_mode=1  : USB4 v2 BW-alloc-mode-4. CalDigit TS5 Plus
-  #   firmware doesn't handle this cleanly on AMD Phoenix1 DPIA: link trains down
-  #   to HBR/RBR and gets stuck. Letting BIOS manage BW is more reliable.
-  # - thunderbolt.asym_threshold=0 : forced immediate asymmetric link
-  #   reconfiguration; default (90%) avoids spurious re-trains during heavy DP use.
-  boot.kernelParams = [
-    # USB4/Thunderbolt parameters
-    "thunderbolt.dprx_timeout=-1"
-    # AMDGPU DisplayPort parameters
-    "amdgpu.mst=1"
-    "amdgpu.dcdebugmask=0x10"
-    # PCIe hot-plug sizing for USB4 devices
-    "pci=hpbussize=0x33,hpmemsize=256M"
   ];
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -164,8 +136,6 @@
     "flakes"
   ]; # Enable Flakes
 
-  # TODO TB5/USB Tests
-  # https://nixos.wiki/wiki/Thunderbolt
   environment.systemPackages = with pkgs; [
     kdePackages.plasma-thunderbolt
     wdisplays
@@ -174,7 +144,6 @@
     brightnessctl
     tldr
   ];
-  services.hardware.bolt.enable = true;
   services.fwupd.enable = true;
 
   hardware.bluetooth.enable = true;
