@@ -5,6 +5,8 @@
   ...
 }:
 
+# Manual setup needed, see:
+# https://nix-community.github.io/lanzaboote/introduction.html
 {
   imports = [ inputs.lanzaboote.nixosModules.lanzaboote ];
 
