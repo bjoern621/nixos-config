@@ -96,6 +96,14 @@
           printf '#!/bin/sh\nexec "%s/bin/qmlls" "$@"\n' "${qt}" > "$HOME/.local/bin/qmlls"
           chmod +x "$HOME/.local/bin/qmlls"
           echo "  ~/.local/bin/qmlls wrapper written"
+
+          # Same trick for qtpaths: the VS Code qt-core extension pins an absolute
+          # store path in qt-core.additionalQtPaths, which rots on GC/rebuild.
+          # Point that setting at ~/.local/bin/qtpaths once and this wrapper keeps
+          # it valid across rebuilds.
+          printf '#!/bin/sh\nexec "%s/bin/qtpaths" "$@"\n' "${pkgs.qt6.qtbase}" > "$HOME/.local/bin/qtpaths"
+          chmod +x "$HOME/.local/bin/qtpaths"
+          echo "  ~/.local/bin/qtpaths wrapper written"
         '';
       };
 
