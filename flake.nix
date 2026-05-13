@@ -25,6 +25,11 @@
       url = "path:/home/bjoern/.local/share/sddm-beach-icons";
       flake = false;
     };
+
+    nixd = {
+      url = "github:nix-community/nixd";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -61,6 +66,8 @@
           # Nix
           nil # LSP server
           nixfmt # formatter
+
+          nixd
 
           # QML qmllint, qmlls, qmlformat + Quickshell modules for import resolution
           qt
