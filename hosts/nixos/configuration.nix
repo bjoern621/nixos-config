@@ -31,6 +31,7 @@
     ../../modules/tailscale-client.nix
     ../../modules/miracast.nix
     ../../modules/external-monitors.nix
+    ../../modules/secureboot.nix
   ];
 
   # Bootloader.
