@@ -28,10 +28,15 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
     ```bash
     sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
     ```
-7. Apply the flake configuration:
+7. Mark the hardware configuration as local-only so git ignores your changes to it:
+    ```bash
+    git -C ~/git/nixos-config update-index --skip-worktree ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
+    ```
+8. Apply the flake configuration:
     ```bash
     sudo nixos-rebuild switch --flake /etc/nixos/config#<host>
     ```
+
 
 List available host names with:
 
