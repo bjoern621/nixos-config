@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 let
   sysconf-reload = pkgs.writeShellScriptBin "sysconf-reload" ''
@@ -72,7 +72,7 @@ let
   '';
 in
 {
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = [
     sysconf-reload
   ];
 }
