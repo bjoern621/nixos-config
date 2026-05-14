@@ -2,21 +2,18 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 
 let
-  # Icons come from the `sddmIcons` flake input (licensed, kept out of repo).
   sddm-beach-theme = pkgs.stdenvNoCC.mkDerivation {
     pname = "sddm-beach-theme";
     version = "1.0";
     src = ./sddm-theme/theme;
     dontBuild = true;
     installPhase = ''
-      mkdir -p $out/share/sddm/themes/beach-clock/icons
+      mkdir -p $out/share/sddm/themes/beach-clock
       cp -r $src/* $out/share/sddm/themes/beach-clock/
-      cp -r ${inputs.sddmIcons}/*.svg $out/share/sddm/themes/beach-clock/icons/
     '';
   };
 

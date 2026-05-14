@@ -283,7 +283,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: Spacing.spacing16 + Spacing.spacing2
                 anchors.verticalCenter: parent.verticalCenter
-                source: "icons/icons8-lock-2.svg"
+                source: "icons/door-closed-locked.svg"
                 size: Typography.fontSize24
                 color: Colors.textColor
             }
@@ -383,7 +383,7 @@ Rectangle {
 
                 TintedIcon {
                     anchors.centerIn: parent
-                    source: "icons/icons8-face-id.svg"
+                    source: "icons/scan-face.svg"
                     size: Typography.fontSize24 + Spacing.spacing4
                     color: Colors.textColor
                 }

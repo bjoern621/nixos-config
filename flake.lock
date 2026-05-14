@@ -687,8 +687,7 @@
         "nix-search-tv": "nix-search-tv",
         "nixd": "nixd",
         "nixpkgs": "nixpkgs_2",
-        "quickshell": "quickshell",
-        "sddmIcons": "sddmIcons"
+        "quickshell": "quickshell"
       }
     },
     "rust-overlay": {
@@ -710,19 +709,6 @@
         "owner": "oxalica",
         "repo": "rust-overlay",
         "type": "github"
-      }
-    },
-    "sddmIcons": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1777403239,
-        "narHash": "sha256-+W9LJvlXbaR3hRcK0E76oXbIwUpwbUUTSbRmhSNJlkc=",
-        "path": "/home/bjoern/.local/share/sddm-beach-icons",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/bjoern/.local/share/sddm-beach-icons",
-        "type": "path"
       }
     },
     "systems": {
