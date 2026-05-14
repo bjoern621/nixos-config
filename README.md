@@ -73,11 +73,11 @@ sysconf-reload
 *Phase 2*: read the UUID and offset, fill them in, then rebuild again:
 
 ```bash
-# UUID of the partition containing the swap file (usually root)
-blkid /dev/$(df /swapfile | tail -1 | awk '{print $1}' | xargs lsblk -no pkname) | grep -oP 'UUID="\K[^"]+'
+# UUID of the filesystem containing the swap file (the decrypted LUKS volume on LUKS setups)
+sudo blkid $(df /swapfile | tail -1 | awk '{print $1}') | grep -o 'UUID="[^"]*"' | cut -d'"' -f2
 
 # Resume offset
-filefrag -v /swapfile | awk 'NR==4 { print $4 }' | tr -d '.'
+sudo filefrag -v /swapfile | awk 'NR==4 { print $4 }' | tr -d '.'
 ```
 
 ```nix
