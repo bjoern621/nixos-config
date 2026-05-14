@@ -32,6 +32,7 @@
     ../../modules/miracast.nix
     ../../modules/external-monitors.nix
     ../../modules/secureboot.nix
+    ../../modules/tpm-luks.nix
   ];
 
   # Bootloader.
