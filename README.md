@@ -20,29 +20,30 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
     ```bash
     git clone https://github.com/bjoern621/nixos-config.git ~/git/nixos-config
     ```
-5. Link the repository as the NixOS config directory:
+5. List available host names and pick one:
+    ```bash
+    ls ~/git/nixos-config/hosts
+    ```
+6. Set the host name as an environment variable:
+    ```bash
+    export HOST=<host>
+    ```
+7. Link the repository as the NixOS config directory:
     ```bash
     sudo ln -s ~/git/nixos-config /etc/nixos/config
     ```
-6. Copy the hardware configuration into the selected host:
+8. Copy the hardware configuration into the selected host:
     ```bash
-    sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
+    sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
     ```
-7. Mark the hardware configuration as local-only so git ignores your changes to it:
+9. Mark the hardware configuration as local-only so git ignores your changes to it:
     ```bash
-    git -C ~/git/nixos-config update-index --skip-worktree ~/git/nixos-config/hosts/<host>/hardware-configuration.nix
+    git -C ~/git/nixos-config update-index --skip-worktree hosts/$HOST/hardware-configuration.nix
     ```
-8. Apply the flake configuration:
+10. Apply the flake configuration:
     ```bash
-    sudo nixos-rebuild switch --flake /etc/nixos/config#<host>
+    sudo nixos-rebuild switch --flake /etc/nixos/config#$HOST
     ```
-
-
-List available host names with:
-
-```bash
-ls ~/git/nixos-config/hosts
-```
 
 ## Usage
 
