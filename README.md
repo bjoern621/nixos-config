@@ -6,7 +6,7 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
 
 > [!IMPORTANT]
 > Create the correct username during installation based on the selected host profile.
-> For `default`, use user `bjoern`. For `homelab` or `vmk3s`, use user `ops`.
+> For `nixos`, use user `bjoern`. For `homelab` or `vmk3s`, use user `ops`.
 > Using a different username can cause the previous home files to be replaced after rebuild,
 > which means cloning this repo and recreating symlinks must be done again.
 
@@ -66,7 +66,7 @@ sysconf-stable-update  # update inputs to revisions at least 7 days old (ensure 
 .
 ├── flake.nix                     # Flake configuration
 ├── hosts/
-│   └── default/
+│   └── nixos/
 │       ├── configuration.nix     # System configuration
 │       └── hardware-configuration.nix
 ├── modules/                      # System-level modules
