@@ -1,6 +1,16 @@
-{ ... }:
+{ lib, ... }:
 
 {
+  dconf.settings."org/gtk/gtk4/settings/file-chooser".show-hidden = true;
+
+  xdg.configFile."gtk-3.0/bookmarks".text = ''
+    file:///home/bjoern/Downloads
+  '';
+
+  home.activation.createDownloads = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p "$HOME/Downloads"
+  '';
+
   # TODO doesnt work
   # nautilus-python loads Python extensions from ~/.local/share/nautilus-python/extensions/.
   # The extension below registers Backspace as an extra accelerator for the win.back action
