@@ -31,7 +31,8 @@
     shell = pkgs.zsh;
     initialPassword = "1234";
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILZtmzMiCFldBIJpMZAlaTgKOHrZypm7J8YHGnsSzhPC bjoern@nixos"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKjTT3sunIot4AmUwDX3NbdS44g+oz9/enIXuxH2knmq laptop"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoKgh7gTGHoM9dXQK/2VMJAf/IaExYsCX1/trFrw1qS pc"
     ];
     extraGroups = [
       "wheel"
