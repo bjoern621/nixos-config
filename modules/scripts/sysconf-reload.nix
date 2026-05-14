@@ -13,22 +13,23 @@ let
     fi
 
     if [[ $# -gt 1 ]]; then
-      echo "Usage: sysconf-reload [nixos|homelab]" >&2
+      echo "Usage: sysconf-reload [<host>]" >&2
       exit 1
     fi
 
+    VALID_HOSTS=$(nix eval "$NIXOS_CONFIG#nixosConfigurations" --apply 'x: builtins.concatStringsSep " " (builtins.attrNames x)' --raw 2>/dev/null) || {
+      echo "[sysconf-reload] Failed to enumerate hosts from flake at $NIXOS_CONFIG." >&2
+      exit 1
+    }
+
     if [[ -n "$TARGET_HOST" ]]; then
-      case "$TARGET_HOST" in
-        nixos|homelab)
-          echo "[sysconf-reload] Host argument provided: $TARGET_HOST"
-          echo "[sysconf-reload] Skipping host auto-detection because argument was provided."
-          ;;
-        *)
-          echo "[sysconf-reload] Invalid host argument: $TARGET_HOST" >&2
-          echo "Usage: sysconf-reload [nixos|homelab]" >&2
-          exit 1
-          ;;
-      esac
+      if [[ " $VALID_HOSTS " != *" $TARGET_HOST "* ]]; then
+        echo "[sysconf-reload] Invalid host argument: $TARGET_HOST" >&2
+        echo "[sysconf-reload] Supported hosts: $VALID_HOSTS" >&2
+        exit 1
+      fi
+      echo "[sysconf-reload] Host argument provided: $TARGET_HOST"
+      echo "[sysconf-reload] Skipping host auto-detection because argument was provided."
     else
       echo "[sysconf-reload] No host argument provided. Detecting active host..."
 
@@ -40,17 +41,14 @@ let
       DETECTED_HOST=$(tr -d '[:space:]' < /etc/hostname)
       echo "[sysconf-reload] Detected hostname: $DETECTED_HOST"
 
-      case "$DETECTED_HOST" in
-        nixos|homelab)
-          TARGET_HOST="$DETECTED_HOST"
-          echo "[sysconf-reload] Rebuild target resolved to flake host: $TARGET_HOST"
-          ;;
-        *)
-          echo "[sysconf-reload] Failed to map detected hostname '$DETECTED_HOST' to a known flake host." >&2
-          echo "[sysconf-reload] Supported hosts: nixos, homelab" >&2
-          exit 1
-          ;;
-      esac
+      if [[ " $VALID_HOSTS " == *" $DETECTED_HOST "* ]]; then
+        TARGET_HOST="$DETECTED_HOST"
+        echo "[sysconf-reload] Rebuild target resolved to flake host: $TARGET_HOST"
+      else
+        echo "[sysconf-reload] Failed to map detected hostname '$DETECTED_HOST' to a known flake host." >&2
+        echo "[sysconf-reload] Supported hosts: $VALID_HOSTS" >&2
+        exit 1
+      fi
     fi
 
     if [[ ! -f /etc/nixos/hardware-configuration.nix ]]; then
