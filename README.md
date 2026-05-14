@@ -45,6 +45,52 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
     sudo nixos-rebuild switch --flake /etc/nixos/config#$HOST
     ```
 
+## Troubleshooting
+
+### Boot hangs on "waiting for device" after install
+
+If the system stalls at boot with a message like `waiting for device /dev/disk/by-uuid/...`, the hibernate resume device is probably misconfigured. The swap file's backing partition UUID and resume offset in the host configuration still point to the old/default values and need to be updated to match this machine.
+
+**Quick fix**: temporarily disable hibernate to get the system booting:
+
+In `hosts/$HOST/configuration.nix`, set `system.hibernate.enable = false`, then rebuild.
+
+**Long-term fix**: the swap file must exist before its resume offset can be read, so this requires two rebuilds.
+
+*Phase 1*: enable hibernate with only `size` set (no `resumeDevice`/`resumeOffset`) so the swap file gets created, then rebuild:
+
+```nix
+system.hibernate = {
+  enable = true;
+  swapFile.size = 32; # GB, should be >= RAM
+};
+```
+
+```bash
+sysconf-reload
+```
+
+*Phase 2*: read the UUID and offset, fill them in, then rebuild again:
+
+```bash
+# UUID of the partition containing the swap file (usually root)
+blkid /dev/$(df /swapfile | tail -1 | awk '{print $1}' | xargs lsblk -no pkname) | grep -oP 'UUID="\K[^"]+'
+
+# Resume offset
+filefrag -v /swapfile | awk 'NR==4 { print $4 }' | tr -d '.'
+```
+
+```nix
+system.hibernate.swapFile = {
+  resumeDevice = "/dev/disk/by-uuid/<UUID>";
+  resumeOffset = <offset>;
+};
+```
+
+```bash
+sysconf-reload
+```
+
 ## Usage
 
 ### Rebuild System

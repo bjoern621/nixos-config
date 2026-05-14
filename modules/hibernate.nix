@@ -20,8 +20,9 @@ in
       };
 
       resumeDevice = lib.mkOption {
-        type = lib.types.str;
-        description = "Block device containing the swap file (e.g. /dev/disk/by-uuid/XXXX)";
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Block device containing the swap file (e.g. /dev/disk/by-uuid/XXXX). Leave null on first boot to create the swap file first, then set after reading the UUID.";
       };
 
       size = lib.mkOption {
@@ -53,7 +54,7 @@ in
     ];
 
     # Set resume device (generates the resume= kernel parameter)
-    boot.resumeDevice = lib.mkIf (cfg.swapFile.resumeOffset != null) cfg.swapFile.resumeDevice;
+    boot.resumeDevice = lib.mkIf (cfg.swapFile.resumeOffset != null && cfg.swapFile.resumeDevice != null) cfg.swapFile.resumeDevice;
 
     # Hibernate on lid close (ignore when docked to keep external monitors on)
     services.logind.settings.Login = {
