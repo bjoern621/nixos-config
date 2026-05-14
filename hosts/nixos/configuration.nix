@@ -156,9 +156,9 @@
     enable = true;
     swapFile = {
       path = "/swapfile";
-      resumeDevice = "/dev/disk/by-uuid/2b9e5bc2-459d-41ab-80af-6197bdadf407";
+      resumeDevice = "/dev/disk/by-uuid/fbfab8ba-1f6b-4b70-af59-0c37d8aea15a";
       size = 32;
-      resumeOffset = 100587520;
+      resumeOffset = 215146496;
     };
   };
 
