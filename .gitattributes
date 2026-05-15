@@ -1,3 +1,4 @@
 * text=auto eol=lf
 
 home/modules/quickshell/config/dynamic-island/icons/*.svg filter=git-crypt diff=git-crypt merge=git-crypt
+modules/sddm-theme/theme/icons/icons8-*.svg filter=git-crypt diff=git-crypt merge=git-crypt

@@ -7,7 +7,7 @@ TintedIcon {
     property bool spinning: visible
     property int spinDuration: 900
 
-    source: "icons/loader-circle.svg"
+    source: "icons/icons8-spinner.svg"
     size: Typography.fontSize20
     color: Colors.textColor
     rotation: 0
