@@ -11,16 +11,11 @@ Rectangle {
     readonly property int inputWidth: 280
     readonly property int inputHeight: 48
     readonly property int faceButtonSize: inputHeight
-    readonly property int autoLoginIntervalMs: 100
     readonly property int errorAutoHideMs: 3000
 
     property int currentUserIndex: userModel.lastIndex
     readonly property string instanceId: "screen-" + Math.floor(Math.random() * 1000000000)
-    // Loud loading only — silent attempts run in flight without UI feedback.
-    readonly property bool isLoading: Globals.authLoading && !Globals.authSilent
-    readonly property bool errorVisible: Globals.authErrorVisible
-    readonly property string errorMessageText: Globals.authErrorMessage
-    readonly property bool autoSilentLogin: config.autoSilentLogin === "true"
+    readonly property bool isLoading: Globals.authLoading
     readonly property string loadingMessage: Globals.authAttemptKind === "face" ? "Gesicht wird erkannt…" : "Wird überprüft…"
     property bool syncingPasswordFromGlobals: false
 
@@ -47,81 +42,19 @@ Rectangle {
         errorTimer.restart();
     }
 
-    function scheduleAutoSubmit() {
-        autoLoginTimer.stop();
-        if (!root.autoSilentLogin)
+    function submitAuth(kind, password) {
+        if (Globals.authLoading)
             return;
-        if (Globals.authInputOwner !== root.instanceId) {
-            if (passwordField.activeFocus) {
-                Globals.authInputOwner = root.instanceId;
-            } else {
-                return;
-            }
-        }
-        if (Globals.authPassword.length === 0)
-            return;
-        if (Globals.authLoading) {
-            // Silent attempt in flight: supersede it with a queued silent retry using the latest password.
-            // Loud attempt in flight: input is disabled, so this branch shouldn't trigger from typing.
-            if (Globals.authSilent) {
-                Globals.authQueuedAttemptKind = "auto";
-                Globals.authQueuedPassword = Globals.authPassword;
-                Globals.authQueuedSilent = true;
-            }
-            return;
-        }
-        autoLoginTimer.restart();
-    }
-
-    function submitAuth(kind, password, silent) {
-        if (Globals.authLoading) {
-            // Loud submit while a silent attempt is in flight: upgrade UI to show loading.
-            // Same password is in flight, so no need to re-submit — just wait for the result.
-            if (Globals.authSilent && !silent) {
-                Globals.authSilent = false;
-                Globals.authQueuedAttemptKind = "";
-                Globals.authQueuedPassword = "";
-                Globals.authQueuedSilent = false;
-            }
-            return false;
-        }
         if (kind !== "face" && (!password || password.length === 0))
-            return false;
-
-        autoLoginTimer.stop();
-        Globals.authInputOwner = root.instanceId;
-        Globals.authLoading = true;
-        Globals.authSilent = silent === true;
-        Globals.authAttemptKind = kind;
-        Globals.authQueuedAttemptKind = "";
-        Globals.authQueuedPassword = "";
-        Globals.authQueuedSilent = false;
-        root.clearError();
-
-        sddm.login(root.userName(), kind === "face" ? "" : password, sessionModel.lastIndex);
-        return true;
-    }
-
-    function queueFaceAuth() {
-        autoLoginTimer.stop();
-        Globals.authInputOwner = root.instanceId;
-
-        if (!Globals.authLoading) {
-            Globals.authPassword = "";
-            root.submitAuth("face", "", false);
             return;
-        }
 
-        // User clicked face button while another attempt is running — make it loud.
-        Globals.authSilent = false;
-        if (Globals.authAttemptKind !== "face") {
-            Globals.authQueuedAttemptKind = "face";
-            Globals.authQueuedPassword = "";
-            Globals.authQueuedSilent = false;
-        }
+        Globals.authInputOwner = root.instanceId;
+        Globals.authAttemptKind = kind;
+        Globals.authLoading = true;
+        root.clearError();
+        sddm.login(root.userName(), kind === "face" ? "" : password, sessionModel.lastIndex);
     }
 
-    // Non-visual root-scope timers — kept here so they're easy to find.
     Timer {
         id: clockTicker
         property date time: new Date()
@@ -129,12 +62,6 @@ Rectangle {
         running: true
         repeat: true
         onTriggered: time = new Date()
-    }
-
-    Timer {
-        id: autoLoginTimer
-        interval: root.autoLoginIntervalMs
-        onTriggered: root.submitAuth("auto", Globals.authPassword, true)
     }
 
     Timer {
@@ -307,15 +234,14 @@ Rectangle {
                 opacity: root.isLoading ? 0 : 1
                 FadeBehavior on opacity {}
 
-                onAccepted: root.submitAuth("manual", text, false)
+                onAccepted: root.submitAuth("password", text)
 
                 onTextChanged: {
-                    if (!root.syncingPasswordFromGlobals) {
-                        Globals.authInputOwner = root.instanceId;
-                        Globals.authPassword = text;
-                        root.clearError();
-                    }
-                    root.scheduleAutoSubmit();
+                    if (root.syncingPasswordFromGlobals)
+                        return;
+                    Globals.authInputOwner = root.instanceId;
+                    Globals.authPassword = text;
+                    root.clearError();
                 }
             }
 
@@ -330,8 +256,6 @@ Rectangle {
             }
 
             // Loading overlay — replaces the input content while authenticating.
-            // Mirrors the bluetooth-row pattern: inline status + spinner.
-            // visible follows opacity so the fade actually plays.
             Row {
                 anchors.left: lockIcon.right
                 anchors.leftMargin: Spacing.spacing8
@@ -372,8 +296,6 @@ Rectangle {
                 opacity: root.isLoading ? 0.4 : 1.0
                 FadeBehavior on opacity {}
 
-                // MouseArea is disabled while loading, so pressed/containsMouse
-                // stay false — no need to gate these branches on isLoading.
                 color: faceArea.pressed ? Colors.hoverItemPressed : faceArea.containsMouse ? Colors.hoverItemHovered : Colors.pillBackground
                 border.width: 1
                 border.color: faceArea.containsMouse ? Colors.pillBorderFocus : Colors.pillBorder
@@ -394,7 +316,7 @@ Rectangle {
                     hoverEnabled: true
                     cursorShape: root.isLoading ? Qt.ForbiddenCursor : Qt.PointingHandCursor
                     enabled: !root.isLoading
-                    onClicked: root.queueFaceAuth()
+                    onClicked: root.submitAuth("face", "")
                 }
             }
         }
@@ -408,8 +330,8 @@ Rectangle {
 
             Label {
                 anchors.centerIn: parent
-                text: root.errorMessageText
-                visible: !root.isLoading && root.errorVisible && root.errorMessageText !== ""
+                text: Globals.authErrorMessage
+                visible: !root.isLoading && Globals.authErrorVisible && Globals.authErrorMessage !== ""
                 font.pixelSize: Typography.fontSize16
                 font.weight: Font.Normal
                 color: Colors.textError
@@ -422,30 +344,12 @@ Rectangle {
         function onLoginFailed() {
             if (!Globals.authLoading)
                 return;
+            if (Globals.authInputOwner !== root.instanceId)
+                return;
 
             var failedKind = Globals.authAttemptKind;
-            var wasSilent = Globals.authSilent;
-            var queuedKind = Globals.authQueuedAttemptKind;
-            var queuedPassword = Globals.authQueuedPassword;
-            var queuedSilent = Globals.authQueuedSilent;
-
             Globals.authLoading = false;
-            Globals.authSilent = false;
             Globals.authAttemptKind = "";
-            Globals.authQueuedAttemptKind = "";
-            Globals.authQueuedPassword = "";
-            Globals.authQueuedSilent = false;
-
-            if (queuedKind !== "") {
-                if (queuedKind === "face")
-                    Globals.authPassword = "";
-                root.submitAuth(queuedKind, queuedPassword, queuedSilent);
-                return;
-            }
-
-            // Silent failure: no error toast, no focus stealing — user keeps typing as if nothing happened.
-            if (wasSilent)
-                return;
 
             root.showError(failedKind === "face" ? "Gesicht nicht erkannt" : "Falsches Passwort");
             passwordField.forceActiveFocus();
@@ -453,11 +357,7 @@ Rectangle {
         function onLoginSucceeded() {
             // Keep loading true until the session starts so the user can't click again.
             root.clearError();
-            Globals.authSilent = false;
             Globals.authAttemptKind = "";
-            Globals.authQueuedAttemptKind = "";
-            Globals.authQueuedPassword = "";
-            Globals.authQueuedSilent = false;
         }
     }
 
@@ -473,19 +373,6 @@ Rectangle {
             passwordField.text = Globals.authPassword;
             root.syncingPasswordFromGlobals = false;
             passwordField.cursorPosition = keepAtEnd ? passwordField.text.length : Math.min(cursorPosition, passwordField.text.length);
-            root.scheduleAutoSubmit();
-        }
-    }
-
-    // Fire face unlock automatically when the greeter opens. Only the first screen actually triggers it (Globals.authLoading gate); others no-op.
-    Timer {
-        id: autoFaceTimer
-        interval: 100
-        repeat: false
-        onTriggered: {
-            // First howdy attempt fires silently — no "Gesicht wird erkannt…", no error on miss.
-            if (!Globals.authLoading && Globals.authPassword.length === 0)
-                root.submitAuth("face", "", true);
         }
     }
 
@@ -494,6 +381,5 @@ Rectangle {
             Globals.authInputOwner = root.instanceId;
         passwordField.text = Globals.authPassword;
         passwordField.forceActiveFocus();
-        autoFaceTimer.start();
     }
 }
