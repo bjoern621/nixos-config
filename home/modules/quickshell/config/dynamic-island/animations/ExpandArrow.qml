@@ -17,7 +17,7 @@ Item {
     TintedIcon {
         id: icon
         anchors.centerIn: parent
-        source: "../icons/icons8-arrow.svg"
+        source: "../icons/icons8-arrow-down.svg"
         size: root.iconSize
         color: root.iconColor
     }

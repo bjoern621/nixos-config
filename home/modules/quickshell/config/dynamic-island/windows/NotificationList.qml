@@ -131,7 +131,7 @@ Item {
                         TintedIcon {
                             anchors.centerIn: parent
                             size: Spacing.spacing12
-                            source: "../icons/icons8-cross.svg"
+                            source: "../icons/icons8-close.svg"
                             color: Colors.textColorMuted
                         }
                     }

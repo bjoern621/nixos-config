@@ -678,7 +678,7 @@ Item {
 
                     TintedIcon {
                         anchors.centerIn: parent
-                        source: "../icons/icons8-skip-to-start-50.svg"
+                        source: "../icons/icons8-skip-to-start.svg"
                         size: Typography.fontSize24
                         color: root.canGoPrevious ? Colors.textColor : Colors.textColorMuted
                     }
@@ -720,7 +720,7 @@ Item {
 
                     ContentReplace {
                         id: playIconReplace
-                        contentKey: root.isPlaying ? "../icons/icons8-pause-50.svg" : "../icons/icons8-play-50.svg"
+                        contentKey: root.isPlaying ? "../icons/icons8-pause.svg" : "../icons/icons8-play.svg"
                         anchors.centerIn: parent
                         width: Typography.fontSize24
                         height: Typography.fontSize24
@@ -777,7 +777,7 @@ Item {
 
                     TintedIcon {
                         anchors.centerIn: parent
-                        source: "../icons/icons8-end-50.svg"
+                        source: "../icons/icons8-end.svg"
                         size: Typography.fontSize24
                         color: root.canGoNext ? Colors.textColor : Colors.textColorMuted
                     }
@@ -823,7 +823,7 @@ Item {
                     spacing: Spacing.spacing4
 
                     TintedIcon {
-                        source: "../icons/icons8-list.svg"
+                        source: "../icons/icons8-playlist.svg"
                         size: Typography.fontSize16
                         color: Colors.textColorMuted
                         anchors.verticalCenter: parent.verticalCenter
@@ -841,8 +841,8 @@ Item {
                     ExpandArrow {
                         id: chevronIcon
                         expanded: root.queueExpanded
-                        collapsedRotation: 90
-                        expandedRotation: -90
+                        collapsedRotation: 0
+                        expandedRotation: 180
                         iconSize: Typography.fontSize16
                         iconColor: Colors.textColorMuted
                         anchors.verticalCenter: parent.verticalCenter
@@ -1311,7 +1311,7 @@ Item {
                                         TintedIcon {
                                             visible: !root.isPlaying
                                             anchors.centerIn: parent
-                                            source: "../icons/icons8-play-50.svg"
+                                            source: "../icons/icons8-play.svg"
                                             size: Typography.fontSize12
                                             color: Colors.textColor
                                         }

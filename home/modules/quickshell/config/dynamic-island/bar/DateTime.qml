@@ -29,7 +29,7 @@ Row {
         spacing: Spacing.spacing4
 
         TintedIcon {
-            source: "../icons/icons8-calendar-" + datetime.currentDate.getDate() + ".svg"
+            source: "../icons/icons8-calendar-" + datetime.currentDate.getDate() + "-50.svg"
             size: Typography.fontSize20
             anchors.verticalCenter: parent.verticalCenter
         }

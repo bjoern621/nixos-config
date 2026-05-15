@@ -55,7 +55,7 @@ Item {
 
             TintedIcon {
                 anchors.centerIn: parent
-                source: "../icons/icons8-cross.svg"
+                source: "../icons/icons8-close.svg"
                 size: Typography.fontSize16
                 color: Colors.textColor
             }

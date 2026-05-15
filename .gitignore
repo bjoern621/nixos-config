@@ -3,13 +3,13 @@ hosts/*/hardware-configuration.nix
 
 __pycache__/
 
-# Non-free assets
-modules/fancy-boot/darwin/logo.png
-
 .direnv/
 
 # nix-build output symlinks
 /result
 /result-*
 
-home/modules/quickshell/config/dynamic-island/icons/
+# Non-free assets
+#modules/fancy-boot/darwin/logo.png
+#home/modules/quickshell/config/dynamic-island/icons/
+#sddm icons

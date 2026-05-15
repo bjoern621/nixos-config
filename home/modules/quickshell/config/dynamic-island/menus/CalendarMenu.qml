@@ -83,9 +83,9 @@ Item {
 
                     TintedIcon {
                         anchors.centerIn: parent
-                        source: "../icons/icons8-arrow.svg"
+                        source: "../icons/icons8-arrow-down.svg"
                         size: Typography.fontSize14
-                        rotation: 180
+                        rotation: 90
                     }
 
                     MouseArea {
@@ -158,8 +158,9 @@ Item {
 
                     TintedIcon {
                         anchors.centerIn: parent
-                        source: "../icons/icons8-arrow.svg"
+                        source: "../icons/icons8-arrow-down.svg"
                         size: Typography.fontSize14
+                        rotation: -90
                     }
 
                     MouseArea {

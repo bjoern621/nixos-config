@@ -141,7 +141,7 @@ Variants {
 
                             ContentReplace {
                                 id: dndIconReplace
-                                contentKey: Globals.doNotDisturb ? "../icons/icons8-do-not-disturb-filled" : "../icons/icons8-bell-filled.svg"
+                                contentKey: Globals.doNotDisturb ? "../icons/icons8-do-not-disturb.svg" : "../icons/icons8-bell.svg"
 
                                 TintedIcon {
                                     anchors.centerIn: parent

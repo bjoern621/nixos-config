@@ -346,8 +346,8 @@ Item {
 
                     ExpandArrow {
                         expanded: root.outputExpanded
-                        collapsedRotation: 90
-                        expandedRotation: -90
+                        collapsedRotation: 0
+                        expandedRotation: 180
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }

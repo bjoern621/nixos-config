@@ -63,6 +63,8 @@ Item {
                     expanded: trayRoot.expanded
                     iconSize: Typography.fontSize16
                     iconColor: Colors.textColor
+                    collapsedRotation: 270
+                    expandedRotation: 90
                 }
             }
         }

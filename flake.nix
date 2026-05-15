@@ -68,6 +68,8 @@
 
           nixd
 
+          git-crypt
+
           # QML qmllint, qmlls, qmlformat + Quickshell modules for import resolution
           qt
           qs
