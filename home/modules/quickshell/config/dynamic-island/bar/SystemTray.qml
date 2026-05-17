@@ -15,10 +15,9 @@ Item {
     property Item menuParent: null
     property real menuTopY: 0
 
-    // Exposed state for Bar (interactionZone sizing / shouldShowPill)
-    readonly property bool menuVisible: internal.menuVisible
-    readonly property real menuContentWidth: trayMenuContent.implicitWidth
-    readonly property real menuContentHeight: trayMenuContent.implicitHeight
+    // Uniform popup contract consumed by Bar.qml
+    readonly property bool popupOpen: internal.menuVisible
+    readonly property alias popupItem: trayMenuContainer
 
     property bool expanded: false
 

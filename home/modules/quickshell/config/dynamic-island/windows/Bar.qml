@@ -41,11 +41,39 @@ Variants {
 
         implicitHeight: !pillHidden ? 1000 : 0
 
-        mask: Region {
-            item: interactionZone
+        // Aggregate over direct children of contentRow; each child manages its own popup
+        // (including any submenus nested inside that popup's outer Item).
+        readonly property bool anyPopupOpen: {
+            for (const c of contentRow.children) if (c.popupOpen) return true;
+            return false;
+        }
+        readonly property real maxPopupWidth: {
+            let m = 0;
+            for (const c of contentRow.children)
+                if (c.popupOpen && c.popupItem) m = Math.max(m, c.popupItem.width);
+            return m;
+        }
+        readonly property real maxPopupHeight: {
+            let m = 0;
+            for (const c of contentRow.children)
+                if (c.popupOpen && c.popupItem) m = Math.max(m, c.popupItem.height);
+            return m;
         }
 
-        readonly property bool shouldShowPill: zoneHover.hovered || nowPlayingHoverItem.menuOpen || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible || Globals.launcherVisible
+        // Input region = trigger strip / pill area + each visible popup's own region.
+        // Each child's popupItem already absorbs its descendants (submenus, bridges) inside
+        // its bounding box, so Bar references only direct children. Closed popups have
+        // visible: false and contribute nothing.
+        mask: Region {
+            Region { item: interactionZone }
+            Region { item: nowPlayingHoverItem.popupItem }
+            Region { item: calendarHoverItem.popupItem }
+            Region { item: systemTray.popupItem }
+            Region { item: volumeHoverItem.popupItem }
+            Region { item: batteryHoverItem.popupItem }
+        }
+
+        readonly property bool shouldShowPill: zoneHover.hovered || anyPopupOpen || Globals.launcherVisible
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
@@ -61,11 +89,14 @@ Variants {
             }
         }
 
+        // interactionZone is the trigger strip + pill hit area. Open popups are NOT
+        // included in its bounds — they're added to the input mask as separate
+        // Region entries, so the hitbox matches the visible shape.
         Item {
             id: interactionZone
-            width: Math.max(pill.implicitWidth + Spacing.spacing24, nowPlayingHoverItem.menuOpen ? nowPlayingView.implicitWidth + 2 * Spacing.spacing24 : 0, volumeHoverItem.menuOpen ? volumeSlider.implicitWidth + 2 * Spacing.spacing24 : 0, calendarHoverItem.menuOpen ? calendarView.implicitWidth + 2 * Spacing.spacing24 : 0, systemTray.menuVisible ? systemTray.menuContentWidth + 2 * Spacing.spacing24 : 0)
+            width: pill.implicitWidth
             x: (root.width - width) / 2
-            height: root.isHovered ? 44 + Math.max(nowPlayingHoverItem.menuHeight, volumeHoverItem.menuHeight, calendarHoverItem.menuHeight, batteryHoverItem.menuHeight, systemTray.menuVisible ? systemTray.menuContentHeight + Spacing.spacing12 : 0) + ((nowPlayingHoverItem.menuOpen || volumeHoverItem.menuOpen || calendarHoverItem.menuOpen || batteryHoverItem.menuOpen || systemTray.menuVisible) ? Spacing.spacing8 : 0) : Spacing.spacing8
+            height: root.isHovered ? 44 : Spacing.spacing8
             anchors.top: parent.top
 
             HoverHandler {
@@ -159,8 +190,8 @@ Variants {
                         id: volumeHoverItem
                         clickable: true
                         menu: volumeMenu
-                        onMenuOpenChanged: {
-                            Globals.volumeSliderOpen = menuOpen;
+                        onPopupOpenChanged: {
+                            Globals.volumeSliderOpen = popupOpen;
                         }
                         onClicked: {
                             if (Pipewire.defaultAudioSink?.audio)

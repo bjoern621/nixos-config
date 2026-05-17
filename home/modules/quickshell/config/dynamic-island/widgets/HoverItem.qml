@@ -12,8 +12,8 @@ Item {
 
     readonly property bool hovered: hoverHandler.hovered
     readonly property bool pressed: tapHandler.pressed
-    readonly property bool menuOpen: internal.menuOpen
-    readonly property real menuHeight: internal.effectiveMenuHeight
+    readonly property bool popupOpen: internal.menuOpen
+    readonly property Item popupItem: menu
 
     signal clicked
     signal menuClosed
@@ -27,7 +27,6 @@ Item {
         id: internal
         property bool menuOpen: false
         property bool clickArmed: false
-        readonly property real effectiveMenuHeight: menuOpen && root.menu ? root.menu.implicitHeight : 0
         readonly property bool shouldShow: root.menu !== null && (root.menuOnClick ? (clickArmed && (root.hovered || (root.menu && root.menu.keepOpen))) : (root.hovered || (root.menu && root.menu.keepOpen)))
 
         onShouldShowChanged: {

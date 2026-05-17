@@ -11,6 +11,7 @@ PopReveal {
     readonly property bool menuHovered: hoverHandler.hovered
     readonly property bool keepOpen: menuHovered || contentInteracting
 
+    implicitWidth: contentArea.childrenRect.width
     implicitHeight: contentArea.childrenRect.height + gapHeight
 
     HoverHandler {
