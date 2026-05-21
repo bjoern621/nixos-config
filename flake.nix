@@ -49,7 +49,7 @@
 
           nixd
 
-          git-crypt
+          git-crypt # used for encrypting secrets like licensed icons
 
           # QML qmllint, qmlls, qmlformat + Quickshell modules for import resolution
           qt
