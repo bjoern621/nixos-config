@@ -9,12 +9,19 @@ let
     NIXOS_CONFIG="/etc/nixos/config"
     DELAY_DAYS=''${1:-7}  # Default 7 days, can be overridden
 
-    if [[ ! -d "$NIXOS_CONFIG" ]]; then
-      echo "Missing source repo: $NIXOS_CONFIG" >&2
+    if [[ ! -f /etc/hostname ]]; then
+      echo "[sysconf-stable-update] Failed to detect host: /etc/hostname is missing." >&2
+      exit 1
+    fi
+    DETECTED_HOST=$(tr -d '[:space:]' < /etc/hostname)
+
+    HOST_FLAKE="$NIXOS_CONFIG/hosts/$DETECTED_HOST"
+    if [[ ! -f "$HOST_FLAKE/flake.nix" ]]; then
+      echo "[sysconf-stable-update] No flake at $HOST_FLAKE/flake.nix for host '$DETECTED_HOST'." >&2
       exit 1
     fi
 
-    cd "$NIXOS_CONFIG"
+    cd "$HOST_FLAKE"
 
     # Calculate the date threshold
     THRESHOLD_DATE=$(date -d "$DELAY_DAYS days ago" +%Y-%m-%dT00:00:00Z 2>/dev/null || \

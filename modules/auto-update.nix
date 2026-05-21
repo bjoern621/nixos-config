@@ -50,7 +50,6 @@ in
       serviceConfig = {
         Type = "oneshot";
         User = cfg.user;
-        WorkingDirectory = "/etc/nixos/config";
       };
       path = [
         pkgs.nix
@@ -66,12 +65,19 @@ in
         NIXOS_CONFIG="/etc/nixos/config"
         DELAY_DAYS="${toString cfg.delayDays}"
 
-        if [[ ! -d "$NIXOS_CONFIG" ]]; then
-          echo "Missing source repo: $NIXOS_CONFIG" >&2
+        if [[ ! -f /etc/hostname ]]; then
+          echo "[nixos-stable-update] Failed to detect host: /etc/hostname is missing." >&2
+          exit 1
+        fi
+        DETECTED_HOST=$(tr -d '[:space:]' < /etc/hostname)
+
+        HOST_FLAKE="$NIXOS_CONFIG/hosts/$DETECTED_HOST"
+        if [[ ! -f "$HOST_FLAKE/flake.nix" ]]; then
+          echo "[nixos-stable-update] No flake at $HOST_FLAKE/flake.nix for host '$DETECTED_HOST'." >&2
           exit 1
         fi
 
-        cd "$NIXOS_CONFIG"
+        cd "$HOST_FLAKE"
 
         # Calculate the date threshold
         THRESHOLD_DATE=$(date -d "$DELAY_DAYS days ago" +%Y-%m-%dT00:00:00Z 2>/dev/null || \
@@ -251,10 +257,10 @@ in
         echo "Rebuilding system..."
 
         # Copy hardware config first (like sysconf-reload does)
-        cp /etc/nixos/hardware-configuration.nix "$NIXOS_CONFIG/hosts/default/hardware-configuration.nix"
+        cp /etc/nixos/hardware-configuration.nix "$HOST_FLAKE/hardware-configuration.nix"
 
         # Rebuild requires root; use NixOS setuid wrapper and full nixos-rebuild path
-        /run/wrappers/bin/sudo /run/current-system/sw/bin/nixos-rebuild switch --flake "$NIXOS_CONFIG#nixos"
+        /run/wrappers/bin/sudo /run/current-system/sw/bin/nixos-rebuild switch --flake "$HOST_FLAKE"
 
         send_update_notification
 

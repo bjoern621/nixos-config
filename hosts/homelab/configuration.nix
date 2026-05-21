@@ -7,6 +7,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
+    ../../modules/auto-update.nix
     ../../modules/homelab/vm/hypervisor
     ../../modules/homelab/samba.nix
     ../../modules/homelab/mounts.nix
@@ -54,4 +55,11 @@
 
   nixpkgs.config.allowUnfree = true;
   system.stateVersion = "25.11";
+
+  services.nixos-auto-update = {
+    enable = true;
+    user = "ops";
+    delayDays = 7;
+    schedule = "Mon 03:00";
+  };
 }

@@ -17,10 +17,25 @@ let
       exit 1
     fi
 
-    VALID_HOSTS=$(nix eval "$NIXOS_CONFIG#nixosConfigurations" --apply 'x: builtins.concatStringsSep " " (builtins.attrNames x)' --raw 2>/dev/null) || {
-      echo "[sysconf-reload] Failed to enumerate hosts from flake at $NIXOS_CONFIG." >&2
+    # Each host lives at $NIXOS_CONFIG/hosts/<host>/flake.nix.
+    if [[ ! -d "$NIXOS_CONFIG/hosts" ]]; then
+      echo "[sysconf-reload] Missing $NIXOS_CONFIG/hosts directory" >&2
       exit 1
-    }
+    fi
+
+    VALID_HOSTS=""
+    for host_dir in "$NIXOS_CONFIG/hosts"/*/; do
+      [[ -d "$host_dir" ]] || continue
+      [[ -f "$host_dir/flake.nix" ]] || continue
+      host_name=$(basename "$host_dir")
+      VALID_HOSTS+="$host_name "
+    done
+    VALID_HOSTS=''${VALID_HOSTS% }
+
+    if [[ -z "$VALID_HOSTS" ]]; then
+      echo "[sysconf-reload] No hosts with flake.nix found under $NIXOS_CONFIG/hosts/" >&2
+      exit 1
+    fi
 
     if [[ -n "$TARGET_HOST" ]]; then
       if [[ " $VALID_HOSTS " != *" $TARGET_HOST "* ]]; then
@@ -66,7 +81,7 @@ let
     echo "[sysconf-reload] Marked $NEW_FILES untracked files as intent-to-add so Nix can see them."
 
     echo "[sysconf-reload] Rebuilding flake target: $TARGET_HOST"
-    sudo nixos-rebuild switch --flake "$NIXOS_CONFIG#$TARGET_HOST"
+    sudo nixos-rebuild switch --flake "$NIXOS_CONFIG/hosts/$TARGET_HOST"
 
     echo "[sysconf-reload] System reloaded successfully for host: $TARGET_HOST"
   '';

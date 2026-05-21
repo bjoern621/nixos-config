@@ -42,7 +42,7 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
     ```
 10. Apply the flake configuration:
     ```bash
-    sudo nixos-rebuild switch --flake /etc/nixos/config#$HOST
+    sudo nixos-rebuild switch --flake /etc/nixos/config/hosts/$HOST
     ```
 
 ## Troubleshooting
@@ -109,16 +109,34 @@ sysconf-stable-update  # update inputs to revisions at least 7 days old (ensure 
 
 ## Project Structure
 
+Each host has its own flake under `hosts/<host>/` with an independent `flake.lock`,
+so the server hosts only pull `nixpkgs` and `home-manager` instead of the full
+desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
+
 ```
 .
-├── flake.nix                     # Flake configuration
+├── flake.nix                       # Repo dev shell (`nix develop`)
+├── flake.lock
 ├── hosts/
-│   └── nixos/
-│       ├── configuration.nix     # System configuration
+│   ├── nixos/                      # Daily driver, full input set
+│   │   ├── flake.nix
+│   │   ├── flake.lock
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix
+│   ├── homelab/                    # Server, nixpkgs + home-manager only
+│   │   ├── flake.nix
+│   │   ├── flake.lock
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix
+│   └── vmk3s/                      # Server, nixpkgs + home-manager only
+│       ├── flake.nix
+│       ├── flake.lock
+│       ├── configuration.nix
 │       └── hardware-configuration.nix
-├── modules/                      # System-level modules
-├── home/                         # Home Manager configs
-│   ├── bjoern.nix
+├── modules/                        # Shared system-level modules
+├── home/                           # Shared Home Manager configs
+│   ├── bjoern.nix                  # User config for the `nixos` host
+│   ├── ops.nix                     # User config for the server hosts
 │   └── modules/
 └── README.md
 ```

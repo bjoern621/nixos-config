@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
+    ../../modules/auto-update.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
@@ -63,4 +64,11 @@
     kubectl
     tldr
   ];
+
+  services.nixos-auto-update = {
+    enable = true;
+    user = "ops";
+    delayDays = 7;
+    schedule = "Mon 03:00";
+  };
 }
