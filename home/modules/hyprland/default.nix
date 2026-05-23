@@ -19,6 +19,7 @@
     ./monitors.nix
     ./no_update_notice.nix
     ./windowrules.nix
+    ./mozza-mail.nix
     ./disable_middle_click_paste.nix
     ./media-keys.nix
     ./brightness-keys.nix
