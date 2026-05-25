@@ -6,8 +6,8 @@
     windowrule = [
       "workspace 5 silent, match:class (electron)"
       "float on, match:class (electron)"
-      "size 2173 1222, match:class (electron)"
-      "move 194 109, match:class (electron)"
+      "size (monitor_w*0.85) (monitor_h*0.85), match:class (electron)"
+      "move (monitor_w*0.076) (monitor_h*0.076), match:class (electron)"
     ];
   };
 }
