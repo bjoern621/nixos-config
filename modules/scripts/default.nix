@@ -8,5 +8,6 @@
     ./sysconf-reload.nix
     ./sysconf-help.nix
     ./sysconf-audio-fix.nix
+    ./sysconf-fix-monitors.nix
   ];
 }

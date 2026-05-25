@@ -30,6 +30,7 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 | `sysconf-pull`      | `git pull && sudo nixos-rebuild switch`         | Pulls latest config from remote then rebuilds               |
 | `sysconf-help`      | —                                               | Shows help for all sysconf commands                         |
 | `sysconf-audio-fix` | —                                               | Reloads TAS2781 speaker driver (workaround for suspend bug) |
+| `sysconf-fix-monitors` | —                                            | Re-applies Hyprland monitor config (workaround for 0.55.0 mixed-scale cursor wall + layer-shell offset) |
 
 ## Module Conventions
 
