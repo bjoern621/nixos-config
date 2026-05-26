@@ -4,7 +4,7 @@ The SVG files in this folder are encrypted with [git-crypt](https://github.com/A
 
 ## Decrypting
 
-You need the symmetric key (stored as base64 text) and `git-crypt` installed.
+Requires `git-crypt` and the symmetric key (stored as base64 text).
 
 **1. Restore the key from base64:**
 

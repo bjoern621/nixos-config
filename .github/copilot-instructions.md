@@ -28,8 +28,8 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 | `sysconf-reload`    | `sudo nixos-rebuild switch`                     | Copies hardware config and rebuilds the system              |
 | `sysconf-update`    | `nix flake update && sudo nixos-rebuild switch` | Updates all flake inputs then rebuilds                      |
 | `sysconf-pull`      | `git pull && sudo nixos-rebuild switch`         | Pulls latest config from remote then rebuilds               |
-| `sysconf-help`      | —                                               | Shows help for all sysconf commands                         |
-| `sysconf-audio-fix` | —                                               | Reloads TAS2781 speaker driver (workaround for suspend bug) |
+| `sysconf-help`      | (none)                                          | Shows help for all sysconf commands                         |
+| `sysconf-audio-fix` | (none)                                          | Reloads TAS2781 speaker driver (workaround for suspend bug) |
 
 ## Module Conventions
 
@@ -51,7 +51,7 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 The authoritative reference for window rules and layer rules is:
 https://wiki.hyprland/Configuring/Window-Rules/
 
-**IMPORTANT**: The window/layer rule syntax changes frequently. Before writing or modifying any window rules or layer rules, **always fetch the latest syntax** from the wiki using `WebFetch` on https://wiki.hypr.land/Configuring/Window-Rules/. Do not rely on the examples below — they may be outdated.
+**IMPORTANT**: The window/layer rule syntax changes frequently. Before writing or modifying any window rules or layer rules, **always fetch the latest syntax** from the wiki using `WebFetch` on https://wiki.hypr.land/Configuring/Window-Rules/. Do not rely on the examples below; they may be outdated.
 
 - Key layer rule effects: `blur on`, `ignore_alpha <float>`, `blur_popups on`, `xray on`, `dim_around on`.
 - Anonymous syntax: `layerrule = <effect>, match:namespace <regex>`
@@ -67,7 +67,7 @@ Use `Spacing.*` constants. Preferred values are **4**, **8**, and **12**. Other 
 
 ### Colors
 
-Always use `Colors.*` properties — never hardcode color values. Key tokens:
+Always use `Colors.*` properties. Never hardcode color values. Key tokens:
 
 - `hoverItemHovered` / `hoverItemPressed` for interactive state backgrounds
 - `pillBorder` for hover borders
@@ -76,7 +76,7 @@ Always use `Colors.*` properties — never hardcode color values. Key tokens:
 
 ### Typography
 
-Always use `Typography.*` font size constants (`fontSize12`, `fontSize14`, `fontSize16`, etc.) — never use literal font size numbers. Default label style is `fontSize14` bold (set in `Label.qml`). Use `Font.Normal` weight explicitly for secondary/muted text.
+Always use `Typography.*` font size constants (`fontSize12`, `fontSize14`, `fontSize16`, etc.). Never use literal font size numbers. Default label style is `fontSize14` bold (set in `Label.qml`). Use `Font.Normal` weight explicitly for secondary/muted text.
 
 ### Hover Effects
 
@@ -119,18 +119,18 @@ All animations should feel **playful, squishy, and smooth**. The overall approac
 
 #### Hover: always instant
 
-Hover state changes (background color, border) must be **instant** — no `Behavior on color`, no `ColorAnimation`. The color binding updates immediately via the ternary pattern:
+Hover state changes (background color, border) must be **instant**. No `Behavior on color`, no `ColorAnimation`. The color binding updates immediately via the ternary pattern:
 
 ```qml
 color: pressed ? Colors.hoverItemPressed
      : hovered ? Colors.hoverItemHovered
      : "transparent"
-// NO Behavior on color — hover must be instant
+// NO Behavior on color; hover must be instant
 ```
 
 #### Press/click: squishy scale-down
 
-Every clickable element should scale down on press for a tactile "squishy" feel. Use the **`SquishBehavior`** reusable component — never write inline `Behavior on scale` with a raw `NumberAnimation`:
+Every clickable element should scale down on press for a tactile "squishy" feel. Use the **`SquishBehavior`** reusable component. Never write inline `Behavior on scale` with a raw `NumberAnimation`:
 
 ```qml
 scale: tapHandler.pressed ? 0.85 : 1.0
@@ -139,7 +139,7 @@ SquishBehavior on scale {}
 SquishBehavior on scale { bouncy: true; duration: 120 }
 ```
 
-`SquishBehavior` properties: `duration` (default 100ms), `bouncy` (default false — uses `OutBack` when true).
+`SquishBehavior` properties: `duration` (default 100ms), `bouncy` (default false; uses `OutBack` when true).
 
 **Scale values by element size** (smaller elements scale more):
 

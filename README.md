@@ -36,7 +36,7 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
     ```bash
     sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
     ```
-9. Mark the hardware configuration as local-only so git ignores your changes to it:
+9. Mark the hardware configuration as local-only so git ignores changes to it:
     ```bash
     git -C ~/git/nixos-config update-index --skip-worktree hosts/$HOST/hardware-configuration.nix
     ```

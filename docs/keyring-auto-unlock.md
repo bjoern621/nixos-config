@@ -33,7 +33,7 @@ Missing files → helper logs a reason and exits 0 (never blocks login).
 Run as your normal user (NOT root). Two phases so a failed seal doesn't wipe
 contexts you'd need to retry.
 
-**Phase 1 — generate keys and seal the password.** Wipes the dir first to stay
+**Phase 1: generate keys and seal the password.** Wipes the dir first to stay
 idempotent across retries. Type the CURRENT login password at the prompt: no
 trailing newline, no spaces. (No shell comments inside the block so it pastes
 into bash and zsh alike.)
@@ -59,7 +59,7 @@ Verify the seal before proceeding:
 
 If it printed `FAIL`, do NOT continue. Re-run Phase 1.
 
-**Phase 2 — drop transient contexts and lock down permissions:**
+**Phase 2: drop transient contexts and lock down permissions:**
 
 ```sh
 rm -f "$TPM_DIR"/primary.ctx "$TPM_DIR"/key.ctx

@@ -18,4 +18,4 @@ The logo is available from Wikipedia under the non-free fair use policy:
 
 ## Alternative
 
-If you prefer not to use the non-free logo, you can use the existing logo. (No changes are required)
+To skip the non-free logo, leave the existing one in place. No changes are required.
