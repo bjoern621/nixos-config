@@ -15,6 +15,7 @@ Scope {
     readonly property bool charging: UPower.displayDevice.state === UPowerDeviceState.Charging
     readonly property bool fullyCharged: UPower.displayDevice.state === UPowerDeviceState.FullyCharged
 
+    readonly property real shutdownThreshold: 0.03
     readonly property real criticalThreshold: 0.10
     readonly property real warningThreshold: 0.25
 
@@ -54,7 +55,10 @@ Scope {
 
         const pctInt = Math.round(pct * 100);
 
-        if (crossedBelow(criticalThreshold)) {
+        if (crossedBelow(shutdownThreshold)) {
+            sendNotification("Akku kritisch", "Nur noch " + pctInt + " % Akku übrig. Das System schaltet sich gleich ab!", "critical");
+            PopupHost.show("../icons/icons8-battery-25.svg", "System schaltet sich gleich ab!", "Nur noch " + pctInt + " % Akku übrig.\nLadegerät jetzt anschließen!", Colors.batteryCritical);
+        } else if (crossedBelow(criticalThreshold)) {
             sendNotification("Akku fast leer", "Nur noch " + pctInt + " % Akku übrig. Bitte sofort Ladegerät anschließen!", "critical");
             PopupHost.show("../icons/icons8-battery-25.svg", "Akku fast leer!", "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!", Colors.batteryCritical);
         } else if (crossedBelow(warningThreshold)) {
