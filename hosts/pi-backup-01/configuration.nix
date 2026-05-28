@@ -71,10 +71,33 @@
 
   # One job per source. The remoteUser is restricted to a single read-only
   # rrsync command on the source side, so remotePath is relative to that root.
+  # All jobs share one SSH key (default sshKey path). vmk3s exposes both
+  # source trees as read-only bind mounts under one rrsync chroot, so a
+  # single forced-command on root authorizes both pulls.
   services.pi-backup.jobs = {
     bitwarden = {
       host = "vmk3s";
-      remotePath = "./";
+      remoteUser = "root";
+      remotePath = "bitwarden/";
+      schedule = "*-*-* 03:30:00";
+      keepDaily = 30;
+      keepWeekly = 12;
+    };
+
+    # Direct rsync of the webdav PVC tree. The `webdav-pvc` mount on
+    # vmk3s exposes the whole k3s local-path storage tree, so the
+    # include/exclude filter limits the pull to the webdav namespace's
+    # PVC dir(s). --link-dest dedup keeps the on-disk cost ~constant
+    # across daily snapshots.
+    webdav = {
+      host = "vmk3s";
+      remoteUser = "root";
+      remotePath = "webdav-pvc/";
+      extraRsyncArgs = [
+        "--include=pvc-*_webdav_*/"
+        "--include=pvc-*_webdav_*/***"
+        "--exclude=*"
+      ];
       schedule = "*-*-* 03:30:00";
       keepDaily = 30;
       keepWeekly = 12;

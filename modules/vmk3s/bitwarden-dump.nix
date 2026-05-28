@@ -17,85 +17,17 @@ let
       gnutar
       findutils
     ];
-    text = ''
-      set -euo pipefail
-
-      export KUBECONFIG=${lib.escapeShellArg cfg.kubeconfig}
-
-      out=${lib.escapeShellArg cfg.outputDir}
-      ns=${lib.escapeShellArg cfg.namespace}
-      pg_pod=${lib.escapeShellArg cfg.postgresPod}
-      pg_user=${lib.escapeShellArg cfg.postgresUser}
-      pg_db=${lib.escapeShellArg cfg.postgresDatabase}
-      pvc_root=${lib.escapeShellArg cfg.pvcStorageRoot}
-      keep=${toString cfg.keepDumps}
-
-      stamp=$(date -u +%Y-%m-%dT%H%M%SZ)
-      mkdir -p "$out"
-
-      echo "[bitwarden-dump] $stamp - starting"
-
-      # 1. Postgres logical dump. -Fc is custom format (compressed, pg_restore-friendly).
-      #    Fetch the app-user password from the auth secret rather than relying
-      #    on a specific env-var name inside the pod (Bitnami's chart has
-      #    renamed these between versions).
-      pg_pass=$(kubectl get secret -n "$ns" ${lib.escapeShellArg cfg.postgresAuthSecret} \
-        -o jsonpath='{.data.password}' | base64 -d)
-      pg_dump_file="$out/postgres-$stamp.dump"
-      tmp_pg="$pg_dump_file.partial"
-      kubectl exec -n "$ns" "$pg_pod" -- \
-        env PGPASSWORD="$pg_pass" pg_dump -U "$pg_user" -d "$pg_db" -Fc \
-        > "$tmp_pg"
-      mv "$tmp_pg" "$pg_dump_file"
-      echo "[bitwarden-dump] wrote $pg_dump_file ($(stat -c%s "$pg_dump_file") bytes)"
-
-      # 2. Tar the Bitwarden PVCs from the local-path provisioner.
-      #    Local-path names directories as pvc-<uid>_<namespace>_<pvc-name>; filter by namespace.
-      pvc_tar="$out/pvcs-$stamp.tar.zst"
-      tmp_tar="$pvc_tar.partial"
-      mapfile -t pvc_dirs < <(find "$pvc_root" -maxdepth 1 -type d -name "pvc-*_''${ns}_*" -printf '%P\n' | sort)
-      if (( ''${#pvc_dirs[@]} == 0 )); then
-        echo "[bitwarden-dump] WARNING: no PVC dirs found under $pvc_root for namespace $ns" >&2
-      fi
-      tar --zstd -cf "$tmp_tar" -C "$pvc_root" "''${pvc_dirs[@]}"
-      mv "$tmp_tar" "$pvc_tar"
-      echo "[bitwarden-dump] wrote $pvc_tar"
-
-      # 3. Sealed-secrets controller's active master key.
-      #    Without this, the in-git sealed secrets cannot be decrypted on restore.
-      ss_key="$out/sealed-secrets-key-$stamp.yaml"
-      tmp_ss="$ss_key.partial"
-      kubectl get secret \
-        -n ${lib.escapeShellArg cfg.sealedSecretsNamespace} \
-        -l ${lib.escapeShellArg cfg.sealedSecretsKeyLabel} \
-        -o yaml > "$tmp_ss"
-      mv "$tmp_ss" "$ss_key"
-      echo "[bitwarden-dump] wrote $ss_key"
-
-      # 4. Retention: keep the newest <keep> triplets (matched by timestamp).
-      mapfile -t stamps < <(find "$out" -maxdepth 1 -name 'postgres-*.dump' -printf '%f\n' \
-        | sed -E 's/^postgres-(.+)\.dump$/\1/' | sort)
-      total=''${#stamps[@]}
-      if (( total > keep )); then
-        prune_count=$(( total - keep ))
-        for s in "''${stamps[@]:0:$prune_count}"; do
-          rm -f -- "$out/postgres-$s.dump" "$out/pvcs-$s.tar.zst" "$out/sealed-secrets-key-$s.yaml"
-          echo "[bitwarden-dump] pruned $s"
-        done
-      fi
-
-      echo "[bitwarden-dump] $stamp - done"
-    '';
+    text = builtins.readFile ./bitwarden-dump.sh;
   };
 in
 {
   options.services.bitwarden-dump = {
-    enable = lib.mkEnableOption "Bitwarden self-host disaster-recovery dump (postgres + PVCs + sealed-secrets key)";
+    enable = lib.mkEnableOption "Bitwarden self-host disaster-recovery dump (postgres + PVCs)";
 
     outputDir = lib.mkOption {
       type = lib.types.path;
       default = "/var/backups/bitwarden";
-      description = "Where the timestamped dump triplets are written.";
+      description = "Where the timestamped dump pairs are written.";
     };
 
     kubeconfig = lib.mkOption {
@@ -140,22 +72,10 @@ in
       description = "Where the local-path provisioner stores PVC contents.";
     };
 
-    sealedSecretsNamespace = lib.mkOption {
-      type = lib.types.str;
-      default = "kube-system";
-      description = "Namespace where the sealed-secrets controller runs.";
-    };
-
-    sealedSecretsKeyLabel = lib.mkOption {
-      type = lib.types.str;
-      default = "sealedsecrets.bitnami.com/sealed-secrets-key=active";
-      description = "Label selector matching the active sealed-secrets master key Secret.";
-    };
-
     keepDumps = lib.mkOption {
       type = lib.types.int;
       default = 3;
-      description = "Local retention (number of triplets). Pis hold the long history.";
+      description = "Local retention (number of dump pairs). Pis hold the long history.";
     };
 
     schedule = lib.mkOption {
@@ -166,9 +86,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # The output dir is created by `services.backup-source` when enabled
-    # (mode 0750 root:backup-pull, so the rrsync user can read).
-    # The dump script also mkdir -p's it as a safety net.
+    # The dump unit runs as root and writes the dir; rrsync also reads as
+    # root via the backup-source bind mount. No other user touches it.
+    systemd.tmpfiles.rules = [
+      "d ${cfg.outputDir} 0700 root root - -"
+      "z ${cfg.outputDir} 0700 root root - -"
+    ];
 
     systemd.services.bitwarden-dump = {
       description = "Dump Bitwarden self-host for off-host pull backup";
@@ -181,6 +104,18 @@ in
       ];
       wants = [ "network-online.target" ];
       requires = [ "k3s.service" ];
+
+      environment = {
+        KUBECONFIG = cfg.kubeconfig;
+        OUT_DIR = cfg.outputDir;
+        NS = cfg.namespace;
+        PG_POD = cfg.postgresPod;
+        PG_USER = cfg.postgresUser;
+        PG_DB = cfg.postgresDatabase;
+        PG_AUTH_SECRET = cfg.postgresAuthSecret;
+        PVC_ROOT = cfg.pvcStorageRoot;
+        KEEP = toString cfg.keepDumps;
+      };
 
       serviceConfig = {
         Type = "oneshot";

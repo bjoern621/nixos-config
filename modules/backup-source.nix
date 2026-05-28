@@ -21,18 +21,48 @@ let
       };
     };
   };
+
+  mountUnits = lib.mapAttrs' (
+    name: src:
+    lib.nameValuePair "${cfg.chrootRoot}/${name}" {
+      device = src;
+      fsType = "none";
+      options = [
+        "bind"
+        "ro"
+        "nofail"
+        "x-systemd.requires-mounts-for=${src}"
+      ];
+    }
+  ) cfg.sources;
 in
 {
   options.services.backup-source = {
-    enable = lib.mkEnableOption "expose a read-only rsync path to one or more pi-backup hosts";
+    enable = lib.mkEnableOption "expose a read-only rsync chroot consolidating one or more source trees";
 
-    allowedPath = lib.mkOption {
+    chrootRoot = lib.mkOption {
       type = lib.types.path;
-      example = "/var/backups/bitwarden";
+      default = "/srv/backup-source";
       description = ''
-        Directory the `backup-pull` user is allowed to read via rrsync.
-        rrsync's `-ro` flag pins the user to read-only and chroots the visible
-        tree to this path.
+        Path under which each entry in `sources` is exposed via a
+        read-only bind mount. This is also the rrsync chroot root, so
+        a compromised key can read nothing outside this tree.
+      '';
+    };
+
+    sources = lib.mkOption {
+      type = lib.types.attrsOf lib.types.path;
+      default = { };
+      example = lib.literalExpression ''
+        {
+          bitwarden  = "/var/backups/bitwarden";
+          webdav-pvc = "/var/lib/rancher/k3s/storage";
+        }
+      '';
+      description = ''
+        Source trees to expose under `chrootRoot/<name>` as read-only
+        bind mounts. The pi-side rsync requests `<name>/...` and rrsync
+        resolves it within the chroot.
       '';
     };
 
@@ -40,40 +70,34 @@ in
       type = lib.types.listOf authorizedKeyType;
       default = [ ];
       description = ''
-        Public SSH keys for the pi-backup hosts allowed to pull. Each key is
-        wrapped in a forced-command authorized_keys entry restricting it to
-        `rrsync -ro <allowedPath>` with the standard hardening flags.
+        Public SSH keys for the pi-backup hosts allowed to pull. Each
+        becomes a forced-command authorized_keys entry on root, restricted
+        to `rrsync -ro <chrootRoot>`. The `restrict` keyword disables
+        shell, port-forwarding, X11 and agent access; rrsync further
+        locks the key to a single read-only rsync invocation rooted at
+        the chroot.
       '';
     };
   };
 
   config = lib.mkIf cfg.enable {
-    users.users.backup-pull = {
-      isSystemUser = true;
-      group = "backup-pull";
-      shell = pkgs.bashInteractive; # rrsync runs as the login shell command
-      home = "/var/empty";
-      createHome = false;
-      # Forced-command authorized keys: each Pi gets one entry locked to rrsync -ro.
-      # `restrict` disables pty/forwarding/X11/agent; rrsync ships with rsync.
-      openssh.authorizedKeys.keys = map (
-        e:
-        ''command="${pkgs.rsync}/bin/rrsync -ro ${cfg.allowedPath}",restrict ${e.key} ${e.name}''
-      ) cfg.authorizedKeys;
-    };
-
-    users.groups.backup-pull = { };
-
-    # The allowed root must exist with the rrsync user as group owner, so the
-    # forced-command rsync can traverse and read it.
-    #
-    # `d` only sets ownership at creation; another module may already create
-    # the same path with different owners (e.g. modules/homelab/storage.nix).
-    # The accompanying `z` line enforces 0750 root:backup-pull on each boot
-    # whether the path is new or pre-existing.
+    # Pre-create the chroot root and a mountpoint per source so the bind
+    # mounts have somewhere to attach. systemd-tmpfiles-setup runs before
+    # local-fs.target, so the mountpoints exist by the time fileSystems
+    # mounts.
     systemd.tmpfiles.rules = [
-      "d ${cfg.allowedPath} 0750 root backup-pull - -"
-      "z ${cfg.allowedPath} 0750 root backup-pull - -"
-    ];
+      "d ${cfg.chrootRoot} 0755 root root - -"
+    ]
+    ++ lib.mapAttrsToList (name: _src: "d ${cfg.chrootRoot}/${name} 0755 root root - -") cfg.sources;
+
+    fileSystems = mountUnits;
+
+    # rrsync runs as root because some bind-mounted trees contain files
+    # owned by container runtime UIDs (e.g. k3s PVC contents owned by
+    # 1000:1000) that an unprivileged user cannot read. Forced-command +
+    # `restrict` still locks each key to a single read-only rsync.
+    users.users.root.openssh.authorizedKeys.keys = map (
+      k: ''command="${pkgs.rsync}/bin/rrsync -ro ${cfg.chrootRoot}",restrict ${k.key} ${k.name}''
+    ) cfg.authorizedKeys;
   };
 }
