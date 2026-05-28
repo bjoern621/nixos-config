@@ -71,11 +71,18 @@
 
   # One job per source. The remoteUser is restricted to a single read-only
   # rrsync command on the source side, so remotePath is relative to that root.
-  # All jobs share one SSH key (default sshKey path). vmk3s exposes both
-  # source trees as read-only bind mounts under one rrsync chroot, so a
-  # single forced-command on root authorizes both pulls.
+  # Backups are organized as one job per "selected service component".
+  # vmk3s exposes both source trees as read-only bind mounts under a
+  # single rrsync chroot, so all jobs share one SSH key.
+  #
+  # To add a new service, add a job below that filters `k3s-pvcs/` to
+  # that namespace (and, if the service has a database, a corresponding
+  # logical-dump job on vmk3s).
   services.pi-backup.jobs = {
-    bitwarden = {
+    # Bitwarden postgres logical dump (vmk3s writes a single stable
+    # `postgres.dump`, atomically replaced each run; daily history lives
+    # in the Pi snapshots).
+    bitwarden-pg = {
       host = "vmk3s";
       remoteUser = "root";
       remotePath = "bitwarden/";
@@ -84,15 +91,27 @@
       keepWeekly = 12;
     };
 
-    # Direct rsync of the webdav PVC tree. The `webdav-pvc` mount on
-    # vmk3s exposes the whole k3s local-path storage tree, so the
-    # include/exclude filter limits the pull to the webdav namespace's
-    # PVC dir(s). --link-dest dedup keeps the on-disk cost ~constant
-    # across daily snapshots.
-    webdav = {
+    # Bitwarden attachment PVC. Pulled directly from the live storage
+    # tree; --link-dest dedup keeps daily snapshots cheap.
+    bitwarden-pvc = {
       host = "vmk3s";
       remoteUser = "root";
-      remotePath = "webdav-pvc/";
+      remotePath = "k3s-pvcs/";
+      extraRsyncArgs = [
+        "--include=pvc-*_bitwarden_*/"
+        "--include=pvc-*_bitwarden_*/***"
+        "--exclude=*"
+      ];
+      schedule = "*-*-* 03:30:00";
+      keepDaily = 30;
+      keepWeekly = 12;
+    };
+
+    # WebDAV PVC (Obsidian + GoodNotes vault files).
+    webdav-pvc = {
+      host = "vmk3s";
+      remoteUser = "root";
+      remotePath = "k3s-pvcs/";
       extraRsyncArgs = [
         "--include=pvc-*_webdav_*/"
         "--include=pvc-*_webdav_*/***"

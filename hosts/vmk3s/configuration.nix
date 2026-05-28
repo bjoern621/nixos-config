@@ -89,7 +89,7 @@
     enable = true;
     sources = {
       bitwarden = "/var/backups/bitwarden";
-      webdav-pvc = "/var/lib/rancher/k3s/storage";
+      k3s-pvcs = "/var/lib/rancher/k3s/storage";
     };
     authorizedKeys = [
       # Public half of the keypair distributed to each Pi. The matching

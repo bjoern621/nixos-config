@@ -13,21 +13,21 @@ let
     runtimeInputs = with pkgs; [
       coreutils
       kubectl
-      zstd
-      gnutar
-      findutils
     ];
     text = builtins.readFile ./bitwarden-dump.sh;
   };
 in
 {
   options.services.bitwarden-dump = {
-    enable = lib.mkEnableOption "Bitwarden self-host disaster-recovery dump (postgres + PVCs)";
+    enable = lib.mkEnableOption "Bitwarden postgres logical dump for off-host pull backup";
 
     outputDir = lib.mkOption {
       type = lib.types.path;
       default = "/var/backups/bitwarden";
-      description = "Where the timestamped dump pairs are written.";
+      description = ''
+        Directory holding `postgres.dump` (stable filename, atomically
+        replaced each run). Pi snapshots provide the time-series history.
+      '';
     };
 
     kubeconfig = lib.mkOption {
@@ -66,18 +66,6 @@ in
       '';
     };
 
-    pvcStorageRoot = lib.mkOption {
-      type = lib.types.path;
-      default = "/var/lib/rancher/k3s/storage";
-      description = "Where the local-path provisioner stores PVC contents.";
-    };
-
-    keepDumps = lib.mkOption {
-      type = lib.types.int;
-      default = 3;
-      description = "Local retention (number of dump pairs). Pis hold the long history.";
-    };
-
     schedule = lib.mkOption {
       type = lib.types.str;
       default = "*-*-* 03:00:00";
@@ -86,15 +74,15 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # The dump unit runs as root and writes the dir; rrsync also reads as
-    # root via the backup-source bind mount. No other user touches it.
+    # The dump unit runs as root; rrsync reads as root via the
+    # backup-source bind mount. No other user touches it.
     systemd.tmpfiles.rules = [
       "d ${cfg.outputDir} 0700 root root - -"
       "z ${cfg.outputDir} 0700 root root - -"
     ];
 
     systemd.services.bitwarden-dump = {
-      description = "Dump Bitwarden self-host for off-host pull backup";
+      description = "Dump Bitwarden postgres for off-host pull backup";
 
       # Don't fire kubectl until the API server is up. A persistent timer
       # firing on early boot would otherwise spam a failure for nothing.
@@ -113,19 +101,13 @@ in
         PG_USER = cfg.postgresUser;
         PG_DB = cfg.postgresDatabase;
         PG_AUTH_SECRET = cfg.postgresAuthSecret;
-        PVC_ROOT = cfg.pvcStorageRoot;
-        KEEP = toString cfg.keepDumps;
       };
 
       serviceConfig = {
         Type = "oneshot";
         User = "root";
         ExecStart = "${dumpScript}/bin/bitwarden-dump";
-        # k3s.yaml is root-readable by default; the unit needs that and the PVC tree.
-        ReadOnlyPaths = [
-          cfg.kubeconfig
-          cfg.pvcStorageRoot
-        ];
+        ReadOnlyPaths = [ cfg.kubeconfig ];
         ReadWritePaths = [ cfg.outputDir ];
         PrivateTmp = true;
         ProtectHome = true;
@@ -134,7 +116,7 @@ in
     };
 
     systemd.timers.bitwarden-dump = {
-      description = "Schedule for Bitwarden disaster-recovery dump";
+      description = "Schedule for Bitwarden postgres dump";
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnCalendar = cfg.schedule;
