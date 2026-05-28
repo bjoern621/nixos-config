@@ -5,6 +5,14 @@
   ...
 }:
 
+# Pi-side pull backup jobs. Each entry in `services.pi-backup.jobs`
+# becomes a systemd service + timer that rsyncs from
+# `<remoteUser>@<host>:<remotePath>` into
+# `<mountPoint>/snapshots/<name>/<UTC-timestamp>/`, with `--link-dest`
+# against the previous snapshot for hardlink dedup. After each pull a
+# prune step keeps the newest `keepDaily` snapshots plus one per ISO
+# week up to `keepWeekly`.
+
 let
   cfg = config.services.pi-backup;
   storage = cfg.storage;
@@ -22,57 +30,44 @@ let
         remoteUser = lib.mkOption {
           type = lib.types.str;
           default = "backup-pull";
-          description = "SSH user on the source host.";
         };
 
         remotePath = lib.mkOption {
           type = lib.types.str;
-          example = "/var/backups/bitwarden/";
-          description = ''
-            Source-relative path under the rrsync read-only root.
-            If the source's rrsync root is `/var/backups/bitwarden`, this should be `./`
-            (rrsync rewrites the request relative to the root).
-          '';
+          example = "./";
+          description = "Path relative to the rrsync chroot on the source.";
         };
 
         schedule = lib.mkOption {
           type = lib.types.str;
           default = "*-*-* 03:30:00";
-          description = "systemd OnCalendar expression for the backup timer.";
         };
 
         randomizedDelay = lib.mkOption {
           type = lib.types.str;
           default = "30min";
-          description = "Spread multiple Pis so they don't hit the source simultaneously.";
+          description = "Spreads Pis so they do not hit the source simultaneously.";
         };
 
         keepDaily = lib.mkOption {
           type = lib.types.int;
           default = 30;
-          description = "Keep this many daily snapshots before pruning.";
         };
 
         keepWeekly = lib.mkOption {
           type = lib.types.int;
           default = 12;
-          description = "Keep at most this many additional weekly snapshots beyond the daily window.";
         };
 
         sshKey = lib.mkOption {
           type = lib.types.str;
           default = "/home/ops/.ssh/backup_pull_id_ed25519";
-          description = ''
-            Filesystem path to the private SSH key for the pull.
-            Deployed out-of-band; ops:ops, mode 0400.
-            String type (not `path`) so it is not copied into the Nix store.
-          '';
+          description = "Private key path. Deployed out-of-band as ops:ops 0400; not copied to the Nix store.";
         };
 
         extraRsyncArgs = lib.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
-          description = "Extra arguments appended to the rsync invocation.";
         };
 
         _name = lib.mkOption {
@@ -105,22 +100,20 @@ let
 
         cd "$snap_root"
 
-        # snapshots are named YYYY-MM-DDTHHMMSSZ; lexicographic == chronological.
+        # Snapshot names are YYYY-MM-DDTHHMMSSZ, lexicographic == chronological.
         mapfile -t snaps < <(find . -mindepth 1 -maxdepth 1 -type d -name '????-??-??T??????Z' -printf '%f\n' | sort)
 
         if (( ''${#snaps[@]} <= keep_daily )); then
           exit 0
         fi
 
-        # Keep the newest `keep_daily` unconditionally.
         kept_daily_start=$(( ''${#snaps[@]} - keep_daily ))
         daily_kept=("''${snaps[@]:$kept_daily_start}")
 
-        # From the remainder, keep one per ISO week, up to keep_weekly.
+        # From the remainder, keep one snapshot per ISO week, up to keep_weekly.
         candidates=("''${snaps[@]:0:$kept_daily_start}")
         weekly_kept=()
         declare -A seen_weeks=()
-        # Walk newest-first through the candidates so we keep the latest snapshot per week.
         for (( i = ''${#candidates[@]} - 1; i >= 0; i-- )); do
           snap="''${candidates[i]}"
           date_part="''${snap%%T*}"
@@ -134,7 +127,6 @@ let
           fi
         done
 
-        # Build the "keep" set as an associative array for O(1) lookup.
         declare -A keep=()
         for s in "''${daily_kept[@]}" "''${weekly_kept[@]}"; do
           keep[$s]=1
@@ -207,9 +199,6 @@ let
     wants = [ "network-online.target" ];
 
     unitConfig = {
-      # Only attempt to run if the backup volume is actually mounted.
-      # The unit succeeds without doing anything if the drive is missing,
-      # which is exactly what we want (boot resilience: drive can be absent).
       ConditionPathIsMountPoint = storage.mountPoint;
     };
 
@@ -221,9 +210,6 @@ let
 
       PrivateTmp = true;
       ProtectSystem = "strict";
-      # The key lives under /home/ops/.ssh, so home must stay visible. Read-only
-      # keeps the unit from writing anywhere in /home while still allowing
-      # the SSH key file to be read.
       ProtectHome = "read-only";
       ReadWritePaths = [
         "${storage.mountPoint}/snapshots/${job._name}"
@@ -251,26 +237,15 @@ in
     jobs = lib.mkOption {
       type = lib.types.attrsOf jobModule;
       default = { };
-      description = ''
-        Per-source backup jobs. Each entry produces one systemd service + timer that
-        pulls from `<remoteUser>@<host>:<remotePath>` into
-        `<mountPoint>/snapshots/<name>/<UTC-timestamp>/`, with `--link-dest` against
-        the previous snapshot for hardlink-based history.
-      '';
       example = lib.literalExpression ''
         {
-          bitwarden = {
-            host = "vmk3s";
-            remotePath = "./";
-          };
+          bitwarden = { host = "vmk3s"; remotePath = "./"; };
         }
       '';
     };
   };
 
   config = lib.mkIf enabled {
-    # Shared state dir for known_hosts and rsync partial files. 0700 because
-    # known_hosts identifies sources we trust, nothing else should read it.
     systemd.tmpfiles.rules = [
       "d /var/lib/pi-backup 0700 root root - -"
     ];

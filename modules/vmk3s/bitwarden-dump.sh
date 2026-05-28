@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Inputs (set by the systemd unit):
-#   KUBECONFIG       - k3s kubeconfig path
-#   OUT_DIR          - where the dump file lives
-#   NS               - bitwarden namespace
-#   PG_POD           - postgres pod name inside NS
-#   PG_USER          - postgres user
-#   PG_DB            - postgres database
-#   PG_AUTH_SECRET   - secret holding postgres credentials (key: password)
+# Inputs (from the systemd unit env):
+#   KUBECONFIG       k3s kubeconfig path
+#   OUT_DIR          where postgres.dump lives
+#   NS               bitwarden namespace
+#   PG_POD           postgres pod name
+#   PG_USER          postgres user
+#   PG_DB            postgres database
+#   PG_AUTH_SECRET   secret holding postgres credentials (key: password)
 
 mkdir -p "$OUT_DIR"
 
-echo "[bitwarden-dump] starting"
-
-# Logical postgres dump. -Fc is custom format (compressed, pg_restore-friendly).
-# The password comes from the kube secret rather than a pod env var, because
-# Bitnami's chart renames these env names between releases.
+# Password comes from the kube Secret rather than a pod env var because
+# Bitnami's chart renames the env names between releases.
 pg_pass=$(kubectl get secret -n "$NS" "$PG_AUTH_SECRET" \
   -o jsonpath='{.data.password}' | base64 -d)
 

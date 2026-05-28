@@ -5,6 +5,10 @@
   ...
 }:
 
+# Bitwarden postgres logical dump for off-host pull backup. Writes a
+# single `postgres.dump` (replaced atomically each run) into `outputDir`.
+# The Pi snapshots provide the time-series history.
+
 let
   cfg = config.services.bitwarden-dump;
 
@@ -19,21 +23,16 @@ let
 in
 {
   options.services.bitwarden-dump = {
-    enable = lib.mkEnableOption "Bitwarden postgres logical dump for off-host pull backup";
+    enable = lib.mkEnableOption "Bitwarden postgres logical dump";
 
     outputDir = lib.mkOption {
       type = lib.types.path;
       default = "/var/backups/bitwarden";
-      description = ''
-        Directory holding `postgres.dump` (stable filename, atomically
-        replaced each run). Pi snapshots provide the time-series history.
-      '';
     };
 
     kubeconfig = lib.mkOption {
       type = lib.types.path;
       default = "/etc/rancher/k3s/k3s.yaml";
-      description = "k3s kubeconfig path. Default fits a k3s server install.";
     };
 
     namespace = lib.mkOption {
@@ -44,7 +43,6 @@ in
     postgresPod = lib.mkOption {
       type = lib.types.str;
       default = "bitwarden-postgresql-0";
-      description = "Name of the postgres pod inside `namespace`.";
     };
 
     postgresUser = lib.mkOption {
@@ -60,22 +58,17 @@ in
     postgresAuthSecret = lib.mkOption {
       type = lib.types.str;
       default = "bitwarden-postgresql-auth";
-      description = ''
-        Name of the kubernetes Secret holding the postgres credentials.
-        The dump script reads the `password` key (Bitnami chart convention).
-      '';
+      description = "kube Secret name. The dump script reads its `password` key.";
     };
 
     schedule = lib.mkOption {
       type = lib.types.str;
       default = "*-*-* 03:00:00";
-      description = "systemd OnCalendar expression. Should fire before the Pi pull window.";
+      description = "systemd OnCalendar expression. Fires before the Pi pull window.";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    # The dump unit runs as root; rrsync reads as root via the
-    # backup-source bind mount. No other user touches it.
     systemd.tmpfiles.rules = [
       "d ${cfg.outputDir} 0700 root root - -"
       "z ${cfg.outputDir} 0700 root root - -"
@@ -84,8 +77,6 @@ in
     systemd.services.bitwarden-dump = {
       description = "Dump Bitwarden postgres for off-host pull backup";
 
-      # Don't fire kubectl until the API server is up. A persistent timer
-      # firing on early boot would otherwise spam a failure for nothing.
       after = [
         "k3s.service"
         "network-online.target"

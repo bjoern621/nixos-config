@@ -49,13 +49,40 @@
   nixpkgs.config.allowUnfree = true;
   system.stateVersion = "25.11";
 
-  # The backup volume lives on an external USB SSD/HDD encrypted with LUKS.
-  # Steps to provision before flipping `enable = true`:
-  #   1. Plug the drive in. Identify it: `lsblk`.
-  #   2. Create a single partition.
-  #   3. `cryptsetup luksFormat /dev/<partition>` (set a strong passphrase; record it offline).
-  #   4. `blkid /dev/<partition>` -> copy the UUID into `deviceUuid` below.
-  #   5. `cryptsetup luksOpen /dev/<partition> backup`
+  # Backup target side.
+  #
+  # Daily at 03:30 UTC the Pi pulls from vmk3s into
+  # /srv/backups/snapshots/<job>/<UTC-stamp>/. Each job uses --link-dest
+  # against the previous run for hardlink dedup, then prunes to 30 daily
+  # plus 12 weekly snapshots.
+  #
+  # What is backed up:
+  #   bitwarden-pg    pg_dump of the bitwarden vault DB
+  #                   (vmk3s:/var/backups/bitwarden/postgres.dump)
+  #   bitwarden-pvc   bitwarden namespace PVCs (attachments)
+  #   webdav-pvc      webdav namespace PVCs (Obsidian + GoodNotes vaults)
+  #
+  # Restore:
+  #   Bitwarden DB    pg_restore /srv/backups/snapshots/bitwarden-pg/latest/postgres.dump
+  #                   into a fresh bitwarden postgres pod.
+  #   Bitwarden PVCs  copy /srv/backups/snapshots/bitwarden-pvc/latest/pvc-*/
+  #                   back under /var/lib/rancher/k3s/storage/ on a fresh node.
+  #   WebDAV PVCs     same pattern, from snapshots/webdav-pvc/latest/.
+  #
+  # Adding a service: add a job below pointing at `k3s-pvcs/` and
+  # filtering to the service's namespace. If the service has a database,
+  # add a logical-dump module on the source side too.
+  #
+  # SSH key: the matching private half of the source host's authorizedKeys
+  # entry lives at /home/ops/.ssh/backup_pull_id_ed25519 (ops:ops, 0400),
+  # deployed out-of-band.
+
+  # External USB drive, LUKS-encrypted, mounted at /srv/backups. To provision:
+  #   1. Plug in the drive, identify with `lsblk`.
+  #   2. Create one partition.
+  #   3. `cryptsetup luksFormat /dev/<part>` (strong passphrase, recorded offline).
+  #   4. `blkid /dev/<part>` -> copy UUID into `deviceUuid` below.
+  #   5. `cryptsetup luksOpen /dev/<part> backup`
   #      `mkfs.ext4 /dev/mapper/backup`
   #      `cryptsetup luksClose backup`
   #   6. Flip `enable = true` and run `sysconf-reload`.
@@ -64,24 +91,7 @@
     deviceUuid = "00000000-0000-0000-0000-000000000000";
   };
 
-  # Private SSH key for the pull is not generated here; copy it onto the Pi
-  # out-of-band at /home/ops/.ssh/backup_pull_id_ed25519 (ops:ops, mode 0400).
-  # The matching public key must already be in the authorizedKeys list on the
-  # source host (see hosts/vmk3s/configuration.nix).
-
-  # One job per source. The remoteUser is restricted to a single read-only
-  # rrsync command on the source side, so remotePath is relative to that root.
-  # Backups are organized as one job per "selected service component".
-  # vmk3s exposes both source trees as read-only bind mounts under a
-  # single rrsync chroot, so all jobs share one SSH key.
-  #
-  # To add a new service, add a job below that filters `k3s-pvcs/` to
-  # that namespace (and, if the service has a database, a corresponding
-  # logical-dump job on vmk3s).
   services.pi-backup.jobs = {
-    # Bitwarden postgres logical dump (vmk3s writes a single stable
-    # `postgres.dump`, atomically replaced each run; daily history lives
-    # in the Pi snapshots).
     bitwarden-pg = {
       host = "vmk3s";
       remoteUser = "root";
@@ -91,8 +101,6 @@
       keepWeekly = 12;
     };
 
-    # Bitwarden attachment PVC. Pulled directly from the live storage
-    # tree; --link-dest dedup keeps daily snapshots cheap.
     bitwarden-pvc = {
       host = "vmk3s";
       remoteUser = "root";
@@ -107,7 +115,6 @@
       keepWeekly = 12;
     };
 
-    # WebDAV PVC (Obsidian + GoodNotes vault files).
     webdav-pvc = {
       host = "vmk3s";
       remoteUser = "root";
