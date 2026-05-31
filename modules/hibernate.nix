@@ -56,6 +56,13 @@ in
     # Set resume device (generates the resume= kernel parameter)
     boot.resumeDevice = lib.mkIf (cfg.swapFile.resumeOffset != null && cfg.swapFile.resumeDevice != null) cfg.swapFile.resumeDevice;
 
+    # Hibernation copies in-use RAM into a snapshot held in RAM, which needs free
+    # pages to copy into. The default image_size (~2/5 of RAM) pre-frees too
+    # little under memory pressure, so the copy fails with "Error -12 creating
+    # image" and the machine silently wakes. 0 = pre-free maximally so it always
+    # fits, at the cost of a few extra seconds of swap-out.
+    systemd.tmpfiles.rules = [ "w /sys/power/image_size - - - - 0" ];
+
     # Hibernate on lid close (ignore when docked to keep external monitors on)
     services.logind.settings.Login = {
       HandleLidSwitch = "hibernate";
