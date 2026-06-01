@@ -6,6 +6,12 @@
 let
   bridgeName = "br0";
   uplinkInterface = "enp3s0";
+  # Pin the bridge to the uplink's permanent MAC. A networkd bridge netdev
+  # otherwise gets a fresh random MAC on each (re)creation, which changes the
+  # DHCP identity and the host's leased address on every rebuild. Reusing the
+  # uplink MAC matches the default Linux behaviour of a bridge over a single
+  # port and keeps the lease stable.
+  uplinkMac = "60:be:b4:14:61:b4";
 
   # Safety net for the guest tap. libvirt enslaves a guest's tap to br0 once, at
   # guest start, and never reconciles it. If the bridge is recreated under a
@@ -67,6 +73,7 @@ in
     netdevs."20-${bridgeName}".netdevConfig = {
       Name = bridgeName;
       Kind = "bridge";
+      MACAddress = uplinkMac;
     };
 
     networks = {
