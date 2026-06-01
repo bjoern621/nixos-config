@@ -4,7 +4,6 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
-    ../../modules/auto-update.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
@@ -67,13 +66,6 @@
     kubectl
     tldr
   ];
-
-  services.nixos-auto-update = {
-    enable = true;
-    user = "ops";
-    delayDays = 7;
-    schedule = "Mon 03:00";
-  };
 
   # Backup source side. Bitwarden postgres is dumped daily at 03:00 UTC
   # into /var/backups/bitwarden/postgres.dump. The pi-backup hosts pull
