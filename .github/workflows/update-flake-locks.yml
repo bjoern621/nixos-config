@@ -1,10 +1,10 @@
-name: Update flake locks (delayed stable)
+name: Update flake locks (stable)
 
-# Advances the committed host flake.lock files to nixpkgs/home-manager
-# revisions at least DELAY_DAYS old, then opens a PR. Merging it lands the new
-# pins on main; each host picks them up on its next sysconf-auto-pull. The
-# hosts never compute their own revisions, so this is the single place updates
-# enter the system.
+# Advances the committed host flake.lock files to github input revisions at
+# least DELAY_DAYS old, then opens a PR. Merging it lands the new pins on main;
+# each host picks them up on its next sysconf-auto-pull. The hosts never
+# compute their own revisions, so this is the single place updates enter the
+# system.
 
 on:
   schedule:
@@ -27,22 +27,18 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Update host flake locks to delayed-stable revisions
+      - name: Update host flake locks to stable revisions
         env:
           GITHUB_TOKEN: ${{ github.token }}
           DELAY_DAYS: ${{ github.event.inputs.delay_days || '7' }}
-        run: bash .github/scripts/update-delayed-locks.sh hosts/homelab hosts/vmk3s
+          PR_BODY_FILE: ${{ github.workspace }}/pr-body.md
+        run: bash .github/scripts/update-stable-locks.sh hosts/homelab hosts/vmk3s
 
       - name: Open pull request
         uses: peter-evans/create-pull-request@v6
         with:
           branch: automated/flake-lock-update
           delete-branch: true
-          title: "chore: delayed-stable flake.lock update"
-          commit-message: "chore: delayed-stable flake.lock update"
-          body: |
-            Automated update of the homelab and vmk3s flake.lock files to
-            nixpkgs/home-manager revisions at least ${{ github.event.inputs.delay_days || '7' }} days old.
-
-            Merging lands the pins on `main`; the hosts converge on their next
-            `sysconf-auto-pull`.
+          title: "chore: stable flake.lock update"
+          commit-message: "chore: stable flake.lock update"
+          body-path: ${{ github.workspace }}/pr-body.md
