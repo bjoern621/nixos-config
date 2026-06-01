@@ -20,9 +20,26 @@ let
       exit 1
     fi
 
-    echo "Pulling latest changes in $NIXOS_CONFIG..."
     cd "$NIXOS_CONFIG"
-    sudo git pull --ff-only
+
+    # Host repos are deployment mirrors of origin, never hand-edited, so match
+    # upstream exactly instead of merging. A hard reset is idempotent and
+    # immune to local drift such as an uncommitted flake.lock override or a
+    # half-applied pull. sysconf-reload re-copies the live
+    # hardware-configuration.nix before building, so resetting that file to its
+    # committed version does not affect the resulting configuration.
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+    echo "Fetching origin/$BRANCH in $NIXOS_CONFIG..."
+    sudo git fetch origin "$BRANCH"
+
+    if ! sudo git diff --quiet || ! sudo git diff --cached --quiet; then
+      echo "WARNING: discarding local changes in $NIXOS_CONFIG:" >&2
+      sudo git status --short >&2
+    fi
+
+    echo "Resetting to origin/$BRANCH..."
+    sudo git reset --hard "origin/$BRANCH"
 
     echo "Pull complete. Reloading system..."
     sysconf-reload
