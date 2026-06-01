@@ -8,6 +8,7 @@
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
     ../../modules/sysconf-sudo.nix
+    ../../modules/sysconf-auto-pull.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/homelab/vm/hypervisor
     ../../modules/homelab/samba.nix
@@ -31,6 +32,11 @@
 
   services.admin-ssh-keys.users = [ "ops" ];
   services.sysconf-sudo.users = [ "ops" ];
+  services.sysconf-auto-pull = {
+    enable = true;
+    user = "ops";
+    schedule = "daily";
+  };
 
   users.users.ops = {
     isNormalUser = true;
