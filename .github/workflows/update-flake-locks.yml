@@ -31,7 +31,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           DELAY_DAYS: ${{ github.event.inputs.delay_days || '7' }}
-          PR_BODY_FILE: ${{ github.workspace }}/pr-body.md
+          # Outside the repo tree, so create-pull-request does not commit it.
+          PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
         run: bash .github/scripts/update-stable-locks.sh hosts/homelab hosts/vmk3s
 
       - name: Open pull request
@@ -41,4 +42,4 @@ jobs:
           delete-branch: true
           title: "chore: stable flake.lock update"
           commit-message: "chore: stable flake.lock update"
-          body-path: ${{ github.workspace }}/pr-body.md
+          body-path: ${{ runner.temp }}/pr-body.md
