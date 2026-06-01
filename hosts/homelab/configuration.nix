@@ -25,8 +25,8 @@
 
   networking.hostName = "homelab";
   # Host networking (br0 bridge via systemd-networkd) lives in the hypervisor
-  # module, which the guest taps depend on. NetworkManager is intentionally not
-  # used on this host.
+  # module, which the VMs' network ports connect to. NetworkManager is
+  # intentionally not used on this host.
 
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "de_DE.UTF-8";
