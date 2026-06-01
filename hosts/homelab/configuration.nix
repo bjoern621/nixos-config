@@ -24,7 +24,9 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "homelab";
-  networking.networkmanager.enable = true;
+  # Host networking (br0 bridge via systemd-networkd) lives in the hypervisor
+  # module, which the guest taps depend on. NetworkManager is intentionally not
+  # used on this host.
 
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "de_DE.UTF-8";
@@ -45,7 +47,6 @@
     initialPassword = "1234";
     extraGroups = [
       "wheel"
-      "networkmanager"
       "docker"
       "libvirtd"
       "smbshare"

@@ -6,6 +6,35 @@
 let
   bridgeName = "br0";
   uplinkInterface = "enp3s0";
+
+  # Safety net for the guest tap. libvirt enslaves a guest's tap to br0 once, at
+  # guest start, and never reconciles it. If the bridge is recreated under a
+  # running guest the tap is orphaned and the guest loses the LAN. The primary
+  # defence is the networkd setup below, which keeps br0 a stable netdev across a
+  # rebuild and does not evict foreign bridge ports. This hook covers the
+  # remaining case: on guest (re)start it re-enslaves any of the guest's taps
+  # that are bridged to br0 but currently have no master.
+  enslaveGuestTaps = pkgs.writeShellScript "libvirt-enslave-guest-taps" ''
+    operation="$2"
+    case "$operation" in
+      started | reconnect) ;;
+      *) exit 0 ;;
+    esac
+
+    domainXml="$(cat)"
+    case "$domainXml" in
+      *"bridge='${bridgeName}'"*) ;;
+      *) exit 0 ;;
+    esac
+
+    taps="$(printf '%s' "$domainXml" \
+      | ${pkgs.gnused}/bin/sed -n "s/.*<target dev='\(vnet[0-9]*\)'.*/\1/p")"
+    for tap in $taps; do
+      if [ -d "/sys/class/net/$tap" ] && [ ! -e "/sys/class/net/$tap/master" ]; then
+        ${pkgs.iproute2}/bin/ip link set "$tap" master ${bridgeName}
+      fi
+    done
+  '';
 in
 {
   virtualisation.libvirtd = {
@@ -17,44 +46,46 @@ in
       runAsRoot = false;
       swtpm.enable = true;
     };
+    hooks.qemu.enslave-guest-taps = enslaveGuestTaps;
   };
 
-  # br0 bridges the physical uplink to libvirt guests. It is defined as
-  # NetworkManager-native profiles rather than networking.bridges because
-  # NetworkManager manages the host and ignores networking.bridges: with the
-  # scripted option, the uplink enslavement happens outside NM and is lost
-  # whenever NM restarts (e.g. on a live `nixos-rebuild switch`), at which
-  # point NM claims the uplink with an auto-generated wired connection and the
-  # bridge is left with no path to the LAN. A declarative bridge-slave profile
-  # keeps the uplink enslaved across NM restarts.
-  #
-  # no-auto-default stops NM from creating its fallback wired connection for
-  # any device, so it cannot compete with the slave profile for the uplink.
-  networking.networkmanager.settings.main.no-auto-default = "*";
+  # br0 bridges the physical uplink (enp3s0) to libvirt guests. It is managed by
+  # systemd-networkd rather than NetworkManager. networkd keeps the bridge as a
+  # persistent netdev: a `nixos-rebuild switch` reloads it instead of tearing it
+  # down, and it leaves foreign bridge ports (the libvirt guest taps) attached.
+  # NetworkManager instead reactivates its bridge profile on restart and evicts
+  # ports it does not own, which detached the running guest tap and took the VM
+  # offline. Scripted networking.bridges had the same teardown-on-switch problem
+  # for the uplink. networkd avoids both failure modes.
+  networking.useNetworkd = true;
+  networking.useDHCP = false;
+  networking.networkmanager.enable = false;
 
-  networking.networkmanager.ensureProfiles.profiles = {
-    "${bridgeName}" = {
-      connection = {
-        id = bridgeName;
-        type = "bridge";
-        interface-name = bridgeName;
-        autoconnect = true;
-        autoconnect-slaves = 1;
-      };
-      bridge.stp = false;
-      ipv4.method = "auto";
-      ipv6.method = "auto";
+  systemd.network = {
+    enable = true;
+
+    netdevs."20-${bridgeName}".netdevConfig = {
+      Name = bridgeName;
+      Kind = "bridge";
     };
 
-    "${bridgeName}-${uplinkInterface}" = {
-      connection = {
-        id = "${bridgeName}-${uplinkInterface}";
-        type = "ethernet";
-        interface-name = uplinkInterface;
-        master = bridgeName;
-        slave-type = "bridge";
-        autoconnect = true;
-        autoconnect-priority = 10;
+    networks = {
+      # Uplink: enslaved to the bridge, no address of its own. The host is
+      # considered online once the link is enslaved; the address lives on br0.
+      "30-${uplinkInterface}" = {
+        matchConfig.Name = uplinkInterface;
+        networkConfig.Bridge = bridgeName;
+        linkConfig.RequiredForOnline = "enslaved";
+      };
+
+      # The bridge carries the host address via DHCP (v4 + v6) and SLAAC.
+      "40-${bridgeName}" = {
+        matchConfig.Name = bridgeName;
+        networkConfig = {
+          DHCP = "yes";
+          IPv6AcceptRA = true;
+        };
+        linkConfig.RequiredForOnline = "routable";
       };
     };
   };
