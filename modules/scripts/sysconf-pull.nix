@@ -28,18 +28,21 @@ let
     # half-applied pull. sysconf-reload re-copies the live
     # hardware-configuration.nix before building, so resetting that file to its
     # committed version does not affect the resulting configuration.
+    #
+    # Git runs as the invoking user (the repo owner), not via sudo, so the
+    # working tree stays owned by that user. Only nixos-rebuild needs root.
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
     echo "Fetching origin/$BRANCH in $NIXOS_CONFIG..."
-    sudo git fetch origin "$BRANCH"
+    git fetch origin "$BRANCH"
 
-    if ! sudo git diff --quiet || ! sudo git diff --cached --quiet; then
+    if ! git diff --quiet || ! git diff --cached --quiet; then
       echo "WARNING: discarding local changes in $NIXOS_CONFIG:" >&2
-      sudo git status --short >&2
+      git status --short >&2
     fi
 
     echo "Resetting to origin/$BRANCH..."
-    sudo git reset --hard "origin/$BRANCH"
+    git reset --hard "origin/$BRANCH"
 
     echo "Pull complete. Reloading system..."
     sysconf-reload

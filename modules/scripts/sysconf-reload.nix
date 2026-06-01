@@ -71,13 +71,15 @@ let
       exit 1
     fi
 
+    # Git and file operations run as the invoking user (the repo owner) so the
+    # working tree stays owned by that user. Only nixos-rebuild needs root.
     HARDWARE_TARGET="$NIXOS_CONFIG/hosts/$TARGET_HOST/hardware-configuration.nix"
     echo "[sysconf-reload] Copying /etc/nixos/hardware-configuration.nix -> $HARDWARE_TARGET"
-    sudo mkdir -p "$NIXOS_CONFIG/hosts/$TARGET_HOST"
-    sudo cp -f /etc/nixos/hardware-configuration.nix "$HARDWARE_TARGET"
+    mkdir -p "$NIXOS_CONFIG/hosts/$TARGET_HOST"
+    cp -f /etc/nixos/hardware-configuration.nix "$HARDWARE_TARGET"
 
-    NEW_FILES=$(sudo git -C "$NIXOS_CONFIG" ls-files --others --exclude-standard | wc -l)
-    sudo git -C "$NIXOS_CONFIG" add -N .
+    NEW_FILES=$(git -C "$NIXOS_CONFIG" ls-files --others --exclude-standard | wc -l)
+    git -C "$NIXOS_CONFIG" add -N .
     echo "[sysconf-reload] Marked $NEW_FILES untracked files as intent-to-add so Nix can see them."
 
     echo "[sysconf-reload] Rebuilding flake target: $TARGET_HOST"

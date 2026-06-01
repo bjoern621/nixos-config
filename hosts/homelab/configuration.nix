@@ -7,6 +7,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
+    ../../modules/sysconf-sudo.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/homelab/vm/hypervisor
     ../../modules/homelab/samba.nix
@@ -29,6 +30,7 @@
   console.keyMap = "de";
 
   services.admin-ssh-keys.users = [ "ops" ];
+  services.sysconf-sudo.users = [ "ops" ];
 
   users.users.ops = {
     isNormalUser = true;
