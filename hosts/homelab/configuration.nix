@@ -24,9 +24,6 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "homelab";
-  # Host networking (br0 bridge via systemd-networkd) lives in the hypervisor
-  # module, which the VMs' network ports connect to. NetworkManager is
-  # intentionally not used on this host.
 
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "de_DE.UTF-8";
