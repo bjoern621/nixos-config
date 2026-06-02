@@ -20,6 +20,7 @@
     ./modules/google-chrome.nix
     ./modules/desktop-theme.nix
     ./modules/desktop-portals.nix
+    ./modules/xdg-user-dirs.nix
     ./user-packages.nix
     ./modules/quickshell/quickshell.nix
     ./modules/paintdotnet.nix
