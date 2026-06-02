@@ -37,6 +37,13 @@
         identityFile = "/home/bjoern/.ssh/id_ed25519";
         identitiesOnly = true;
       };
+
+      vm112 = {
+        hostname = "vm112.kss.ful.inf.haw-hamburg.de";
+        user = "padawan";
+        identityFile = "/home/bjoern/.ssh/id_ed25519";
+        identitiesOnly = true;
+      };
     };
   };
 }
