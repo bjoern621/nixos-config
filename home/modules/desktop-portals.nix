@@ -39,4 +39,19 @@
     "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}/glib-2.0/schemas"
     "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}/glib-2.0/schemas"
   ];
+
+  # xdg-desktop-portal-gtk exits 1 with "Error reading events from display:
+  # broken pipe" whenever its Wayland connection drops (Hyprland restart,
+  # suspend/resume, monitor reconfiguration). The packaged unit ships
+  # Restart=no, so the GTK FileChooser backend stays dead afterwards and every
+  # download / open-file dialog fails until a manual restart.
+  #
+  # A drop-in is used instead of `systemd.user.services` because the latter
+  # writes a full unit that shadows the package's ExecStart/BusName. The
+  # drop-in only layers Restart on top of the packaged unit.
+  xdg.configFile."systemd/user/xdg-desktop-portal-gtk.service.d/restart.conf".text = ''
+    [Service]
+    Restart=on-failure
+    RestartSec=1
+  '';
 }
