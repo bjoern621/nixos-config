@@ -40,18 +40,43 @@
     "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}/glib-2.0/schemas"
   ];
 
-  # xdg-desktop-portal-gtk exits 1 with "Error reading events from display:
-  # broken pipe" whenever its Wayland connection drops (Hyprland restart,
-  # suspend/resume, monitor reconfiguration). The packaged unit ships
-  # Restart=no, so the GTK FileChooser backend stays dead afterwards and every
-  # download / open-file dialog fails until a manual restart.
+  # Portal stack lifecycle hardening. Two independent failures leave file
+  # dialogs broken for apps that are already running:
   #
-  # A drop-in is used instead of `systemd.user.services` because the latter
-  # writes a full unit that shadows the package's ExecStart/BusName. The
-  # drop-in only layers Restart on top of the packaged unit.
-  xdg.configFile."systemd/user/xdg-desktop-portal-gtk.service.d/restart.conf".text = ''
-    [Service]
-    Restart=on-failure
-    RestartSec=1
-  '';
+  #   1. Backend crash. xdg-desktop-portal-gtk exits with "Error reading events
+  #      from display: broken pipe" when its Wayland connection drops (Hyprland
+  #      restart, suspend/resume, monitor reconfiguration). The packaged unit
+  #      ships Restart=no, so the FileChooser backend stays dead afterwards.
+  #
+  #   2. Frontend restart. xdg-desktop-portal is PartOf=graphical-session.target,
+  #      so any cycle of that target stops and restarts the whole portal stack.
+  #      Chromium/Electron apps (Chrome, VSCode, Spotify) cache their D-Bus proxy
+  #      to org.freedesktop.portal.Desktop at startup and never reconnect, so a
+  #      frontend restart silently kills their open/save/download dialogs until
+  #      the app itself is restarted.
+  #
+  # Clearing PartOf detaches the units from target-restart propagation. They
+  # still start on D-Bus activation and still stop with the user manager at
+  # logout. Restart=on-failure revives them after a genuine crash; with the
+  # frontend now surviving target churn, backend restarts are transparent
+  # because the frontend re-resolves the impl backend per request.
+  #
+  # Drop-ins are used instead of systemd.user.services because a full unit would
+  # shadow the package's ExecStart/BusName.
+  xdg.configFile =
+    let
+      lifecycle = ''
+        [Unit]
+        PartOf=
+
+        [Service]
+        Restart=on-failure
+        RestartSec=1
+      '';
+    in
+    {
+      "systemd/user/xdg-desktop-portal.service.d/lifecycle.conf".text = lifecycle;
+      "systemd/user/xdg-desktop-portal-gtk.service.d/lifecycle.conf".text = lifecycle;
+      "systemd/user/xdg-desktop-portal-hyprland.service.d/lifecycle.conf".text = lifecycle;
+    };
 }
