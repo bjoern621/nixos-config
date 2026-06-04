@@ -18,21 +18,21 @@
       };
 
       homelab = {
-        hostname = "homelab.local";
+        hostname = "homelab";
         user = "ops";
         identityFile = "/home/bjoern/.ssh/id_ed25519";
         identitiesOnly = true;
       };
 
       vmk3s = {
-        hostname = "vmk3s.local";
+        hostname = "vmk3s";
         user = "ops";
         identityFile = "/home/bjoern/.ssh/id_ed25519";
         identitiesOnly = true;
       };
 
       pi-backup-01 = {
-        hostname = "pi-backup-01.local";
+        hostname = "pi-backup-01";
         user = "ops";
         identityFile = "/home/bjoern/.ssh/id_ed25519";
         identitiesOnly = true;
