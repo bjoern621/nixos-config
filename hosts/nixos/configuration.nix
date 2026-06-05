@@ -125,6 +125,12 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
+  # bitwarden-desktop still bundles electron 39, which nixpkgs now marks EOL.
+  # Remove once bitwarden-desktop upstream moves to a maintained electron.
+  nixpkgs.config.permittedInsecurePackages = [
+    "electron-39.8.10"
+  ];
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
