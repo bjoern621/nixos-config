@@ -61,6 +61,16 @@
   # frontend now surviving target churn, backend restarts are transparent
   # because the frontend re-resolves the impl backend per request.
   #
+  # StartLimitIntervalSec=0 disables systemd's start rate limiter. The default
+  # (5 starts within 10s) defeats Restart=on-failure: a single Wayland
+  # disconnect (Hyprland restart, suspend/resume, monitor reconfiguration) makes
+  # xdg-desktop-portal-gtk crash and restart in a tight burst, the burst trips
+  # the limiter, and systemd then refuses to start it again with
+  # 'start-limit-hit'. The FileChooser backend stays dead until a manual restart
+  # or relogin, which is why file dialogs silently stop opening mid-session.
+  # With the limiter off, RestartSec=1 still throttles to one restart per second
+  # and the backend recovers once Wayland is reachable again.
+  #
   # Drop-ins are used instead of systemd.user.services because a full unit would
   # shadow the package's ExecStart/BusName.
   xdg.configFile =
@@ -68,6 +78,7 @@
       lifecycle = ''
         [Unit]
         PartOf=
+        StartLimitIntervalSec=0
 
         [Service]
         Restart=on-failure
