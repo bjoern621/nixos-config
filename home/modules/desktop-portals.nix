@@ -89,5 +89,20 @@
       "systemd/user/xdg-desktop-portal.service.d/lifecycle.conf".text = lifecycle;
       "systemd/user/xdg-desktop-portal-gtk.service.d/lifecycle.conf".text = lifecycle;
       "systemd/user/xdg-desktop-portal-hyprland.service.d/lifecycle.conf".text = lifecycle;
+
+      # Make XDG autostart wait for the portal frontend. Chromium/Electron apps
+      # probe the portal once at launch and cache the result; if they start
+      # before xdg-desktop-portal has exported the FileChooser interface their
+      # open/save dialogs stay broken until the app is restarted. UWSM orders
+      # every autostart app After=xdg-desktop-autostart.target, so ordering that
+      # target after the portal transitively orders all autostart apps after it.
+      # The frontend acquires its D-Bus name only once every portal is
+      # registered, so "active" already means FileChooser is answerable. Wants=
+      # (not Requires=) keeps autostart working even if the portal fails.
+      "systemd/user/xdg-desktop-autostart.target.d/portal.conf".text = ''
+        [Unit]
+        Wants=xdg-desktop-portal.service
+        After=xdg-desktop-portal.service
+      '';
     };
 }

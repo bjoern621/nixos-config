@@ -23,7 +23,7 @@
     ./disable_middle_click_paste.nix
     ./media-keys.nix
     ./brightness-keys.nix
-    ./standard-apps.nix
+    ./autostart.nix
     ./mouse-cursor.nix
     ./settings/default.nix
     ./mouse-accel.nix
