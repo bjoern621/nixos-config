@@ -62,6 +62,10 @@
   wayland.windowManager.hyprland = {
     enable = true;
 
+    # Keep the legacy hyprlang config generator. The default flipped to "lua"
+    # for stateVersion >= 26.05; this config is written in hyprlang syntax.
+    configType = "hyprlang";
+
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     systemd.enable = false;
   };

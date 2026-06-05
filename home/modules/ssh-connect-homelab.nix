@@ -7,42 +7,44 @@
     extraConfig = ''
       Include ~/.ssh/config.local
     '';
-    matchBlocks = {
+    # `matchBlocks` is deprecated; `settings` uses upstream OpenSSH directive
+    # names. The "*" block is always emitted last as the default host config.
+    settings = {
       "*" = {
-        addKeysToAgent = "no";
-        compression = false;
-        forwardAgent = false;
-        hashKnownHosts = true;
-        serverAliveCountMax = 3;
-        serverAliveInterval = 0;
+        AddKeysToAgent = "no";
+        Compression = false;
+        ForwardAgent = false;
+        HashKnownHosts = true;
+        ServerAliveCountMax = 3;
+        ServerAliveInterval = 0;
       };
 
       homelab = {
-        hostname = "homelab";
-        user = "ops";
-        identityFile = "/home/bjoern/.ssh/id_ed25519";
-        identitiesOnly = true;
+        HostName = "homelab";
+        User = "ops";
+        IdentityFile = "/home/bjoern/.ssh/id_ed25519";
+        IdentitiesOnly = true;
       };
 
       vmk3s = {
-        hostname = "vmk3s";
-        user = "ops";
-        identityFile = "/home/bjoern/.ssh/id_ed25519";
-        identitiesOnly = true;
+        HostName = "vmk3s";
+        User = "ops";
+        IdentityFile = "/home/bjoern/.ssh/id_ed25519";
+        IdentitiesOnly = true;
       };
 
       pi-backup-01 = {
-        hostname = "pi-backup-01";
-        user = "ops";
-        identityFile = "/home/bjoern/.ssh/id_ed25519";
-        identitiesOnly = true;
+        HostName = "pi-backup-01";
+        User = "ops";
+        IdentityFile = "/home/bjoern/.ssh/id_ed25519";
+        IdentitiesOnly = true;
       };
 
       vm112 = {
-        hostname = "vm112.kss.ful.inf.haw-hamburg.de";
-        user = "padawan";
-        identityFile = "/home/bjoern/.ssh/id_ed25519";
-        identitiesOnly = true;
+        HostName = "vm112.kss.ful.inf.haw-hamburg.de";
+        User = "padawan";
+        IdentityFile = "/home/bjoern/.ssh/id_ed25519";
+        IdentitiesOnly = true;
       };
     };
   };
