@@ -3,8 +3,7 @@
 {
   services.smokeping = {
     enable = true;
-    host = "0.0.0.0";
-    port = 8081;
+    hostName = "pi-4b-hh";
 
     # cgiUrl and imgUrl are embedded in generated HTML, so they must be
     # reachable by the browser - not localhost. pi-4b-hh resolves via
@@ -44,6 +43,13 @@
       host = heise.de
     '';
   };
+
+  services.nginx.virtualHosts.smokeping.listen = [
+    {
+      addr = "0.0.0.0";
+      port = 8081;
+    }
+  ];
 
   networking.firewall.allowedTCPPorts = [ 8081 ];
 }
