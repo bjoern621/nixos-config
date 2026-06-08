@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell.Services.Mpris
 import "../"
 import "../base"
 
@@ -14,6 +15,32 @@ Column {
     spacing: Spacing.spacing4
 
     readonly property var appAudio: streamNode.audio
+
+    // Apps like Spotify re-assert their own internal volume onto the PipeWire
+    // stream on every track change, so a volume set only on the stream node is
+    // transient. When the stream maps to an MPRIS player, driving the player's
+    // volume updates the app's internal volume; the app then propagates that to
+    // the stream and the change persists across tracks. Match the stream to a
+    // player by comparing normalized app/dbus identifiers.
+    readonly property var mprisPlayer: {
+        const players = Mpris.players?.values ?? [];
+        if (!players.length)
+            return null;
+        const props = streamNode.properties ?? {};
+        const norm = s => (s ?? "").toString().toLowerCase().replace(/[^a-z0-9]/g, "");
+        const streamTokens = [props["application.name"], props["node.name"], props["application.process.binary"], streamNode.name].map(norm).filter(t => t.length >= 3);
+        for (let i = 0; i < players.length; i++) {
+            const p = players[i];
+            if (!p || !p.volumeSupported)
+                continue;
+            const dbusTail = (p.dbusName ?? "").toString().split(".").pop();
+            const playerTokens = [p.desktopEntry, p.identity, dbusTail].map(norm).filter(t => t.length >= 3);
+            const hit = streamTokens.some(s => playerTokens.some(pt => s === pt || s.includes(pt) || pt.includes(s)));
+            if (hit)
+                return p;
+        }
+        return null;
+    }
     readonly property int appVolume: Math.round((appAudio?.volume ?? 0) * 100)
     readonly property bool appMuted: appAudio?.muted ?? false
     readonly property string appIconSource: {
@@ -73,8 +100,14 @@ Column {
             handleVerticalSize: 16
 
             onMoved: newValue => {
+                // Set the stream node directly for instant feedback, and drive
+                // the app's MPRIS volume (when available) so the change survives
+                // track changes. Both use the same 0-1 scale, so this does not
+                // compound: the player echoes its value back onto the stream.
                 if (root.appAudio)
                     root.appAudio.volume = newValue;
+                if (root.mprisPlayer)
+                    root.mprisPlayer.volume = newValue;
             }
             onPressedChanged: root.sliderPressedChanged(pressed)
         }
