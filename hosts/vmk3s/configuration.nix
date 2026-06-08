@@ -78,7 +78,7 @@
   # Backup source side. Bitwarden postgres is dumped daily at 03:00 UTC
   # into /var/backups/bitwarden/postgres.dump. The pi-backup hosts pull
   # this dump plus selected k3s PVCs via the read-only rrsync chroot at
-  # /srv/backup-source. See hosts/pi-backup-01/configuration.nix for the
+  # /srv/backup-source. See hosts/pi-4b-hh/configuration.nix for the
   # job list and restore procedure.
   services.bitwarden-dump.enable = true;
   services.backup-source = {
@@ -91,8 +91,8 @@
     # (ops:ops, 0400). One entry per Pi.
     authorizedKeys = [
       {
-        name = "pi-backup-01";
-        key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINzPEPmeh9uuXE1Uo+/MfzPJfvkaMyMyRrdz4IgOLEtF pi-backup-01";
+        name = "pi-4b-hh";
+        key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINzPEPmeh9uuXE1Uo+/MfzPJfvkaMyMyRrdz4IgOLEtF pi-4b-hh";
       }
     ];
   };

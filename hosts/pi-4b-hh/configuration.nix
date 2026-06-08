@@ -21,7 +21,7 @@
   # nixos-hardware's raspberry-pi-4 module pins firmware and overlays; do not
   # override boot.kernelPackages here without a specific reason.
 
-  networking.hostName = "pi-backup-01";
+  networking.hostName = "pi-4b-hh";
   networking.networkmanager.enable = true;
 
   time.timeZone = "Europe/Berlin";
@@ -49,7 +49,7 @@
   nixpkgs.config.allowUnfree = true;
   system.stateVersion = "25.11";
 
-  # Backup target side.
+  # Backup target side. See hosts/vmk3s/configuration.nix for the source side.
   #
   # Daily at 03:30 UTC the Pi pulls from vmk3s into
   # /srv/backups/snapshots/<job>/<UTC-stamp>/. Each job uses --link-dest

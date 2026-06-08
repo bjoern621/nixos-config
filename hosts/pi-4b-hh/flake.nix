@@ -1,5 +1,5 @@
 {
-  description = "pi-backup-01 host - aarch64 Raspberry Pi backup target";
+  description = "pi-4b-hh host - aarch64 Raspberry Pi backup target";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -25,7 +25,7 @@
       customLib = import ../../lib/customLib.nix { inherit pkgs; };
     in
     {
-      nixosConfigurations.pi-backup-01 = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.pi-4b-hh = nixpkgs.lib.nixosSystem {
         inherit system;
 
         modules = [

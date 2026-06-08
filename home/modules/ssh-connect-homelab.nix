@@ -33,8 +33,8 @@
         IdentitiesOnly = true;
       };
 
-      pi-backup-01 = {
-        HostName = "pi-backup-01";
+      pi-4b-hh = {
+        HostName = "pi-4b-hh";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
