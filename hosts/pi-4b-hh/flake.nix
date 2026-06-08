@@ -23,25 +23,33 @@
       system = "aarch64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       customLib = import ../../lib/customLib.nix { inherit pkgs; };
-    in
-    {
-      nixosConfigurations.pi-4b-hh = nixpkgs.lib.nixosSystem {
+
+      baseModules = [
+        ./configuration.nix
+        nixos-hardware.nixosModules.raspberry-pi-4
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";
+          home-manager.users.ops = import ../../home/ops.nix;
+          home-manager.extraSpecialArgs = { inherit inputs customLib; };
+        }
+      ];
+
+      mkSystem = modules: nixpkgs.lib.nixosSystem {
         inherit system;
-
-        modules = [
-          ./configuration.nix
-          nixos-hardware.nixosModules.raspberry-pi-4
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
-            home-manager.users.ops = import ../../home/ops.nix;
-            home-manager.extraSpecialArgs = { inherit inputs customLib; };
-          }
-        ];
-
+        modules = baseModules ++ modules;
         specialArgs = { inherit inputs customLib; };
       };
+
+      sdImage =
+        (mkSystem [ "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix" ]).config.system.build.sdImage;
+    in
+    {
+      nixosConfigurations.pi-4b-hh = mkSystem [ ];
+
+      packages.aarch64-linux.sdImage = sdImage;
+      packages.x86_64-linux.sdImage = sdImage;
     };
 }

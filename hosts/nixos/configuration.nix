@@ -147,6 +147,8 @@
     "flakes"
   ]; # Enable Flakes
 
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
   environment.systemPackages = with pkgs; [
     kdePackages.plasma-thunderbolt
     wdisplays

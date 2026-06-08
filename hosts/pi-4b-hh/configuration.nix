@@ -18,8 +18,7 @@
   boot.loader.systemd-boot.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
 
-  # nixos-hardware's raspberry-pi-4 module pins firmware and overlays; do not
-  # override boot.kernelPackages here without a specific reason.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "pi-4b-hh";
   networking.networkmanager.enable = true;
