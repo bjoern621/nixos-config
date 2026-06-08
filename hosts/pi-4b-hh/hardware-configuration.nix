@@ -1,10 +1,12 @@
 { ... }:
 {
-  # Placeholder hardware configuration.
+  # Hardware configuration for Raspberry Pi 4B SD card images.
   #
-  # This file exists so the flake can be evaluated from the repository without
-  # importing an absolute path like /etc/nixos/hardware-configuration.nix.
-  #
-  # On the NixOS host, the sysconf-reload script overwrites this file by copying
-  # /etc/nixos/hardware-configuration.nix into this host directory.
+  # The firmware partition (mmcblk0p1, vfat, label FIRMWARE) is not mounted
+  # at runtime; only the root is needed here. The sd-image-aarch64 module
+  # handles partition layout at image build time.
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/NIXOS_SD";
+    fsType = "ext4";
+  };
 }
