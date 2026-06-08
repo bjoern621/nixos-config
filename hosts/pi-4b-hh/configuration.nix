@@ -60,7 +60,7 @@
       set -euo pipefail
       git clone https://github.com/bjoern621/nixos-config.git /etc/nixos/config
       chown -R ops:users /etc/nixos/config
-      ln -sf /etc/nixos/config/hosts/pi-4b-hh/hardware-configuration.nix /etc/nixos/hardware-configuration.nix
+      cp /etc/nixos/config/hosts/pi-4b-hh/hardware-configuration.nix /etc/nixos/hardware-configuration.nix
     '';
   };
 
