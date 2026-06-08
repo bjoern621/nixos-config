@@ -41,6 +41,30 @@
 
   programs.zsh.enable = true;
 
+  # On first boot the SD card image has no /etc/nixos/config git clone and no
+  # /etc/nixos/hardware-configuration.nix because the image bypasses nixos-install.
+  # This service clones the repository and creates a symlink for the hardware
+  # config so that sysconf-pull and sysconf-reload work without any manual steps.
+  systemd.services.nixos-config-setup = {
+    description = "Clone NixOS config repository on first boot";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    unitConfig.ConditionPathExists = "!/etc/nixos/config/.git";
+    path = [ pkgs.git ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      set -euo pipefail
+      git clone https://github.com/bjoern621/nixos-config.git /etc/nixos/config
+      chown -R ops:users /etc/nixos/config
+      git -C /etc/nixos/config update-index --skip-worktree hosts/pi-4b-hh/hardware-configuration.nix
+      ln -sf /etc/nixos/config/hosts/pi-4b-hh/hardware-configuration.nix /etc/nixos/hardware-configuration.nix
+    '';
+  };
+
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"

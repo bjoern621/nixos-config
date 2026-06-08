@@ -85,13 +85,10 @@ zstdcat result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M status=progress co
 
 Insert the card and power on the Pi. The system boots directly into the NixOS configuration with no manual installation steps. Default credentials: user `ops`, password `1234` - change the password after first login.
 
-To enable `sysconf-pull` for subsequent updates, clone the repository on the Pi after first boot:
+On first boot, a systemd service (`nixos-config-setup`) clones the repository to `/etc/nixos/config` automatically (requires internet access). Once it completes, `sysconf-pull` and `sysconf-reload` are ready to use. Check its status with:
 
 ```bash
-nix-shell -p git
-sudo mkdir -p /etc/nixos/config
-sudo chown ops:users /etc/nixos/config
-git clone https://github.com/bjoern621/nixos-config.git /etc/nixos/config
+systemctl status nixos-config-setup
 ```
 
 ## Troubleshooting
