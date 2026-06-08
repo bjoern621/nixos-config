@@ -5,11 +5,8 @@
     enable = true;
     hostName = "pi-4b-hh";
 
-    # cgiUrl and imgUrl are embedded in generated HTML, so they must be
-    # reachable by the browser - not localhost. pi-4b-hh resolves via
-    # Tailscale MagicDNS from any host on the tailnet.
-    cgiUrl = "http://pi-4b-hh:8081/smokeping/smokeping.cgi";
-    imgUrl = "http://pi-4b-hh:8081/smokeping/img";
+    # The nginx virtualHost serves the CGI at /smokeping.fcgi, not /smokeping.cgi.
+    cgiUrl = "http://pi-4b-hh:8081/smokeping.fcgi";
 
     targetConfig = ''
       probe = FPing
