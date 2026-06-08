@@ -45,6 +45,55 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
     sudo nixos-rebuild switch --flake /etc/nixos/config/hosts/$HOST
     ```
 
+## Raspberry Pi SD Card Hosts
+
+Hosts that target Raspberry Pi hardware (e.g. `pi-4b-hh`) are provisioned by flashing a pre-built SD card image rather than running the NixOS installer. The image is built from the host's flake and boots directly into the configured system.
+
+> [!IMPORTANT]
+> Building requires aarch64 emulation on the build machine. The `nixos` host has `boot.binfmt.emulatedSystems = [ "aarch64-linux" ]` configured for this. If the `nixos` host has not been rebuilt since that option was added, do so before building.
+
+### Build the image
+
+Run from any machine with the repo checked out:
+
+```bash
+nix build /path/to/hosts/<host>#sdImage
+```
+
+This produces a `result` symlink pointing to a compressed `.img.zst` file.
+
+### Flash
+
+**Using Raspberry Pi Imager:**
+
+1. Decompress the image to a temporary file:
+    ```bash
+    zstdcat result/sd-image/*.img.zst > /tmp/<host>.img
+    ```
+2. Open Raspberry Pi Imager, select **Use custom**, and pick `/tmp/<host>.img`.
+
+**Using `dd` directly:**
+
+```bash
+# Verify the SD card device first
+lsblk
+
+zstdcat result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+### First boot
+
+Insert the card and power on the Pi. The system boots directly into the NixOS configuration with no manual installation steps. Default credentials: user `ops`, password `1234` - change the password after first login.
+
+To enable `sysconf-pull` for subsequent updates, clone the repository on the Pi after first boot:
+
+```bash
+nix-shell -p git
+sudo mkdir -p /etc/nixos/config
+sudo chown ops:users /etc/nixos/config
+git clone https://github.com/bjoern621/nixos-config.git /etc/nixos/config
+```
+
 ## Troubleshooting
 
 ### Boot hangs on "waiting for device" after install
@@ -128,8 +177,13 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │   │   ├── flake.lock
 │   │   ├── configuration.nix
 │   │   └── hardware-configuration.nix
-│   └── vmk3s/                      # Server, nixpkgs + home-manager only
-│       ├── flake.nix
+│   ├── vmk3s/                      # Server, nixpkgs + home-manager only
+│   │   ├── flake.nix
+│   │   ├── flake.lock
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix
+│   └── pi-4b-hh/                   # Raspberry Pi 4, SD card image
+│       ├── flake.nix               # exposes packages.<system>.sdImage
 │       ├── flake.lock
 │       ├── configuration.nix
 │       └── hardware-configuration.nix
