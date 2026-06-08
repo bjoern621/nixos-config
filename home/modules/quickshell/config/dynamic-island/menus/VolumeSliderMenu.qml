@@ -64,7 +64,8 @@ Item {
     readonly property var bluetoothTargets: [
         {
             name: "Anker Soundcore Boost",
-            mac: "F4:2B:7D:54:EF:8A"
+            mac: "F4:2B:7D:55:AE:AB"
+            //  mac: "F4:2B:7D:54:EF:8A" // the other Anker
         },
         {
             name: "LinkBuds S",
