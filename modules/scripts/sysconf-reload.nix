@@ -74,9 +74,13 @@ let
     # Git and file operations run as the invoking user (the repo owner) so the
     # working tree stays owned by that user. Only nixos-rebuild needs root.
     HARDWARE_TARGET="$NIXOS_CONFIG/hosts/$TARGET_HOST/hardware-configuration.nix"
-    echo "[sysconf-reload] Copying /etc/nixos/hardware-configuration.nix -> $HARDWARE_TARGET"
     mkdir -p "$NIXOS_CONFIG/hosts/$TARGET_HOST"
-    cp -f /etc/nixos/hardware-configuration.nix "$HARDWARE_TARGET"
+    if [[ /etc/nixos/hardware-configuration.nix -ef "$HARDWARE_TARGET" ]]; then
+      echo "[sysconf-reload] Skipping hardware-configuration.nix copy (source and target are the same file)."
+    else
+      echo "[sysconf-reload] Copying /etc/nixos/hardware-configuration.nix -> $HARDWARE_TARGET"
+      cp -f /etc/nixos/hardware-configuration.nix "$HARDWARE_TARGET"
+    fi
 
     NEW_FILES=$(git -C "$NIXOS_CONFIG" ls-files --others --exclude-standard | wc -l)
     git -C "$NIXOS_CONFIG" add -N .
