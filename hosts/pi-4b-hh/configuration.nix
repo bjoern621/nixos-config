@@ -8,6 +8,7 @@
     ../../modules/admin-ssh-keys.nix
     ../../modules/homelab/ssh-hardening.nix
     ../../modules/tailscale-client.nix
+    ../../modules/smokeping.nix
     ../../modules/pi-backup
   ];
 
