@@ -26,13 +26,8 @@
 
   # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
   # Its DSP firmware state is not restored properly, causing tinny audio.
-  #
-  # Also keep the Realtek Bluetooth USB radio (0bda:5852) powered on. USB
-  # autosuspend on the Bluetooth controller drops the link mid-stream and
-  # contributes to A2DP dropouts.
   services.udev.extraRules = ''
     ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-TIAS2781:00", ATTR{power/control}="on"
-    ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="0bda", ATTR{idProduct}=="5852", ATTR{power/control}="on"
   '';
 
   services.tlp = {
