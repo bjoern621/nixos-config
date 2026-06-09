@@ -57,9 +57,15 @@
 
   # Kubernetes API server for remote kubectl and GitOps controllers.
   # Argo CD UI is exposed as NodePort on 32443.
+  # Ports 80/443 carry public web traffic to the GitOps traefik-proxy
+  # LoadBalancer (via k3s servicelb). The bundled k3s Traefik is disabled
+  # below so traefik-proxy can own these host ports. 31478/31553 are the
+  # former traefik-proxy NodePorts, kept during cutover and removed after.
   networking.firewall.allowedTCPPorts = [
     6443
     32443
+    80
+    443
     31478
     31553
   ];
@@ -67,6 +73,7 @@
   services.k3s = {
     enable = true;
     role = "server";
+    extraFlags = [ "--disable=traefik" ];
   };
 
   environment.systemPackages = with pkgs; [
