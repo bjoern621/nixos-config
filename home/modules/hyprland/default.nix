@@ -32,6 +32,7 @@
     ./smart-gaps.nix
     ./wallpaper-chooser.nix
     ./hyprlock.nix
+    ./hypridle.nix
   ];
 
   # Auto-start Hyprland uwsm after login

@@ -3,7 +3,17 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    hyprland.url = "github:hyprwm/Hyprland";
+
+    # Pinned to the commit right before PR #15124 "renderer: optimize text
+    # rendering", which regressed IHyprRenderer::renderText and segfaults in
+    # pango_cairo_show_layout at startup (Hyprland would crash on launch, looping
+    # the SDDM session). This commit still includes the suspend/hibernate
+    # render-teardown fix (#15048, merged 2026-06-10). Unpin once a fix lands
+    # upstream past dd09b617.
+    hyprland = {
+      url = "github:hyprwm/Hyprland/179c2bce0355289c60271fb00b89f2d5511618d5";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     home-manager = {
       url = "github:nix-community/home-manager";
