@@ -79,11 +79,6 @@
       title = Google Germany edge
       host = google.de
 
-      ++ AmazonDE
-      menu = amazon.de
-      title = Amazon Germany
-      host = amazon.de
-
       + DNS
       menu = DNS Latency
       title = DNS Query Times
