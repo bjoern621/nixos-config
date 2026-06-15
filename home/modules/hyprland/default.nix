@@ -31,7 +31,6 @@
     ./exclusive-workspace.nix
     ./smart-gaps.nix
     ./wallpaper-chooser.nix
-    ./hyprlock.nix
     ./hypridle.nix
   ];
 

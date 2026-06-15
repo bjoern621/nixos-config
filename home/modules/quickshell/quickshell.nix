@@ -35,6 +35,18 @@ let
     exec ${qsPython}/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
   '';
 
+  # Session-lock launcher. Runs the lock config as a separate Quickshell process
+  # (config/lock), kept apart from the bar instance so a bar reload or crash
+  # cannot affect the lock and vice versa. Single-instance: a second invocation
+  # while a lock is already up is a no-op, so repeated lock-session signals do
+  # not stack surfaces.
+  quickshellLock = pkgs.writeShellScriptBin "quickshell-lock" ''
+    if ${pkgs.procps}/bin/pgrep -f 'quickshell.*quickshell-lock/shell.qml' >/dev/null 2>&1; then
+      exit 0
+    fi
+    exec ${qsWrapped}/bin/quickshell -p "$HOME/.config/quickshell-lock/shell.qml"
+  '';
+
   # Emoji dataset for the EmojiPicker (Super+.). Built from Unicode's
   # emoji-test.txt + CLDR annotations (en + de) at home-manager rebuild,
   # so updating nixpkgs auto-bumps the dataset.
@@ -57,12 +69,18 @@ in
   home.packages = with pkgs; [
     qsWrapped # quickshell + private PATH/fonts (imagemagick, python3+keyring, font-awesome, inter)
     spotifyCli # quickshell-spotify: user-facing CLI for setup/auth/clear
+    quickshellLock # quickshell-lock: launches the session lock (config/lock)
   ];
 
   # Link quickshell config to ~/.config/quickshell via an out-of-store symlink
   # so that Quickshell's hot reload can detect file changes directly in the repo.
   xdg.configFile."quickshell".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/nixos-config/home/modules/quickshell/config/dynamic-island";
+
+  # Separate config tree for the session lock, so it runs as its own Quickshell
+  # process (launched by quickshell-lock) instead of inside the bar instance.
+  xdg.configFile."quickshell-lock".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/nixos-config/home/modules/quickshell/config/lock";
 
   # Autostart quickshell as a systemd user service (UWSM-managed session)
   systemd.user.services.quickshell = {

@@ -23,6 +23,7 @@
     ../../modules/eduvpn-escape.nix
     ../../modules/networkmanager-openvpn.nix
     ../../modules/quickshell.nix
+    ../../modules/quickshell-lock.nix
     ../../modules/hibernate.nix
     ../../modules/nix-ld.nix
     ../../modules/auto-update.nix

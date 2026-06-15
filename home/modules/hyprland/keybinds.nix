@@ -14,6 +14,9 @@
       "$mainMod, W, killactive,"
       "$mainMod, F, fullscreen, 0"
       "$mainMod, M, exit,"
+      # Lock the session. Emits the logind Lock signal that hypridle turns into
+      # quickshell-lock (hypridle.nix).
+      "$mainMod, L, exec, loginctl lock-session"
 
       # Move focus with mainMod + arrow keys
       "$mainMod, left, movefocus, l"
