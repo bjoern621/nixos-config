@@ -51,10 +51,10 @@
       "$mainMod SHIFT, 0, movetoworkspace, 10"
 
       # Alt + Arrow keys -> Home/End/PageUp/PageDown
-      "ALT, left, sendshortcut, , home,"
-      "ALT, right, sendshortcut, , end,"
-      "ALT, up, sendshortcut, , page_up,"
-      "ALT, down, sendshortcut, , page_down,"
+      "ALT, left, sendshortcut, , home, activewindow"
+      "ALT, right, sendshortcut, , end, activewindow"
+      "ALT, up, sendshortcut, , page_up, activewindow"
+      "ALT, down, sendshortcut, , page_down, activewindow"
     ];
 
     # Allow moving windows with the left mouse button
