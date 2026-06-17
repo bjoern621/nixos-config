@@ -25,6 +25,16 @@ Scope {
 	// Clear the failure text once the user starts typing again.
 	onCurrentTextChanged: showFailure = false
 
+	// Reset transient state before a fresh lock. The instance is resident and
+	// reused across lock cycles (shell.qml does not quit on unlock), so the
+	// password buffer and failure text from a previous unlock must be cleared
+	// before the next lock surface appears.
+	function reset() {
+		currentText = "";
+		showFailure = false;
+		failureMessage = "";
+	}
+
 	function tryPassword() {
 		if (unlockInProgress || currentText === "") return;
 		attemptKind = "password";
