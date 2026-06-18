@@ -8,5 +8,6 @@ Spinner 1.0 Spinner.qml
 FadeBehavior 1.0 FadeBehavior.qml
 SquishBehavior 1.0 SquishBehavior.qml
 
+LoginPanel 1.0 LoginPanel.qml
 LockContext 1.0 LockContext.qml
 LockSurface 1.0 LockSurface.qml

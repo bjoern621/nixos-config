@@ -6,14 +6,37 @@
 }:
 
 let
+  # Shared visual face (LoginPanel.qml) and design tokens live in the Quickshell
+  # lock config and are the single source of truth. They are copied into the SDDM
+  # theme at build time so the login screen and the session lock stay identical.
+  # See home/modules/quickshell/config/lock/LoginPanel.qml.
+  lockShared = ../home/modules/quickshell/config/lock;
+
   sddm-beach-theme = pkgs.stdenvNoCC.mkDerivation {
     pname = "sddm-beach-theme";
     version = "1.0";
     src = ./sddm-theme/theme;
     dontBuild = true;
     installPhase = ''
-      mkdir -p $out/share/sddm/themes/beach-clock
-      cp -r $src/* $out/share/sddm/themes/beach-clock/
+      themeDir="$out/share/sddm/themes/beach-clock"
+      mkdir -p "$themeDir"
+
+      # Theme-specific files: Main.qml, Globals.qml, qmldir, metadata.desktop, theme.conf.
+      cp -r $src/* "$themeDir/"
+
+      # Shared face and design tokens from the lock config.
+      install -m644 \
+        ${lockShared}/LoginPanel.qml \
+        ${lockShared}/Colors.qml \
+        ${lockShared}/Typography.qml \
+        ${lockShared}/Spacing.qml \
+        ${lockShared}/Label.qml \
+        ${lockShared}/TintedIcon.qml \
+        ${lockShared}/Spinner.qml \
+        ${lockShared}/FadeBehavior.qml \
+        ${lockShared}/SquishBehavior.qml \
+        "$themeDir/"
+      cp -r ${lockShared}/icons "$themeDir/"
     '';
   };
 
