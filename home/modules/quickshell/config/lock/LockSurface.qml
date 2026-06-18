@@ -9,321 +9,352 @@ import "."
 // face-unlock button. Authentication is delegated entirely to the shared
 // LockContext, so the login look is reused without reusing the login logic.
 Rectangle {
-	id: root
+    id: root
 
-	required property LockContext context
+    required property LockContext context
 
-	readonly property int inputWidth: 280
-	readonly property int inputHeight: 48
-	readonly property int faceButtonSize: inputHeight
+    readonly property int inputWidth: 280
+    readonly property int inputHeight: 48
+    readonly property int faceButtonSize: inputHeight
 
-	readonly property bool isLoading: context.unlockInProgress
-	readonly property string loadingMessage: context.attemptKind === "face"
-		? "Gesicht wird erkannt…"
-		: "Wird überprüft…"
-	readonly property string userName: Quickshell.env("USER") || "Benutzer"
+    // The lock runs under Hyprland (eDP-1 at scale 2, home/modules/hyprland/
+    // monitors.nix) but the SDDM login theme runs under kwin, which renders the
+    // same fixed px values at a different per-output scale. Left uncompensated,
+    // every element on the lock appears 2/1.6 = 1.25x larger than on the greeter.
+    // Match the greeter by scaling contentRoot so each design unit lands on the
+    // same number of physical pixels as SDDM, on every monitor.
+    //
+    // greeterScale: the scale kwin auto-picks for the greeter on each output,
+    // persisted in /var/lib/sddm/.config/kwinoutputconfig.json. Unlisted outputs
+    // fall back to the surface's own scale, which leaves contentRoot unscaled.
+    readonly property real greeterScale: {
+        switch (Screen.name) {
+        case "eDP-1":
+            return 1.6;
+        default:
+            return Screen.devicePixelRatio;
+        }
+    }
+    readonly property real uiScale: greeterScale / Screen.devicePixelRatio
 
-	property bool syncingTextFromContext: false
+    readonly property bool isLoading: context.unlockInProgress
+    readonly property string loadingMessage: context.attemptKind === "face" ? "Gesicht wird erkannt…" : "Wird überprüft…"
+    readonly property string userName: Quickshell.env("USER") || "Benutzer"
 
-	readonly property var dayNames: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]
-	readonly property var monthNames: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
+    property bool syncingTextFromContext: false
 
-	color: Colors.background
+    readonly property var dayNames: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]
+    readonly property var monthNames: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
 
-	function germanDate(d) {
-		return dayNames[d.getDay()] + ", " + d.getDate() + ". " + monthNames[d.getMonth()];
-	}
+    color: Colors.background
 
-	// Put keyboard focus on the password field. forceActiveFocus is scoped to
-	// each surface's own window, so the compositor still routes keys to the
-	// focused monitor; the shared LockContext keeps every field's text in sync.
-	Component.onCompleted: passwordField.forceActiveFocus()
+    function germanDate(d) {
+        return dayNames[d.getDay()] + ", " + d.getDate() + ". " + monthNames[d.getMonth()];
+    }
 
-	Timer {
-		id: clockTicker
-		property date time: new Date()
-		interval: 1000
-		running: true
-		repeat: true
-		onTriggered: time = new Date()
-	}
+    // Put keyboard focus on the password field. forceActiveFocus is scoped to
+    // each surface's own window, so the compositor still routes keys to the
+    // focused monitor; the shared LockContext keeps every field's text in sync.
+    Component.onCompleted: passwordField.forceActiveFocus()
 
-	// webOS-inspired analog clock: bottom-half arc with hour, minute, second hands.
-	Item {
-		id: clockColumn
-		anchors.centerIn: parent
-		width: 320
-		height: 360
+    Timer {
+        id: clockTicker
+        property date time: new Date()
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: time = new Date()
+    }
 
-		readonly property int clockSize: 280
-		readonly property int hourHandWidth: 4
-		readonly property int hourHandHeight: 70
-		readonly property int minuteHandWidth: 3
-		readonly property int minuteHandHeight: 105
-		readonly property real secondHandWidth: 1.5
-		readonly property int secondHandHeight: 115
-		readonly property int centerCapSize: 8
+    // Scaled layout container. Scaled by uiScale from the top-left and sized to
+    // root.width / uiScale, it still covers the full surface, but its children
+    // render at the same physical size as the SDDM theme.
+    Item {
+        id: contentRoot
+        width: root.width / root.uiScale
+        height: root.height / root.uiScale
+        scale: root.uiScale
+        transformOrigin: Item.TopLeft
 
-		Item {
-			id: clockFace
-			width: parent.clockSize
-			height: parent.clockSize
-			anchors.horizontalCenter: parent.horizontalCenter
-			anchors.top: parent.top
+        // webOS-inspired analog clock: bottom-half arc with hour, minute, second hands.
+        Item {
+            id: clockColumn
+            anchors.centerIn: parent
+            width: 320
+            height: 360
 
-			readonly property real cx: width / 2
-			readonly property real cy: height / 2
+            readonly property int clockSize: 280
+            readonly property int hourHandWidth: 4
+            readonly property int hourHandHeight: 70
+            readonly property int minuteHandWidth: 3
+            readonly property int minuteHandHeight: 105
+            readonly property real secondHandWidth: 1.5
+            readonly property int secondHandHeight: 115
+            readonly property int centerCapSize: 8
 
-			Item {
-				id: arcRotor
-				anchors.fill: parent
-				transformOrigin: Item.Center
+            Item {
+                id: clockFace
+                width: parent.clockSize
+                height: parent.clockSize
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
 
-				NumberAnimation on rotation {
-					from: 0
-					to: 360
-					duration: 4000
-					loops: Animation.Infinite
-					running: true
-				}
+                readonly property real cx: width / 2
+                readonly property real cy: height / 2
 
-				Canvas {
-					anchors.fill: parent
-					antialiasing: true
-					onPaint: {
-						var ctx = getContext("2d");
-						ctx.reset();
-						ctx.lineWidth = 3;
-						ctx.strokeStyle = Colors.textColor;
-						ctx.lineCap = "round";
-						ctx.beginPath();
-						var sweep = Math.PI * 2 * 0.4;
-						var start = (Math.PI - sweep) / 2;
-						ctx.arc(clockFace.cx, clockFace.cy, clockFace.width / 2 - 4, start, start + sweep, false);
-						ctx.stroke();
-					}
-				}
-			}
+                Item {
+                    id: arcRotor
+                    anchors.fill: parent
+                    transformOrigin: Item.Center
 
-			Rectangle {
-				width: clockColumn.hourHandWidth
-				height: clockColumn.hourHandHeight
-				radius: width / 2
-				color: Colors.textColor
-				x: clockFace.cx - width / 2
-				y: clockFace.cy - height
-				transformOrigin: Item.Bottom
-				rotation: (clockTicker.time.getHours() % 12) * 30 + clockTicker.time.getMinutes() * 0.5
-			}
+                    NumberAnimation on rotation {
+                        from: 0
+                        to: 360
+                        duration: 4000
+                        loops: Animation.Infinite
+                        running: true
+                    }
 
-			Rectangle {
-				width: clockColumn.minuteHandWidth
-				height: clockColumn.minuteHandHeight
-				radius: width / 2
-				color: Colors.textColor
-				x: clockFace.cx - width / 2
-				y: clockFace.cy - height
-				transformOrigin: Item.Bottom
-				rotation: clockTicker.time.getMinutes() * 6 + clockTicker.time.getSeconds() * 0.1
-			}
+                    Canvas {
+                        anchors.fill: parent
+                        antialiasing: true
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.reset();
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = Colors.textColor;
+                            ctx.lineCap = "round";
+                            ctx.beginPath();
+                            var sweep = Math.PI * 2 * 0.4;
+                            var start = (Math.PI - sweep) / 2;
+                            ctx.arc(clockFace.cx, clockFace.cy, clockFace.width / 2 - 4, start, start + sweep, false);
+                            ctx.stroke();
+                        }
+                    }
+                }
 
-			Rectangle {
-				width: clockColumn.secondHandWidth
-				height: clockColumn.secondHandHeight
-				color: Colors.textColor
-				x: clockFace.cx - width / 2
-				y: clockFace.cy - height
-				transformOrigin: Item.Bottom
-				rotation: clockTicker.time.getSeconds() * 6
-			}
+                Rectangle {
+                    width: clockColumn.hourHandWidth
+                    height: clockColumn.hourHandHeight
+                    radius: width / 2
+                    color: Colors.textColor
+                    x: clockFace.cx - width / 2
+                    y: clockFace.cy - height
+                    transformOrigin: Item.Bottom
+                    rotation: (clockTicker.time.getHours() % 12) * 30 + clockTicker.time.getMinutes() * 0.5
+                }
 
-			Rectangle {
-				width: clockColumn.centerCapSize
-				height: width
-				radius: width / 2
-				color: Colors.textColor
-				x: clockFace.cx - width / 2
-				y: clockFace.cy - height / 2
-			}
-		}
+                Rectangle {
+                    width: clockColumn.minuteHandWidth
+                    height: clockColumn.minuteHandHeight
+                    radius: width / 2
+                    color: Colors.textColor
+                    x: clockFace.cx - width / 2
+                    y: clockFace.cy - height
+                    transformOrigin: Item.Bottom
+                    rotation: clockTicker.time.getMinutes() * 6 + clockTicker.time.getSeconds() * 0.1
+                }
 
-		Label {
-			anchors.horizontalCenter: parent.horizontalCenter
-			anchors.top: clockFace.bottom
-			anchors.topMargin: Spacing.spacing24 + Spacing.spacing4
-			text: root.germanDate(clockTicker.time)
-			font.pixelSize: Typography.fontSize20
-			font.weight: Font.DemiBold
-		}
-	}
+                Rectangle {
+                    width: clockColumn.secondHandWidth
+                    height: clockColumn.secondHandHeight
+                    color: Colors.textColor
+                    x: clockFace.cx - width / 2
+                    y: clockFace.cy - height
+                    transformOrigin: Item.Bottom
+                    rotation: clockTicker.time.getSeconds() * 6
+                }
 
-	Column {
-		id: inputColumn
-		anchors.horizontalCenter: parent.horizontalCenter
-		anchors.bottom: parent.bottom
-		anchors.bottomMargin: Spacing.spacing40 * 2
-		spacing: Spacing.spacing12
+                Rectangle {
+                    width: clockColumn.centerCapSize
+                    height: width
+                    radius: width / 2
+                    color: Colors.textColor
+                    x: clockFace.cx - width / 2
+                    y: clockFace.cy - height / 2
+                }
+            }
 
-		Label {
-			anchors.horizontalCenter: parent.horizontalCenter
-			text: root.userName
-			font.pixelSize: Typography.fontSize16
-			font.weight: Font.DemiBold
-		}
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: clockFace.bottom
+                anchors.topMargin: Spacing.spacing24 + Spacing.spacing4
+                text: root.germanDate(clockTicker.time)
+                font.pixelSize: Typography.fontSize20
+                font.weight: Font.DemiBold
+            }
+        }
 
-		// Password pill. Centered on screen via its own width; the face button
-		// overflows outside on the right and does not affect centering.
-		Rectangle {
-			id: passwordPill
-			anchors.horizontalCenter: parent.horizontalCenter
-			width: root.inputWidth
-			height: root.inputHeight
-			radius: height / 2
-			color: root.isLoading ? Colors.pillBackgroundLoading : Colors.pillBackground
-			border.width: 1
-			border.color: root.isLoading || passwordField.activeFocus ? Colors.pillBorderFocus : Colors.pillBorder
+        Column {
+            id: inputColumn
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Spacing.spacing40 * 2
+            spacing: Spacing.spacing12
 
-			TintedIcon {
-				id: lockIcon
-				anchors.left: parent.left
-				anchors.leftMargin: Spacing.spacing16 + Spacing.spacing2
-				anchors.verticalCenter: parent.verticalCenter
-				source: "icons/icons8-password-key.svg"
-				size: Typography.fontSize24
-				color: Colors.textColor
-			}
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.userName
+                font.pixelSize: Typography.fontSize16
+                font.weight: Font.DemiBold
+            }
 
-			TextInput {
-				id: passwordField
-				anchors.left: lockIcon.right
-				anchors.leftMargin: Spacing.spacing8
-				anchors.right: parent.right
-				anchors.rightMargin: Spacing.spacing16 + Spacing.spacing4
-				anchors.verticalCenter: parent.verticalCenter
-				height: parent.height
-				verticalAlignment: TextInput.AlignVCenter
-				font.pixelSize: Typography.fontSize14
-				font.family: Typography.fontFamily
-				color: Colors.textColor
-				echoMode: TextInput.Password
-				inputMethodHints: Qt.ImhSensitiveData
-				focus: true
-				clip: true
-				enabled: !root.isLoading
-				opacity: root.isLoading ? 0 : 1
-				FadeBehavior on opacity {}
+            // Password pill. Centered on screen via its own width; the face button
+            // overflows outside on the right and does not affect centering.
+            Rectangle {
+                id: passwordPill
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: root.inputWidth
+                height: root.inputHeight
+                radius: height / 2
+                color: root.isLoading ? Colors.pillBackgroundLoading : Colors.pillBackground
+                border.width: 1
+                border.color: root.isLoading || passwordField.activeFocus ? Colors.pillBorderFocus : Colors.pillBorder
 
-				onAccepted: root.context.tryPassword()
+                TintedIcon {
+                    id: lockIcon
+                    anchors.left: parent.left
+                    anchors.leftMargin: Spacing.spacing16 + Spacing.spacing2
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: "icons/icons8-password-key.svg"
+                    size: Typography.fontSize24
+                    color: Colors.textColor
+                }
 
-				onTextChanged: {
-					if (root.syncingTextFromContext) return;
-					root.context.currentText = text;
-				}
+                TextInput {
+                    id: passwordField
+                    anchors.left: lockIcon.right
+                    anchors.leftMargin: Spacing.spacing8
+                    anchors.right: parent.right
+                    anchors.rightMargin: Spacing.spacing16 + Spacing.spacing4
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: parent.height
+                    verticalAlignment: TextInput.AlignVCenter
+                    font.pixelSize: Typography.fontSize14
+                    font.family: Typography.fontFamily
+                    color: Colors.textColor
+                    echoMode: TextInput.Password
+                    inputMethodHints: Qt.ImhSensitiveData
+                    focus: true
+                    clip: true
+                    enabled: !root.isLoading
+                    opacity: root.isLoading ? 0 : 1
+                    FadeBehavior on opacity {}
 
-				// Keep every monitor's field in sync with the shared buffer.
-				Connections {
-					target: root.context
-					function onCurrentTextChanged() {
-						if (passwordField.text === root.context.currentText) return;
-						root.syncingTextFromContext = true;
-						passwordField.text = root.context.currentText;
-						passwordField.cursorPosition = passwordField.text.length;
-						root.syncingTextFromContext = false;
-					}
-				}
-			}
+                    onAccepted: root.context.tryPassword()
 
-			// Placeholder.
-			Label {
-				anchors.fill: passwordField
-				verticalAlignment: Text.AlignVCenter
-				text: "Passwort"
-				font.weight: Font.Normal
-				color: Colors.textColorMuted
-				visible: passwordField.text.length === 0 && !passwordField.activeFocus && !root.isLoading
-			}
+                    onTextChanged: {
+                        if (root.syncingTextFromContext)
+                            return;
+                        root.context.currentText = text;
+                    }
 
-			// Loading overlay: replaces the input content while authenticating.
-			Row {
-				anchors.left: lockIcon.right
-				anchors.leftMargin: Spacing.spacing8
-				anchors.right: parent.right
-				anchors.rightMargin: Spacing.spacing16
-				anchors.verticalCenter: parent.verticalCenter
-				spacing: Spacing.spacing8
-				opacity: root.isLoading ? 1 : 0
-				visible: opacity > 0
-				FadeBehavior on opacity {}
+                    // Keep every monitor's field in sync with the shared buffer.
+                    Connections {
+                        target: root.context
+                        function onCurrentTextChanged() {
+                            if (passwordField.text === root.context.currentText)
+                                return;
+                            root.syncingTextFromContext = true;
+                            passwordField.text = root.context.currentText;
+                            passwordField.cursorPosition = passwordField.text.length;
+                            root.syncingTextFromContext = false;
+                        }
+                    }
+                }
 
-				Label {
-					text: root.loadingMessage
-					font.weight: Font.Normal
-					color: Colors.textColor
-					anchors.verticalCenter: parent.verticalCenter
-				}
-			}
+                // Placeholder.
+                Label {
+                    anchors.fill: passwordField
+                    verticalAlignment: Text.AlignVCenter
+                    text: "Passwort"
+                    font.weight: Font.Normal
+                    color: Colors.textColorMuted
+                    visible: passwordField.text.length === 0 && !passwordField.activeFocus && !root.isLoading
+                }
 
-			Spinner {
-				anchors.right: parent.right
-				anchors.rightMargin: Spacing.spacing16
-				anchors.verticalCenter: parent.verticalCenter
-				size: Typography.fontSize20
-				visible: root.isLoading
-			}
+                // Loading overlay: replaces the input content while authenticating.
+                Row {
+                    anchors.left: lockIcon.right
+                    anchors.leftMargin: Spacing.spacing8
+                    anchors.right: parent.right
+                    anchors.rightMargin: Spacing.spacing16
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Spacing.spacing8
+                    opacity: root.isLoading ? 1 : 0
+                    visible: opacity > 0
+                    FadeBehavior on opacity {}
 
-			// Face unlock button, anchored to the pill's right edge and overflowing
-			// outside so the pill stays centered on screen.
-			Rectangle {
-				id: faceButton
-				anchors.left: parent.right
-				anchors.leftMargin: Spacing.spacing8
-				anchors.verticalCenter: parent.verticalCenter
-				width: root.faceButtonSize
-				height: root.faceButtonSize
-				radius: height / 2
-				opacity: root.isLoading ? 0.4 : 1.0
-				FadeBehavior on opacity {}
+                    Label {
+                        text: root.loadingMessage
+                        font.weight: Font.Normal
+                        color: Colors.textColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
 
-				color: faceArea.pressed ? Colors.hoverItemPressed : faceArea.containsMouse ? Colors.hoverItemHovered : Colors.pillBackground
-				border.width: 1
-				border.color: faceArea.containsMouse ? Colors.pillBorderFocus : Colors.pillBorder
+                Spinner {
+                    anchors.right: parent.right
+                    anchors.rightMargin: Spacing.spacing16
+                    anchors.verticalCenter: parent.verticalCenter
+                    size: Typography.fontSize20
+                    visible: root.isLoading
+                }
 
-				scale: faceArea.pressed ? 0.85 : 1.0
-				SquishBehavior on scale {}
+                // Face unlock button, anchored to the pill's right edge and overflowing
+                // outside so the pill stays centered on screen.
+                Rectangle {
+                    id: faceButton
+                    anchors.left: parent.right
+                    anchors.leftMargin: Spacing.spacing8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: root.faceButtonSize
+                    height: root.faceButtonSize
+                    radius: height / 2
+                    opacity: root.isLoading ? 0.4 : 1.0
+                    FadeBehavior on opacity {}
 
-				TintedIcon {
-					anchors.centerIn: parent
-					source: "icons/icons8-face-id.svg"
-					size: Typography.fontSize24 + Spacing.spacing4
-					color: Colors.textColor
-				}
+                    color: faceArea.pressed ? Colors.hoverItemPressed : faceArea.containsMouse ? Colors.hoverItemHovered : Colors.pillBackground
+                    border.width: 1
+                    border.color: faceArea.containsMouse ? Colors.pillBorderFocus : Colors.pillBorder
 
-				MouseArea {
-					id: faceArea
-					anchors.fill: parent
-					hoverEnabled: true
-					cursorShape: root.isLoading ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-					enabled: !root.isLoading
-					onClicked: root.context.tryFace()
-				}
-			}
-		}
+                    scale: faceArea.pressed ? 0.85 : 1.0
+                    SquishBehavior on scale {}
 
-		// Error slot. Fixed height reserves layout space so the pill does not
-		// shift when an error appears.
-		Item {
-			anchors.horizontalCenter: parent.horizontalCenter
-			width: root.inputWidth
-			height: Typography.fontSize24
+                    TintedIcon {
+                        anchors.centerIn: parent
+                        source: "icons/icons8-face-id.svg"
+                        size: Typography.fontSize24 + Spacing.spacing4
+                        color: Colors.textColor
+                    }
 
-			Label {
-				anchors.centerIn: parent
-				text: root.context.failureMessage
-				visible: !root.isLoading && root.context.showFailure && root.context.failureMessage !== ""
-				font.pixelSize: Typography.fontSize16
-				font.weight: Font.Normal
-				color: Colors.textError
-			}
-		}
-	}
+                    MouseArea {
+                        id: faceArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: root.isLoading ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                        enabled: !root.isLoading
+                        onClicked: root.context.tryFace()
+                    }
+                }
+            }
+
+            // Error slot. Fixed height reserves layout space so the pill does not
+            // shift when an error appears.
+            Item {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: root.inputWidth
+                height: Typography.fontSize24
+
+                Label {
+                    anchors.centerIn: parent
+                    text: root.context.failureMessage
+                    visible: !root.isLoading && root.context.showFailure && root.context.failureMessage !== ""
+                    font.pixelSize: Typography.fontSize16
+                    font.weight: Font.Normal
+                    color: Colors.textError
+                }
+            }
+        }
+    }
 }
