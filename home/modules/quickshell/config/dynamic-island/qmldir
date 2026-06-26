@@ -62,6 +62,7 @@ Battery 1.0 bar/Battery.qml
 VolumeIcon 1.0 bar/VolumeIcon.qml
 DateTime 1.0 bar/DateTime.qml
 WorkspaceIndicator 1.0 bar/WorkspaceIndicator.qml
+Workspace3Apps 1.0 bar/Workspace3Apps.qml
 SystemTray 1.0 bar/SystemTray.qml
 NowPlaying 1.0 bar/NowPlaying.qml
 MusicBars 1.0 bar/MusicBars.qml

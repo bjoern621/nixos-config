@@ -122,6 +122,19 @@ Variants {
                     anchors.centerIn: parent
                     spacing: Spacing.spacing8
 
+                    Workspace3Apps {
+                        id: workspace3Apps
+                        monitorName: root.modelData.name
+                    }
+
+                    Rectangle {
+                        visible: workspace3Apps.visible
+                        width: 1
+                        height: Spacing.spacing16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
                     WorkspaceIndicator {
                         monitorName: root.modelData.name
                     }
