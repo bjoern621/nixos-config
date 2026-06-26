@@ -12,5 +12,6 @@
     ripgrep
     bruno
     mkchromecast
+    claude-code
   ];
 }
