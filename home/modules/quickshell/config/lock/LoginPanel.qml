@@ -37,6 +37,7 @@ Item {
     signal passwordEdited(string text)
     signal passwordSubmitted
     signal faceRequested
+    signal passkeyRequested
 
     function focusPassword() {
         passwordField.forceActiveFocus();
@@ -327,6 +328,44 @@ Item {
                         cursorShape: panel.loading ? Qt.ForbiddenCursor : Qt.PointingHandCursor
                         enabled: !panel.loading
                         onClicked: panel.faceRequested()
+                    }
+                }
+
+                // Passkey (FIDO2 security key) button, mirrored on the pill's left
+                // edge and overflowing outside so the pill stays centered. Triggers
+                // a key-only authentication, separate from the face button.
+                Rectangle {
+                    id: passkeyButton
+                    anchors.right: parent.left
+                    anchors.rightMargin: Spacing.spacing8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: panel.faceButtonSize
+                    height: panel.faceButtonSize
+                    radius: height / 2
+                    opacity: panel.loading ? 0.4 : 1.0
+                    FadeBehavior on opacity {}
+
+                    color: passkeyArea.pressed ? Colors.hoverItemPressed : passkeyArea.containsMouse ? Colors.hoverItemHovered : Colors.pillBackground
+                    border.width: 1
+                    border.color: passkeyArea.containsMouse ? Colors.pillBorderFocus : Colors.pillBorder
+
+                    scale: passkeyArea.pressed ? 0.85 : 1.0
+                    SquishBehavior on scale {}
+
+                    TintedIcon {
+                        anchors.centerIn: parent
+                        source: "icons/icons8-passkey.svg"
+                        size: Typography.fontSize24 + Spacing.spacing4
+                        color: Colors.textColor
+                    }
+
+                    MouseArea {
+                        id: passkeyArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: panel.loading ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                        enabled: !panel.loading
+                        onClicked: panel.passkeyRequested()
                     }
                 }
             }

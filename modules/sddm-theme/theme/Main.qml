@@ -15,10 +15,18 @@ Rectangle {
 
     readonly property int errorAutoHideMs: 3000
 
+    // Sentinel "password" the passkey button sends. SDDM only forwards a password
+    // string to PAM, so this token is how the FIDO2-key intent is encoded; the
+    // sddm PAM stack (modules/display-manager.nix) routes it to pam_u2f. It is
+    // not a secret and authenticates nothing on its own; the key still gates.
+    readonly property string passkeySentinel: "__fido2_passkey__"
+
     property int currentUserIndex: userModel.lastIndex
     readonly property string instanceId: "screen-" + Math.floor(Math.random() * 1000000000)
     readonly property bool isLoading: Globals.authLoading
-    readonly property string loadingMessage: Globals.authAttemptKind === "face" ? "Gesicht wird erkannt…" : "Wird überprüft…"
+    readonly property string loadingMessage: Globals.authAttemptKind === "face" ? "Gesicht wird erkannt…"
+        : Globals.authAttemptKind === "passkey" ? "Sicherheitsschlüssel…"
+        : "Wird überprüft…"
 
     function userName() {
         return userModel.data(userModel.index(currentUserIndex, 0), Qt.UserRole + 1) || "Unbekannter Benutzer";
@@ -73,6 +81,7 @@ Rectangle {
         }
         onPasswordSubmitted: root.submitAuth("password", Globals.authPassword)
         onFaceRequested: root.submitAuth("face", "")
+        onPasskeyRequested: root.submitAuth("passkey", root.passkeySentinel)
 
         Component.onCompleted: {
             if (Globals.authInputOwner === "")
@@ -93,7 +102,9 @@ Rectangle {
             Globals.authLoading = false;
             Globals.authAttemptKind = "";
 
-            root.showError(failedKind === "face" ? "Gesicht nicht erkannt" : "Falsches Passwort");
+            root.showError(failedKind === "face" ? "Gesicht nicht erkannt"
+                : failedKind === "passkey" ? "Schlüssel nicht erkannt"
+                : "Falsches Passwort");
             panel.focusPassword();
         }
         function onLoginSucceeded() {

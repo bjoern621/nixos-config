@@ -28,6 +28,7 @@
     ../../modules/nix-ld.nix
     ../../modules/auto-update.nix
     ../../modules/howdy.nix
+    ../../modules/fido2-auth.nix
     ../../modules/fonts.nix
     ../../modules/tailscale-client.nix
     ../../modules/miracast.nix

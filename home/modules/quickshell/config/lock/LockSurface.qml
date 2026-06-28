@@ -41,7 +41,9 @@ Rectangle {
 
 		userName: Quickshell.env("USER") || "Benutzer"
 		loading: root.context.unlockInProgress
-		loadingMessage: root.context.attemptKind === "face" ? "Gesicht wird erkannt…" : "Wird überprüft…"
+		loadingMessage: root.context.attemptKind === "face" ? "Gesicht wird erkannt…"
+			: root.context.attemptKind === "passkey" ? "Sicherheitsschlüssel…"
+			: "Wird überprüft…"
 		failureMessage: root.context.failureMessage
 		failureVisible: root.context.showFailure
 		passwordText: root.context.currentText
@@ -50,6 +52,7 @@ Rectangle {
 		onPasswordEdited: text => root.context.currentText = text
 		onPasswordSubmitted: root.context.tryPassword()
 		onFaceRequested: root.context.tryFace()
+		onPasskeyRequested: root.context.tryPasskey()
 
 		// forceActiveFocus is scoped to each surface's own window, so the compositor
 		// still routes keys to the focused monitor; the shared buffer keeps every

@@ -18,9 +18,15 @@ Scope {
 	property bool showFailure: false
 	property string failureMessage: ""
 
-	// Which attempt is in flight: "password" or "face". Determines what gets sent
-	// to PAM when it asks for a response, and which failure message to show.
+	// Which attempt is in flight: "password", "face" or "passkey". Determines what
+	// gets sent to PAM when it asks for a response, and which failure message to
+	// show.
 	property string attemptKind: ""
+
+	// Sentinel response sent for a passkey attempt. The PAM stack
+	// (modules/quickshell-lock.nix) routes it to pam_u2f, mirroring how the SDDM
+	// login encodes the same intent. Not a secret; the key still gates.
+	readonly property string passkeySentinel: "__fido2_passkey__"
 
 	// Clear the failure text once the user starts typing again.
 	onCurrentTextChanged: showFailure = false
@@ -51,6 +57,14 @@ Scope {
 		pam.start();
 	}
 
+	function tryPasskey() {
+		if (unlockInProgress) return;
+		attemptKind = "passkey";
+		showFailure = false;
+		unlockInProgress = true;
+		pam.start();
+	}
+
 	PamContext {
 		id: pam
 
@@ -64,7 +78,9 @@ Scope {
 		// stack detects and reroutes to howdy).
 		onPamMessage: {
 			if (this.responseRequired) {
-				this.respond(root.attemptKind === "face" ? "" : root.currentText);
+				this.respond(root.attemptKind === "face" ? ""
+						: root.attemptKind === "passkey" ? root.passkeySentinel
+						: root.currentText);
 			}
 		}
 
@@ -75,6 +91,8 @@ Scope {
 				root.currentText = "";
 				root.failureMessage = root.attemptKind === "face"
 					? "Gesicht nicht erkannt"
+					: root.attemptKind === "passkey"
+					? "Schlüssel nicht erkannt"
 					: "Falsches Passwort";
 				root.showFailure = true;
 				root.failed();

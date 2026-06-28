@@ -47,6 +47,15 @@ let
     [ -z "$password" ]
   '';
 
+  # PAM helper: exits 0 when the piped authtok is the passkey sentinel that the
+  # passkey button sends (modules/sddm-theme/theme/Main.qml passkeySentinel), 1
+  # otherwise. Routes a passkey attempt to pam_u2f. The token is not a secret and
+  # authenticates nothing on its own; the key still gates.
+  isPasskeyToken = pkgs.writeShellScript "sddm-is-passkey-token" ''
+    read -r token
+    [ "$token" = "__fido2_passkey__" ]
+  '';
+
   # PAM session helper: unlocks the GNOME Keyring after face login by decrypting
   # the login password from TPM. Status logged under journal tag `sddm-keyring-tpm`.
   # Setup: docs/keyring-auto-unlock.md.
@@ -92,6 +101,8 @@ let
   pamExec = "${pkgs.linux-pam}/lib/security/pam_exec.so";
   pamHowdy = "${config.services.howdy.package}/lib/security/pam_howdy.so";
   pamGnomeKeyring = "${pkgs.gnome-keyring}/lib/security/pam_gnome_keyring.so";
+  pamU2f = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
+  u2fAuthfile = config.security.pam.u2f.settings.authfile;
 in
 {
   services.displayManager.enable = true;
@@ -127,17 +138,28 @@ in
   security.tpm2.enable = true;
   users.users.bjoern.extraGroups = [ "tss" ];
 
-  # SDDM PAM: route on empty vs non-empty password.
-  #   Empty password (face button) → howdy face recognition
-  #   Non-empty password (typed)   → unix password auth, no howdy
-  # The final `required pam_unix` is unreachable during auth but is called by
-  # pam_setcred() to establish initgroups credentials (howdy and pam_exec both
-  # return PAM_CRED_INSUFFICIENT from setcred).
+  # SDDM PAM: three separate paths chosen by what the greeter sends as the
+  # password, so each method stands alone (no method is a second factor on top
+  # of another):
+  #   Passkey button (sentinel token) → pam_u2f only. Touch -> done; any failure
+  #                                     dies without falling through to face.
+  #   Face button / empty submit ("") → Howdy face only (pam_u2f is skipped).
+  #   Typed password                  → pam_unix only (key and face skipped).
+  # The two pam_exec classifiers jump to the matching method:
+  #   isPasskeyToken success (3) skips isPasswordEmpty, gnome_keyring and the
+  #     typed-password pam_unix, landing on pam_u2f.
+  #   isPasswordEmpty success (3) skips gnome_keyring, pam_unix and pam_u2f,
+  #     landing on Howdy.
+  # The final `required pam_unix` is the face/password backstop; it is also
+  # called by pam_setcred() to establish initgroups credentials (howdy and
+  # pam_exec both return PAM_CRED_INSUFFICIENT from setcred).
   security.pam.services.sddm.text = lib.mkForce ''
     auth  optional                    ${pamUnix} likeauth nullok
-    auth  [success=2 default=ignore]  ${pamExec} quiet expose_authtok ${isPasswordEmpty}
+    auth  [success=3 default=ignore]  ${pamExec} quiet expose_authtok ${isPasskeyToken}
+    auth  [success=3 default=ignore]  ${pamExec} quiet expose_authtok ${isPasswordEmpty}
     auth  optional                    ${pamGnomeKeyring}
     auth  [success=done default=die]  ${pamUnix} nullok try_first_pass
+    auth  [success=done default=die]  ${pamU2f} authfile=${u2fAuthfile} cue
     auth  [success=done default=ignore]  ${pamHowdy}
     auth  required                    ${pamUnix} nullok
 
