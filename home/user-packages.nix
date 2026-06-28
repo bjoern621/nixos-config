@@ -13,5 +13,6 @@
     bruno
     mkchromecast
     claude-code
+    dbeaver-bin
   ];
 }
