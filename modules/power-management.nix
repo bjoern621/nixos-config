@@ -26,8 +26,21 @@
 
   # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
   # Its DSP firmware state is not restored properly, causing tinny audio.
+  #
+  # The battery (PNP0C0A) and Synaptics touchpad (SYNA2BA6) rules remove both
+  # devices as wake sources. With them armed, any suspend attempt aborts
+  # within the same second: the EC raises a battery status notification
+  # (GPE09, ACPI SCI / IRQ 9) as power draw changes on suspend, which counts
+  # as a wake event. Lid open and the power button remain armed.
+  #
+  # s2idle stays unusable on this machine even with these rules (the platform
+  # never reaches s0ix, "Wakeup unrelated to ACPI SCI"), which is why lid
+  # close hibernates directly (modules/hibernate.nix). The rules are kept for
+  # the case that a BIOS update fixes s0ix and suspend gets re-enabled.
   services.udev.extraRules = ''
     ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-TIAS2781:00", ATTR{power/control}="on"
+    ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="PNP0C0A:00", ATTR{power/wakeup}="disabled"
+    ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-SYNA2BA6:00", ATTR{power/wakeup}="disabled"
   '';
 
   services.tlp = {

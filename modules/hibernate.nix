@@ -37,6 +37,7 @@ in
         description = "Resume offset for the swap file (get with: filefrag -v /swapfile)";
       };
     };
+
   };
 
   config = lib.mkIf cfg.enable {
@@ -63,7 +64,16 @@ in
     # fits, at the cost of a few extra seconds of swap-out.
     systemd.tmpfiles.rules = [ "w /sys/power/image_size - - - - 0" ];
 
-    # Hibernate on lid close (ignore when docked to keep external monitors on)
+    # Hibernate on lid close (ignore when docked to keep external monitors
+    # on). Direct hibernate instead of suspend-then-hibernate: this machine
+    # (Yoga Slim 7 14APU8, BIOS M6CN44WW) never reaches s0ix. Every s2idle
+    # attempt aborts within seconds ("Wakeup unrelated to ACPI SCI",
+    # total_hw_sleep stays 0), so a closed lid would cycle suspend/resume
+    # indefinitely at full power draw.
+    #
+    # The Hyprland lid bind must not disable eDP-1 while undocked (see
+    # home/modules/hyprland/monitors.nix): tearing down the panel while the
+    # S4 snapshot is taken corrupts the hibernation image.
     services.logind.settings.Login = {
       HandleLidSwitch = "hibernate";
       HandleLidSwitchDocked = "ignore";

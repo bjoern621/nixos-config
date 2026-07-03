@@ -13,9 +13,14 @@
       ",preferred,auto,1"
     ];
 
-    # Disable internal display when lid closed, re-enable when opened
+    # Disable the internal display on lid close only while an external monitor
+    # is connected (docked case, where logind ignores the lid). Undocked, the
+    # lid close triggers suspend-then-hibernate (modules/hibernate.nix), and
+    # tearing down eDP-1 concurrently with the hibernation snapshot leaves
+    # amdgpu in an inconsistent state that corrupts the image. The monitor
+    # count includes eDP-1 itself, so > 1 means externals are present.
     bindl = [
-      ", switch:on:Lid Switch, exec, hyprctl keyword monitor eDP-1, disable"
+      ", switch:on:Lid Switch, exec, [ \"$(hyprctl monitors | grep -c '^Monitor ')\" -gt 1 ] && hyprctl keyword monitor \"eDP-1, disable\""
       ", switch:off:Lid Switch, exec, hyprctl keyword monitor eDP-1, 2944x1840@90, 0x0, 2"
     ];
   };

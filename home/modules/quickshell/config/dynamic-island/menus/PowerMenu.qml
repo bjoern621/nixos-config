@@ -27,6 +27,9 @@ Item {
                 Quickshell.execDetached(["loginctl", "lock-session"]);
                 break;
             case "hibernate":
+                // Direct hibernate, same as lid close. s2idle never reaches
+                // hardware sleep on this machine (see modules/hibernate.nix),
+                // so there is no suspend option.
                 LoadingHost.show("Hibernieren...");
                 Quickshell.execDetached(["systemctl", "hibernate"]);
                 break;
