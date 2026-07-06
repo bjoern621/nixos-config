@@ -33,6 +33,7 @@
     ./modules/tailscale-client.nix
     ./modules/eduvpn.nix
     ./modules/direnv.nix
+    ./modules/scanning.nix
   ];
 
   home.username = "bjoern";

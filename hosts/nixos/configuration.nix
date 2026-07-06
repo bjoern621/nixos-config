@@ -15,6 +15,7 @@
     ../../modules/fancy-boot/fancy-boot.nix
     ../../modules/file-manager.nix
     ../../modules/printing.nix
+    ../../modules/scanning.nix
     ../../modules/cleanup.nix
     # ../../modules/autologin.nix
     ../../modules/nix-search-tv.nix
