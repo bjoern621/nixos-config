@@ -12,7 +12,8 @@
       # Application shortcuts
       "$mainMod, Q, exec, $terminal"
       "$mainMod, W, killactive,"
-      "$mainMod, F, fullscreen, 0"
+      "$mainMod SHIFT, F, fullscreen, 0"
+      "$mainMod, F, fullscreenstate, 2 0"
       "$mainMod, M, exit,"
       "$mainMod, L, exec, loginctl lock-session"
 
