@@ -34,6 +34,7 @@
     ./modules/eduvpn.nix
     ./modules/direnv.nix
     ./modules/scanning.nix
+    ./modules/firewall-viewer.nix
   ];
 
   home.username = "bjoern";
