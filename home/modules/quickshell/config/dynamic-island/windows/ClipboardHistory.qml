@@ -10,7 +10,6 @@ import QtQuick
 import "../"
 import "../base"
 import "../lib/fzf.js" as FzfLib
-import "../lib/secret-mask.js" as SecretMask
 
 Scope {
     id: clipScope
@@ -28,14 +27,6 @@ Scope {
     // Map clipId -> integer version (bumped each decode). Used to bust Image cache.
     property var imageVersions: ({})
     property var imageDecodeQueue: []
-    // Map clipId -> reason string for entries flagged as sensitive by the
-    // source-side wrapper (KDE password-manager hint, Bitwarden source URL,
-    // ...). Loaded from ~/.cache/cliphist/sensitive-ids.
-    property var sensitiveIds: ({})
-
-    // Tracking for the mask-reason tooltip on the lock icon.
-    property Item hoveredLockItem: null
-    property string hoveredLockReason: ""
 
     onClipVisibleChanged: {
         if (clipVisible) {
@@ -54,12 +45,11 @@ Scope {
     onSearchTextChanged: updateFilter()
 
     function refresh() {
-        // Load sensitive-id sidecar first; on its completion, listProc runs.
-        sensitiveProc.pending = ({});
-        sensitiveProc.running = true;
+        listProc.pending = [];
+        listProc.running = true;
     }
 
-    // resetIndex=false skips the `currentIndex = 0` write so background refreshes (sensitiveProc → listProc) don't clobber a hover-set selection from MouseArea. User-driven calls (open, search) keep the default reset.
+    // resetIndex=false skips the `currentIndex = 0` write so background refreshes (listProc) and deletes don't clobber a hover-set selection from MouseArea. User-driven calls (open, search) keep the default reset.
     function updateFilter(resetIndex = true) {
         const query = searchText.toLowerCase();
         if (query === "") {
@@ -93,6 +83,14 @@ Scope {
         decodeProc.entry = entry.raw;
         decodeProc.isImage = entry.isImage;
         decodeProc.running = true;
+    }
+
+    function deleteEntry(entry) {
+        // Fire-and-forget so rapid deletes don't queue on a Process object;
+        // the local model is updated optimistically.
+        Quickshell.execDetached(["bash", "-c", "printf '%s' \"$1\" | cliphist delete", "cliphist-delete", entry.raw]);
+        allEntries = allEntries.filter(e => e.clipId !== entry.clipId);
+        updateFilter(false);
     }
 
     function decodeNextImage() {
@@ -139,32 +137,6 @@ Scope {
     }
 
     Process {
-        id: sensitiveProc
-        property var pending: ({})
-        command: ["bash", "-c", "cat \"${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/sensitive-ids\" 2>/dev/null || true"]
-        running: false
-
-        stdout: SplitParser {
-            onRead: data => {
-                const line = data.replace(/[\r\n]+$/, "");
-                if (!line)
-                    return;
-                const tabIdx = line.indexOf('\t');
-                const id = (tabIdx < 0 ? line : line.substring(0, tabIdx)).trim();
-                const reason = tabIdx < 0 ? "" : line.substring(tabIdx + 1).trim();
-                if (id)
-                    sensitiveProc.pending[id] = reason || "Quelle markiert";
-            }
-        }
-
-        onExited: {
-            clipScope.sensitiveIds = sensitiveProc.pending;
-            listProc.pending = [];
-            listProc.running = true;
-        }
-    }
-
-    Process {
         id: listProc
         property var pending: []
         command: ["cliphist", "list"]
@@ -180,21 +152,13 @@ Scope {
                     return;
                 const isImage = rawDisplay.startsWith("[[ binary data");
                 const clipId = data.substring(0, tabIdx).trim();
-                const sourceReason = clipScope.sensitiveIds[clipId] || "";
-                const masked = isImage ? {
-                    display: rawDisplay,
-                    masked: false,
-                    reason: ""
-                } : SecretMask.maskEntry(rawDisplay, sourceReason);
                 listProc.pending.push({
                     raw: data,
-                    display: masked.display,
-                    lower: masked.display.toLowerCase(),
+                    display: rawDisplay,
+                    lower: rawDisplay.toLowerCase(),
                     isImage: isImage,
                     imagePath: isImage ? "/tmp/cliphist_preview_" + clipId + ".png" : "",
-                    clipId: clipId,
-                    masked: masked.masked,
-                    maskReason: masked.reason || ""
+                    clipId: clipId
                 });
             }
         }
@@ -338,40 +302,13 @@ Scope {
                         color: Colors.textColorMuted
                     }
 
-                    TintedIcon {
-                        id: lockIcon
-                        visible: !clipDelegate.modelData.isImage && clipDelegate.modelData.masked
-                        anchors {
-                            right: parent.right
-                            verticalCenter: parent.verticalCenter
-                            rightMargin: Spacing.spacing12
-                        }
-                        source: "../icons/icons8-lock.svg"
-                        size: Typography.fontSize16
-                        color: Colors.textColorMuted
-
-                        HoverHandler {
-                            id: lockHover
-                            enabled: lockIcon.visible
-                            cursorShape: Qt.ArrowCursor
-                            onHoveredChanged: {
-                                if (hovered) {
-                                    clipScope.hoveredLockItem = lockIcon;
-                                    clipScope.hoveredLockReason = clipDelegate.modelData.maskReason || "Maskiert";
-                                } else if (clipScope.hoveredLockItem === lockIcon) {
-                                    clipScope.hoveredLockItem = null;
-                                    clipScope.hoveredLockReason = "";
-                                }
-                            }
-                        }
-                    }
-
                     Text {
                         visible: !clipDelegate.modelData.isImage
                         anchors {
                             fill: parent
                             leftMargin: Spacing.spacing12
-                            rightMargin: clipDelegate.modelData.masked ? Spacing.spacing12 + Typography.fontSize16 + Spacing.spacing8 : Spacing.spacing12
+                            // Keeps elided text clear of the trash button.
+                            rightMargin: Spacing.spacing8 + Spacing.spacing24 + Spacing.spacing8
                         }
                         text: clipDelegate.modelData.display
                         font.family: Typography.fontFamily
@@ -383,6 +320,7 @@ Scope {
                     }
 
                     HoverHandler {
+                        id: rowHover
                         cursorShape: Qt.PointingHandCursor
                     }
 
@@ -390,16 +328,52 @@ Scope {
                         id: clipDelegateTap
                         onTapped: clipScope.selectEntry(clipDelegate.modelData)
                     }
+
+                    Rectangle {
+                        id: trashBtn
+                        anchors {
+                            right: parent.right
+                            rightMargin: Spacing.spacing8
+                            top: parent.top
+                            topMargin: Spacing.spacing8
+                        }
+                        width: Spacing.spacing24
+                        height: Spacing.spacing24
+                        radius: height / 2
+                        color: trashTap.pressed ? Colors.hoverItemPressed : trashHover.hovered ? Colors.hoverItemHovered : "transparent"
+                        border.color: trashHover.hovered ? Colors.pillBorder : "transparent"
+                        opacity: rowHover.hovered ? 1.0 : 0.0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 80
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+
+                        scale: trashTap.pressed ? 0.85 : 1.0
+                        SquishBehavior on scale {}
+
+                        HoverHandler {
+                            id: trashHover
+                            cursorShape: Qt.PointingHandCursor
+                        }
+                        TapHandler {
+                            id: trashTap
+                            // Exclusive grab on press so the row's select TapHandler doesn't also fire.
+                            gesturePolicy: TapHandler.ReleaseWithinBounds
+                            onTapped: clipScope.deleteEntry(clipDelegate.modelData)
+                        }
+
+                        TintedIcon {
+                            anchors.centerIn: parent
+                            size: Spacing.spacing12
+                            source: "../icons/icons8-trash.svg"
+                            color: Colors.textColorMuted
+                        }
+                    }
                 }
             }
         }
-    }
-
-    Tooltip {
-        anchorItem: clipScope.hoveredLockItem
-        text: clipScope.hoveredLockItem ? "Maskiert" : ""
-        subtitle: clipScope.hoveredLockReason
-        screen: clipWindow.screen
-        recalcKey: clipList.contentY
     }
 }
