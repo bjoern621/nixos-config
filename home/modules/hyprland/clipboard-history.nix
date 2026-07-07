@@ -12,8 +12,8 @@
   # Watch for new clipboard content and store it in the history.
   wayland.windowManager.hyprland.settings = {
     exec-once = [
-      "wl-paste -t text --watch cliphist store -max-items 100"
-      "wl-paste -t image --watch cliphist store -max-items 100"
+      "wl-paste -t text --watch cliphist -max-items 100 store"
+      "wl-paste -t image --watch cliphist -max-items 100 store"
     ];
 
     # Routed via Hyprland's `global` dispatcher to the running quickshell.
