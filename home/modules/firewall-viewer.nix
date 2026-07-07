@@ -1,23 +1,38 @@
 # Read-only viewer for the NixOS firewall (networking.firewall, iptables backend).
 # There is no GUI for the default iptables backend, so this provides a desktop
 # entry that opens the active rules in a terminal.
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 let
   firewall-view = pkgs.writeShellScriptBin "firewall-view" ''
     set -euo pipefail
+    export PATH=${lib.makeBinPath (with pkgs; [ gawk coreutils util-linux ])}:$PATH
 
+    echo "== NixOS Firewall =="
+    echo
     echo "Open inbound ports (everything else is blocked):"
     echo
-    (sudo iptables -S nixos-fw; sudo ip6tables -S nixos-fw) \
-      | ${pkgs.gawk}/bin/awk '/--dport/ {
+
+    # -S output has one rule per line ("-A nixos-fw -p tcp --dport 631 ...")
+    # which is easier to parse than the columnar -L output that `show` uses.
+    ports=$( (sudo iptables -S nixos-fw; sudo ip6tables -S nixos-fw) \
+      | awk '/--dport/ {
           for (i = 1; i <= NF; i++) {
             if ($i == "-p") proto = $(i + 1)
             if ($i == "--dport") port = $(i + 1)
           }
-          print "  " proto "/" port
+          print proto "/" port
         }' \
-      | sort -t/ -k2,2n -u
+      | sort -t/ -k2,2n -u)
+
+    {
+      echo "PROTO|PORT|SERVICE"
+      echo "-----|----|-------"
+      while IFS=/ read -r proto port; do
+        name=$(getent services "$port/$proto" | awk '{print $1}') || true
+        echo "$proto|$port|''${name:--}"
+      done <<< "$ports"
+    } | column -t -s'|' -o' | '
 
     echo
     echo "Full rule set (first block IPv4, second block IPv6):"
@@ -25,7 +40,11 @@ let
     sudo nixos-firewall-tool show
 
     echo
-    read -rsn1 -p "Press any key to close..."
+    nixos-firewall-tool help
+    echo
+
+    # Drop into a normal shell so commands can be run from here.
+    exec "''${SHELL:-zsh}"
   '';
 in
 {
