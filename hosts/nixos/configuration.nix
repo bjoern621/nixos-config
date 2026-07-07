@@ -32,7 +32,7 @@
     ../../modules/fido2-auth.nix
     ../../modules/fonts.nix
     ../../modules/tailscale-client.nix
-    ../../modules/miracast.nix
+    # ../../modules/miracast.nix
     # ../../modules/sunshine.nix
     ../../modules/external-monitors.nix
     ../../modules/secureboot.nix
