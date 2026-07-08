@@ -73,7 +73,7 @@
 
       # --- WiFi ---
       WIFI_PWR_ON_AC = "off";
-      WIFI_PWR_ON_BAT = "on";
+      WIFI_PWR_ON_BAT = "off";
 
       # --- PCIe ---
       PCIE_ASPM_ON_AC = "default";
