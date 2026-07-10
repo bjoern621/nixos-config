@@ -17,6 +17,21 @@
 
 { pkgs, ... }:
 
+let
+  # Adwaita's index.theme inherits only hicolor. KDE apps reference Breeze icon
+  # names (e.g. KSystemLog's utilities-log-viewer) that Adwaita does not ship,
+  # so the lookup fails and launchers show the missing-icon placeholder.
+  # This copy rewrites the Inherits chain to fall through to Breeze. Installed
+  # under $XDG_DATA_HOME/icons it shadows the package's index.theme (data home
+  # is searched first), while the icon subdirectories still resolve from the
+  # original package. Adwaita stays primary; Breeze only fills gaps.
+  # breeze-dark comes first because the desktop is dark: monochrome icons that
+  # fall through render light-on-dark.
+  adwaitaIndexWithBreezeFallback = pkgs.runCommand "adwaita-index-breeze-fallback" { } ''
+    sed 's/^Inherits=.*/Inherits=breeze-dark,breeze,hicolor/' \
+      ${pkgs.adwaita-icon-theme}/share/icons/Adwaita/index.theme > $out
+  '';
+in
 {
   dconf.settings."org/gnome/desktop/interface" = {
     color-scheme = "prefer-dark";
@@ -46,6 +61,11 @@
       name = "Adwaita-dark";
     };
   };
+
+  # Fallback icons for KDE apps, reached through the Inherits chain above.
+  home.packages = [ pkgs.kdePackages.breeze-icons ];
+
+  xdg.dataFile."icons/Adwaita/index.theme".source = adwaitaIndexWithBreezeFallback;
 
   # https://wiki.hypr.land/Nix/Hyprland-on-Home-Manager/#fixing-problems-with-themes
   home.pointerCursor = {

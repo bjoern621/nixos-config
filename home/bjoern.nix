@@ -22,6 +22,7 @@
     ./modules/desktop-portals.nix
     ./modules/xdg-user-dirs.nix
     ./user-packages.nix
+    ./modules/ksystemlog.nix
     ./modules/quickshell/quickshell.nix
     ./modules/paintdotnet.nix
     ./modules/shell.nix

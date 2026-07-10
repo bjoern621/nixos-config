@@ -37,8 +37,10 @@ Scope {
     function rebuildAppList() {
         const apps = DesktopEntries.applications.values.filter(a => !a.noDisplay).sort((a, b) => a.name.localeCompare(b.name));
         indexedApps = apps.map(app => {
+            // keywords is a QML sequence (QList<QString>), not a JS array:
+            // Array.isArray is false for it, so join must go through the prototype.
             const kw = app.keywords;
-            const keywords = Array.isArray(kw) ? kw.join(" ") : (typeof kw === "string" ? kw : "");
+            const keywords = kw && kw.length ? Array.prototype.join.call(kw, " ") : "";
             const fields = [app.name || "", app.genericName || "", keywords, app.comment || ""];
             return {
                 app,
