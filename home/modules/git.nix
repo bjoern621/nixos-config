@@ -17,7 +17,9 @@
         email = "41452212+bjoern621@users.noreply.github.com";
       };
       init.defaultBranch = "main";
-      pull.rebase = true;
+
+      pull.rebase = true; # Rebases local commits on top of the remote. Linear history, no merge commits.
+      rebase.autoStash = true; # makes rebase-pulls stash dirty files, pull, then unstash. Removes the clean-tree requirement (git pull --rebase doesn't work if there are uncommitted changes), at the cost of occasional stash-pop conflicts.
 
       # Configure git-credential-helper with libsecret
       # Allows storing the git password and not needing to retype it over and over again
