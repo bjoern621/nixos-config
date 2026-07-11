@@ -37,6 +37,7 @@
     ../../modules/external-monitors.nix
     ../../modules/secureboot.nix
     ../../modules/tpm-luks.nix
+    ../../modules/system-packages.nix
   ];
 
   services.tailscale-client.operator = "bjoern";
@@ -152,14 +153,6 @@
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
-  environment.systemPackages = with pkgs; [
-    kdePackages.plasma-thunderbolt
-    wdisplays
-    wlr-randr
-    usbutils
-    brightnessctl
-    tldr
-  ];
   services.fwupd.enable = true;
 
   hardware.bluetooth.enable = true;
