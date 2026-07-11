@@ -31,6 +31,9 @@
       };
     };
 
+    # 1 = restore the last session ("Continue where you left off")
+    RestoreOnStartup = 1;
+
     PromotionalTabsEnabled = false;
     PromotionsEnabled = false;
     WelcomePageOnOSUpgradeEnabled = false;
