@@ -19,8 +19,12 @@
     # tearing down eDP-1 concurrently with the hibernation snapshot leaves
     # amdgpu in an inconsistent state that corrupts the image. The monitor
     # count includes eDP-1 itself, so > 1 means externals are present.
+    #
+    # The guard uses `test`, not `[ ... ]`: Hyprland parses a leading `[` in an
+    # exec command as a window-rule prefix and strips it, which would leave the
+    # shell with a dangling `&& ...` and silently skip the disable.
     bindl = [
-      ", switch:on:Lid Switch, exec, [ \"$(hyprctl monitors | grep -c '^Monitor ')\" -gt 1 ] && hyprctl keyword monitor \"eDP-1, disable\""
+      ", switch:on:Lid Switch, exec, test \"$(hyprctl monitors | grep -c '^Monitor ')\" -gt 1 && hyprctl keyword monitor \"eDP-1, disable\""
       ", switch:off:Lid Switch, exec, hyprctl keyword monitor eDP-1, 2944x1840@90, 0x0, 2"
     ];
   };
