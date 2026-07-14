@@ -22,6 +22,14 @@
           face-recognition-models = pyprev.face-recognition-models.overridePythonAttrs (old: {
             dependencies = (old.dependencies or [ ]) ++ [ pyfinal.setuptools_80 ];
           });
+
+          # WORKAROUND (nixpkgs-unstable): howdy pulls opencv4Full, whose VTK
+          # feature drags in vtk -> gdal-minimal/pdal, which fail to build from
+          # source in this nixpkgs snapshot and are not cached. Howdy only uses
+          # opencv for camera capture and never touches VTK, so disabling it
+          # drops the broken subtree without affecting howdy.
+          # Remove once vtk builds again upstream.
+          opencv4Full = pyprev.opencv4Full.override { enableVtk = false; };
         })
       ];
     })
