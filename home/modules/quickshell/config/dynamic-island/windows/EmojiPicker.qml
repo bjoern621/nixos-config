@@ -155,13 +155,21 @@ Scope {
     Process {
         id: typeProc
         property string emoji: ""
-        // sleep allows the emoji window to fully unmap and keyboard focus to
-        // return to the previously focused client before wtype injects keys.
-        command: ["bash", "-c", "sleep 0.05; wtype -- \"$EMOJI\""]
+        // Copy the emoji to the clipboard, then paste it into the focused client
+        // with Ctrl+Shift+V. The paste is fired from onExited so the copy has
+        // landed and the emoji window has unmapped, letting keyboard focus return
+        // to the previous client before the keys are injected. Direct `wtype`
+        // typing of the codepoints is unreliable across apps (synthetic keymap,
+        // ZWJ/skin-tone sequences), so the clipboard route is used instead.
+        command: ["bash", "-c", "printf '%s' \"$EMOJI\" | wl-copy"]
         environment: ({
                 EMOJI: emoji
             })
         running: false
+
+        onExited: {
+            Quickshell.execDetached(["wtype", "-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"]);
+        }
     }
 
     PanelWindow {
