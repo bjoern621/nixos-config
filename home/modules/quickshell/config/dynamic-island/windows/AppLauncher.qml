@@ -218,8 +218,9 @@ Scope {
                     }
 
                     TintedIcon {
+                        // Fallback for apps with a missing or unresolvable icon.
                         anchors.fill: appIcon
-                        source: "../icons/icons8-menu.svg"
+                        source: "../icons/icons8-desktop.svg"
                         size: Typography.fontSize16
                         color: Colors.textColorMuted
                         visible: appIcon.status !== Image.Ready

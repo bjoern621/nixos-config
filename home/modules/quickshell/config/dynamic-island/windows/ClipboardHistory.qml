@@ -295,11 +295,21 @@ Scope {
 
                     TintedIcon {
                         // Placeholder while image decode pending
+                        id: clipPendingIcon
                         visible: modelData.isImage && !clipScope.imageVersions[modelData.clipId]
                         anchors.centerIn: parent
-                        source: "../icons/icons8-menu.svg"
+                        source: "../icons/icons8-spinner.svg"
                         size: Typography.fontSize24
                         color: Colors.textColorMuted
+
+                        NumberAnimation on rotation {
+                            from: 0
+                            to: 360
+                            duration: 900
+                            loops: Animation.Infinite
+                            running: clipPendingIcon.visible
+                            easing.type: Easing.Linear
+                        }
                     }
 
                     Text {

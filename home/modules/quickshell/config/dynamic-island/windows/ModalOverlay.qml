@@ -38,7 +38,7 @@ Scope {
         target: "popup"
 
         function test() {
-            PopupHost.show("../icons/icons8-settings.svg", "Test", "Dies ist eine Testbenachrichtigung.", Colors.textColor);
+            PopupHost.show("../icons/icons8-bell.svg", "Test", "Dies ist eine Testbenachrichtigung.", Colors.textColor);
         }
     }
 
