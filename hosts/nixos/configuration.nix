@@ -38,6 +38,8 @@
     ../../modules/secureboot.nix
     ../../modules/tpm-luks.nix
     ../../modules/system-packages.nix
+    ../../modules/sops.nix
+    ../../modules/cachix-push.nix
   ];
 
   services.tailscale-client.operator = "bjoern";

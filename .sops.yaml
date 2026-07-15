@@ -1,0 +1,15 @@
+# Recipients for secrets/. sops encrypts to every listed key on save.
+#   admin_bjoern  ~/.config/sops/age/keys.txt, edits secrets for all hosts
+#   host_nixos    /var/lib/sops-nix/key.txt, decrypts on that host only
+# New or replaced host: add its public key, then `sops updatekeys secrets/*.yaml`.
+
+keys:
+  - &admin_bjoern age1eumu6mg0ah6yg4p0sv6vp098h6ym7hlclscfwz70cgwz3c7prflsuwa7ye
+  - &host_nixos age12ap87879tsj4lgrd0pmwqnsvpdqdl82qawnwdvakh3pdlwdgpewq8w4rdf
+
+creation_rules:
+  - path_regex: secrets/[^/]+\.yaml$
+    key_groups:
+      - age:
+          - *admin_bjoern
+          - *host_nixos
