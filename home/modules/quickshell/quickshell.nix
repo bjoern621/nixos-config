@@ -95,9 +95,19 @@ in
       RestartSec = 1;
       # Without a platform theme, Qt defaults to hicolor icons.
       # gtk3 makes Qt read the icon theme from GTK settings (gtk.iconTheme).
+      #
+      # Chromium-based tray apps (Discord, Electron) publish their icon only as
+      # StatusNotifierItem.IconPixmap and leave IconName unimplemented, so its
+      # getter returns a D-Bus error instead of an empty string. Discord also
+      # re-emits NewIcon several times per second, and Quickshell refetches the
+      # property on every signal, logging a warning each time (~40/min). The
+      # tray icon itself renders from IconPixmap and is unaffected.
+      # The dbus.properties category carries nothing else, so it is dropped
+      # wholesale; remove this rule when debugging tray property updates.
       Environment = [
         "QT_QPA_PLATFORMTHEME=gtk3"
         "QUICKSHELL_EMOJI_DATA=${emojiData}"
+        "QT_LOGGING_RULES=quickshell.dbus.properties.warning=false"
       ];
     };
     Install = {
