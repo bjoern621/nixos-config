@@ -55,6 +55,21 @@
   #      frontend restart silently kills their open/save/download dialogs until
   #      the app itself is restarted.
   #
+  #   3. Environment race. The frontend resolves its backend config from
+  #      $XDG_CURRENT_DESKTOP-portals.conf and honours the UseIn= key of each
+  #      .portal file. UWSM sets XDG_CURRENT_DESKTOP in the systemd user manager
+  #      from wayland-wm-env@.service, which runs Before=graphical-session-pre.
+  #      The xdg-desktop-autostart drop-in below pulls the frontend up with
+  #      Wants=, which carries no ordering, so systemd exec'd the frontend in
+  #      parallel with the env preloader and it won the race by ~180ms. With
+  #      XDG_CURRENT_DESKTOP unset it never loaded hyprland-portals.conf and
+  #      discarded hyprland.portal (UseIn=wlroots;Hyprland;sway;Wayfire;river),
+  #      leaving ScreenCast, Screenshot and GlobalShortcuts with no backend.
+  #      Those interfaces were then never exported on D-Bus, which breaks screen
+  #      sharing: the app shows its own source picker, then captures nothing.
+  #      After=graphical-session-pre.target holds the frontend until the
+  #      preloader has exited and the environment is populated.
+  #
   # Clearing PartOf detaches the units from target-restart propagation. They
   # still start on D-Bus activation and still stop with the user manager at
   # logout. Restart=on-failure revives them after a genuine crash; with the
@@ -79,6 +94,7 @@
         [Unit]
         PartOf=
         StartLimitIntervalSec=0
+        After=graphical-session-pre.target
 
         [Service]
         Restart=on-failure
