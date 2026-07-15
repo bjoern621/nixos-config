@@ -38,7 +38,10 @@ in
       Environment = [
         "RCLONE_CONFIG_GARAGE_TYPE=s3"
         "RCLONE_CONFIG_GARAGE_PROVIDER=Other"
-        "RCLONE_CONFIG_GARAGE_ENDPOINT=http://garage-s3:3900"
+        # The tailnet name of the Garage sidecar. Reaching it needs the tailnet
+        # ACL to grant this account port 3900 on tag:k8s-distributed-s3; the tag
+        # otherwise only carries the node-to-node grant for RPC on 3901.
+        "RCLONE_CONFIG_GARAGE_ENDPOINT=http://garage-k8s:3900"
         # Matches s3_region in the cluster's garage.toml.
         "RCLONE_CONFIG_GARAGE_REGION=garage"
         # garage.toml leaves root_domain unset, so buckets are addressed as
