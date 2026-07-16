@@ -6,9 +6,9 @@
   ...
 }:
 
-# Mounts the Garage S3 remote at its root so Nautilus browses it like any other
-# folder. Credentials come from sops, which is system-level: see
-# modules/garage-mount.nix.
+# Mounts the Garage S3 buckets so Nautilus browses them like any other folder,
+# one directory per access key. Credentials come from sops, which is
+# system-level: see modules/garage-mount.nix.
 
 let
   mountPoint = "${config.home.homeDirectory}/mnt/garage";
@@ -16,6 +16,23 @@ let
   # Unmounting FUSE needs the setuid wrapper. The binary in the fuse3 package is
   # not setuid, so calling it directly always fails with EPERM.
   fusermount3 = "${osConfig.security.wrapperDir}/fusermount3";
+
+  # One remote per access key: a remote carries one credential pair, and
+  # ListBuckets returns only that key's buckets. Credentials come from the
+  # EnvironmentFile.
+  s3Remote = remote: [
+    "RCLONE_CONFIG_${remote}_TYPE=s3"
+    "RCLONE_CONFIG_${remote}_PROVIDER=Other"
+    # The tailnet name of the Garage sidecar. Reaching it needs the tailnet
+    # ACL to grant this account port 3900 on tag:k8s-distributed-s3; the tag
+    # otherwise only carries the node-to-node grant for RPC on 3901.
+    "RCLONE_CONFIG_${remote}_ENDPOINT=http://garage-k8s:3900"
+    # Matches s3_region in the cluster's garage.toml.
+    "RCLONE_CONFIG_${remote}_REGION=garage"
+    # garage.toml leaves root_domain unset, so buckets are addressed as
+    # endpoint/bucket rather than as a subdomain of the endpoint.
+    "RCLONE_CONFIG_${remote}_FORCE_PATH_STYLE=true"
+  ];
 in
 {
   home.packages = [ pkgs.rclone ];
@@ -38,19 +55,16 @@ in
 
       EnvironmentFile = osConfig.sops.templates."garage-rclone.env".path;
 
-      Environment = [
-        "RCLONE_CONFIG_GARAGE_TYPE=s3"
-        "RCLONE_CONFIG_GARAGE_PROVIDER=Other"
-        # The tailnet name of the Garage sidecar. Reaching it needs the tailnet
-        # ACL to grant this account port 3900 on tag:k8s-distributed-s3; the tag
-        # otherwise only carries the node-to-node grant for RPC on 3901.
-        "RCLONE_CONFIG_GARAGE_ENDPOINT=http://garage-k8s:3900"
-        # Matches s3_region in the cluster's garage.toml.
-        "RCLONE_CONFIG_GARAGE_REGION=garage"
-        # garage.toml leaves root_domain unset, so buckets are addressed as
-        # endpoint/bucket rather than as a subdomain of the endpoint.
-        "RCLONE_CONFIG_GARAGE_FORCE_PATH_STYLE=true"
-      ];
+      Environment =
+        s3Remote "LAPTOP"
+        ++ s3Remote "TEAM"
+        ++ [
+          # combine puts each key's buckets under a directory named after the key.
+          "RCLONE_CONFIG_GARAGE_TYPE=combine"
+          # Quoted because systemd splits Environment= on whitespace, which would
+          # otherwise drop every upstream after the first.
+          ''"RCLONE_CONFIG_GARAGE_UPSTREAMS=bjoern-laptop=laptop: team=team:"''
+        ];
 
       ExecStartPre = [
         # An rclone that died without unmounting, which happens when a file
@@ -64,11 +78,8 @@ in
       ];
 
       ExecStart = lib.concatStringsSep " " [
-        # A remote with no bucket mounts the bucket list itself, so every bucket
-        # the key is granted appears as a top-level directory. Grants live on the
-        # cluster rather than in this repo, so a bucket added there shows up here
-        # without a rebuild. S3 ListBuckets returns only granted buckets, so this
-        # is never a view of the whole server.
+        # Upstreams have no bucket, so each mounts its own bucket list. Grants
+        # live on the cluster, so a new bucket appears without a rebuild.
         "${pkgs.rclone}/bin/rclone mount garage: ${mountPoint}"
         # S3 has no partial writes: an object is replaced whole. Without a write
         # cache, anything that opens a file for update rather than streaming it

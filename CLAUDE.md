@@ -32,6 +32,21 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 | `sysconf-audio-fix` | (none)                                          | Reloads TAS2781 speaker driver (workaround for suspend bug) |
 | `sysconf-fix-monitors` | (none)                                       | Re-applies Hyprland monitor config (workaround for the mixed-scale cursor wall + layer-shell offset) |
 
+## Secrets
+
+Secrets live in `secrets/` as sops-encrypted YAML, each paired with a committed `*.yaml.template`.
+
+**Never add, rename, or remove a key by editing the encrypted file first.** The template is the schema; the encrypted file only stores values. A key that exists only in the ciphertext is invisible to review.
+
+1. Add the key with a placeholder to `secrets/<name>.yaml.template`.
+2. Declare a matching `sops.secrets` entry in the consuming module.
+3. Set the value: `sops --set '["<key>"] "<value>"' secrets/<name>.yaml`.
+4. Rebuild, then restart the consuming service.
+
+Step 3 precedes the rebuild: a `sops.secrets` entry whose key is missing **fails activation**. `EnvironmentFile` is read only at unit start, so a changed value needs a restart, not just a rebuild.
+
+Recreating an encrypted file from its template (`cp` + `sops -e -i`) **destroys every real value in it**. Create-from-scratch only.
+
 ## Module Conventions
 
 - **One Concern Per File**: each module contains configuration for a single application or feature.
