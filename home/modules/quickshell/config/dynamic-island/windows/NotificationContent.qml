@@ -10,34 +10,42 @@ Item {
     property string body: ""
     property int urgency: 1
     property bool expiryAnimationRunning: false
+    property bool expiryPaused: false
     property int expiryDuration: 5000
 
+    // Rows of {index, text} as returned by NotificationListener.actionsFor().
+    property var actions: []
+
+    signal expired
+    signal actionInvoked(int index)
+
     implicitHeight: textColumn.implicitHeight
+
+    // Fraction of the expiry timeout still left. The stripe renders it, and
+    // running out is what expires the notification, so both stay in step while
+    // paused.
+    property real expiryProgress: 1.0
 
     Rectangle {
         id: urgencyStripe
         anchors.left: parent.left
         anchors.top: parent.top
         width: 3
-        height: root.implicitHeight
+        height: root.implicitHeight * root.expiryProgress
         radius: 2
         color: root.urgency === 2 ? Colors.batteryCritical : Colors.textColorMuted
     }
 
-    NumberAnimation {
+    NumberAnimation on expiryProgress {
         id: expiryAnim
-        target: urgencyStripe
-        property: "height"
-        to: 0
+        running: root.expiryAnimationRunning
+        // Qt rejects a pause on an animation that is not running.
+        paused: root.expiryPaused && expiryAnim.running
+        from: 1.0
+        to: 0.0
         duration: root.expiryDuration
         easing.type: Easing.Linear
-    }
-
-    onImplicitHeightChanged: {
-        if (root.expiryAnimationRunning && !expiryAnim.running && root.implicitHeight > 0) {
-            expiryAnim.from = root.implicitHeight
-            expiryAnim.start()
-        }
+        onFinished: root.expired()
     }
 
     Column {
@@ -79,6 +87,57 @@ Item {
             maximumLineCount: 3
             elide: Text.ElideRight
             visible: text !== ""
+        }
+
+        Row {
+            id: actionRow
+            spacing: Spacing.spacing8
+            topPadding: Spacing.spacing4
+            visible: root.actions.length > 0
+
+            Repeater {
+                model: root.actions
+
+                delegate: Rectangle {
+                    id: actionBtn
+                    required property var modelData
+
+                    implicitWidth: actionLabel.implicitWidth + Spacing.spacing12 * 2
+                    implicitHeight: 26
+                    width: implicitWidth
+                    height: implicitHeight
+                    radius: height / 2
+                    color: actionTap.pressed ? Colors.hoverItemPressed : actionHover.hovered ? Colors.hoverItemHovered : "transparent"
+                    border.width: 1
+                    border.color: actionHover.hovered ? Colors.pillBorder : Colors.separatorColor
+
+                    scale: actionTap.pressed ? 0.85 : 1.0
+                    SquishBehavior on scale {}
+
+                    HoverHandler {
+                        id: actionHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
+                    // Takes the exclusive grab so the tap never also reaches the
+                    // click handler on the surrounding card.
+                    TapHandler {
+                        id: actionTap
+                        gesturePolicy: TapHandler.ReleaseWithinBounds
+                        onTapped: root.actionInvoked(actionBtn.modelData.index)
+                    }
+
+                    Text {
+                        id: actionLabel
+                        anchors.centerIn: parent
+                        text: actionBtn.modelData.text
+                        font.family: Typography.fontFamily
+                        font.pixelSize: Typography.fontSize12
+                        font.weight: Font.Normal
+                        color: Colors.textColor
+                    }
+                }
+            }
         }
     }
 }

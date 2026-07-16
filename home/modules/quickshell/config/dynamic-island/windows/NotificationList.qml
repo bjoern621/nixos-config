@@ -47,6 +47,7 @@ Item {
 
                 delegate: Rectangle {
                     id: histEntry
+                    required property string uid
                     required property string appName
                     required property string summary
                     required property string body
@@ -57,12 +58,23 @@ Item {
                     width: notifCol.width
                     implicitHeight: entryContent.implicitHeight + Spacing.spacing12 * 2
                     height: implicitHeight
-                    color: entryHover.hovered ? Colors.hoverItemHovered : "transparent"
+                    color: entryTap.pressed ? Colors.hoverItemPressed : entryHover.hovered ? Colors.hoverItemHovered : "transparent"
+                    border.width: 1
                     border.color: entryHover.hovered ? Colors.pillBorder : "transparent"
                     radius: Spacing.spacing8
 
+                    scale: entryTap.pressed ? 0.97 : 1.0
+                    SquishBehavior on scale {}
+
                     HoverHandler {
                         id: entryHover
+                        cursorShape: NotificationListener.hasClickAction(histEntry.uid) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    }
+
+                    TapHandler {
+                        id: entryTap
+                        gesturePolicy: TapHandler.ReleaseWithinBounds
+                        onTapped: NotificationListener.invokeDefault(histEntry.uid)
                     }
 
                     NotificationContent {
@@ -73,12 +85,15 @@ Item {
                             left: parent.left
                             leftMargin: Spacing.spacing8
                             right: parent.right
-                            rightMargin: Spacing.spacing12
+                            // Keeps the text clear of the timestamp and delete button.
+                            rightMargin: Spacing.spacing12 + Spacing.spacing24 * 2
                         }
                         appName: histEntry.appName
                         summary: histEntry.summary
                         body: histEntry.body
                         urgency: histEntry.urgency
+                        actions: NotificationListener.actionsFor(histEntry.uid)
+                        onActionInvoked: index => NotificationListener.invokeAction(histEntry.uid, index)
                     }
 
                     Text {
@@ -106,8 +121,11 @@ Item {
                         height: Spacing.spacing24
                         radius: height / 2
                         color: deleteTap.pressed ? Colors.hoverItemPressed : deleteHover.hovered ? Colors.hoverItemHovered : "transparent"
+                        border.width: 1
                         border.color: deleteHover.hovered ? Colors.pillBorder : "transparent"
                         opacity: entryHover.hovered ? 1.0 : 0.0
+                        // An item at zero opacity still takes input.
+                        visible: deleteBtn.opacity > 0
 
                         Behavior on opacity {
                             NumberAnimation {
@@ -125,6 +143,7 @@ Item {
                         }
                         TapHandler {
                             id: deleteTap
+                            gesturePolicy: TapHandler.ReleaseWithinBounds
                             onTapped: NotificationListener.removeAt(histEntry.index)
                         }
 
