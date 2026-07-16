@@ -145,8 +145,13 @@ in
   # PanelWindow background is not blurred, only the pill (alpha 0.7, at the time of writing) is.
   # When the pill is slid off-screen it is clipped, leaving only the transparent
   # background, so blur disappears without any extra logic.
+  # no_anim keeps Hyprland from animating the layer surface itself. The Bar
+  # resizes 1px <-> 1000px on hover, and Hyprland stretches the client buffer
+  # into the still-animating box, so the pill renders vertically distorted for a
+  # few frames under load. Quickshell already animates its own show/hide in QML.
   wayland.windowManager.hyprland.settings.layerrule = [
     "blur on, match:namespace quickshell"
     "ignore_alpha 0.01, match:namespace quickshell"
+    "no_anim on, match:namespace quickshell"
   ];
 }
