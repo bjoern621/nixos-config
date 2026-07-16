@@ -30,7 +30,7 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 | `sysconf-pull`      | `git pull && sudo nixos-rebuild switch`         | Pulls latest config from remote then rebuilds               |
 | `sysconf-help`      | (none)                                          | Shows help for all sysconf commands                         |
 | `sysconf-audio-fix` | (none)                                          | Reloads TAS2781 speaker driver (workaround for suspend bug) |
-| `sysconf-fix-monitors` | (none)                                       | Re-applies Hyprland monitor config (workaround for 0.55.0 mixed-scale cursor wall + layer-shell offset) |
+| `sysconf-fix-monitors` | (none)                                       | Re-applies Hyprland monitor config (workaround for the mixed-scale cursor wall + layer-shell offset) |
 
 ## Module Conventions
 
@@ -50,13 +50,14 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 ## Hyprland Rules
 
 The authoritative reference for window rules and layer rules is:
-https://wiki.hypr.land/Configuring/Window-Rules/
+https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 
-**IMPORTANT**: The window/layer rule syntax changes frequently. Before writing or modifying any window rules or layer rules, **always fetch the latest syntax** from the wiki using `WebFetch` on https://wiki.hypr.land/Configuring/Window-Rules/. Do not rely on the examples below; they may be outdated.
+**IMPORTANT**: The window/layer rule syntax changes frequently. Before writing or modifying any window rules or layer rules, **always fetch the latest syntax** from the wiki using `WebFetch`. Do not rely on the examples below; they may be outdated.
 
-- Key layer rule effects: `blur on`, `ignore_alpha <float>`, `blur_popups on`, `xray on`, `dim_around on`.
+- Layer rule effects: `no_anim`, `blur`, `blur_popups`, `ignore_alpha <float>`, `dim_around`, `xray`, `animation <style>`, `order <int>`, `above_lock`, `no_screen_share`.
 - Anonymous syntax: `layerrule = <effect>, match:namespace <regex>`
 - Named syntax uses a block: `layerrule { name = …; <effect> = …; match:namespace = …; }`
+- `match:namespace` is a full match, so `quickshell` does not match `quickshell-launcher`.
 
 ## Quickshell (QML Shell UI)
 
@@ -86,7 +87,7 @@ Interactive items should change both **background** and **border** on hover. The
 - Default: transparent background, transparent border
 - Hovered: `Colors.hoverItemHovered` background, `Colors.pillBorder` border
 - Pressed: `Colors.hoverItemPressed` background, `Colors.pillBorder` border
-- Always set `cursorShape: Qt.PointingHandCursor` on interactive areas.
+- Clickable areas use `cursorShape: Qt.PointingHandCursor`; non-clickable ones keep `Qt.ArrowCursor`. `HoverItem` derives this from its `clickable` property.
 
 ### Border Radius
 
@@ -151,12 +152,18 @@ SquishBehavior on scale { bouncy: true; duration: 120 }
 
 #### Show/hide: fade + slide + scale pop
 
-The standard pattern for popup/menu transitions (see `HoverMenu.qml`, `VolumeOsd.qml`, `SystemTray.qml`):
+Popup/menu transitions use **`PopReveal`** (see `HoverMenu.qml`, `VolumeOsd.qml`). It combines slide + fade + scale pop; drive it with `showing`, or call `show()` / `hide()`:
 
-- **Show**: slide up ~8–16px + fade in (`OutCubic`, 60–100ms) + scale 0.96→1.0 (`OutBack`, 80–130ms)
-- **Hide**: slide down ~8–16px + fade out (`InCubic`, 60–80ms) + scale 1.0→0.96 (`InCubic`, 60–80ms)
-- Set `transformOrigin: Item.Top` so scaling anchors to the bar/trigger
-- Initial state: `opacity: 0`, `scale: 0.96`
+```qml
+PopReveal {
+    id: reveal
+    edge: Qt.TopEdge   // slide origin; combinable, e.g. Qt.TopEdge | Qt.RightEdge
+    showing: someFlag
+    onHidden: window.visible = false
+}
+```
+
+`PopReveal` properties: `slideOffset` (default `Spacing.spacing8`), `showDuration` / `hideDuration` (default 80ms), `showing`, `edge` (default `Qt.TopEdge`). Signals: `shown`, `hidden`. It sets `transformOrigin` from `edge`, holds `opacity: 0` / `scale: 0.96` when hidden, and is `visible` only while `opacity > 0`. The scale runs `showDuration + 50` on `OutBack` so the pop trails the fade.
 
 **When NOT to use scale pop**: Content transitions _within_ an already-visible container (e.g. calendar year switching, expanding a section) should use fade + slide only, not scale. Scale pop is for showing/hiding the container itself.
 
@@ -172,27 +179,22 @@ ContentReplace {
 }
 ```
 
-`ContentReplace` properties: `duration` (default 150ms), `contentKey` (watched value that triggers the transition), `displayValue` (read-only; updates at the animation midpoint).
+`ContentReplace` properties: `duration` (default 150ms), `contentKey` (watched value that triggers the transition), `displayValue` (tracks `contentKey`, but is re-assigned at the animation midpoint so the swap lands mid-transition).
 
 **Important**: content inside must bind to `displayValue`, not directly to the source property. Direct binding bypasses the deferred swap and the old content won't be visible during scale-down.
 
 #### Expandable sections: height + opacity
 
-For collapsible content (e.g. Wiedergabeliste):
+For collapsible content (e.g. the Wiedergabeliste in `NowPlayingMenu.qml`), use **`ExpandSection`**. It animates height + opacity via states/transitions and clips its content:
 
 ```qml
-height: expanded ? contentColumn.implicitHeight : 0
-clip: true
-Behavior on height {
-    NumberAnimation { duration: 250; easing.type: expanded ? Easing.OutBack : Easing.InCubic }
-}
-opacity: expanded ? 1 : 0
-Behavior on opacity {
-    NumberAnimation { duration: expanded ? 200 : 120; easing.type: expanded ? Easing.OutCubic : Easing.InCubic }
+ExpandSection {
+    expanded: root.queueExpanded
+    Column { /* content */ }
 }
 ```
 
-Use `OutBack` on expand for a bouncy overshoot, `InCubic` on collapse for a quick tuck-away.
+`ExpandSection` properties: `expanded`, `horizontal` (animates width instead of height; default false), `duration` (default 180ms). Expand uses `OutCubic`, collapse uses `InCubic`.
 
 #### Image/content loading: fade in
 
@@ -218,6 +220,8 @@ OSD progress bars (volume, brightness) use **120ms** for a slightly smoother vis
 
 #### Menu timing
 
+Both timers live in `HoverItem.qml`:
+
 - **150ms** delay before showing a hover menu (prevents accidental triggers)
 - **100ms** delay before hiding (prevents flicker on brief mouse passes)
 
@@ -233,22 +237,25 @@ OSD progress bars (volume, brightness) use **120ms** for a slightly smoother vis
 
 **Every mapped PanelWindow creates a Wayland layer surface that Hyprland must composite and blur each frame.** With `Variants` per screen this multiplies quickly. Minimizing mapped surfaces is critical for battery life.
 
-**Rule: A PanelWindow must be unmapped (`visible: false`) whenever it has no visible content.** Only windows that need always-on hover detection (Bar trigger strip, PowerCorner, NotificationPanel) should stay mapped, and those should be as small as possible.
+**Rule: A PanelWindow must be unmapped (`visible: false`) whenever it has no visible content.** Only windows that need always-on hover detection (Bar, PowerCorner, NotificationCenter) stay mapped, and those keep their idle input region as small as possible.
 
 Verify with: `hyprctl layers | grep quickshell`
 
 **Patterns by window type:**
 
-| Type                       | Pattern                                                                     | Example                                    |
-| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
-| Toggled overlay (IPC/flag) | `visible: flag \|\| !hideComplete` + track PopReveal `onHidden`             | AppLauncher, ClipboardHistory, PopupWindow |
-| Transient OSD              | `visible: false` default, set `true` before `show()`, `false` on `onHidden` | VolumeOsd, BrightnessOsd                   |
-| Notification-driven        | `visible: entries.length > 0`                                               | NotificationToast                          |
-| Hover-triggered            | Keep mapped but **shrink** `implicitHeight` when idle                       | Bar (1000px → 8px trigger strip)           |
+| Type                       | Pattern                                                                     | Example                                     |
+| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------- |
+| Toggled overlay (IPC/flag) | `visible: <flag>` bound to the owning Scope's property                      | AppLauncher, ClipboardHistory, EmojiPicker  |
+| Transient OSD              | `visible: false` default, set `true` before `show()`, `false` on `onHidden` | VolumeOsd, BrightnessOsd                    |
+| Notification-driven        | `visible: <model>.count > 0`                                                | NotificationToast                           |
+| Hover-triggered            | Keep mapped, **shrink** `implicitHeight` when idle                          | Bar (1000px idle-collapses to `0`, which the surface clamps to a 1px trigger strip) |
+| Hover-triggered, fixed size| Keep mapped, shrink the **`mask` region** when idle                         | PowerCorner, NotificationCenter             |
 
 **When adding a new PanelWindow**, always implement one of these patterns. Never leave a PanelWindow permanently mapped with no visibility management.
 
-**Blur namespace split:** Hyprland applies blur via `layerrule = "blur on, match:namespace quickshell"` (defined in `quickshell.nix`). Windows that don't need blur can opt out by setting a different namespace:
+**Resizing a mapped layer surface is not free.** Hyprland animates a layer's size and stretches the client buffer into the animating box, so a surface that resizes on hover visibly distorts for a few frames under load. Any namespace whose window resizes or toggles needs `no_anim on` in its layerrule.
+
+**Namespace split:** layerrules match on the layer namespace, and `match:namespace` is a full match, so each namespace needs its own rules. A window selects one via:
 
 ```qml
 import Quickshell.Wayland._WlrLayerShell
@@ -258,4 +265,12 @@ PanelWindow {
 }
 ```
 
-Currently only ScreenCorners uses `quickshell-noblur` since it's purely decorative (opaque corner masks, no translucent content). All other windows use the default `quickshell` namespace because they contain blurred content (pills, panels, menus).
+| Namespace              | Windows                        | Rules live in            |
+| ---------------------- | ------------------------------ | ------------------------ |
+| `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay | `quickshell.nix`         |
+| `quickshell-noblur`    | ScreenCorners, WallpaperChooser | (none; opts out of blur) |
+| `quickshell-launcher`  | AppLauncher                    | `hyprland/app-launcher.nix` |
+| `quickshell-clipboard` | ClipboardHistory               | `hyprland/clipboard-history.nix` |
+| `quickshell-emoji`     | EmojiPicker                    | `hyprland/emoji-picker.nix` |
+
+`quickshell-noblur` exists for windows that are purely decorative or opaque and gain nothing from blur. Per the One Concern Per File convention, a window with its own namespace carries its layerrules in that app's module, not in `quickshell.nix`.
