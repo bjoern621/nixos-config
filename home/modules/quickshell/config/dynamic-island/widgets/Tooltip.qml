@@ -9,10 +9,12 @@ import "../"
 // behind it: the tooltip sees the layer below (e.g. the picker pill) blurred.
 //
 // Caller supplies `anchorItem` (the item the tooltip points at) and `text`
-// (and optionally `subtitle`). The tooltip self-positions centered above
-// `anchorItem`. If the anchor moves due to scrolling or layout changes that
-// don't alter its own properties (e.g. an outer ListView's contentY), bind
-// `recalcKey` to that value to trigger position recomputation.
+// (and optionally `subtitle`). The tooltip self-positions centered on
+// `anchorItem`, above it by default. Set `placement` to "below" for anchors at
+// the top of the screen, such as items in the bar. If the anchor moves due to
+// scrolling or layout changes that don't alter its own properties (e.g. an
+// outer ListView's contentY), bind `recalcKey` to that value to trigger
+// position recomputation.
 //
 //   Tooltip {
 //       anchorItem: hoveredCell
@@ -32,6 +34,10 @@ Scope {
     property var screen: null
     property int verticalSpacing: Spacing.spacing4
     property var recalcKey: 0
+
+    // "above" | "below", relative to anchorItem.
+    property string placement: "above"
+    readonly property bool placeBelow: placement === "below"
 
     readonly property bool shouldShow: text !== "" && anchorItem !== null
 
@@ -68,7 +74,8 @@ Scope {
             id: reveal
 
             showing: root.shouldShow
-            edge: Qt.BottomEdge
+            // Slide out of the anchor: down from its bottom, or up from its top.
+            edge: root.placeBelow ? Qt.TopEdge : Qt.BottomEdge
             showDuration: 80
             hideDuration: 60
 
@@ -90,6 +97,10 @@ Scope {
                 if (!root.anchorItem)
                     return 0;
                 const _ = root.recalcKey;
+                if (root.placeBelow) {
+                    const b = root.anchorItem.mapToItem(null, 0, root.anchorItem.height);
+                    return b.y + root.verticalSpacing;
+                }
                 const p = root.anchorItem.mapToItem(null, 0, 0);
                 return p.y - reveal.height - root.verticalSpacing;
             }

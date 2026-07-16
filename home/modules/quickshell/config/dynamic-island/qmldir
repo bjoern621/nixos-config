@@ -39,6 +39,7 @@ BatteryMenu 1.0 menus/BatteryMenu.qml
 NowPlayingMenu 1.0 menus/NowPlayingMenu.qml
 PowerMenu 1.0 menus/PowerMenu.qml
 TrayContextMenu 1.0 menus/TrayContextMenu.qml
+TrayMenuPanel 1.0 menus/TrayMenuPanel.qml
 LoadingScreen 1.0 menus/LoadingScreen.qml
 ShutdownScreen 1.0 menus/ShutdownScreen.qml
 
@@ -64,6 +65,7 @@ DateTime 1.0 bar/DateTime.qml
 WorkspaceIndicator 1.0 bar/WorkspaceIndicator.qml
 Workspace3Apps 1.0 bar/Workspace3Apps.qml
 SystemTray 1.0 bar/SystemTray.qml
+TrayIcon 1.0 bar/TrayIcon.qml
 NowPlaying 1.0 bar/NowPlaying.qml
 MusicBars 1.0 bar/MusicBars.qml
 

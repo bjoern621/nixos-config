@@ -1,299 +1,76 @@
-import Quickshell
 import QtQuick
 import "../"
-import "../base"
 
+// A tray item's context menu: the root panel plus, when an entry with children
+// is hovered, a submenu panel beside it.
+//
+// Live menus nest exactly one level (Tailscale's exit nodes, nm-applet's
+// available networks), which is all the dbusmenu spec's `children-display`
+// vocabulary encourages, so two panels cover it.
 Item {
     id: menuRoot
 
     property var menuHandle: null
-    property var panelWindow: null
 
     signal itemTriggered
 
-    readonly property bool hovered: rootHover.hovered
+    readonly property bool hovered: mainPanel.hovered || (submenuPanel.visible && submenuPanel.hovered)
+
+    // Width of the root panel alone. A submenu widens `implicitWidth`, so anyone
+    // centring this menu on a trigger must use this instead, or opening a
+    // submenu would drag the root panel sideways.
+    readonly property real rootWidth: mainPanel.implicitWidth
+
     property var activeSubmenu: null
     property real submenuY: 0
 
     implicitWidth: mainPanel.implicitWidth + (submenuPanel.visible ? Spacing.spacing4 + submenuPanel.implicitWidth : 0)
-    implicitHeight: Math.max(mainPanel.implicitHeight, submenuPanel.visible ? submenuY + submenuPanel.implicitHeight : 0)
+    implicitHeight: Math.max(mainPanel.implicitHeight, submenuPanel.visible ? menuRoot.submenuY + submenuPanel.implicitHeight : 0)
 
-    HoverHandler {
-        id: rootHover
+    function closeSubmenu() {
+        menuRoot.activeSubmenu = null;
     }
 
+    // Hovering off an entry and onto its submenu briefly crosses the gap
+    // between the panels, so closing is deferred.
     Timer {
         id: submenuCloseTimer
         interval: 300
         onTriggered: {
-            if (!submenuHover.hovered) {
-                menuRoot.activeSubmenu = null;
-            }
+            if (!submenuPanel.hovered)
+                menuRoot.closeSubmenu();
         }
     }
 
-    // Main menu panel
-    Rectangle {
+    TrayMenuPanel {
         id: mainPanel
-        implicitWidth: 200
-        implicitHeight: mainContent.implicitHeight + 2 * Spacing.spacing8
-        height: implicitHeight
-        radius: Spacing.spacing12
-        color: Colors.pillBackground
-        border.width: 1
-        border.color: Colors.pillBorder
+        menuHandle: menuRoot.menuHandle
 
-        QsMenuOpener {
-            id: opener
-            menu: menuRoot.menuHandle
+        onEntryTriggered: menuRoot.itemTriggered()
+        onSubmenuRequested: function (entry, y) {
+            submenuCloseTimer.stop();
+            menuRoot.activeSubmenu = entry;
+            menuRoot.submenuY = y;
         }
-
-        Column {
-            id: mainContent
-            anchors.fill: parent
-            anchors.margins: Spacing.spacing8
-
-            Repeater {
-                model: opener.children
-
-                Item {
-                    width: mainContent.width
-                    height: modelData.isSeparator ? 9 : 30
-
-                    required property var modelData
-
-                    Rectangle {
-                        visible: modelData.isSeparator
-                        width: parent.width
-                        height: 1
-                        anchors.centerIn: parent
-                        color: Colors.separatorColor
-                    }
-
-                    Rectangle {
-                        id: mainItemBg
-                        visible: !modelData.isSeparator
-                        anchors.fill: parent
-                        radius: Spacing.spacing4
-                        color: mainItemMouse.containsMouse && modelData.enabled ? Colors.hoverItemHovered : "transparent"
-                        border.color: mainItemMouse.containsMouse && modelData.enabled ? Colors.pillBorder : "transparent"
-
-                        Text {
-                            id: mainCheckMark
-                            visible: modelData.buttonType !== 0
-                            text: modelData.checkState === Qt.Checked ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF") : " "
-                            color: Colors.textColor
-                            font.pixelSize: Typography.fontSize12
-                            width: visible ? 16 : 0
-                            anchors.left: parent.left
-                            anchors.leftMargin: Spacing.spacing8
-                            anchors.verticalCenter: parent.verticalCenter
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        TintedIcon {
-                            id: mainItemIcon
-                            source: modelData.icon ?? ""
-                            visible: (modelData.icon ?? "") !== ""
-                            size: 16
-                            color: Colors.textColor
-                            anchors.left: mainCheckMark.right
-                            anchors.leftMargin: visible ? Spacing.spacing4 : 0
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            text: modelData.text ?? ""
-                            color: modelData.enabled ? Colors.textColor : Colors.textColorMuted
-                            font.pixelSize: Typography.fontSize12
-                            elide: Text.ElideRight
-                            anchors.left: mainItemIcon.visible ? mainItemIcon.right : mainCheckMark.right
-                            anchors.leftMargin: Spacing.spacing6
-                            anchors.right: mainSubmenuArrow.left
-                            anchors.rightMargin: Spacing.spacing4
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            id: mainSubmenuArrow
-                            visible: modelData.hasChildren
-                            text: "\u203A"
-                            color: Colors.textColorMuted
-                            font.pixelSize: Typography.fontSize16
-                            anchors.right: parent.right
-                            anchors.rightMargin: Spacing.spacing8
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        MouseArea {
-                            id: mainItemMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
-                            onContainsMouseChanged: {
-                                if (containsMouse) {
-                                    if (modelData.hasChildren) {
-                                        submenuCloseTimer.stop();
-                                        menuRoot.activeSubmenu = modelData;
-                                        menuRoot.submenuY = mainItemBg.mapToItem(menuRoot, 0, 0).y;
-                                    } else if (menuRoot.activeSubmenu !== null) {
-                                        submenuCloseTimer.restart();
-                                    }
-                                } else if (modelData.hasChildren) {
-                                    submenuCloseTimer.restart();
-                                }
-                            }
-
-                            onClicked: {
-                                if (!modelData.enabled)
-                                    return;
-                                if (modelData.hasChildren) {
-                                    menuRoot.activeSubmenu = modelData;
-                                    menuRoot.submenuY = mainItemBg.mapToItem(menuRoot, 0, 0).y;
-                                } else {
-                                    if (modelData.sendTriggered)
-                                        modelData.sendTriggered();
-                                    else
-                                        modelData.triggered();
-                                    menuRoot.itemTriggered();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        onSubmenuLeft: submenuCloseTimer.restart()
     }
 
-    // Submenu panel
-    Rectangle {
+    TrayMenuPanel {
         id: submenuPanel
         visible: menuRoot.activeSubmenu !== null
         x: mainPanel.width + Spacing.spacing4
         y: menuRoot.submenuY
-        implicitWidth: 200
-        implicitHeight: subContent.implicitHeight + 2 * Spacing.spacing8
-        height: implicitHeight
-        radius: Spacing.spacing12
-        color: Colors.pillBackground
-        border.width: 1
-        border.color: Colors.pillBorder
 
-        HoverHandler {
-            id: submenuHover
-            onHoveredChanged: {
-                if (hovered)
-                    submenuCloseTimer.stop();
-            }
-        }
+        // Binding the handle only while visible is what signals "this submenu
+        // is open" to the application.
+        menuHandle: menuRoot.activeSubmenu
 
-        QsMenuOpener {
-            id: subOpener
-            menu: menuRoot.activeSubmenu
-        }
-
-        Column {
-            id: subContent
-            anchors.fill: parent
-            anchors.margins: Spacing.spacing8
-
-            Repeater {
-                model: subOpener.children
-
-                Item {
-                    width: subContent.width
-                    height: modelData.isSeparator ? 9 : 30
-
-                    required property var modelData
-
-                    Rectangle {
-                        visible: modelData.isSeparator
-                        width: parent.width
-                        height: 1
-                        anchors.centerIn: parent
-                        color: Colors.separatorColor
-                    }
-
-                    Rectangle {
-                        id: subItemBg
-                        visible: !modelData.isSeparator
-                        anchors.fill: parent
-                        radius: Spacing.spacing4
-                        color: subItemMouse.containsMouse && modelData.enabled ? Colors.hoverItemHovered : "transparent"
-                        border.color: subItemMouse.containsMouse && modelData.enabled ? Colors.pillBorder : "transparent"
-
-                        Text {
-                            id: subCheckMark
-                            visible: modelData.buttonType !== 0
-                            text: modelData.checkState === Qt.Checked ? (modelData.buttonType === 1 ? "\u2713" : "\u25CF") : " "
-                            color: Colors.textColor
-                            font.pixelSize: Typography.fontSize12
-                            width: visible ? 16 : 0
-                            anchors.left: parent.left
-                            anchors.leftMargin: Spacing.spacing8
-                            anchors.verticalCenter: parent.verticalCenter
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        TintedIcon {
-                            id: subItemIcon
-                            source: modelData.icon ?? ""
-                            visible: (modelData.icon ?? "") !== ""
-                            size: 16
-                            color: Colors.textColor
-                            anchors.left: subCheckMark.right
-                            anchors.leftMargin: visible ? Spacing.spacing4 : 0
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            text: modelData.text ?? ""
-                            color: modelData.enabled ? Colors.textColor : Colors.textColorMuted
-                            font.pixelSize: Typography.fontSize12
-                            elide: Text.ElideRight
-                            anchors.left: subItemIcon.visible ? subItemIcon.right : subCheckMark.right
-                            anchors.leftMargin: Spacing.spacing6
-                            anchors.right: subSubmenuArrow.left
-                            anchors.rightMargin: Spacing.spacing4
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            id: subSubmenuArrow
-                            visible: modelData.hasChildren
-                            text: "\u203A"
-                            color: Colors.textColorMuted
-                            font.pixelSize: Typography.fontSize16
-                            anchors.right: parent.right
-                            anchors.rightMargin: Spacing.spacing8
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        MouseArea {
-                            id: subItemMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
-                            onClicked: {
-                                if (!modelData.enabled)
-                                    return;
-                                if (modelData.hasChildren) {
-                                    const pos = subItemBg.mapToItem(null, subItemBg.width, 0);
-                                    modelData.display(menuRoot.panelWindow, pos.x, pos.y);
-                                } else {
-                                    if (modelData.sendTriggered)
-                                        modelData.sendTriggered();
-                                    else
-                                        modelData.triggered();
-                                    menuRoot.itemTriggered();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        onEntryTriggered: menuRoot.itemTriggered()
+        onHoveredChanged: {
+            if (hovered)
+                submenuCloseTimer.stop();
+            else
+                submenuCloseTimer.restart();
         }
     }
 }
