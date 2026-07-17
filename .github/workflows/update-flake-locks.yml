@@ -33,7 +33,7 @@ jobs:
           DELAY_DAYS: ${{ github.event.inputs.delay_days || '7' }}
           # Outside the repo tree, so create-pull-request does not commit it.
           PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
-        run: bash .github/scripts/update-stable-locks.sh hosts/homelab hosts/vmk3s
+        run: bash .github/scripts/update-stable-locks.sh hosts/homelab hosts/vmk3s hosts/nixos hosts/pi-4b-hh
 
       - name: Open pull request
         uses: peter-evans/create-pull-request@v6

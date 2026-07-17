@@ -4,7 +4,8 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/scripts/default.nix
-    ../../modules/auto-update.nix
+    ../../modules/sysconf-sudo.nix
+    ../../modules/sysconf-auto-pull.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/homelab/ssh-hardening.nix
     ../../modules/tailscale-client.nix
@@ -153,10 +154,12 @@
     };
   };
 
-  services.nixos-auto-update = {
+  # Updates enter via CI stable flake.lock PRs (update-flake-locks.yml).
+  # Host only converges to origin/main; never computes own revisions.
+  services.sysconf-sudo.users = [ "ops" ];
+  services.sysconf-auto-pull = {
     enable = true;
     user = "ops";
-    delayDays = 7;
     schedule = "Mon 03:00";
   };
 }

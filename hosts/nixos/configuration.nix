@@ -27,7 +27,8 @@
     ../../modules/quickshell-lock.nix
     ../../modules/hibernate.nix
     ../../modules/nix-ld.nix
-    ../../modules/auto-update.nix
+    ../../modules/sysconf-sudo.nix
+    ../../modules/sysconf-auto-pull.nix
     ../../modules/howdy.nix
     ../../modules/fido2-auth.nix
     ../../modules/fonts.nix
@@ -173,12 +174,12 @@
     };
   };
 
-  # Automatic weekly updates using 7-day delayed stable strategy
-  # Updates all flake inputs to revisions that have "baked" for at least a week
-  services.nixos-auto-update = {
+  # Updates enter via CI stable flake.lock PRs (update-flake-locks.yml).
+  # Host only converges to origin/main; never computes own revisions.
+  services.sysconf-sudo.users = [ "bjoern" ];
+  services.sysconf-auto-pull = {
     enable = true;
     user = "bjoern";
-    delayDays = 7;
     schedule = "Mon 03:00";
   };
 }
