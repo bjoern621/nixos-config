@@ -6,31 +6,29 @@
   ...
 }:
 
-# Mounts the Garage S3 buckets so Nautilus browses them like any other folder,
-# one directory per access key. Credentials come from sops, which is
-# system-level: see modules/garage-mount.nix.
+# Mounts Garage S3 buckets as a normal folder tree.
+# One dir per access key.
+# Credentials from sops, system level: see modules/garage-mount.nix.
 
 let
   mountPoint = "${config.home.homeDirectory}/mnt/garage";
 
-  # Unmounting FUSE needs the setuid wrapper. The binary in the fuse3 package is
-  # not setuid, so calling it directly always fails with EPERM.
+  # FUSE unmount needs the setuid wrapper.
+  # fuse3 package binary is not setuid, direct call always EPERM.
   fusermount3 = "${osConfig.security.wrapperDir}/fusermount3";
 
-  # One remote per access key: a remote carries one credential pair, and
-  # ListBuckets returns only that key's buckets. Credentials come from the
-  # EnvironmentFile.
+  # One remote per access key.
+  # Remote carries one credential pair, ListBuckets returns only that key's
+  # buckets.
   s3Remote = remote: [
     "RCLONE_CONFIG_${remote}_TYPE=s3"
     "RCLONE_CONFIG_${remote}_PROVIDER=Other"
-    # The tailnet name of the Garage sidecar. Reaching it needs the tailnet
-    # ACL to grant this account port 3900 on tag:k8s-distributed-s3; the tag
-    # otherwise only carries the node-to-node grant for RPC on 3901.
+    # Tailnet name of the Garage sidecar.
     "RCLONE_CONFIG_${remote}_ENDPOINT=http://garage-k8s:3900"
-    # Matches s3_region in the cluster's garage.toml.
+    # Matches s3_region in cluster garage.toml.
     "RCLONE_CONFIG_${remote}_REGION=garage"
-    # garage.toml leaves root_domain unset, so buckets are addressed as
-    # endpoint/bucket rather than as a subdomain of the endpoint.
+    # garage.toml leaves root_domain unset.
+    # Buckets address as endpoint/bucket, not endpoint subdomain.
     "RCLONE_CONFIG_${remote}_FORCE_PATH_STYLE=true"
   ];
 in
@@ -41,16 +39,17 @@ in
     Unit = {
       Description = "Garage S3 buckets mounted at ${mountPoint}";
 
-      # The endpoint is a MagicDNS name, so it resolves only after tailscaled has
-      # set up DNS. Rather than ordering against a system unit, which a user
-      # manager cannot do, the service fails and retries until the name resolves.
-      # The default start rate limit would give up during a slow boot.
+      # Endpoint is a MagicDNS name, resolves only after tailscaled sets up DNS.
+      # User manager cannot order against a system unit, so service fails and
+      # retries until name resolves.
+      # Default start rate limit gives up during slow boot.
       StartLimitIntervalSec = 0;
     };
 
     Service = {
-      # rclone signals readiness once the mount is answering, so dependants and
-      # `systemctl --user start` block until the tree is actually browsable.
+      # rclone signals readiness once mount answers.
+      # Dead mount reports failed, not active.
+      # Type=simple reports active at fork.
       Type = "notify";
 
       EnvironmentFile = osConfig.sops.templates."garage-rclone.env".path;
@@ -59,41 +58,41 @@ in
         s3Remote "LAPTOP"
         ++ s3Remote "TEAM"
         ++ [
-          # combine puts each key's buckets under a directory named after the key.
+          # combine puts each key's buckets under a dir named after the key.
           "RCLONE_CONFIG_GARAGE_TYPE=combine"
-          # Quoted because systemd splits Environment= on whitespace, which would
-          # otherwise drop every upstream after the first.
+          # Quoted: systemd splits Environment= on whitespace, dropping every
+          # upstream after the first.
           ''"RCLONE_CONFIG_GARAGE_UPSTREAMS=bjoern-laptop=laptop: team=team:"''
         ];
 
       ExecStartPre = [
-        # An rclone that died without unmounting, which happens when a file
-        # manager or indexer holds the mount open past SIGTERM, leaves the mount
-        # point stale. mkdir cannot even stat a stale mount point, so it fails
-        # with ENOTCONN and the restart loop then repeats that failure forever.
-        # The lazy unmount detaches a stale mount regardless of who holds it, and
-        # is a no-op when nothing is mounted.
+        # rclone dying without unmount leaves mount point stale.
+        # Happens when a file manager holds it open past SIGTERM.
+        # mkdir cannot stat stale point, fails ENOTCONN, restart loops forever.
+        # Lazy unmount detaches regardless of holder.
+        # No-op when nothing mounted.
         "-${fusermount3} -u -z ${mountPoint}"
         "${pkgs.coreutils}/bin/mkdir -p ${mountPoint}"
       ];
 
       ExecStart = lib.concatStringsSep " " [
-        # Upstreams have no bucket, so each mounts its own bucket list. Grants
-        # live on the cluster, so a new bucket appears without a rebuild.
+        # Upstreams have no bucket, each mounts own bucket list.
+        # Grants live on cluster, new bucket appears without rebuild.
         "${pkgs.rclone}/bin/rclone mount garage: ${mountPoint}"
-        # S3 has no partial writes: an object is replaced whole. Without a write
-        # cache, anything that opens a file for update rather than streaming it
-        # start to finish fails, which covers most of what a file manager does.
+        # S3 has no partial writes, object replaced whole.
+        # Without write cache, opening a file for update instead of streaming
+        # start to finish fails.
+        # Covers most of what a file manager does.
         "--vfs-cache-mode writes"
-        # Objects changed elsewhere show up within this window instead of being
-        # served from a stale listing.
+        # Objects changed elsewhere appear within this window, not served from a
+        # stale listing.
         "--dir-cache-time 30s"
       ];
 
-      # rclone unmounts on SIGTERM, so this covers only the case where it exits
-      # without doing so. A lazy unmount reports success before the mount point
-      # is reusable, so the ExecStartPre above repeats it rather than trusting
-      # this to have finished.
+      # rclone unmounts on SIGTERM.
+      # Covers only exit without unmount.
+      # Lazy unmount reports success before mount point is reusable, so
+      # ExecStartPre repeats it.
       ExecStop = "-${fusermount3} -u -z ${mountPoint}";
 
       Restart = "on-failure";
@@ -103,8 +102,9 @@ in
     Install.WantedBy = [ "default.target" ];
   };
 
-  # Puts the mount in the Nautilus sidebar. The option is a lines type, so this
-  # appends to the bookmarks in file-manager.nix rather than replacing them.
+  # Puts mount in Nautilus sidebar.
+  # Option is a lines type, appends to bookmarks in file-manager.nix instead of
+  # replacing.
   xdg.configFile."gtk-3.0/bookmarks".text = lib.mkAfter ''
     file://${mountPoint} Garage
   '';

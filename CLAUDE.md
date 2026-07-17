@@ -62,6 +62,33 @@ Recreating an encrypted file from its template (`cp` + `sops -e -i`) **destroys 
 - Use `mkEnableOption` / `mkOption` for module options.
 - Keep modules self-contained.
 
+## Comments
+
+Comments in this repo are caveman-terse: maximum density, zero filler.
+
+This **fulfills** the "Writing style for docs and code comments" section of the global `~/.claude/CLAUDE.md` rather than replacing it.
+Every rule there points the same way: no filler, no rhetorical scaffolding, no hedging, one idea per sentence, cut everything that does not pull its weight.
+Caveman is those rules carried to their limit, so the global section still applies in full and this section says how far to take it.
+
+The single deviation: the global section asks for prose that reads like a human technical writer, which implies complete sentences.
+Comments here drop articles and use fragments instead.
+Nothing else in the global section is relaxed, and the "one sentence per line" rule holds here too.
+
+- Drop articles (`the`, `a`, `an`) wherever meaning survives.
+- Drop connective filler: `so this`, `which is`, `in order to`, `rather than trusting`, `the case where`.
+- Fragments are correct. Pattern: `[thing] [action] [reason].`
+- Identifiers, error codes, flags, and units stay exact and unabbreviated: `ENOTCONN`, `Type=simple`, `SIGTERM`, `root_domain`, `--vfs-cache-mode`.
+- Never trade a fact for brevity. Cutting words is free. Cutting facts is not.
+- A comment states the constraint the code cannot show. Density does not license dropping the "why".
+
+```nix
+# Bad:  rclone unmounts on SIGTERM, so this covers only the case where it exits without doing so.
+# Good: rclone unmounts on SIGTERM.
+#       Covers only exit without unmount.
+```
+
+Markdown docs in this repo follow the global prose style unchanged. Caveman applies to comments only.
+
 ## Hyprland Rules
 
 The authoritative reference for window rules and layer rules is:
