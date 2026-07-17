@@ -104,6 +104,11 @@ Item {
 
     onExpandedChanged: if (!expanded) trayRoot.closeMenu()
 
+    // An entry that removes its own item from the tray, such as a Quit, would
+    // otherwise leave the menu behind as an empty panel: the handle dies with
+    // the item and the entries drain away, but nothing dismisses the menu.
+    onTrayItemsChanged: if (internal.menuOpen && !trayRoot.trayItems.includes(internal.activeItem)) trayRoot.closeMenu()
+
     // Hyprland clears the grab when a click lands outside the bar, which is
     // what dismisses the menu without the click having to reach this window.
     HyprlandFocusGrab {
@@ -306,11 +311,15 @@ Item {
             trayMenuContent.activeSubmenu = null;
         }
 
+        // Triggering an entry deliberately leaves the menu up. Only a click off
+        // the menu dismisses it, so a toggle such as "Turn Bluetooth On" can be
+        // flipped and its result read without the menu going away first. An
+        // entry that opens a window still takes the focus grab with it, which
+        // dismisses the menu on its own.
         TrayContextMenu {
             id: trayMenuContent
             anchors.fill: parent
             menuHandle: internal.activeItem ? internal.activeItem.menu : null
-            onItemTriggered: trayRoot.closeMenu()
         }
     }
 }

@@ -14,7 +14,6 @@ Rectangle {
 
     property var menuHandle: null
 
-    signal entryTriggered
     // `y` is the entry's top edge in panel coordinates, for aligning a submenu.
     signal submenuRequested(var entry, real y)
     signal submenuLeft
@@ -186,7 +185,6 @@ Rectangle {
                             // Quickshell wires this signal to the dbusmenu
                             // "clicked" event for the entry.
                             row.modelData.triggered();
-                            panel.entryTriggered();
                         }
                     }
                 }

@@ -12,8 +12,6 @@ Item {
 
     property var menuHandle: null
 
-    signal itemTriggered
-
     readonly property bool hovered: mainPanel.hovered || (submenuPanel.visible && submenuPanel.hovered)
 
     // Width of the root panel alone. A submenu widens `implicitWidth`, so anyone
@@ -46,7 +44,6 @@ Item {
         id: mainPanel
         menuHandle: menuRoot.menuHandle
 
-        onEntryTriggered: menuRoot.itemTriggered()
         onSubmenuRequested: function (entry, y) {
             submenuCloseTimer.stop();
             menuRoot.activeSubmenu = entry;
@@ -65,7 +62,6 @@ Item {
         // is open" to the application.
         menuHandle: menuRoot.activeSubmenu
 
-        onEntryTriggered: menuRoot.itemTriggered()
         onHoveredChanged: {
             if (hovered)
                 submenuCloseTimer.stop();

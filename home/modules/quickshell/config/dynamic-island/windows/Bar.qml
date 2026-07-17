@@ -60,17 +60,26 @@ Variants {
             return m;
         }
 
+        // A Region follows its item's geometry but not its visibility, so a closed popup
+        // still punches its full rectangle into the input region, where it reads as a
+        // backdrop swallowing clicks meant for the window underneath. Passing null instead
+        // leaves that Region at its empty default. The test is the popup's visibility
+        // rather than its popupOpen flag, so a rect lasts exactly as long as the popup is
+        // on screen, including while it animates away.
+        function maskItem(item) {
+            return item && item.visible ? item : null;
+        }
+
         // Input region = trigger strip / pill area + each visible popup's own region.
         // Each child's popupItem already absorbs its descendants (submenus, bridges) inside
-        // its bounding box, so Bar references only direct children. Closed popups have
-        // visible: false and contribute nothing.
+        // its bounding box, so Bar references only direct children.
         mask: Region {
             Region { item: interactionZone }
-            Region { item: nowPlayingHoverItem.popupItem }
-            Region { item: calendarHoverItem.popupItem }
-            Region { item: systemTray.popupItem }
-            Region { item: volumeHoverItem.popupItem }
-            Region { item: batteryHoverItem.popupItem }
+            Region { item: root.maskItem(nowPlayingHoverItem.popupItem) }
+            Region { item: root.maskItem(calendarHoverItem.popupItem) }
+            Region { item: root.maskItem(systemTray.popupItem) }
+            Region { item: root.maskItem(volumeHoverItem.popupItem) }
+            Region { item: root.maskItem(batteryHoverItem.popupItem) }
         }
 
         readonly property bool shouldShowPill: zoneHover.hovered || anyPopupOpen || Globals.launcherVisible
@@ -89,6 +98,11 @@ Variants {
             }
         }
 
+        // The tray row expands for as long as the pill is on screen and no
+        // longer, so the pill always slides back in at its resting width. The
+        // collapse runs while the pill is off screen, where it costs nothing.
+        onPillHiddenChanged: if (pillHidden) systemTray.expanded = false
+
         // interactionZone is the trigger strip + pill hit area. Open popups are NOT
         // included in its bounds — they're added to the input mask as separate
         // Region entries, so the hitbox matches the visible shape.
@@ -101,6 +115,26 @@ Variants {
 
             HoverHandler {
                 id: zoneHover
+            }
+
+            // A tray menu is dismissed by clicking off it. A click that misses
+            // the bar's input region clears the tray's focus grab instead, so
+            // this only has to cover the pill. The handler takes a passive grab
+            // and never accepts the point, leaving the click to the component it
+            // landed on: pressing the volume icon both mutes and dismisses.
+            TapHandler {
+                enabled: systemTray.popupOpen
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                onTapped: function (eventPoint) {
+                    const pos = eventPoint.scenePosition;
+                    // The tray row toggles and swaps its own menu, so taps on it
+                    // are left alone. The menu's top edge reaches a few pixels
+                    // into interactionZone and needs excluding too.
+                    const onTray = systemTray.contains(systemTray.mapFromItem(null, pos));
+                    const onMenu = systemTray.popupItem.contains(systemTray.popupItem.mapFromItem(null, pos));
+                    if (!onTray && !onMenu)
+                        systemTray.closeMenu();
+                }
             }
 
             Rectangle {
