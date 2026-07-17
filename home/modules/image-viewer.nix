@@ -17,7 +17,5 @@
     fi
   '';
 
-  wayland.windowManager.hyprland.settings.windowrule = [
-    "float on, match:class qimgv"
-  ];
+  wayland.windowManager.hyprland.extraLuaFiles."rules.32-image-viewer".content = ./image-viewer.lua;
 }

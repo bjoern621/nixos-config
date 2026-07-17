@@ -30,6 +30,7 @@
     ./screenshot.nix
     ./exclusive-workspace.nix
     ./smart-gaps.nix
+    ./floating-size.nix
     ./wallpaper-chooser.nix
     ./hypridle.nix
   ];
@@ -62,9 +63,10 @@
   wayland.windowManager.hyprland = {
     enable = true;
 
-    # Keep the legacy hyprlang config generator. The default flipped to "lua"
-    # for stateVersion >= 26.05; this config is written in hyprlang syntax.
-    configType = "hyprlang";
+    # Lua config generator. Config lives in per-module .lua files wired via
+    # extraLuaFiles; hyprland.lua only requires them, alphabetically by attr
+    # name. Window rule order matters, hence the rules.NN- attr prefixes.
+    configType = "lua";
 
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     systemd.enable = false;

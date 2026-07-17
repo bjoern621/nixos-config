@@ -89,17 +89,24 @@ Nothing else in the global section is relaxed, and the "one sentence per line" r
 
 Markdown docs in this repo follow the global prose style unchanged. Caveman applies to comments only.
 
-## Hyprland Rules
+## Hyprland Configuration (Lua)
+
+Hyprland is configured in its Lua syntax (hyprlang is deprecated).
+Each concern lives in a real `.lua` file next to its Nix module, wired via `wayland.windowManager.hyprland.extraLuaFiles."<name>".content = ./<file>.lua;`.
+Home Manager generates `~/.config/hypr/hyprland.lua`, which `require`s the files in alphabetical order of their attr names.
+Window rules are last-match-wins across all files, so order-sensitive rule files use a `rules.NN-` attr prefix; pick a number that places new rules relative to the existing ones.
+Other attrs use the plain concern name.
 
 The authoritative reference for window rules and layer rules is:
 https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 
 **IMPORTANT**: The window/layer rule syntax changes frequently. Before writing or modifying any window rules or layer rules, **always fetch the latest syntax** from the wiki using `WebFetch`. Do not rely on the examples below; they may be outdated.
 
+- Window rules: `hl.window_rule({ name = …, match = { class = …, float = true, … }, <effect> = … })`
+- Layer rules: `hl.layer_rule({ match = { namespace = <regex> }, <effect> = … })`
 - Layer rule effects: `no_anim`, `blur`, `blur_popups`, `ignore_alpha <float>`, `dim_around`, `xray`, `animation <style>`, `order <int>`, `above_lock`, `no_screen_share`.
-- Anonymous syntax: `layerrule = <effect>, match:namespace <regex>`
-- Named syntax uses a block: `layerrule { name = …; <effect> = …; match:namespace = …; }`
-- `match:namespace` is a full match, so `quickshell` does not match `quickshell-launcher`.
+- `match.namespace` is a full match, so `quickshell` does not match `quickshell-launcher`.
+- Binds: `hl.bind("SUPER + Q", hl.dsp.exec_cmd("…"), { locked = true, … })`; options: `hl.config({ … })`.
 
 ## Quickshell (QML Shell UI)
 
@@ -323,9 +330,9 @@ Verify with: `hyprctl layers | grep quickshell`
 
 **When adding a new PanelWindow**, always implement one of these patterns. Never leave a PanelWindow permanently mapped with no visibility management.
 
-**Resizing a mapped layer surface is not free.** Hyprland animates a layer's size and stretches the client buffer into the animating box, so a surface that resizes on hover visibly distorts for a few frames under load. Any namespace whose window resizes or toggles needs `no_anim on` in its layerrule.
+**Resizing a mapped layer surface is not free.** Hyprland animates a layer's size and stretches the client buffer into the animating box, so a surface that resizes on hover visibly distorts for a few frames under load. Any namespace whose window resizes or toggles needs `no_anim = true` in its layer rule.
 
-**Namespace split:** layerrules match on the layer namespace, and `match:namespace` is a full match, so each namespace needs its own rules. A window selects one via:
+**Namespace split:** layer rules match on the layer namespace, and `match.namespace` is a full match, so each namespace needs its own rules. A window selects one via:
 
 ```qml
 import Quickshell.Wayland._WlrLayerShell
@@ -337,10 +344,10 @@ PanelWindow {
 
 | Namespace              | Windows                        | Rules live in            |
 | ---------------------- | ------------------------------ | ------------------------ |
-| `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay, LoadingOverlay, Tooltip | `quickshell.nix`         |
+| `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay, LoadingOverlay, Tooltip | `quickshell/layerrules.lua` |
 | `quickshell-noblur`    | ScreenCorners, WallpaperChooser | (none; opts out of blur) |
-| `quickshell-launcher`  | AppLauncher                    | `hyprland/app-launcher.nix` |
-| `quickshell-clipboard` | ClipboardHistory               | `hyprland/clipboard-history.nix` |
-| `quickshell-emoji`     | EmojiPicker                    | `hyprland/emoji-picker.nix` |
+| `quickshell-launcher`  | AppLauncher                    | `hyprland/app-launcher.lua` |
+| `quickshell-clipboard` | ClipboardHistory               | `hyprland/clipboard-history.lua` |
+| `quickshell-emoji`     | EmojiPicker                    | `hyprland/emoji-picker.lua` |
 
-`quickshell-noblur` exists for windows that are purely decorative or opaque and gain nothing from blur. Per the One Concern Per File convention, a window with its own namespace carries its layerrules in that app's module, not in `quickshell.nix`.
+`quickshell-noblur` exists for windows that are purely decorative or opaque and gain nothing from blur. Per the One Concern Per File convention, a window with its own namespace carries its layer rules in that app's module, not in the quickshell module.

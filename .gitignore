@@ -9,6 +9,9 @@ __pycache__/
 /result
 /result-*
 
+# Written by the dev shell hook; embeds a nix store path that rots on GC
+/.luarc.json
+
 # Non-free assets
 #modules/fancy-boot/darwin/logo.png
 #home/modules/quickshell/config/dynamic-island/icons/

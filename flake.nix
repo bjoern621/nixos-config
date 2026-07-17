@@ -56,6 +56,10 @@
           qs
           qt5compat
           sddm
+
+          # Lua for Hyprland config files (Hyprland embeds Lua 5.5)
+          lua5_5 # luac -p syntax check
+          lua-language-server
         ];
 
         shellHook = ''
@@ -78,6 +82,12 @@
           printf '#!/bin/sh\nexec "%s/bin/qtpaths" "$@"\n' "${pkgs.qt6.qtbase}" > "$HOME/.local/bin/qtpaths"
           chmod +x "$HOME/.local/bin/qtpaths"
           echo "  ~/.local/bin/qtpaths wrapper written"
+
+          # lua-language-server config for the Hyprland .lua files: resolves the
+          # hl.* API from Hyprland's shipped stubs. Gitignored because the store
+          # path rots on GC; regenerated on every shell entry.
+          printf '{\n  "workspace": { "library": [ "%s/share/hypr" ] },\n  "diagnostics": { "globals": [ "hl" ] }\n}\n' "${pkgs.hyprland}" > .luarc.json
+          echo "  .luarc.json written"
         '';
       };
     };

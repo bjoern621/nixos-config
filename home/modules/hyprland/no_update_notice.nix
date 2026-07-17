@@ -1,11 +1,5 @@
-{ ... }: 
+{ ... }:
 
 {
-  wayland.windowManager.hyprland.settings = {
-    # https://wiki.hypr.land/Configuring/Variables/#ecosystem
-    ecosystem = {
-      no_update_news = true;
-      no_donation_nag = true;
-    };
-  };
+  wayland.windowManager.hyprland.extraLuaFiles."no_update_notice".content = ./no_update_notice.lua;
 }

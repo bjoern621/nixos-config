@@ -140,18 +140,5 @@ in
     };
   };
 
-  # ignore_alpha skips blur at or below the threshold, so the transparent
-  # PanelWindow background stays unblurred and only the pill blurs.
-  # A pill slid off-screen is clipped, leaving transparent background, so blur
-  # disappears with no extra logic.
-  #
-  # no_anim stops Hyprland animating the layer surface.
-  # Bar resizes 1px <-> 1000px on hover, and Hyprland stretches the client buffer
-  # into the still-animating box, distorting the pill for a few frames under load.
-  # Quickshell animates its own show/hide in QML.
-  wayland.windowManager.hyprland.settings.layerrule = [
-    "blur on, match:namespace quickshell"
-    "ignore_alpha 0.01, match:namespace quickshell"
-    "no_anim on, match:namespace quickshell"
-  ];
+  wayland.windowManager.hyprland.extraLuaFiles."quickshell-layerrules".content = ./layerrules.lua;
 }

@@ -1,7 +1,6 @@
 { ... }:
 
 {
-    # wayland.windowManager.hyprland.settings
-    wayland.windowManager.hyprland.settings.misc.middle_click_paste = false;
-    # TODO: Does not work for chrome
+  wayland.windowManager.hyprland.extraLuaFiles."disable_middle_click_paste".content =
+    ./disable_middle_click_paste.lua;
 }

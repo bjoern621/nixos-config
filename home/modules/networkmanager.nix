@@ -6,11 +6,7 @@
 */
 
 {
-  wayland.windowManager.hyprland.settings = {
-    exec = [
-      "nm-applet --indicator"
-    ];
-  };
+  wayland.windowManager.hyprland.extraLuaFiles."networkmanager".content = ./networkmanager.lua;
 
   # Override icon: upstream uses "preferences-system-network" which is missing in Adwaita
   xdg.desktopEntries."nm-connection-editor" = {

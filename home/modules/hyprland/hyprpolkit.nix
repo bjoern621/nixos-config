@@ -1,13 +1,9 @@
 { pkgs, ... }:
 
 {
-    # https://wiki.hypr.land/Hypr-Ecosystem/hyprpolkitagent/
-    
-    wayland.windowManager.hyprland.settings.exec-once = [
-      "systemctl --user start hyprpolkitagent"
-    ];
+  wayland.windowManager.hyprland.extraLuaFiles."hyprpolkit".content = ./hyprpolkit.lua;
 
-    home.packages = [
-      pkgs.hyprpolkitagent
-    ];
+  home.packages = [
+    pkgs.hyprpolkitagent
+  ];
 }

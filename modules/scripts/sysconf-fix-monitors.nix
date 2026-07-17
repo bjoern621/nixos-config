@@ -12,7 +12,7 @@ let
     # translation and the bad state clears until the next latch event
     # (boot, lid open/close, monitor hotplug, suspend resume).
     #
-    # Positions must match home/modules/hyprland/monitors.nix: externals in a
+    # Positions must match home/modules/hyprland/monitors.lua: externals in a
     # row at the top, eDP-1 centered below. The intermediate scale-1 pass uses
     # x=1088 because eDP-1 is 2944 logical wide at that scale (2560 - 1472).
     set -euo pipefail

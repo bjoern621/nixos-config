@@ -5,7 +5,5 @@
     mpv
   ];
 
-  wayland.windowManager.hyprland.settings.windowrule = [
-    "float on, match:class mpv"
-  ];
+  wayland.windowManager.hyprland.extraLuaFiles."rules.31-mpv".content = ./mpv.lua;
 }
