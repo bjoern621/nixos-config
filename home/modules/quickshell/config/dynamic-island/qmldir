@@ -1,4 +1,5 @@
 singleton Globals 1.0 base/Globals.qml
+singleton Clock 1.0 base/Clock.qml
 singleton Colors 1.0 base/Colors.qml
 singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml

@@ -5,7 +5,12 @@ import "../base"
 Item {
     id: root
 
-    property int displayYear: new Date().getFullYear()
+    // The year the grid shows. It tracks todayYear, so a midnight rollover into a new
+    // year carries the grid with it, until the user navigates to some other year: that
+    // one is absolute and stays put. Navigating back to the current year unpins.
+    readonly property int displayYear: _yearPinned ? _pinnedYear : todayYear
+    property bool _yearPinned: false
+    property int _pinnedYear: 0
     property int _targetYear: displayYear
 
     function navigateYear(direction) {
@@ -13,7 +18,7 @@ Item {
         gridSlide.transition(direction > 0 ? 1 : -1);
     }
 
-    readonly property var today: new Date()
+    readonly property var today: Clock.date
     readonly property int todayYear: today.getFullYear()
     readonly property int todayMonth: today.getMonth()
     readonly property int todayDay: today.getDate()
@@ -177,7 +182,8 @@ Item {
                 id: gridSlide
 
                 onReadyToSwap: direction => {
-                    root.displayYear = root._targetYear;
+                    root._pinnedYear = root._targetYear;
+                    root._yearPinned = root._targetYear !== root.todayYear;
                     gridSlide.completeTransition();
                 }
 
