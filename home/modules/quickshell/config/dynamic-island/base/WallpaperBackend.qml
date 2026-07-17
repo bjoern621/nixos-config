@@ -1,5 +1,5 @@
 // WallpaperBackend - Interoperation layer between Globals.wallpaperPath and
-// the wallpaper display backend (currently hyprpaper).
+// the wallpaper display backend (hyprpaper).
 //
 // Watches Globals.wallpaperPath and forwards every change to
 // `hyprctl hyprpaper wallpaper`.  Swap this file to switch backends
@@ -7,7 +7,6 @@
 
 import QtQuick
 import Quickshell.Io
-import "../"
 
 Item {
     id: root
@@ -24,16 +23,12 @@ Item {
         if (path.length === 0)
             return;
 
-        console.log("[WallpaperBackend] applying: " + path);
         applyProc.command = ["hyprctl", "hyprpaper", "wallpaper", "," + path];
         applyProc.running = true;
     }
 
     Process {
         id: applyProc
-        stdout: SplitParser {
-            onRead: data => console.log("[WallpaperBackend] " + data)
-        }
     }
 
     Component.onCompleted: applyWallpaper()

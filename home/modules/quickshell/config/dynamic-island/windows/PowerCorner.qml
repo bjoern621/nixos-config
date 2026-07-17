@@ -27,14 +27,6 @@ Variants {
 
         readonly property bool shouldShowMenu: (cornerHover.hovered || powerMenuWrapper.keepOpen) && !LoadingHost.active
 
-        onShouldShowMenuChanged: {
-            if (shouldShowMenu) {
-                powerMenuWrapper.show();
-            } else {
-                powerMenuWrapper.hide();
-            }
-        }
-
         Rectangle {
             id: powerInteractionZone
             color: "transparent"
@@ -58,6 +50,7 @@ Variants {
 
         HoverMenu {
             id: powerMenuWrapper
+            showing: powerCorner.shouldShowMenu
             width: powerMenuView.implicitWidth
             anchors.top: parent.top
             anchors.right: parent.right

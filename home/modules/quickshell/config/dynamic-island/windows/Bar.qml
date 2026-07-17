@@ -47,19 +47,6 @@ Variants {
             for (const c of contentRow.children) if (c.popupOpen) return true;
             return false;
         }
-        readonly property real maxPopupWidth: {
-            let m = 0;
-            for (const c of contentRow.children)
-                if (c.popupOpen && c.popupItem) m = Math.max(m, c.popupItem.width);
-            return m;
-        }
-        readonly property real maxPopupHeight: {
-            let m = 0;
-            for (const c of contentRow.children)
-                if (c.popupOpen && c.popupItem) m = Math.max(m, c.popupItem.height);
-            return m;
-        }
-
         // A Region follows its item's geometry but not its visibility, so a closed popup
         // still punches its full rectangle into the input region, where it reads as a
         // backdrop swallowing clicks meant for the window underneath. Passing null instead
@@ -82,7 +69,11 @@ Variants {
             Region { item: root.maskItem(batteryHoverItem.popupItem) }
         }
 
-        readonly property bool shouldShowPill: zoneHover.hovered || anyPopupOpen || Globals.launcherVisible
+        // Launcher maps on one screen, so only that Bar slides out.
+        // Without the name test every screen's surface grows to 1000px.
+        readonly property bool launcherOnThisScreen: Globals.launcherVisible && Globals.launcherScreenName === root.modelData.name
+
+        readonly property bool shouldShowPill: zoneHover.hovered || anyPopupOpen || launcherOnThisScreen
 
         onShouldShowPillChanged: {
             if (shouldShowPill) {
@@ -104,7 +95,7 @@ Variants {
         onPillHiddenChanged: if (pillHidden) systemTray.expanded = false
 
         // interactionZone is the trigger strip + pill hit area. Open popups are NOT
-        // included in its bounds — they're added to the input mask as separate
+        // included in its bounds. They're added to the input mask as separate
         // Region entries, so the hitbox matches the visible shape.
         Item {
             id: interactionZone
@@ -193,6 +184,9 @@ Variants {
                         NowPlaying {
                             id: nowPlaying
                             player: root.mprisPlayer
+                            // Pill keeps visible: true while slid off-screen.
+                            // Gate stops the visualiser animating an unseen surface.
+                            barHidden: root.pillHidden
                         }
                     }
 
@@ -237,9 +231,8 @@ Variants {
                         id: volumeHoverItem
                         clickable: true
                         menu: volumeMenu
-                        onPopupOpenChanged: {
-                            Globals.volumeSliderOpen = popupOpen;
-                        }
+                        // Claim keyed by screen: a plain bool is last-writer-wins across Bars.
+                        onPopupOpenChanged: Globals.setVolumeSliderOpen(root.modelData.name, popupOpen)
                         onClicked: {
                             if (Pipewire.defaultAudioSink?.audio)
                                 Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;

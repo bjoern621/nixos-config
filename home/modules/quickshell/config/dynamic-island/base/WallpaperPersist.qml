@@ -1,16 +1,18 @@
-// WallpaperPersist - Handles saving and restoring the wallpaper path.
-// On startup, reads ~/.local/share/quickshell/current-wallpaper and sets
-// Globals.wallpaperPath. Call save(path) to persist a new wallpaper choice.
+// Restores Globals.wallpaperPath on startup from
+// ~/.local/share/quickshell/current-wallpaper.
+// save(path) persists a new choice.
+
+pragma Singleton
 
 import QtQuick
+import Quickshell
 import Quickshell.Io
 
-Item {
-    visible: false
-
+Singleton {
     function save(path) {
         Globals.wallpaperPath = "file://" + path;
-        saveProc.command = ["bash", "-c", "mkdir -p ~/.local/share/quickshell && echo '" + path + "' > ~/.local/share/quickshell/current-wallpaper"];
+        // path goes in argv, never interpolated: a filename can hold a quote.
+        saveProc.command = ["bash", "-c", "mkdir -p ~/.local/share/quickshell && printf '%s\\n' \"$1\" > ~/.local/share/quickshell/current-wallpaper", "bash", path];
         saveProc.running = true;
     }
 
@@ -20,10 +22,8 @@ Item {
         stdout: SplitParser {
             onRead: data => {
                 const line = data.trim();
-                if (line.length > 0) {
-                    console.log("[WallpaperPersist] restored: " + line);
+                if (line.length > 0)
                     Globals.wallpaperPath = "file://" + line;
-                }
             }
         }
     }

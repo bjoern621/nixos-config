@@ -2,7 +2,8 @@ import QtQuick
 import QtQuick.Controls as QQC
 import "../base"
 
-// Thin styled scrollbar. Attach with `QQC.ScrollBar.vertical: ThinScrollBar {}` on a Flickable / ListView / GridView.
+// Thin styled scrollbar.
+// Attach with `QQC.ScrollBar.vertical: ThinScrollBar {}` on Flickable / ListView / GridView.
 QQC.ScrollBar {
     id: bar
     policy: parent && parent.contentHeight > parent.height ? QQC.ScrollBar.AsNeeded : QQC.ScrollBar.AlwaysOff

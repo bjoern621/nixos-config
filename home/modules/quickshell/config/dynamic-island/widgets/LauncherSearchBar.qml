@@ -1,8 +1,8 @@
 import QtQuick
 import "../base"
 
-// Read-only search bar used inside LauncherWindow. Keystrokes are captured by
-// the parent window (no TextInput/TextEdit). Just renders the current value.
+// Read-only search bar for LauncherPanel.
+// No TextInput/TextEdit: LauncherPanel's Keys handler captures keystrokes.
 Rectangle {
     id: root
     property string text: ""

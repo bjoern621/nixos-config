@@ -1,13 +1,11 @@
 import QtQuick
 import "../base"
 
-// Reusable inner chrome for keyboard-driven launcher overlays
-// (AppLauncher, ClipboardHistory, EmojiPicker). Hosts: click-to-dismiss
-// dim layer, key dispatch (Esc, arrows, typed chars), centered panel
-// Rectangle, search bar, content slot, empty-state label.
+// Inner chrome for keyboard-driven launcher overlays
+// (AppLauncher, ClipboardHistory, EmojiPicker).
 //
-// The hosting PanelWindow stays in the parent file (PanelWindow can't be a
-// QML component root). Wrap with:
+// The hosting PanelWindow stays in the parent file: PanelWindow cannot be a QML component root.
+// Wrap with:
 //
 //   PanelWindow {
 //       visible: scope.open
@@ -18,13 +16,13 @@ import "../base"
 //       LauncherPanel {
 //           anchors.fill: parent
 //           searchText: scope.searchText
-//           onSearchTextChanged: text => scope.searchText = text
+//           onSearchEdited: text => scope.searchText = text
 //           ...
 //           ListView { ... }   // default content
 //       }
 //   }
 //
-// No animations: matches the AppLauncher feel (snappy).
+// No animations, deliberate: matches AppLauncher's snappy feel.
 Item {
     id: root
     focus: true
@@ -71,13 +69,12 @@ Item {
         event.accepted = true;
     }
 
-    // Dismiss on click outside the panel. Sits underneath the panel so the
-    // panel's own MouseArea (below) consumes clicks within the panel before
-    // they reach this layer. Using MouseArea (not TapHandler) here is
-    // intentional: PointerHandlers attached to a parent fire even when a
-    // descendant has handled the gesture, which would close the panel on
-    // every legit click (delegate, category button, ...). MouseArea props
-    // ("eventually accept" model) give us proper hit-testing.
+    // Dismiss on click outside the panel.
+    // Sits under the panel, so the panel's own MouseArea eats clicks inside the panel first.
+    // MouseArea, not TapHandler: PointerHandlers attached to a parent fire
+    // even when a descendant handled the gesture,
+    // closing the panel on every legit click (delegate, category button).
+    // MouseArea's "eventually accept" model hit-tests properly.
     MouseArea {
         anchors.fill: parent
         onClicked: root.escaped()
@@ -94,10 +91,9 @@ Item {
         border.width: 1
         border.color: Colors.pillBorder
 
-        // Click-eater: clicks landing on panel padding/empty space (i.e. not
-        // on a child MouseArea/PointerHandler) are absorbed here so they
-        // don't bubble out to the dismiss MouseArea above. Descendant
-        // TapHandlers (delegates, category cells) still fire normally.
+        // Click-eater: absorbs clicks on panel padding,
+        // else they bubble out to the dismiss MouseArea.
+        // Descendant TapHandlers (delegates, category cells) still fire.
         MouseArea {
             anchors.fill: parent
         }

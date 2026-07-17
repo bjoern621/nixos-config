@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import Quickshell.Services.Pipewire
-import Quickshell.Io
 import QtQuick
 import "../"
 import "../base"
@@ -11,29 +10,32 @@ import "BluetoothUtils.js" as BluetoothUtils
 Item {
     id: root
 
-    readonly property bool sliderActive: masterSlider.pressed || _activeAppSliders > 0
-    property int _activeAppSliders: 0
+    // Read by Bar.qml to keep the menu open while a slider is held.
+    readonly property bool sliderActive: masterSlider.pressed || root._anyAppSliderPressed
+
+    // Aggregated over live rows, never counted from press/release edges.
+    // A row destroyed mid-drag emits no release.
+    // A +1/-1 counter then leaks a permanent +1, latching sliderActive true,
+    // and the menu never closes again.
+    //
+    // itemAt is not a binding dependency, so row churn re-runs this via _appRowGeneration.
+    // Repeater drops a removed row before it signals, and a fresh row cannot be pressed.
+    property int _appRowGeneration: 0
+    readonly property bool _anyAppSliderPressed: {
+        root._appRowGeneration;
+        for (let i = 0; i < appRepeater.count; i++) {
+            const row = appRepeater.itemAt(i);
+            if (row && row.sliderPressed)
+                return true;
+        }
+        return false;
+    }
 
     readonly property int contentPadding: Spacing.spacing12
 
     implicitWidth: 300
     implicitHeight: mainLayout.height + 2 * contentPadding
 
-    // --- Master audio state ---
-    readonly property var audioNode: Pipewire.defaultAudioSink?.audio ?? null
-    readonly property int currentVolume: Math.round((audioNode?.volume ?? 0) * 100)
-    readonly property bool isMuted: audioNode?.muted ?? false
-    readonly property string volumeIconSource: {
-        if (isMuted || currentVolume === 0)
-            return "../icons/icons8-audio-muted.svg";
-        if (currentVolume <= 33)
-            return "../icons/icons8-low-volume.svg";
-        if (currentVolume <= 66)
-            return "../icons/icons8-volume.svg";
-        return "../icons/icons8-audio.svg";
-    }
-
-    // --- Filtered node lists ---
     readonly property var sinkNodes: {
         const nodes = Pipewire.nodes.values;
         const result = [];
@@ -60,165 +62,14 @@ Item {
         return result;
     }
 
-    // Always-visible Bluetooth targets (paired audio devices).
-    readonly property var bluetoothTargets: [
-        {
-            name: "Anker Soundcore Boost",
-            mac: "F4:2B:7D:55:AE:AB"
-            //  mac: "F4:2B:7D:54:EF:8A" // the other Anker
-        },
-        {
-            name: "LinkBuds S",
-            mac: "F8:4E:17:CB:22:59"
-        },
-        {
-            name: "Fractal Scape",
-            mac: "98:FD:B4:6F:2E:B3"
-        }
-    ]
-
-    property string btConnectingMac: ""
-    property string btConnectingName: ""
-    property string btStatusText: ""
-    property string btStatusMac: ""
-    property bool btAutoSwitchOnConnect: false
-    readonly property string btBackendScriptPath: Qt.resolvedUrl("../bluetooth_backend.py").toString().replace("file://", "")
-    property string pendingSwitchMac: ""
-    property int pendingSwitchAttempts: 0
-    readonly property int btSwitchMaxAttempts: 60
-    readonly property bool btBusy: btConnectProcess.running || pendingSwitchMac.length > 0
-
+    // Connect and audio switch live in BluetoothConnector: machine-global state, menu is per-screen.
     readonly property var outputDevices: {
-        return BluetoothUtils.buildOutputDevices(root.sinkNodes, root.bluetoothTargets);
-    }
-
-    function connectBluetoothDevice(targetName, mac) {
-        if (root.btBusy)
-            return;
-
-        root.btConnectingMac = mac;
-        root.btConnectingName = targetName;
-        root.btStatusMac = mac;
-        root.btAutoSwitchOnConnect = true;
-        root.btStatusText = "Starte Bluetooth-Backend...";
-        btConnectProcess.targetMac = mac;
-        btConnectProcess.running = true;
-    }
-
-    function finishBluetoothStatus(statusText) {
-        root.btStatusText = statusText;
-        btStatusClearTimer.restart();
-    }
-
-    function statusTextForBackendCode(code) {
-        switch (code) {
-        case "CHECK_BACKEND":
-            return "Prüfe Bluetooth-Backend...";
-        case "UNBLOCK_BLUETOOTH":
-            return "Entsperre Bluetooth...";
-        case "POWER_ON":
-            return "Aktiviere Bluetooth...";
-        case "CONNECT_DEVICE":
-            return "Verbinde mit Gerät...";
-        default:
-            return code;
-        }
+        return BluetoothUtils.buildOutputDevices(root.sinkNodes, BluetoothConnector.targets);
     }
 
     property bool outputExpanded: false
 
-    Process {
-        id: btConnectProcess
-        running: false
-        property string targetMac: ""
-
-        command: ["python3", root.btBackendScriptPath, "connect", targetMac]
-
-        stdout: SplitParser {
-            onRead: data => {
-                const line = data.trim();
-                if (line.indexOf("STATUS:") === 0) {
-                    root.btStatusText = root.statusTextForBackendCode(line.substring(7));
-                    return;
-                }
-
-                if (line === "RESULT:OK") {
-                    root.pendingSwitchMac = btConnectProcess.targetMac;
-                    root.pendingSwitchAttempts = 0;
-                    root.btStatusText = "Warte auf Audio-Ausgang...";
-                    btSwitchTimer.start();
-                    return;
-                }
-
-                if (line === "RESULT:FAIL") {
-                    root.pendingSwitchMac = "";
-                    btSwitchTimer.stop();
-                    root.finishBluetoothStatus("Bluetooth-Verbindung fehlgeschlagen");
-                    root.btConnectingMac = "";
-                    root.btAutoSwitchOnConnect = false;
-                    return;
-                }
-
-                if (line === "RESULT:BACKEND_UNAVAILABLE") {
-                    root.pendingSwitchMac = "";
-                    btSwitchTimer.stop();
-                    root.finishBluetoothStatus("Bluetooth-Backend ist nicht verfuegbar");
-                    root.btConnectingMac = "";
-                    root.btAutoSwitchOnConnect = false;
-                }
-            }
-        }
-    }
-
-    Timer {
-        id: btSwitchTimer
-        interval: 300 // ms per retry (~18s total with btSwitchMaxAttempts=60)
-        repeat: true
-        running: false
-        onTriggered: {
-            if (!root.pendingSwitchMac.length) {
-                btSwitchTimer.stop();
-                return;
-            }
-
-            root.pendingSwitchAttempts++;
-            const sink = BluetoothUtils.findSinkByBluetooth(Pipewire.nodes.values, root.pendingSwitchMac, root.btConnectingName);
-            if (sink) {
-                // Bluetooth device is finally ready to be switched to. Do it (if still desired), and stop the timer and pending state.
-                const shouldAutoSwitch = root.btAutoSwitchOnConnect;
-                if (shouldAutoSwitch)
-                    Pipewire.preferredDefaultAudioSink = sink;
-                root.pendingSwitchMac = "";
-                root.btConnectingMac = "";
-                root.btAutoSwitchOnConnect = false;
-                btSwitchTimer.stop();
-                root.finishBluetoothStatus(shouldAutoSwitch ? "Verbunden" : "Verbunden im Hintergrund");
-                return;
-            }
-
-            if (root.pendingSwitchAttempts >= root.btSwitchMaxAttempts) {
-                root.pendingSwitchMac = "";
-                root.btConnectingMac = "";
-                root.btAutoSwitchOnConnect = false;
-                btSwitchTimer.stop();
-                root.finishBluetoothStatus("Verbunden, aber kein Audio-Ausgang gefunden");
-            }
-        }
-    }
-
-    Timer {
-        id: btStatusClearTimer
-        interval: 3000
-        repeat: false
-        onTriggered: {
-            if (!root.btBusy) {
-                root.btStatusText = "";
-                root.btStatusMac = "";
-            }
-        }
-    }
-
-    // Track all nodes we need audio data from
+    // PwObjectTracker keeps audio data current for every node read here.
     PwObjectTracker {
         objects: {
             var list = [];
@@ -248,59 +99,54 @@ Item {
             width: parent.width - 2 * root.contentPadding
             spacing: Spacing.spacing8
 
-            // ═══ SECTION 1: Master Volume ═══
             Row {
                 width: parent.width
                 height: 40
                 spacing: Spacing.spacing8
 
-                // Mute toggle button
                 VolumeMuteButton {
                     id: muteButton
                     width: 32
                     height: 32
                     anchors.verticalCenter: parent.verticalCenter
 
-                    iconSource: root.volumeIconSource
+                    iconSource: VolumeService.iconSource
                     onTapped: {
-                        if (root.audioNode)
-                            root.audioNode.muted = !root.audioNode.muted;
+                        if (VolumeService.audioNode)
+                            VolumeService.audioNode.muted = !VolumeService.audioNode.muted;
                     }
                 }
 
-                // Volume slider
                 StepSlider {
                     id: masterSlider
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - muteButton.width - pctLabel.width - 2 * parent.spacing
-                    externalValue: root.audioNode?.volume ?? 0
+                    externalValue: VolumeService.audioNode?.volume ?? 0
                     stepSize: 0.05
-                    isMuted: root.isMuted
+                    isMuted: VolumeService.muted
 
                     onMoved: newValue => {
-                        if (root.audioNode)
-                            root.audioNode.volume = newValue;
+                        if (VolumeService.audioNode)
+                            VolumeService.audioNode.volume = newValue;
                     }
                 }
 
-                // Percentage label
                 Label {
                     id: pctLabel
-                    text: root.currentVolume + " %"
+                    text: VolumeService.volume + " %"
                     width: 40
                     horizontalAlignment: Text.AlignRight
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
 
-            // ═══ SEPARATOR ═══
             Rectangle {
                 width: parent.width
                 height: 1
                 color: Colors.separatorColor
             }
 
-            // ═══ SECTION 2: Output Device ═══
+            // Output device
             Item {
                 id: outputHeader
                 width: parent.width
@@ -377,25 +223,19 @@ Item {
                             required property var modelData
                             outputDevice: modelData
                             defaultSinkId: Pipewire.defaultAudioSink?.id ?? -1
-                            btBusy: root.btBusy
-                            btConnectingMac: root.btConnectingMac
-                            btStatusMac: root.btStatusMac
-                            btStatusText: root.btStatusText
 
                             onSinkActivated: sinkNode => {
-                                if (root.btBusy)
-                                    root.btAutoSwitchOnConnect = false;
+                                BluetoothConnector.cancelAutoSwitch();
                                 Pipewire.preferredDefaultAudioSink = sinkNode;
                             }
                             onBluetoothActivated: (deviceName, mac) => {
-                                root.connectBluetoothDevice(deviceName, mac);
+                                BluetoothConnector.connectDevice(deviceName, mac);
                             }
                         }
                     }
                 }
             }
 
-            // ═══ SEPARATOR (only if there are streams) ═══
             Rectangle {
                 visible: root.streamNodes.length > 0
                 width: parent.width
@@ -403,7 +243,7 @@ Item {
                 color: Colors.separatorColor
             }
 
-            // ═══ SECTION 3: Applications ═══
+            // Per-application volume
             Label {
                 visible: root.streamNodes.length > 0
                 text: "Anwendungen"
@@ -419,17 +259,15 @@ Item {
                 spacing: Spacing.spacing12
 
                 Repeater {
+                    id: appRepeater
                     model: root.streamNodes
+
+                    onItemAdded: root._appRowGeneration++
+                    onItemRemoved: root._appRowGeneration++
 
                     VolumeApplicationVolumeRow {
                         required property var modelData
                         streamNode: modelData
-                        onSliderPressedChanged: pressed => {
-                            if (pressed)
-                                root._activeAppSliders++;
-                            else
-                                root._activeAppSliders--;
-                        }
                     }
                 }
             }

@@ -18,26 +18,18 @@ HoverItem {
     clickable: true
     pressedScale: 0.85
 
-    // Bumped on every Hyprland event so the active-workspace binding below
-    // re-evaluates on workspace and focus changes.
-    property int eventTick: 0
-
-    Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            root.eventTick++;
-        }
-    }
-
-    // Active workspace id for this monitor (mirrors WorkspaceIndicator).
+    // Hyprland.monitors.values, monitor.name, monitor.activeWorkspace and
+    // workspace.id each carry NOTIFY, so this binding re-runs on its own.
+    // A Hyprland.rawEvent tick would re-run it on windowtitle too, which fires
+    // continuously for a terminal running a build.
+    // WorkspaceIndicator duplicates this. Dedupe needs a shared type in qmldir.
     readonly property int activeWorkspaceId: {
-        eventTick;
-        var monitors = Hyprland.monitors.values;
-        for (var i = 0; i < monitors.length; i++) {
-            if (monitors[i].name === monitorName && monitors[i].activeWorkspace)
+        const monitors = Hyprland.monitors.values;
+        for (let i = 0; i < monitors.length; i++) {
+            if (monitors[i].name === root.monitorName && monitors[i].activeWorkspace)
                 return monitors[i].activeWorkspace.id;
         }
-        var monitor = Hyprland.focusedMonitor;
+        const monitor = Hyprland.focusedMonitor;
         if (monitor && monitor.activeWorkspace)
             return monitor.activeWorkspace.id;
         return 1;
@@ -57,12 +49,12 @@ HoverItem {
     readonly property bool spotifyOpen: hasClient("spotify")
     readonly property bool discordOpen: hasClient("discord")
 
-    visible: activeWorkspaceId === 3 && !(spotifyOpen && discordOpen)
+    visible: root.activeWorkspaceId === 3 && !(root.spotifyOpen && root.discordOpen)
 
     onClicked: {
-        if (!spotifyOpen)
+        if (!root.spotifyOpen)
             Quickshell.execDetached(["uwsm", "app", "--", "spotify.desktop"]);
-        if (!discordOpen)
+        if (!root.discordOpen)
             Quickshell.execDetached(["uwsm", "app", "--", "discord.desktop"]);
     }
 

@@ -9,10 +9,6 @@ Item {
 
     required property var outputDevice
     required property int defaultSinkId
-    required property bool btBusy
-    required property string btConnectingMac
-    required property string btStatusMac
-    required property string btStatusText
 
     signal sinkActivated(var sinkNode)
     signal bluetoothActivated(string deviceName, string mac)
@@ -20,13 +16,13 @@ Item {
     width: parent ? parent.width : 0
 
     readonly property string deviceMac: outputDevice.mac ?? ""
-    readonly property bool hasBtStatus: outputDevice.isBluetooth && deviceMac.length > 0 && (deviceMac === root.btStatusMac) && root.btStatusText.length > 0
+    readonly property bool hasBtStatus: outputDevice.isBluetooth && deviceMac.length > 0 && (deviceMac === BluetoothConnector.statusMac) && BluetoothConnector.statusText.length > 0
     height: hasBtStatus ? 46 : 32
 
     readonly property bool isSinkEntry: outputDevice.type === "sink"
     readonly property bool isDefault: isSinkEntry && outputDevice.node.id === root.defaultSinkId
-    readonly property bool isBusyTarget: root.btBusy && outputDevice.isBluetooth && (deviceMac === root.btConnectingMac)
-    readonly property bool isBluetoothLocked: !isSinkEntry && outputDevice.isBluetooth && root.btBusy
+    readonly property bool isBusyTarget: BluetoothConnector.busy && outputDevice.isBluetooth && (deviceMac === BluetoothConnector.connectingMac)
+    readonly property bool isBluetoothLocked: !isSinkEntry && outputDevice.isBluetooth && BluetoothConnector.busy
 
     scale: sinkTap.pressed ? 0.97 : 1.0
     SquishBehavior on scale {}
@@ -132,7 +128,7 @@ Item {
             Label {
                 visible: root.hasBtStatus
                 width: parent.width
-                text: root.btStatusText
+                text: BluetoothConnector.statusText
                 font.pixelSize: Typography.fontSize12
                 font.weight: Font.Normal
                 color: Colors.textColorMuted
@@ -147,7 +143,7 @@ Item {
     }
     TapHandler {
         id: sinkTap
-        enabled: root.isSinkEntry || !root.btBusy
+        enabled: root.isSinkEntry || !BluetoothConnector.busy
         onTapped: {
             if (root.isSinkEntry) {
                 root.sinkActivated(root.outputDevice.node);

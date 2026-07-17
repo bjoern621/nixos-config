@@ -9,14 +9,21 @@ Scope {
 	id: root
 
 	signal unlocked()
-	signal failed()
 
 	// State lives here, not in the per-screen surfaces, so every monitor renders
 	// the same password buffer and status.
 	property string currentText: ""
-	property bool unlockInProgress: false
 	property bool showFailure: false
 	property string failureMessage: ""
+
+	// Derived from PAM, never mirrored.
+	// pam.start() returns false and emits no signal when the stack cannot start:
+	// config dir not a directory, config file missing, getpwuid_r failure.
+	// Mirrored flag would stick true forever there, disabling field and buttons
+	// with no timeout and no escape, recoverable only from a TTY.
+	// abortConversation() emits activeChanged before completed, so this clears
+	// before the handler below runs.
+	readonly property bool unlockInProgress: pam.active
 
 	// Which attempt is in flight: "password", "face" or "passkey". Determines what
 	// gets sent to PAM when it asks for a response, and which failure message to
@@ -31,21 +38,20 @@ Scope {
 	// Clear the failure text once the user starts typing again.
 	onCurrentTextChanged: showFailure = false
 
-	// Reset transient state before a fresh lock. The instance is resident and
-	// reused across lock cycles (shell.qml does not quit on unlock), so the
-	// password buffer and failure text from a previous unlock must be cleared
-	// before the next lock surface appears.
+	// Instance is resident and reused across lock cycles: shell.qml does not quit
+	// on unlock, so a previous password buffer and failure text outlive it.
+	// unlockInProgress needs no reset, it tracks pam.active.
 	function reset() {
 		currentText = "";
 		showFailure = false;
 		failureMessage = "";
+		attemptKind = "";
 	}
 
 	function tryPassword() {
 		if (unlockInProgress || currentText === "") return;
 		attemptKind = "password";
 		showFailure = false;
-		unlockInProgress = true;
 		pam.start();
 	}
 
@@ -53,7 +59,6 @@ Scope {
 		if (unlockInProgress) return;
 		attemptKind = "face";
 		showFailure = false;
-		unlockInProgress = true;
 		pam.start();
 	}
 
@@ -61,7 +66,6 @@ Scope {
 		if (unlockInProgress) return;
 		attemptKind = "passkey";
 		showFailure = false;
-		unlockInProgress = true;
 		pam.start();
 	}
 
@@ -84,30 +88,34 @@ Scope {
 			}
 		}
 
+		// Sole outcome handler, PamResult.Error included.
+		// PamContext emits error() then completed(PamResult.Error), synchronously.
+		// Separate onError would report twice and lose its message to this branch.
 		onCompleted: result => {
-			if (result === PamResult.Success) {
-				root.unlocked();
-			} else {
-				root.currentText = "";
-				root.failureMessage = root.attemptKind === "face"
-					? "Gesicht nicht erkannt"
-					: root.attemptKind === "passkey"
-					? "Schlüssel nicht erkannt"
-					: "Falsches Passwort";
-				root.showFailure = true;
-				root.failed();
-			}
-			root.unlockInProgress = false;
-			root.attemptKind = "";
-		}
-
-		onError: error => {
+			// Plaintext outlives unlock otherwise.
+			// Process stays resident.
+			// Lid close hibernates via before_sleep_cmd, snapshotting heap to disk.
+			// Assign before showFailure: onCurrentTextChanged clears it.
 			root.currentText = "";
-			root.failureMessage = "Authentifizierung fehlgeschlagen";
+
+			if (result === PamResult.Success) {
+				root.attemptKind = "";
+				root.unlocked();
+				return;
+			}
+
+			// PamResult.Error is a stack/plumbing failure, not a rejected credential.
+			// Naming the attempt would blame the password for a camera or howdy fault.
+			root.failureMessage = result === PamResult.Error
+				? "Authentifizierung fehlgeschlagen"
+				: root.attemptKind === "face"
+				? "Gesicht nicht erkannt"
+				: root.attemptKind === "passkey"
+				? "Schlüssel nicht erkannt"
+				: "Falsches Passwort";
 			root.showFailure = true;
-			root.unlockInProgress = false;
+			// Clear last: message above reads it.
 			root.attemptKind = "";
-			root.failed();
 		}
 	}
 }

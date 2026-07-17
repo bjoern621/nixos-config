@@ -1,6 +1,5 @@
 pragma Singleton
 import QtQuick
-import "../"
 
 QtObject {
     // Text colors

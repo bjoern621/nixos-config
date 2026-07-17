@@ -1,11 +1,10 @@
-// WallpaperAccent - Extracts a vibrant accent color from the current wallpaper
-// using ImageMagick. Caches results per wallpaper in
-// $HOME/.cache/quickshell/wallpaper-accents/ so subsequent loads are instant.
+// Extracts an accent color from the wallpaper via ImageMagick.
+// Caches per wallpaper under $HOME/.cache/quickshell/wallpaper-accents/,
+// so later loads skip magick.
 
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
 
 Item {
     id: root
@@ -13,11 +12,19 @@ Item {
 
     readonly property string cacheDir: Quickshell.env("HOME") + "/.cache/quickshell/wallpaper-accents"
 
-    onWallpaperChanged: resolve()
+    // Arrow-key nav in the chooser reassigns Globals.wallpaperPath per keypress.
+    // Each resolve costs a cache read plus a magick histogram run.
+    onWallpaperChanged: resolveTimer.restart()
 
     Component.onCompleted: resolve()
 
-    // Use Globals.wallpaperPath via this alias so the onChanged signal fires
+    Timer {
+        id: resolveTimer
+        interval: 150
+        onTriggered: root.resolve()
+    }
+
+    // Local property, not Globals.wallpaperPath directly: onWallpaperChanged needs one here.
     readonly property url wallpaper: Globals.wallpaperPath
 
     function wallpaperFile() {
@@ -40,19 +47,30 @@ Item {
     }
 
     function resolve() {
-        const cache = cacheFile();
-
-        cacheCheckProc.command = ["bash", "-c", "cat " + shellEscape(cache) + " 2>/dev/null || echo 'MISS'"];
+        // Process.running ignores a write of true while running, so a mid-flight resolve is dropped.
+        // Re-arm instead.
+        if (cacheCheckProc.running || extractProc.running) {
+            resolveTimer.restart();
+            return;
+        }
+        // Target captured per run, carried through extraction.
+        cacheCheckProc.target = wallpaperFile();
+        cacheCheckProc.cachePath = cacheFile();
+        cacheCheckProc.command = ["bash", "-c", "cat " + shellEscape(cacheCheckProc.cachePath) + " 2>/dev/null || echo 'MISS'"];
         cacheCheckProc.running = true;
     }
 
-    // Step 1: Check if cache exists
     Process {
         id: cacheCheckProc
+
+        property string target: ""
+        property string cachePath: ""
 
         stdout: SplitParser {
             onRead: data => {
                 if (data === "MISS") {
+                    extractProc.target = cacheCheckProc.target;
+                    extractProc.cachePath = cacheCheckProc.cachePath;
                     extractProc.running = true;
                 } else {
                     Globals.accentColor = data.trim();
@@ -61,20 +79,22 @@ Item {
         }
     }
 
-    // Step 2: Extract color from image (only runs on cache miss)
     Process {
         id: extractProc
 
         property var candidates: []
+        // Wallpaper this run was requested for.
+        // Binding the command to the live wallpaper runs magick against a newer selection,
+        // caching its colour under the older one's name.
+        // Cache never self-corrects.
+        property string target: ""
         property string cachePath: ""
 
-        command: ["bash", "-c", "magick " + root.shellEscape(root.wallpaperFile()) + " -resize 64x64! -colors 16 -depth 8 -format '%c' histogram:info: | sort -rn"]
+        command: ["bash", "-c", "magick " + root.shellEscape(extractProc.target) + " -resize 64x64! -colors 16 -depth 8 -format '%c' histogram:info: | sort -rn"]
 
         onRunningChanged: {
-            if (running) {
-                cachePath = root.cacheFile();
+            if (running)
                 candidates = [];
-            }
         }
 
         stdout: SplitParser {
@@ -90,7 +110,6 @@ Item {
             }
 
             if (candidates.length === 0) {
-                console.log("[WallpaperAccent] No vibrant colors found, using default");
                 const fallback = Globals.defaultAccentColor.toString();
                 Globals.accentColor = fallback;
 
@@ -98,19 +117,16 @@ Item {
                 return;
             }
 
-            // Pick best color (highest weight = count * saturation^2)
             let best = candidates[0];
             for (let i = 1; i < candidates.length; i++) {
                 if (candidates[i].weight > best.weight)
                     best = candidates[i];
             }
 
-            // Boost saturation and fix lightness for accent use
             const accentSat = Math.min(0.75, best.s * 1.3);
             const accentLight = 0.65;
             const color = hslToHex(best.h, accentSat, accentLight);
 
-            console.log("[WallpaperAccent] Accent:", color);
             Globals.accentColor = color;
 
             root.saveToCache(color, cachePath);
@@ -128,7 +144,6 @@ Item {
             const g = parseInt(rgbMatch[2]) / 255;
             const b = parseInt(rgbMatch[3]) / 255;
 
-            // Convert to HSL
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
             const l = (max + min) / 2;

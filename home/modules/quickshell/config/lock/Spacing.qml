@@ -4,7 +4,6 @@ import QtQuick
 QtObject {
     readonly property int spacing2: 2
     readonly property int spacing4: 4
-    readonly property int spacing6: 6
     readonly property int spacing8: 8
     readonly property int spacing12: 12
     readonly property int spacing16: 16

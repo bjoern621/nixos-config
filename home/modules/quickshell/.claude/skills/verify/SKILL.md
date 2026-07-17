@@ -26,9 +26,11 @@ model. That is the fastest way to clear stuck overlays.
 Errors surface only in the journal:
 
 ```bash
-journalctl --user -u quickshell.service --since "-5min" --no-pager \
-  | grep -viE "Wallpaper|ContentReplace|Binding loop"
+journalctl --user -u quickshell.service --since "-5min" --no-pager
 ```
+
+A healthy reload logs `Reloading configuration...` then `Configuration Loaded` and nothing else.
+Anything in between is real: filtering the output hides the defect rather than the noise.
 
 The IDE's QML language server cannot resolve Quickshell types and reports
 `Rectangle was not found`, `Instantiator was not found` and similar for every

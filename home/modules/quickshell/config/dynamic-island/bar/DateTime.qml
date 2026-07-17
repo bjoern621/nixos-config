@@ -20,7 +20,7 @@ Row {
         }
 
         Label {
-            text: germanLocale.dayName(datetime.currentDate.getDay(), Locale.LongFormat) + ", " + datetime.currentDate.toLocaleDateString(germanLocale, "dd. MMM")
+            text: datetime.germanLocale.dayName(datetime.currentDate.getDay(), Locale.LongFormat) + ", " + datetime.currentDate.toLocaleDateString(datetime.germanLocale, "dd. MMM")
             anchors.verticalCenter: parent.verticalCenter
         }
     }

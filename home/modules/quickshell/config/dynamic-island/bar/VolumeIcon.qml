@@ -1,4 +1,3 @@
-import Quickshell.Services.Pipewire
 import QtQuick
 import "../"
 import "../base"
@@ -6,18 +5,6 @@ import "../animations"
 
 Item {
     id: root
-    readonly property int volume: Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100)
-    readonly property bool isMuted: Pipewire.defaultAudioSink?.audio.muted ?? false
-
-    readonly property string volumeIconSource: {
-        if (isMuted || volume === 0)
-            return "../icons/icons8-audio-muted.svg";
-        if (volume <= 33)
-            return "../icons/icons8-low-volume.svg";
-        if (volume <= 66)
-            return "../icons/icons8-volume.svg";
-        return "../icons/icons8-audio.svg";
-    }
 
     anchors.verticalCenter: parent.verticalCenter
     width: Typography.fontSize16
@@ -25,7 +12,7 @@ Item {
 
     ContentReplace {
         id: volIconReplace
-        contentKey: root.volumeIconSource
+        contentKey: VolumeService.iconSource
         anchors.fill: parent
 
         Item {

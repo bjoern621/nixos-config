@@ -184,6 +184,8 @@ SquishBehavior on scale { bouncy: true; duration: 120 }
 
 `SquishBehavior` properties: `duration` (default 100ms), `bouncy` (default false; uses `OutBack` when true).
 
+It is a plain `Behavior`, so it applies to any numeric property, not only `scale`. `ExpandArrow` uses it on `rotation`. The same rule holds there: reach for it instead of an inline `Behavior` with a raw `NumberAnimation`.
+
 **Scale values by element size** (smaller elements scale more):
 
 | Element                                      | Pressed scale | `bouncy` | `duration`      |
@@ -207,7 +209,28 @@ PopReveal {
 
 `PopReveal` properties: `slideOffset` (default `Spacing.spacing8`), `showDuration` / `hideDuration` (default 80ms), `showing`, `edge` (default `Qt.TopEdge`). Signals: `shown`, `hidden`. It sets `transformOrigin` from `edge`, holds `opacity: 0` / `scale: 0.96` when hidden, and is `visible` only while `opacity > 0`. The scale runs `showDuration + 50` on `OutBack` so the pop trails the fade.
 
+`showing` is the single source of truth: `show()` and `hide()` write it rather than starting the animations, so both entry points stay in sync and re-entry is a no-op (`hide()` on a hidden reveal emits no second `hidden`). Drive it by binding `showing` **or** by calling `show()` / `hide()`, never both, since an imperative call destroys a binding on `showing`.
+
 **When NOT to use scale pop**: Content transitions _within_ an already-visible container (e.g. calendar year switching, expanding a section) should use fade + slide only, not scale. Scale pop is for showing/hiding the container itself.
+
+#### Directional content swap: fade out → swap → slide in
+
+For a directional swap inside a visible container (the calendar's year navigation), use **`ContentSlide`**. It is fade + slide with no scale pop, which is what "When NOT to use scale pop" calls for.
+
+```qml
+ContentSlide {
+    id: gridSlide
+    onReadyToSwap: direction => {
+        // Swap the content here, at the fade-out midpoint.
+        gridSlide.completeTransition();
+    }
+    Grid { /* content */ }
+}
+```
+
+`ContentSlide` properties: `slideOffset` (default 40), `fadeOutDuration` (default 120ms), `slideInDuration` (default 200ms), `fadeInDuration` (default 200ms). `transition(direction)` starts it. It emits `readyToSwap(direction)` once the old content has faded out, and the handler swaps the content and calls `completeTransition()`.
+
+The content only changes when `readyToSwap` fires, so a caller stepping through values must accumulate onto the in-flight target rather than the displayed one. Reading the displayed value during a transition drops steps under rapid input.
 
 #### Content replace: scale down → swap → scale up
 
@@ -217,13 +240,18 @@ When a value changes and the displayed content should swap in-place (e.g. a volu
 ContentReplace {
     id: iconReplace
     contentKey: someChangingValue  // triggers animation on change
+    width: 24; height: 24          // size it explicitly
     Text { text: iconReplace.displayValue }  // bind to displayValue, NOT the source
 }
 ```
 
-`ContentReplace` properties: `duration` (default 150ms), `contentKey` (watched value that triggers the transition), `displayValue` (tracks `contentKey`, but is re-assigned at the animation midpoint so the swap lands mid-transition).
+`ContentReplace` properties: `duration` (default 150ms, the total split across fade-out and fade-in), `contentKey` (watched value that triggers the transition), `displayValue` (seeded from the first `contentKey`, then re-assigned at the animation midpoint so the swap lands mid-transition).
 
 **Important**: content inside must bind to `displayValue`, not directly to the source property. Direct binding bypasses the deferred swap and the old content won't be visible during scale-down.
+
+**Give it an explicit size.** `implicitWidth` / `implicitHeight` track `childrenRect`, which forms a binding loop when the content anchors back to the container (`centerIn`, `fill`).
+
+`contentKey` must be a value that changes in discrete steps. Keying it on a continuously-changing number restarts the transition on every step, so the content stutters instead of swapping.
 
 #### Expandable sections: height + opacity
 
@@ -309,7 +337,7 @@ PanelWindow {
 
 | Namespace              | Windows                        | Rules live in            |
 | ---------------------- | ------------------------------ | ------------------------ |
-| `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay | `quickshell.nix`         |
+| `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay, LoadingOverlay, Tooltip | `quickshell.nix`         |
 | `quickshell-noblur`    | ScreenCorners, WallpaperChooser | (none; opts out of blur) |
 | `quickshell-launcher`  | AppLauncher                    | `hyprland/app-launcher.nix` |
 | `quickshell-clipboard` | ClipboardHistory               | `hyprland/clipboard-history.nix` |

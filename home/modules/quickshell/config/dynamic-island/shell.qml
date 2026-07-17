@@ -10,11 +10,12 @@ import "widgets"
 import "windows"
 
 ShellRoot {
-    // Force-load singletons so they're ready when needed.
-    property var _loadingHost: LoadingHost
+    // Singletons construct on first use, and neither of these has a first user.
+    // WallpaperPersist restores the wallpaper at startup.
+    // NotificationListener owns the D-Bus server, up before the first notification.
+    property var _wallpaperPersist: WallpaperPersist
     property var _notificationListener: NotificationListener
 
-    WallpaperPersist { id: wallpaperPersist }
     WallpaperBackend {}
     WallpaperAccent {}
     ScreenCorners {}

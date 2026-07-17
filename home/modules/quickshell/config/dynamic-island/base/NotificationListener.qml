@@ -15,10 +15,9 @@ Singleton {
     readonly property string historyFilePath: Quickshell.env("HOME") + "/.local/share/quickshell/notification-history.json"
     property string restoreBuffer: ""
 
-    // Notifications from the running server get uids in the "n" namespace, rows
-    // restored from disk get renamed into the "h" namespace on load. The server
-    // restarts its ids at 1 every session, so without the split a recycled id
-    // could resolve a restored row to an unrelated live notification.
+    // Live server notifications get uids in the "n" namespace, rows restored from disk get "h".
+    // Server restarts its ids at 1 every session.
+    // Without the split, a recycled id resolves a restored row to an unrelated live notification.
     property int uidCounter: 0
 
     ListModel {
@@ -57,8 +56,8 @@ Singleton {
         return -1;
     }
 
-    // Resolves the still-tracked notification behind a history row, or null once
-    // the client closed it or the row was restored from a previous session.
+    // Still-tracked notification behind a history row.
+    // null once the client closed it, and for rows restored from a previous session.
     function _liveFor(uid) {
         if (!uid.startsWith("n"))
             return null;
@@ -113,8 +112,8 @@ Singleton {
         return uid;
     }
 
-    // Dropping a row also closes its notification, otherwise the client keeps
-    // waiting on a notification nothing can display anymore.
+    // Dropping a row also closes its notification.
+    // Else the client keeps waiting on a notification nothing can display.
     function _evictAt(index) {
         const n = _liveFor(_history.get(index).uid);
         if (n)
@@ -135,16 +134,16 @@ Singleton {
         _persistHistory();
     }
 
-    // Closes the notification client-side but keeps the row, so a dismissed toast
-    // stays readable in the notification center.
+    // Closes the notification client-side, keeps the row.
+    // Dismissed toast stays readable in the notification center.
     function dismiss(uid) {
         const n = _liveFor(uid);
         if (n)
             n.dismiss();
     }
 
-    // The action keyed "default" is the one a click on the notification body
-    // triggers; it is never rendered as a button.
+    // Action keyed "default" fires on a click of the notification body.
+    // Never rendered as a button.
     function actionsFor(uid) {
         const n = _liveFor(uid);
         if (!n)
@@ -169,8 +168,8 @@ Singleton {
         return true;
     }
 
-    // Clients that ship no default action still expect a click to raise them, so
-    // the desktop entry is launched instead.
+    // Clients without a default action still expect a click to raise them.
+    // Desktop entry is launched instead.
     function invokeDefault(uid) {
         const n = _liveFor(uid);
         if (n) {
@@ -199,9 +198,9 @@ Singleton {
         return _entryFor(uid) !== null;
     }
 
-    // A notification can also go away without this shell asking: the client
-    // withdraws it, or invoking an action destroys it. Toasts for notifications
-    // that no longer exist have to stop being shown.
+    // Notification can go away without this shell asking.
+    // Client withdraws it, or an action destroys it.
+    // Toasts for notifications that no longer exist have to stop being shown.
     Instantiator {
         model: server.trackedNotifications
 
@@ -253,6 +252,21 @@ Singleton {
                 }
             }
         }
+
+        // Parser clears restoreBuffer only on a successful parse, so leftovers at exit
+        // mean the file will never parse.
+        // Without this, history stays silently empty for every future session.
+        onExited: exitCode => {
+            if (exitCode !== 0) {
+                console.warn("[NotificationListener] history read failed (exit " + exitCode + "):", root.historyFilePath);
+                return;
+            }
+            if (root.restoreBuffer.trim().length === 0)
+                return;
+            console.warn("[NotificationListener] history unparseable, resetting:", root.historyFilePath);
+            root.restoreBuffer = "";
+            root._persistHistory();
+        }
     }
 
     Process {
@@ -264,9 +278,9 @@ Singleton {
         id: server
 
         keepOnReload: false
-        // Clients only send actions to a server that advertises them, and only
-        // keep a notification alive past its timeout if the server advertises
-        // persistence. The notification center needs both.
+        // Clients send actions only to a server that advertises them.
+        // Clients keep a notification past its timeout only if the server advertises persistence.
+        // Notification center needs both.
         actionsSupported: true
         persistenceSupported: true
 

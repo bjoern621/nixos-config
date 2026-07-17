@@ -36,11 +36,19 @@ Scope {
         if (emojiVisible) {
             searchText = "";
             updateFilter();
-            emojiGrid.contentY = 0;
+            emojiScope.rewindGrid();
             emojiGrid.reset();
         } else {
             hoveredCell = null;
         }
+    }
+
+    // cancelFlick() kills in-flight wheel momentum from the previous open.
+    // positionViewAtBeginning() accounts for originY.
+    // contentY = 0 leaves blank space above row 0 while a flick still animates.
+    function rewindGrid() {
+        emojiGrid.cancelFlick();
+        emojiGrid.positionViewAtBeginning();
     }
 
     onSearchTextChanged: {
@@ -51,7 +59,7 @@ Scope {
         hoveredCell = null;
         if (searchText === "")
             updateFilter();
-        emojiGrid.contentY = 0;
+        emojiScope.rewindGrid();
         emojiGrid.currentIndex = 0;
         emojiGrid.hoveredIndex = -1;
     }

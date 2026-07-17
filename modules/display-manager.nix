@@ -42,8 +42,10 @@ let
 
   # PAM helper: exits 0 if password is empty (face auth), 1 if non-empty (password auth).
   # Used with pam_exec expose_authtok which pipes the password to stdin.
+  # IFS= stops read trimming leading/trailing whitespace.
+  # An all-blank password is a password, not a face attempt.
   isPasswordEmpty = pkgs.writeShellScript "sddm-is-password-empty" ''
-    read -r password
+    IFS= read -r password
     [ -z "$password" ]
   '';
 
@@ -52,7 +54,7 @@ let
   # otherwise. Routes a passkey attempt to pam_u2f. The token is not a secret and
   # authenticates nothing on its own; the key still gates.
   isPasskeyToken = pkgs.writeShellScript "sddm-is-passkey-token" ''
-    read -r token
+    IFS= read -r token
     [ "$token" = "__fido2_passkey__" ]
   '';
 
@@ -153,15 +155,24 @@ in
   # The final `required pam_unix` is the face/password backstop; it is also
   # called by pam_setcred() to establish initgroups credentials (howdy and
   # pam_exec both return PAM_CRED_INSUFFICIENT from setcred).
+  #
+  # nullok appears only on rule 1, whose result is discarded. The enforcing
+  # pam_unix rules omit it: pam_unix consults nullok solely when the stored hash
+  # is empty, so on an enforcing rule it converts "deny" into "log in with no
+  # authentication". The backstop needs no nullok to receive the face path's
+  # empty authtok, because it never accepts it: try_first_pass consumes the
+  # non-NULL empty string from rule 1 without re-prompting, then fails against a
+  # real hash. That rejection is the point of the backstop.
+  # Matches the lock stack in modules/quickshell-lock.nix.
   security.pam.services.sddm.text = lib.mkForce ''
     auth  optional                    ${pamUnix} likeauth nullok
     auth  [success=3 default=ignore]  ${pamExec} quiet expose_authtok ${isPasskeyToken}
     auth  [success=3 default=ignore]  ${pamExec} quiet expose_authtok ${isPasswordEmpty}
     auth  optional                    ${pamGnomeKeyring}
-    auth  [success=done default=die]  ${pamUnix} nullok try_first_pass
+    auth  [success=done default=die]  ${pamUnix} try_first_pass
     auth  [success=done default=die]  ${pamU2f} authfile=${u2fAuthfile} cue
     auth  [success=done default=ignore]  ${pamHowdy}
-    auth  required                    ${pamUnix} nullok
+    auth  required                    ${pamUnix} try_first_pass
 
     account   include   login
     password  substack  login

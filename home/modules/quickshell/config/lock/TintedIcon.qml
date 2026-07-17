@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Effects
+import "."
 
 Item {
     id: root
 
     property url source
     property int size: 18
-    property color color: "#ffffff"
+    property color color: Colors.textColor
     property real sourceScale: 2.0
 
     width: size

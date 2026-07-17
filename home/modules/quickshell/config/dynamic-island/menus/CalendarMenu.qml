@@ -11,10 +11,14 @@ Item {
     readonly property int displayYear: _yearPinned ? _pinnedYear : todayYear
     property bool _yearPinned: false
     property int _pinnedYear: 0
-    property int _targetYear: displayYear
+    property int _targetYear: 0
+    // displayYear only catches up on readyToSwap.
+    // Steps before then accumulate onto the in-flight target, else clicks drop years.
+    property bool _transitioning: false
 
     function navigateYear(direction) {
-        _targetYear = displayYear + direction;
+        _targetYear = (_transitioning ? _targetYear : displayYear) + direction;
+        _transitioning = true;
         gridSlide.transition(direction > 0 ? 1 : -1);
     }
 
@@ -27,9 +31,9 @@ Item {
     readonly property int dayCellSize: 24
     readonly property int weekNumberColumnWidth: 24
     readonly property int monthWidth: weekNumberColumnWidth + 7 * dayCellSize
-    readonly property int monthHorizontalGap: 12
-    readonly property int monthVerticalGap: 12
-    readonly property int contentPadding: 12
+    readonly property int monthHorizontalGap: Spacing.spacing12
+    readonly property int monthVerticalGap: Spacing.spacing12
+    readonly property int contentPadding: Spacing.spacing12
 
     implicitWidth: 4 * monthWidth + 3 * monthHorizontalGap + 2 * contentPadding
     implicitHeight: layout.height + 2 * contentPadding
@@ -184,6 +188,7 @@ Item {
                 onReadyToSwap: direction => {
                     root._pinnedYear = root._targetYear;
                     root._yearPinned = root._targetYear !== root.todayYear;
+                    root._transitioning = false;
                     gridSlide.completeTransition();
                 }
 
@@ -297,9 +302,6 @@ Item {
 
                                             property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
 
-                                            scale: dayCellMouse.pressed && dayCell.isValidDay ? 0.85 : 1.0
-                                            SquishBehavior on scale {}
-
                                             Rectangle {
                                                 anchors.centerIn: parent
                                                 width: root.dayCellSize
@@ -316,12 +318,13 @@ Item {
                                                 verticalAlignment: Text.AlignVCenter
                                             }
 
+                                            // Days carry no action.
+                                            // Hover highlight only, no pointing-hand cursor, no squish.
                                             MouseArea {
                                                 id: dayCellMouse
                                                 anchors.fill: parent
                                                 hoverEnabled: true
-                                                cursorShape: dayCell.isValidDay ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                                onClicked: console.log("Calendar: clicked " + dayCell.dayNumber + "." + (mCol.monthIndex + 1) + "." + root.displayYear)
+                                                acceptedButtons: Qt.NoButton
                                             }
                                         }
                                     }

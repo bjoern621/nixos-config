@@ -8,7 +8,7 @@ Item {
     property int hideDuration: 80
     property bool showing: false
 
-    // Qt.TopEdge / BottomEdge / LeftEdge / RightEdge — combinable for diagonals
+    // Qt.TopEdge / BottomEdge / LeftEdge / RightEdge, combinable for diagonals
     // e.g. Qt.TopEdge | Qt.RightEdge = slide from top-right
     property int edge: Qt.TopEdge
 
@@ -109,15 +109,25 @@ Item {
         onFinished: root.hidden()
     }
 
-    onShowingChanged: showing ? show() : hide()
+    // showing is the single source of truth.
+    // show()/hide() write it instead of driving the animations, so both agree.
+    // Re-entry is a no-op: hide() on a hidden reveal emits no second hidden().
+    // Bind showing or call show()/hide(), never both: an imperative write kills the binding.
+    onShowingChanged: {
+        if (showing) {
+            hideAnim.stop();
+            showAnim.start();
+        } else {
+            showAnim.stop();
+            hideAnim.start();
+        }
+    }
 
     function show() {
-        hideAnim.stop();
-        showAnim.start();
+        root.showing = true;
     }
 
     function hide() {
-        showAnim.stop();
-        hideAnim.start();
+        root.showing = false;
     }
 }

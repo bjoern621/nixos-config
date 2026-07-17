@@ -6,6 +6,8 @@ Row {
     id: root
 
     property var player: null
+    // Forwarded to MusicBars: Bar keeps its surface mapped while the pill is off screen.
+    property bool barHidden: false
     readonly property bool hasPlayer: player !== null
     readonly property bool isPlaying: hasPlayer && player.playbackState === MprisPlaybackState.Playing
 
@@ -14,6 +16,7 @@ Row {
 
     MusicBars {
         playing: root.isPlaying
+        barHidden: root.barHidden
     }
 
     Label {

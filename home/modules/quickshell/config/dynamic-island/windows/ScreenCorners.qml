@@ -58,6 +58,8 @@ Scope {
     }
 
     component CornerMask: Item {
+        id: mask
+
         property int radius: 20 // 12px inner radius with 8px offset keeps inner and outer arcs concentric, so outer radius is 20px
         // 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right
         property int corner: 0
@@ -66,9 +68,12 @@ Scope {
         height: radius
 
         Canvas {
+            id: maskCanvas
             anchors.fill: parent
             antialiasing: true
 
+            // Fakes the rounded bezel of a physical display, so black is the
+            // absence of screen rather than a themed surface. Not a Colors token.
             onPaint: {
                 var context = getContext("2d");
                 context.reset();
@@ -79,13 +84,13 @@ Scope {
                 context.globalCompositeOperation = "destination-out";
                 context.beginPath();
 
-                if (parent.corner === 0) {
+                if (mask.corner === 0) {
                     context.moveTo(width, height);
                     context.arc(width, height, width, Math.PI, 1.5 * Math.PI, false);
-                } else if (parent.corner === 1) {
+                } else if (mask.corner === 1) {
                     context.moveTo(0, height);
                     context.arc(0, height, width, 1.5 * Math.PI, 2 * Math.PI, false);
-                } else if (parent.corner === 2) {
+                } else if (mask.corner === 2) {
                     context.moveTo(width, 0);
                     context.arc(width, 0, width, 0.5 * Math.PI, Math.PI, false);
                 } else {
@@ -98,9 +103,8 @@ Scope {
             }
         }
 
-        onRadiusChanged: children[0].requestPaint()
-        onCornerChanged: children[0].requestPaint()
-        onWidthChanged: children[0].requestPaint()
-        onHeightChanged: children[0].requestPaint()
+        // Canvas repaints itself on resize, which covers radius. corner has no
+        // geometry to change, so it needs this.
+        onCornerChanged: maskCanvas.requestPaint()
     }
 }

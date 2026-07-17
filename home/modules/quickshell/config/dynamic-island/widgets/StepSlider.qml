@@ -6,13 +6,13 @@ Item {
 
     property real value: 0
     property real stepSize: 0.05
-    property bool isMuted: false // grays out the fill color
+    property bool isMuted: false
     property color accentColor: Colors.accentColor
     property color mutedColor: Colors.progressMuted
     property color trackColor: Colors.progressBackground
     property int handleVerticalSize: 20
     property int trackPadding: 4 // insets handle range so tracks stay visible at 0% and 100%
-    property bool liveUpdate: true // when false, moved() only fires on release (not during drag)
+    property bool liveUpdate: true // false: moved() fires on release only, not during drag
 
     signal moved(real newValue)
 
@@ -24,11 +24,15 @@ Item {
 
     readonly property color fillColor: root.isMuted ? root.mutedColor : root.accentColor
 
+    // Drag and wheel both write `value` imperatively, dropping whatever binding sits on it.
+    // `when` must gate this Binding off for the whole span of either gesture.
+    // Else the write kills it, and externalValue stops reaching value until
+    // the next press re-installs it.
     Binding {
         target: root
         property: "value"
         value: root.externalValue
-        when: !root.pressed
+        when: !root.pressed && !wheelSettle.running
         restoreMode: Binding.RestoreBinding
     }
 
@@ -98,17 +102,34 @@ Item {
     }
 
     function updateValue(mouseX) {
-        var usable = root.width - 2 * root.trackPadding;
-        var rawFraction = Math.max(0, Math.min(1, (mouseX - root.trackPadding) / usable));
-        var steppedValue = Math.round(rawFraction / root.stepSize) * root.stepSize;
+        const usable = root.width - 2 * root.trackPadding;
+        const rawFraction = Math.max(0, Math.min(1, (mouseX - root.trackPadding) / usable));
+        // Clamp after stepping.
+        // Rounding overshoots 1 for a stepSize that does not divide 1:
+        // 0.4 rounds to 1.2, while handle.x clamps.
+        const steppedValue = Math.max(0, Math.min(1, Math.round(rawFraction / root.stepSize) * root.stepSize));
         root.value = steppedValue;
         if (root.liveUpdate)
             root.moved(steppedValue);
     }
 
-    property real scrollAccumulator: 0
+    // Wheel deltas below the threshold must survive across events, else touchpad scroll never steps.
+    QtObject {
+        id: internal
+        property real scrollAccumulator: 0
+    }
+
     property int touchpadThreshold: 50
     property int mouseThreshold: 120
+
+    // Holds the value Binding off past the last wheel event, covering the
+    // backend round-trip that feeds externalValue back.
+    // Without it the Binding re-installs between wheel events and reverts each
+    // step to the stale externalValue.
+    Timer {
+        id: wheelSettle
+        interval: 200
+    }
 
     MouseArea {
         id: sliderArea
@@ -128,13 +149,22 @@ Item {
                 root.moved(root.value);
         }
         onWheel: wheel => {
-            var delta = wheel.angleDelta.y;
-            var threshold = Math.abs(delta) >= root.mouseThreshold ? root.mouseThreshold : root.touchpadThreshold;
-            root.scrollAccumulator += delta;
-            while (Math.abs(root.scrollAccumulator) >= threshold) {
-                var direction = root.scrollAccumulator > 0 ? 1 : -1;
-                root.scrollAccumulator -= direction * threshold;
-                var steppedValue = Math.max(0, Math.min(1, root.value + direction * root.stepSize));
+            // Restart before writing value: gates the Binding off first, else the write below drops it.
+            wheelSettle.restart();
+            const delta = wheel.angleDelta.y;
+            const threshold = Math.abs(delta) >= root.mouseThreshold ? root.mouseThreshold : root.touchpadThreshold;
+            // Threshold 0 never drains the accumulator, so the loop below never terminates.
+            if (threshold <= 0)
+                return;
+            // Reversing drops accumulated travel.
+            // Else opposing deltas cancel, and the reversal needs a full threshold of its own to register.
+            if (delta * internal.scrollAccumulator < 0)
+                internal.scrollAccumulator = 0;
+            internal.scrollAccumulator += delta;
+            while (Math.abs(internal.scrollAccumulator) >= threshold) {
+                const direction = internal.scrollAccumulator > 0 ? 1 : -1;
+                internal.scrollAccumulator -= direction * threshold;
+                const steppedValue = Math.max(0, Math.min(1, root.value + direction * root.stepSize));
                 root.value = steppedValue;
                 root.moved(steppedValue);
             }

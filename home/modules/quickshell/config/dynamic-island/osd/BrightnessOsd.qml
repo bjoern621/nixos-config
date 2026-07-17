@@ -1,205 +1,93 @@
 import Quickshell
-import Quickshell.Hyprland
+import Quickshell.Hyprland._GlobalShortcuts
 import Quickshell.Io
 import QtQuick
 import "../"
-import "../base"
 
-// Brightness OSD – polls brightnessctl to detect changes.
+// Brightness OSD.
+// Brightness changes only from XF86MonBrightness keybinds
+// (home/modules/hyprland/brightness-keys.nix), which run brightnessctl then notify this shell.
+// Polling brightnessctl at 10 Hz instead spawns it ~864k times a day.
 Scope {
     id: brightnessScope
 
-    property bool _startupDone: false
-    property int _brightness: -1
+    property int brightness: 0
+    // Read requested while another was in flight.
+    // See showOsd.
+    property bool rereadPending: false
 
-    Timer {
-        interval: 1000
-        running: true
-        onTriggered: brightnessScope._startupDone = true
-    }
+    // Seed at start, else the first keypress shows 0, not the real level.
+    Component.onCompleted: brightnessProc.running = true
 
-    // Poll brightnessctl regularly
-    Timer {
-        interval: 100
-        running: true
-        repeat: true
-        onTriggered: brightnessProc.running = true
+    // Shows first, reads after: the pill is up within a frame, and its bar animates
+    // to the real level when brightnessctl lands, well inside the 120ms fill animation.
+    function showOsd() {
+        osd.showOsd();
+        if (brightnessProc.running) {
+            // Process ignores running=true while running.
+            // In-flight read predates this keypress, so read again once it exits.
+            brightnessScope.rereadPending = true;
+            return;
+        }
+        brightnessProc.running = true;
     }
 
     Process {
         id: brightnessProc
         command: ["brightnessctl", "-m"]
+
         stdout: SplitParser {
             onRead: data => {
-                // Format: device,class,current,percentage%,max
+                // device,class,current,percentage%,max
                 const parts = data.split(",");
-                if (parts.length >= 4) {
-                    const pct = parseInt(parts[3]);
-                    if (!isNaN(pct) && pct !== brightnessScope._brightness) {
-                        brightnessScope._brightness = pct;
-                    }
-                }
+                if (parts.length < 4)
+                    return;
+                const pct = parseInt(parts[3]);
+                if (!isNaN(pct))
+                    brightnessScope.brightness = Math.max(0, Math.min(100, pct));
             }
+        }
+
+        onExited: {
+            if (brightnessScope.rereadPending)
+                rereadTimer.start();
         }
     }
 
-    readonly property int osdValue: Math.max(0, Math.min(100, _brightness))
-    readonly property string osdIconSource: "../icons/icons8-brightness.svg"
-
-    function focusedScreen() {
-        const mon = Hyprland.focusedMonitor;
-        if (mon) {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++) {
-                if (screens[i].name === mon.name)
-                    return screens[i];
-            }
-        }
-        return null;
-    }
-
-    on_BrightnessChanged: {
-        if (!_startupDone || _brightness < 0)
-            return;
-        const s = focusedScreen();
-        if (s)
-            osdWindow.screen = s;
-        osdWindow.visible = true;
-        osdHideTimer.restart();
-        osdReveal.show();
-    }
-
+    // Re-arms the read outside brightnessProc's own exit handler.
     Timer {
-        id: osdHideTimer
-        interval: 2000
-        onTriggered: osdReveal.hide()
+        id: rereadTimer
+        interval: 0
+        onTriggered: {
+            brightnessScope.rereadPending = false;
+            brightnessProc.running = true;
+        }
     }
 
-    PanelWindow {
-        id: osdWindow
-        visible: false
+    // Hyprland routes the keybind here through `hyprctl dispatch global`,
+    // reaching this running process.
+    // `qs ipc call` cold-starts a Qt binary per keypress (~125ms),
+    // which the OSD would sit behind.
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "brightness"
+        description: "Show the brightness OSD"
+        onPressed: brightnessScope.showOsd()
+    }
 
-        anchors {
-            top: true
+    // IPC: qs ipc call brightness show
+    IpcHandler {
+        target: "brightness"
+        function show() {
+            brightnessScope.showOsd();
         }
-        exclusiveZone: 0
-        color: "transparent"
+    }
 
-        implicitWidth: 280
-        implicitHeight: 40 + osdPill.implicitHeight + Spacing.spacing16
-        mask: Region {}
-
-        Connections {
-            target: osdReveal
-            function onHidden() {
-                osdWindow.visible = false;
-            }
-        }
-
-        PopReveal {
-            id: osdReveal
-            x: (osdWindow.width - width) / 2
-            y: 40
-            width: 200
-            height: osdPill.implicitHeight
-            showDuration: 120
-            hideDuration: 100
-            slideOffset: Spacing.spacing16
-
-            Rectangle {
-                id: osdPill
-                anchors.fill: parent
-
-                property int marginTopBottom: Spacing.spacing8
-                property int marginLeftRight: Spacing.spacing12
-
-                implicitWidth: 200
-                implicitHeight: contentRow.implicitHeight + 2 * marginTopBottom
-
-                radius: implicitHeight / 2
-                color: Colors.pillBackground
-                border.width: 1
-                border.color: Colors.pillBorder
-
-                Row {
-                    id: contentRow
-                    anchors {
-                        fill: parent
-                        leftMargin: osdPill.marginLeftRight
-                        rightMargin: osdPill.marginLeftRight
-                        topMargin: osdPill.marginTopBottom
-                        bottomMargin: osdPill.marginTopBottom
-                    }
-                    spacing: Spacing.spacing8
-
-                    TintedIcon {
-                        source: brightnessScope.osdIconSource
-                        size: Typography.fontSize16
-                        width: 24
-                        height: 24
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: Colors.textColor
-                    }
-
-                    Column {
-                        spacing: Spacing.spacing4
-                        width: parent.width - 24 - parent.spacing
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Item {
-                            width: parent.width
-                            height: labelText.implicitHeight
-
-                            Label {
-                                id: labelText
-                                text: "Helligkeit"
-                                anchors.left: parent.left
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-
-                            Label {
-                                text: brightnessScope.osdValue + " %"
-                                color: Colors.textColor
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                        }
-
-                        Row {
-                            width: parent.width
-                            spacing: brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0
-
-                            Rectangle {
-                                width: Math.max(0, (parent.width - (brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0)) * brightnessScope.osdValue / 100)
-                                height: 6
-                                radius: 3
-                                color: Colors.accentColor
-
-                                Behavior on width {
-                                    NumberAnimation {
-                                        duration: 120
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-                            }
-
-                            Rectangle {
-                                width: Math.max(0, (parent.width - (brightnessScope.osdValue > 0 && brightnessScope.osdValue < 100 ? 3 : 0)) * (100 - brightnessScope.osdValue) / 100)
-                                height: 6
-                                radius: 3
-                                color: Colors.progressBackground
-
-                                Behavior on width {
-                                    NumberAnimation {
-                                        duration: 120
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    OsdWindow {
+        id: osd
+        iconSource: "../icons/icons8-brightness.svg"
+        label: "Helligkeit"
+        value: brightnessScope.brightness
+        valueLabel: brightnessScope.brightness + " %"
     }
 }

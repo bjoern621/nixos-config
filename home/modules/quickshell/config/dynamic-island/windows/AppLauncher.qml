@@ -18,17 +18,24 @@ Scope {
     // Per-field weights: name dominates, comment is tiebreaker.
     readonly property var fieldWeights: [3.0, 1.5, 1.2, 0.7]
 
-    property bool launcherVisible: false
+    // Globals.launcherVisible is the sole holder, and Bar reads it for its pill.
+    // A local copy needs syncing and drifts.
+    readonly property bool launcherVisible: Globals.launcherVisible
     property string searchText: ""
     // Each entry: { app, fields:[4], lower:[4] }
     property var indexedApps: []
     property var filteredApps: []
 
     onLauncherVisibleChanged: {
-        Globals.launcherVisible = launcherVisible;
         if (launcherVisible) {
             searchText = "";
             updateFilter();
+            // cancelFlick() kills in-flight wheel momentum from the previous
+            // open. positionViewAtBeginning() accounts for originY; contentY = 0
+            // leaves blank space above row 0 while a flick is still animating.
+            resultsList.cancelFlick();
+            resultsList.positionViewAtBeginning();
+            resultsList.reset();
         }
     }
 
@@ -96,7 +103,7 @@ Scope {
     }
 
     function launchApp(app) {
-        launcherVisible = false;
+        Globals.launcherVisible = false;
         Quickshell.execDetached(["uwsm", "app", "--", app.id + ".desktop"]);
     }
 
@@ -108,10 +115,12 @@ Scope {
     function toggle() {
         if (!launcherVisible) {
             const s = focusedScreen();
-            if (s)
+            if (s) {
                 launcherWindow.screen = s;
+                Globals.launcherScreenName = s.name;
+            }
         }
-        launcherVisible = !launcherVisible;
+        Globals.launcherVisible = !launcherVisible;
     }
 
     Component.onCompleted: rebuildAppList()
@@ -161,7 +170,7 @@ Scope {
         AutoCloseOnFocusLoss {
             watch: panel
             armed: launcherScope.launcherVisible
-            onLost: launcherScope.launcherVisible = false
+            onLost: Globals.launcherVisible = false
         }
 
         LauncherPanel {
@@ -172,7 +181,7 @@ Scope {
             emptyVisible: launcherScope.filteredApps.length === 0 && launcherScope.searchText !== ""
 
             onSearchEdited: text => launcherScope.searchText = text
-            onEscaped: launcherScope.launcherVisible = false
+            onEscaped: Globals.launcherVisible = false
             onAccepted: {
                 const apps = launcherScope.filteredApps;
                 if (apps.length > 0)

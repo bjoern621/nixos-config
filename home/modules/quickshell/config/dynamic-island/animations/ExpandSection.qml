@@ -52,8 +52,15 @@ Item {
         }
     ]
 
+    // Sized to content, not to root.
+    // Root animates 0 -> content size and clips, so content holds natural size throughout.
+    //
+    // Content sizes itself.
+    // Deriving height from this Item (anchors.fill, height: parent.height) feeds
+    // childrenRect back into its own source and settles at 0.
     Item {
         id: contentContainer
         width: root.horizontal ? childrenRect.width : parent.width
+        height: childrenRect.height
     }
 }

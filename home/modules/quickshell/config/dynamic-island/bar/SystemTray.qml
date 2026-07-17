@@ -29,6 +29,9 @@ Item {
 
     property bool expanded: false
 
+    readonly property int iconCellSize: 26
+    readonly property int attentionDotSize: 6
+
     // Tray icons keep their native colours, bar symbolic ones which TrayIcon
     // tints so they stay visible. An app whose icon ships an opaque or dark
     // background draws as a solid block against the translucent bar; to force
@@ -50,7 +53,11 @@ Item {
         return trayRoot.defaultIconMode;
     }
 
-    // The spec reserves Passive for items with nothing worth showing.
+    // Drives the menu-dismiss check only.
+    // The Repeater binds SystemTray.items directly and hides Passive per delegate.
+    // .filter() reads every item's status, so any status change yields a fresh array.
+    // Assigning that to `model` rebuilds every delegate, reloading icons and
+    // dropping hover.
     readonly property var trayItems: SystemTray.items.values.filter(item => item.status !== Status.Passive)
 
     QtObject {
@@ -151,7 +158,7 @@ Item {
             id: iconsContainer
             horizontal: true
             expanded: trayRoot.expanded
-            duration: 600
+            duration: 180
             anchors.verticalCenter: parent.verticalCenter
 
             Row {
@@ -161,15 +168,20 @@ Item {
                 spacing: 0
 
                 Repeater {
-                    model: trayRoot.trayItems
+                    model: SystemTray.items
 
                     Item {
                         id: iconItem
 
                         required property var modelData
 
-                        width: 26
-                        height: 26
+                        // Spec reserves Passive for items with nothing worth showing.
+                        // Row skips invisible children, so hiding lays out the same
+                        // as filtering the model.
+                        visible: iconItem.modelData.status !== Status.Passive
+
+                        width: trayRoot.iconCellSize
+                        height: trayRoot.iconCellSize
 
                         readonly property bool menuShown: internal.menuOpen && internal.activeItem === iconItem.modelData
                         readonly property bool needsAttention: modelData.status === Status.NeedsAttention
@@ -200,8 +212,8 @@ Item {
                         // this" state, e.g. a chat mention.
                         Rectangle {
                             visible: iconItem.needsAttention
-                            width: 6
-                            height: 6
+                            width: trayRoot.attentionDotSize
+                            height: trayRoot.attentionDotSize
                             radius: height / 2
                             color: Colors.accentColor
                             anchors.right: parent.right

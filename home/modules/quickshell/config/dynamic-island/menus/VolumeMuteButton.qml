@@ -7,7 +7,7 @@ import "../base"
 Item {
     id: root
 
-    property string iconSource: ""
+    property url iconSource
     property int iconSize: 18
     signal tapped
 

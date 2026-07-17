@@ -1,15 +1,17 @@
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.UPower
 import QtQuick
 import "../"
 
-// Battery monitoring. Sends popups via PopupHost and libnotify  when battery drops below thresholds.
+// Battery monitoring.
+// Popups via PopupHost and libnotify when battery drops below thresholds.
 Scope {
     id: batteryScope
 
-    property bool _startupDone: false
-    property real _lastPct: UPower.displayDevice.percentage
+    // -1, not a binding on pct: threshold checks below assign it,
+    // and an imperative write destroys a binding.
+    // Seeded once startup settles.
+    property real _lastPct: -1
 
     readonly property real pct: UPower.displayDevice.percentage
     readonly property bool charging: UPower.displayDevice.state === UPowerDeviceState.Charging
@@ -19,23 +21,31 @@ Scope {
     readonly property real criticalThreshold: 0.10
     readonly property real warningThreshold: 0.25
 
-    Timer {
-        interval: 2000
-        running: true
-        onTriggered: {
-            batteryScope._lastPct = batteryScope.pct;
-            batteryScope._startupDone = true;
+    Connections {
+        target: ShellStartup
+
+        function onSettledChanged() {
+            if (ShellStartup.settled)
+                batteryScope._lastPct = batteryScope.pct;
         }
     }
 
-    Process {
-        id: notifyProc
-        command: ["notify-send", "", ""]
-    }
-
+    // execDetached, not a shared Process: mutating a Process's command and setting running=true
+    // are both no-ops while it still runs, silently dropping a second threshold crossed inside
+    // notify-send's runtime.
+    //
+    // This shell is the notification daemon (base/NotificationListener.qml), so notify-send
+    // round-trips over D-Bus back into this process.
+    // That files the alert in the notification center.
+    // PopupHost.show below draws the on-screen alert.
+    //
+    // -t is milliseconds.
+    // 15ms expires the toast before it can be seen, leaving only the history entry, so no toast
+    // duplicates the modal.
+    // Critical urgency never expires (see NotificationToast.expiryMs),
+    // so -t applies only to the 25% warning.
     function sendNotification(summary, body, urgency) {
-        notifyProc.command = ["notify-send", "-u", urgency, "-a", "Quickshell", "-t", "15", summary, body];
-        notifyProc.running = true;
+        Quickshell.execDetached(["notify-send", "-u", urgency, "-a", "Quickshell", "-t", "15", summary, body]);
     }
 
     function crossedBelow(threshold) {
@@ -43,7 +53,7 @@ Scope {
     }
 
     onPctChanged: {
-        if (!_startupDone) {
+        if (!ShellStartup.settled) {
             _lastPct = pct;
             return;
         }
@@ -69,7 +79,7 @@ Scope {
         _lastPct = pct;
     }
 
-    // Keep previous value aligned when power state changes.
+    // Re-seed on power-state flip, else a stale _lastPct reads as a threshold crossing.
     onChargingChanged: {
         _lastPct = pct;
     }

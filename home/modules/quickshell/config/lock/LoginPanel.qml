@@ -67,8 +67,13 @@ Item {
         id: clockTicker
         property date time: new Date()
         interval: 1000
-        running: true
+        // Hidden panel repaints nothing, so ticking it only burns wakeups.
+        running: panel.visible
         repeat: true
+        // Refreshes time on restart.
+        // Gated timer would otherwise show the stale pre-hide value for up to
+        // one interval.
+        triggeredOnStart: true
         onTriggered: time = new Date()
     }
 
@@ -113,12 +118,18 @@ Item {
                     anchors.fill: parent
                     transformOrigin: Item.Center
 
+                    // Repaints every frame for as long as it runs.
+                    // Gated so a hidden panel costs nothing.
+                    // hypridle configures no DPMS (AMD crash), so nothing else
+                    // stops it.
+                    // arcRotor.visible tracks panel.visible: QML propagates
+                    // effective visibility down.
                     NumberAnimation on rotation {
                         from: 0
                         to: 360
                         duration: 4000
                         loops: Animation.Infinite
-                        running: true
+                        running: arcRotor.visible
                     }
 
                     Canvas {

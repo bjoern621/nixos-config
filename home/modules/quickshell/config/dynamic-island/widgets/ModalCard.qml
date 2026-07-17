@@ -2,8 +2,9 @@ import QtQuick
 import "../"
 import "../base"
 
-// Reusable dismissable popup card. Parent controls visibility via show()/hide().
-// Properties: icon, title, message, accentColor.
+// Popup card: icon, title, message, dismiss button.
+// Content only: emits dismissed(), the parent owns visibility and every reaction to it.
+// ModalOverlay wraps this in a PopReveal.
 Item {
     id: root
 
@@ -11,6 +12,7 @@ Item {
     property string title: ""
     property string message: ""
     property color accentColor: Colors.textColor
+    property string dismissText: "Verstanden"
 
     signal dismissed
 
@@ -85,7 +87,7 @@ Item {
 
                 Text {
                     id: dismissLabel
-                    text: "Verstanden"
+                    text: root.dismissText
                     font.family: Typography.fontFamily
                     font.pixelSize: Typography.fontSize14
                     font.weight: Font.Bold

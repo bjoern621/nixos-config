@@ -62,16 +62,15 @@ Scope {
     function apply() {
         const path = wallpaperList[currentIndex];
 
-        wallpaperPersist.save(path);
+        WallpaperPersist.save(path);
 
-        // Wallpaper is already showing via hyprpaper preview — just close
+        // Wallpaper is already showing via hyprpaper preview, just close.
         close();
     }
 
     function cancel() {
-        // Restore both hyprpaper display and Globals to the original state
+        // restoreWallpaper() already resets Globals.wallpaperPath.
         restoreWallpaper();
-        Globals.wallpaperPath = originalWallpaper;
         close();
     }
 
@@ -100,15 +99,12 @@ Scope {
         chooserScope.currentIndex = idx;
 
         const path = chooserScope.wallpaperList[idx];
-        console.log("[WallpaperChooser] previewCard idx=" + idx + " path=" + path);
 
         // Setting the global triggers WallpaperBackend to apply it
         Globals.wallpaperPath = "file://" + path;
     }
 
     function restoreWallpaper() {
-        console.log("[WallpaperChooser] restoreWallpaper");
-
         // Restoring the global triggers WallpaperBackend to apply it
         Globals.wallpaperPath = originalWallpaper;
     }
@@ -121,16 +117,11 @@ Scope {
         stdout: SplitParser {
             onRead: data => {
                 const line = data.trim();
-                if (line.length > 0) {
+                if (line.length > 0)
                     chooserScope.wallpaperList.push(line);
-                    // console.log("[WallpaperChooser] found wallpaper: " + line);
-                }
             }
         }
-        onExited: {
-            console.log("[WallpaperChooser] loaded " + chooserScope.wallpaperList.length + " wallpapers");
-            chooserScope.wallpaperListChanged();
-        }
+        onExited: chooserScope.wallpaperListChanged()
     }
 
     Process {
@@ -139,7 +130,9 @@ Scope {
 
     Process {
         id: openFolderProc
-        command: ["xdg-open", "~/.local/share/wallpapers"]
+        // bash -c expands ~.
+        // exec'd directly, xdg-open gets it literally and opens nothing.
+        command: ["bash", "-c", "xdg-open ~/.local/share/wallpapers"]
     }
 
     // Load wallpaper list on startup

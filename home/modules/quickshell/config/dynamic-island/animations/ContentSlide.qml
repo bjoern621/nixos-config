@@ -7,7 +7,7 @@ Item {
 
     property real slideOffset: 40
     property int fadeOutDuration: 120
-    property int slideInDuration: 300
+    property int slideInDuration: 200
     property int fadeInDuration: 200
 
     signal readyToSwap(int direction)

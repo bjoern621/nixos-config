@@ -14,19 +14,30 @@ Keyring layout (service = "quickshell-spotify"):
   access_token      | Current OAuth access token
   refresh_token     | OAuth refresh token
   expires_at        | Token expiry as Unix ms (string)
+
+Only JSON payloads go to stdout; QML parses stdout and discards stderr.
+No token, secret, or auth code reaches either stream.
 """
 
 from __future__ import annotations
 
 import base64
+import contextlib
+import fcntl
 import getpass
+import html
 import json
+import os
+import secrets
+import signal
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
+from collections.abc import Iterator
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
@@ -41,7 +52,7 @@ except ImportError:
     )
     sys.exit(1)
 
-# ── constants ──────────────────────────────────────────────────────────────────
+# constants
 
 KEYRING_SERVICE: str = "quickshell-spotify"
 REDIRECT_URI: str = "http://127.0.0.1:8888/callback"
@@ -50,20 +61,58 @@ SCOPES: str = (
     "user-read-playback-state user-modify-playback-state"
 )
 
-# ── in-process credential cache (never written to disk) ───────────────────────
+HTTP_TIMEOUT: float = 10.0
+# keyring reaches Secret Service over D-Bus, which HTTP_TIMEOUT does not cover.
+KEYRING_TIMEOUT: float = 10.0
+# Lock holder is bounded by KEYRING_TIMEOUT + HTTP_TIMEOUT per refresh.
+LOCK_TIMEOUT: float = 30.0
+# Abandoned auth otherwise holds port 8888 forever.
+AUTH_TIMEOUT: float = 300.0
+
+# in-process credential cache (never written to disk)
 
 _client_id: str = ""
 _client_secret: str = ""
 
 
-# ── keyring helpers ────────────────────────────────────────────────────────────
+# keyring helpers
+
+
+class _KeyringTimeout(Exception):
+    """Keyring call exceeded KEYRING_TIMEOUT."""
+
+
+@contextlib.contextmanager
+def _keyring_deadline() -> Iterator[None]:
+    """Bound a keyring call with SIGALRM.
+
+    Locked or prompting keyring blocks on D-Bus forever, and the process never exits.
+    No-op off the main thread, where signal.signal raises ValueError.
+    """
+
+    def _fire(_signum: int, _frame: Any) -> None:
+        raise _KeyringTimeout(f"exceeded {KEYRING_TIMEOUT}s")
+
+    try:
+        previous = signal.signal(signal.SIGALRM, _fire)
+    except ValueError:
+        yield
+        return
+
+    signal.setitimer(signal.ITIMER_REAL, KEYRING_TIMEOUT)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
 
 
 def _kr_get(username: str) -> str | None:
-    """Return a keyring value or None if absent / backend unavailable."""
+    """Return a keyring value or None if absent / backend unavailable / timed out."""
     try:
-        return keyring.get_password(KEYRING_SERVICE, username)
-    except keyring.errors.KeyringError as exc:
+        with _keyring_deadline():
+            return keyring.get_password(KEYRING_SERVICE, username)
+    except (keyring.errors.KeyringError, _KeyringTimeout) as exc:
         print(f"Keyring read error ({username}): {exc}", file=sys.stderr)
         return None
 
@@ -71,22 +120,24 @@ def _kr_get(username: str) -> str | None:
 def _kr_set(username: str, value: str) -> None:
     """Persist a value in the keyring; raise on failure."""
     try:
-        keyring.set_password(KEYRING_SERVICE, username, value)
-    except keyring.errors.KeyringError as exc:
+        with _keyring_deadline():
+            keyring.set_password(KEYRING_SERVICE, username, value)
+    except (keyring.errors.KeyringError, _KeyringTimeout) as exc:
         raise RuntimeError(f"Keyring write error ({username}): {exc}") from exc
 
 
 def _kr_del(username: str) -> None:
     """Delete a keyring entry, silently ignoring 'not found'."""
     try:
-        keyring.delete_password(KEYRING_SERVICE, username)
+        with _keyring_deadline():
+            keyring.delete_password(KEYRING_SERVICE, username)
     except keyring.errors.PasswordDeleteError:
         pass
-    except keyring.errors.KeyringError as exc:
+    except (keyring.errors.KeyringError, _KeyringTimeout) as exc:
         print(f"Keyring delete error ({username}): {exc}", file=sys.stderr)
 
 
-# ── credentials (client ID / secret) ──────────────────────────────────────────
+# credentials (client ID / secret)
 
 
 def load_credentials() -> tuple[str, str]:
@@ -119,11 +170,55 @@ def clear_credentials() -> None:
     print("All keyring entries for quickshell-spotify cleared.", file=sys.stderr)
 
 
-# ── token storage ──────────────────────────────────────────────────────────────
+# token storage
+
+
+@contextlib.contextmanager
+def _token_lock() -> Iterator[None]:
+    """Serialize refresh + save across processes.
+
+    save_tokens writes three independent keyring keys, and `play` runs unguarded by the
+    QML spotifyDataLoading flag that serializes `all`.
+    Concurrent refreshes interleave the keys and race Spotify's refresh-token rotation.
+    Proceeds unlocked rather than blocking forever on a stalled peer.
+    Never nest: flock on a second fd for the same file deadlocks the process
+    against itself.
+    """
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()
+    path = os.path.join(runtime_dir, "quickshell-spotify-token.lock")
+
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+    except OSError as exc:
+        print(f"Token lock unavailable ({exc}); proceeding unlocked", file=sys.stderr)
+        yield
+        return
+
+    try:
+        deadline = time.monotonic() + LOCK_TIMEOUT
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    print(
+                        f"Token lock busy after {LOCK_TIMEOUT}s; proceeding unlocked",
+                        file=sys.stderr,
+                    )
+                    break
+                time.sleep(0.1)
+        yield
+    finally:
+        # close releases the flock.
+        os.close(fd)
 
 
 def save_tokens(access_token: str, refresh_token: str, expires_in: int) -> None:
-    """Persist OAuth tokens in the keyring."""
+    """Persist OAuth tokens in the keyring.
+
+    Caller holds _token_lock(); the three writes are not atomic together.
+    """
     expires_at = str(int(time.time() * 1000) + expires_in * 1000)
     _kr_set("access_token", access_token)
     _kr_set("refresh_token", refresh_token)
@@ -146,11 +241,19 @@ def load_tokens() -> dict[str, Any] | None:
     }
 
 
-# ── token lifecycle ────────────────────────────────────────────────────────────
+# token lifecycle
+
+
+def _needs_refresh(tokens: dict[str, Any]) -> bool:
+    """True within 5 minutes of expiry."""
+    return int(time.time() * 1000) >= tokens["expires_at"] - 300_000
 
 
 def refresh_access_token() -> bool:
-    """Refresh the access token using the stored refresh token."""
+    """Refresh the access token using the stored refresh token.
+
+    Caller holds _token_lock(); this read-modify-writes keyring token state.
+    """
     tokens = load_tokens()
     if not tokens:
         return False
@@ -171,15 +274,41 @@ def refresh_access_token() -> bool:
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as response:
             result = json.loads(response.read().decode())
+            # Spotify rotates the refresh token at will and invalidates the old one.
+            # Re-saving the old one breaks auth until a manual
+            # `quickshell-spotify auth`.
             save_tokens(
-                result["access_token"], tokens["refresh_token"], result["expires_in"]
+                result["access_token"],
+                result.get("refresh_token", tokens["refresh_token"]),
+                result["expires_in"],
             )
             return True
     except Exception as exc:
         print(f"Error refreshing token: {exc}", file=sys.stderr)
         return False
+
+
+def _refresh_if_stale(stale_token: str | None = None) -> bool:
+    """Refresh tokens under _token_lock, skipping the work a peer already did.
+
+    stale_token: access token that drew a 401; refresh is skipped once the keyring holds
+    a different one.  None: refresh only when the stored token is near expiry.
+    """
+    with _token_lock():
+        tokens = load_tokens()
+        if not tokens:
+            return False
+
+        # A peer may have refreshed while this process waited for the lock.
+        if stale_token is None:
+            if not _needs_refresh(tokens):
+                return True
+        elif tokens["access_token"] != stale_token:
+            return True
+
+        return refresh_access_token()
 
 
 def get_valid_token() -> str | None:
@@ -188,9 +317,8 @@ def get_valid_token() -> str | None:
     if not tokens:
         return None
 
-    # Refresh 5 minutes before expiry
-    if int(time.time() * 1000) >= tokens["expires_at"] - 300_000:
-        if not refresh_access_token():
+    if _needs_refresh(tokens):
+        if not _refresh_if_stale():
             return None
         tokens = load_tokens()
         if not tokens:
@@ -199,18 +327,31 @@ def get_valid_token() -> str | None:
     return tokens.get("access_token")
 
 
-# ── API requests ───────────────────────────────────────────────────────────────
+# API requests
+
+
+class SpotifyError(Exception):
+    """API failure carrying a machine-readable reason for the JSON payload."""
+
+    def __init__(self, reason: str, detail: str = "") -> None:
+        super().__init__(detail or reason)
+        self.reason = reason
 
 
 def api_request(
     endpoint: str,
     method: str = "GET",
     data: dict[str, Any] | None = None,
-) -> dict[str, Any] | None:
-    """Make an authenticated Spotify API request."""
+    _retried: bool = False,
+) -> dict[str, Any]:
+    """Make an authenticated Spotify API request.
+
+    Raises SpotifyError on failure, so callers can tell failure from an empty result.
+    An empty dict means success with no body (204).
+    """
     token = get_valid_token()
     if not token:
-        return None
+        raise SpotifyError("not_authenticated", "no valid access token")
 
     url = f"https://api.spotify.com{endpoint}"
     body = json.dumps(data).encode() if data else None
@@ -220,123 +361,133 @@ def api_request(
         req.add_header("Content-Type", "application/json")
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as response:
             if response.status == 204:
                 return {}
             return json.loads(response.read().decode())
     except urllib.error.HTTPError as exc:
         if exc.code == 401:
-            if refresh_access_token():
-                return api_request(endpoint, method, data)
-        retry_after = (
-            exc.headers.get("Retry-After", "unknown") if exc.headers else "unknown"
-        )
+            # Retry once. A 401 that survives a good refresh means revoked access,
+            # and each recursion costs two HTTP_TIMEOUT waits.
+            if _retried or not _refresh_if_stale(token):
+                raise SpotifyError("not_authenticated", f"401 on {endpoint}") from exc
+            return api_request(endpoint, method, data, _retried=True)
         if exc.code == 429:
-            print(
-                f"API rate limited (429): retry after {retry_after}s", file=sys.stderr
+            retry_after = (
+                exc.headers.get("Retry-After", "unknown") if exc.headers else "unknown"
             )
-        else:
-            print(f"API error {exc.code}: {exc.reason}", file=sys.stderr)
-        return None
-    except Exception as exc:
-        print(f"Request error: {exc}", file=sys.stderr)
-        return None
+            raise SpotifyError(
+                "rate_limited", f"429 on {endpoint}: retry after {retry_after}s"
+            ) from exc
+        raise SpotifyError(
+            "api_error", f"{exc.code} on {endpoint}: {exc.reason}"
+        ) from exc
+    except urllib.error.URLError as exc:
+        raise SpotifyError("network_error", f"{endpoint}: {exc.reason}") from exc
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SpotifyError("network_error", f"{endpoint}: {exc}") from exc
 
 
-# ── track data helpers ─────────────────────────────────────────────────────────
+# track data helpers
+
+
+def _track_entry(track: dict[str, Any]) -> dict[str, str]:
+    """Shape one API track object for the QML model."""
+    images = track.get("album", {}).get("images", [])
+    return {
+        "title": track.get("name", ""),
+        "artist": ", ".join(a.get("name", "") for a in track.get("artists", [])),
+        "artUrl": images[0].get("url", "") if images else "",
+        "uri": track.get("uri", ""),
+    }
 
 
 def get_recently_played(limit: int = 3) -> list[dict[str, str]]:
     """Return recently played tracks (title, artist, artUrl, uri)."""
     result = api_request(f"/v1/me/player/recently-played?limit={limit}")
-    if not result or "items" not in result:
+    if "items" not in result:
         return []
-
-    tracks: list[dict[str, str]] = []
-    for item in result["items"]:
-        track = item.get("track", {})
-        images = track.get("album", {}).get("images", [])
-        tracks.append(
-            {
-                "title": track.get("name", ""),
-                "artist": ", ".join(
-                    a.get("name", "") for a in track.get("artists", [])
-                ),
-                "artUrl": images[0].get("url", "") if images else "",
-                "uri": track.get("uri", ""),
-            }
-        )
-    return tracks
+    return [_track_entry(item.get("track", {})) for item in result["items"]]
 
 
 def get_queue() -> list[dict[str, str]]:
     """Return the user's playback queue (title, artist, artUrl, uri)."""
     result = api_request("/v1/me/player/queue")
-    if not result or "queue" not in result:
+    if "queue" not in result:
         return []
-
-    tracks: list[dict[str, str]] = []
-    for track in result["queue"]:
-        images = track.get("album", {}).get("images", [])
-        tracks.append(
-            {
-                "title": track.get("name", ""),
-                "artist": ", ".join(
-                    a.get("name", "") for a in track.get("artists", [])
-                ),
-                "artUrl": images[0].get("url", "") if images else "",
-                "uri": track.get("uri", ""),
-            }
-        )
-    return tracks
+    return [_track_entry(track) for track in result["queue"]]
 
 
-def play_track(uri: str) -> bool:
-    """Play a specific track by Spotify URI."""
-    return (
-        api_request("/v1/me/player/play", method="PUT", data={"uris": [uri]})
-        is not None
-    )
+def play_track(uri: str) -> None:
+    """Play a specific track by Spotify URI.  Raises SpotifyError on failure."""
+    api_request("/v1/me/player/play", method="PUT", data={"uris": [uri]})
 
 
-# ── OAuth flow ─────────────────────────────────────────────────────────────────
+# OAuth flow
 
 
 class _OAuthServer(HTTPServer):
-    """HTTPServer with shutdown_flag for OAuth callback handling."""
+    """HTTPServer carrying OAuth callback state between handler and start_auth."""
 
     shutdown_flag: bool = False
+    auth_ok: bool = False
+    expected_state: str = ""
 
 
 class _CallbackHandler(BaseHTTPRequestHandler):
     """HTTP handler for the OAuth callback."""
 
+    def _respond(self, status: int, body: str) -> None:
+        payload = f"<html><body>{body}</body></html>".encode()
+        self.send_response(status)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
     def do_GET(self) -> None:
-        query = urllib.parse.urlparse(self.path).query
-        params = urllib.parse.parse_qs(query)
+        assert isinstance(self.server, _OAuthServer)
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        state = params.get("state", [""])[0]
+
+        # Any page open in the browser can reach this loopback callback and bind
+        # the shell to its own account.
+        # Mismatched state keeps the server up.
+        # Shutting down here would let a drive-by request cancel the real flow.
+        # AUTH_TIMEOUT bounds the wait instead.
+        if not secrets.compare_digest(state, self.server.expected_state):
+            self._respond(
+                403,
+                "<h1>Rejected</h1><p>State mismatch; this callback was not initiated "
+                "by quickshell-spotify.</p>",
+            )
+            return
 
         if "code" in params:
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            self.wfile.write(
-                b"<html><body><h1>Success!</h1>"
-                b"<p>You can close this window now.</p></body></html>"
-            )
-            exchange_code(params["code"][0])
-            assert isinstance(self.server, _OAuthServer)
+            # Exchange before responding.
+            # The page must report the real outcome.
+            self.server.auth_ok = exchange_code(params["code"][0])
+            if self.server.auth_ok:
+                self._respond(
+                    200, "<h1>Success!</h1><p>You can close this window now.</p>"
+                )
+            else:
+                self._respond(
+                    400,
+                    "<h1>Failed</h1><p>Token exchange failed.  See the terminal.</p>",
+                )
             self.server.shutdown_flag = True
         elif "error" in params:
-            self.send_response(400)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            self.wfile.write(
-                f"<html><body><h1>Error</h1><p>{params['error'][0]}</p></body></html>".encode()
+            # Escape: value is attacker-controlled, reflected on loopback origin.
+            self._respond(
+                400, f"<h1>Error</h1><p>{html.escape(params['error'][0])}</p>"
             )
-            assert isinstance(self.server, _OAuthServer)
             self.server.shutdown_flag = True
+        else:
+            self._respond(400, "<h1>Error</h1><p>Missing authorization code.</p>")
 
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
+        # Stubbed: default logs the request line, putting the auth code in the journal.
         pass
 
 
@@ -354,11 +505,15 @@ def exchange_code(code: str) -> bool:
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as response:
             result = json.loads(response.read().decode())
-            save_tokens(
-                result["access_token"], result["refresh_token"], result["expires_in"]
-            )
+            # Not called under the lock, unlike refresh_access_token.
+            with _token_lock():
+                save_tokens(
+                    result["access_token"],
+                    result["refresh_token"],
+                    result["expires_in"],
+                )
             print(
                 "Authentication successful! Tokens stored in keyring.", file=sys.stderr
             )
@@ -374,6 +529,7 @@ def setup_credentials_interactive() -> bool:
     print("Create an app at https://developer.spotify.com/dashboard", file=sys.stderr)
     print(f"Set the redirect URI to: {REDIRECT_URI}", file=sys.stderr)
 
+    # getpass, never argv: argv is world-readable via /proc.
     client_id = getpass.getpass("Client ID: ")
     client_secret = getpass.getpass("Client Secret: ")
 
@@ -387,7 +543,7 @@ def setup_credentials_interactive() -> bool:
 
 
 def start_auth() -> bool:
-    """Start the OAuth2 authorization flow."""
+    """Start the OAuth2 authorization flow.  Returns whether tokens were stored."""
     load_credentials()
 
     if not _client_id or not _client_secret:
@@ -398,29 +554,52 @@ def start_auth() -> bool:
         )
         return False
 
+    state = secrets.token_urlsafe(32)
     params = urllib.parse.urlencode(
         {
             "client_id": _client_id,
             "response_type": "code",
             "redirect_uri": REDIRECT_URI,
             "scope": SCOPES,
+            "state": state,
         }
     )
     auth_url = f"https://accounts.spotify.com/authorize?{params}"
 
     server = _OAuthServer(("127.0.0.1", 8888), _CallbackHandler)
+    server.expected_state = state
+    # handle_request returns after this long idle, keeping the deadline checkable.
+    server.timeout = 1
 
     print("Opening browser for authentication…", file=sys.stderr)
     webbrowser.open(auth_url)
 
+    deadline = time.monotonic() + AUTH_TIMEOUT
     while not server.shutdown_flag:
+        if time.monotonic() >= deadline:
+            print(
+                f"Authentication timed out after {AUTH_TIMEOUT:.0f}s.", file=sys.stderr
+            )
+            break
         server.handle_request()
 
     server.server_close()
-    return True
+    return server.auth_ok
 
 
-# ── CLI entry point ────────────────────────────────────────────────────────────
+# CLI entry point
+
+
+def _parse_limit(raw: str) -> int:
+    """Parse a limit argument, or exit non-zero with a JSON error."""
+    try:
+        limit = int(raw)
+    except ValueError:
+        limit = 0
+    if limit < 1:
+        print(json.dumps({"error": "invalid_limit"}))
+        sys.exit(1)
+    return limit
 
 
 def main() -> None:
@@ -458,22 +637,43 @@ def main() -> None:
     elif command == "clear":
         clear_credentials()
     elif command == "recent":
-        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
-        print(json.dumps(get_recently_played(limit)))
+        limit = _parse_limit(sys.argv[2]) if len(sys.argv) > 2 else 3
+        try:
+            print(json.dumps(get_recently_played(limit)))
+        except SpotifyError as exc:
+            print(f"'recent' failed: {exc}", file=sys.stderr)
+            print(json.dumps({"error": exc.reason}))
+            sys.exit(1)
     elif command == "queue":
-        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
-        print(json.dumps(get_queue()[:limit]))
+        limit = _parse_limit(sys.argv[2]) if len(sys.argv) > 2 else 3
+        try:
+            print(json.dumps(get_queue()[:limit]))
+        except SpotifyError as exc:
+            print(f"'queue' failed: {exc}", file=sys.stderr)
+            print(json.dumps({"error": exc.reason}))
+            sys.exit(1)
     elif command == "all":
-        print(
-            json.dumps(
-                {"recently_played": get_recently_played(10), "queue": get_queue()[:10]}
-            )
-        )
+        # Keys stay present on failure so QML keeps working if it ignores "error".
+        payload: dict[str, Any] = {"recently_played": [], "queue": []}
+        try:
+            payload["recently_played"] = get_recently_played(10)
+            payload["queue"] = get_queue()[:10]
+        except SpotifyError as exc:
+            # Empty lists alone cannot be told apart from an empty queue,
+            # and QML discards stderr.
+            payload["error"] = exc.reason
+            print(f"'all' failed: {exc}", file=sys.stderr)
+        print(json.dumps(payload))
     elif command == "play":
         if len(sys.argv) < 3:
             print(json.dumps({"success": False, "error": "Missing URI"}))
             sys.exit(1)
-        print(json.dumps({"success": play_track(sys.argv[2])}))
+        try:
+            play_track(sys.argv[2])
+            print(json.dumps({"success": True}))
+        except SpotifyError as exc:
+            print(f"'play' failed: {exc}", file=sys.stderr)
+            print(json.dumps({"success": False, "error": exc.reason}))
     else:
         print(f"Unknown command: {command}", file=sys.stderr)
         sys.exit(1)

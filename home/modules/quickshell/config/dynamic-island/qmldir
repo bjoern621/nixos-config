@@ -3,9 +3,15 @@ singleton Clock 1.0 base/Clock.qml
 singleton Colors 1.0 base/Colors.qml
 singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml
+singleton ShellStartup 1.0 base/ShellStartup.qml
 singleton LoadingHost 1.0 base/LoadingHost.qml
 singleton GracefulShutdown 1.0 base/GracefulShutdown.qml
 singleton NotificationListener 1.0 base/NotificationListener.qml
+singleton PopupHost 1.0 base/PopupHost.qml
+singleton WallpaperPersist 1.0 base/WallpaperPersist.qml
+singleton VolumeService 1.0 base/VolumeService.qml
+singleton BluetoothConnector 1.0 base/BluetoothConnector.qml
+singleton NowPlayingModel 1.0 base/NowPlayingModel.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
@@ -20,13 +26,17 @@ ExpandArrow 1.0 animations/ExpandArrow.qml
 
 HoverItem 1.0 widgets/HoverItem.qml
 HoverMenu 1.0 widgets/HoverMenu.qml
+IconButton 1.0 widgets/IconButton.qml
 StepSlider 1.0 widgets/StepSlider.qml
 ModalCard 1.0 widgets/ModalCard.qml
+OsdWindow 1.0 widgets/OsdWindow.qml
+OsdPill 1.0 widgets/OsdPill.qml
 LauncherPanel 1.0 widgets/LauncherPanel.qml
 LauncherSearchBar 1.0 widgets/LauncherSearchBar.qml
 LauncherListView 1.0 widgets/LauncherListView.qml
 LauncherGridView 1.0 widgets/LauncherGridView.qml
 LauncherSelection 1.0 widgets/LauncherSelection.qml
+LauncherViewBehavior 1.0 widgets/LauncherViewBehavior.qml
 LauncherDelegateBg 1.0 widgets/LauncherDelegateBg.qml
 ThinScrollBar 1.0 widgets/ThinScrollBar.qml
 TouchpadBoost 1.0 widgets/TouchpadBoost.qml
@@ -43,6 +53,11 @@ TrayContextMenu 1.0 menus/TrayContextMenu.qml
 TrayMenuPanel 1.0 menus/TrayMenuPanel.qml
 LoadingScreen 1.0 menus/LoadingScreen.qml
 ShutdownScreen 1.0 menus/ShutdownScreen.qml
+OverlaySpinner 1.0 menus/OverlaySpinner.qml
+OverlayExitButton 1.0 menus/OverlayExitButton.qml
+VolumeMuteButton 1.0 menus/VolumeMuteButton.qml
+VolumeOutputDeviceRow 1.0 menus/VolumeOutputDeviceRow.qml
+VolumeApplicationVolumeRow 1.0 menus/VolumeApplicationVolumeRow.qml
 
 VolumeOsd 1.0 osd/VolumeOsd.qml
 BrightnessOsd 1.0 osd/BrightnessOsd.qml
@@ -52,13 +67,12 @@ Bar 1.0 windows/Bar.qml
 ScreenCorners 1.0 windows/ScreenCorners.qml
 PowerCorner 1.0 windows/PowerCorner.qml
 LoadingOverlay 1.0 windows/LoadingOverlay.qml
-singleton NotificationListener 1.0 base/NotificationListener.qml
-singleton PopupHost 1.0 base/PopupHost.qml
 ModalOverlay 1.0 windows/ModalOverlay.qml
 AppLauncher 1.0 windows/AppLauncher.qml
 ClipboardHistory 1.0 windows/ClipboardHistory.qml
 EmojiPicker 1.0 windows/EmojiPicker.qml
 NotificationToast 1.0 windows/NotificationToast.qml
+NotificationCenter 1.0 windows/NotificationCenter.qml
 
 Battery 1.0 bar/Battery.qml
 VolumeIcon 1.0 bar/VolumeIcon.qml
@@ -70,6 +84,5 @@ TrayIcon 1.0 bar/TrayIcon.qml
 NowPlaying 1.0 bar/NowPlaying.qml
 MusicBars 1.0 bar/MusicBars.qml
 
-NotificationToast 1.0 windows/NotificationToast.qml
 WallpaperChooser 1.0 windows/WallpaperChooser.qml
-WallpaperPersist 1.0 base/WallpaperPersist.qml
+singleton WallpaperPersist 1.0 base/WallpaperPersist.qml

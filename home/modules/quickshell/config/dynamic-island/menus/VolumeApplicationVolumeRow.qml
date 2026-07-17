@@ -9,7 +9,9 @@ Column {
     id: root
 
     required property var streamNode
-    signal sliderPressedChanged(bool pressed)
+    // Read by the menu to keep itself open during a drag. A property, not a
+    // press/release signal: a row destroyed mid-drag emits no release.
+    readonly property bool sliderPressed: appSlider.pressed
 
     width: parent ? parent.width : 0
     spacing: Spacing.spacing4
@@ -43,15 +45,7 @@ Column {
     }
     readonly property int appVolume: Math.round((appAudio?.volume ?? 0) * 100)
     readonly property bool appMuted: appAudio?.muted ?? false
-    readonly property string appIconSource: {
-        if (appMuted || appVolume === 0)
-            return "../icons/icons8-audio-muted.svg";
-        if (appVolume <= 33)
-            return "../icons/icons8-low-volume.svg";
-        if (appVolume <= 66)
-            return "../icons/icons8-volume.svg";
-        return "../icons/icons8-audio.svg";
-    }
+    readonly property url appIconSource: VolumeService.iconFor(root.appVolume, root.appMuted)
 
     Item {
         width: parent.width
@@ -109,7 +103,6 @@ Column {
                 if (root.mprisPlayer)
                     root.mprisPlayer.volume = newValue;
             }
-            onPressedChanged: root.sliderPressedChanged(pressed)
         }
 
         Label {

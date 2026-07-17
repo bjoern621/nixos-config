@@ -23,13 +23,21 @@ Scope {
 
     Connections {
         target: PopupHost
+
+        // Screen is picked before the surface maps.
+        // Flipping hideComplete first maps the window on the old output.
+        function onAboutToShow() {
+            const s = modalScope.focusedScreen();
+            if (s)
+                modalWindow.screen = s;
+            modalWindow.hideComplete = false;
+        }
+
+        // Layer surface takes keyboard focus on map, but the event still needs
+        // an item holding focus to reach fullArea's Keys handler.
         function onVisibleChanged() {
-            if (PopupHost.visible) {
-                modalWindow.hideComplete = false;
-                const s = modalScope.focusedScreen();
-                if (s)
-                    modalWindow.screen = s;
-            }
+            if (PopupHost.visible)
+                fullArea.focus = true;
         }
     }
 
@@ -79,6 +87,9 @@ Scope {
         Item {
             id: fullArea
             anchors.fill: parent
+            // Keys handlers below are dead without item focus: nothing else in
+            // modalWindow takes it, so events stop at the window contentItem.
+            focus: true
 
             Rectangle {
                 anchors.fill: parent
@@ -92,8 +103,16 @@ Scope {
                 }
             }
 
+            // Covers the card too, and ModalCard's buttons take passive grabs
+            // only, so a tap on the card reaches this handler as well.
+            // Hit test excludes the card instead of an absorbing MouseArea:
+            // dismissBtn sits in front of such a MouseArea and the press never
+            // reaches it, leaving card-button taps dismissing through here.
             TapHandler {
-                onTapped: PopupHost.dismiss()
+                onTapped: function (eventPoint) {
+                    if (!modalReveal.contains(modalReveal.mapFromItem(null, eventPoint.scenePosition)))
+                        PopupHost.dismiss();
+                }
             }
 
             PopReveal {

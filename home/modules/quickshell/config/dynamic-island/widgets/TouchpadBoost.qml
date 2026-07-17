@@ -1,6 +1,10 @@
 import QtQuick
 
-// Adds inertia and adjustable speed to touchpad scrolling. Pure logic component (not a MouseArea); subscribes to a WheelSource for wheel events. Mouse wheel (NoScrollPhase) is left for Flickable's built-in handling; touchpad phases drive flickable.contentY directly with a flick on ScrollEnd.
+// Adds inertia and adjustable speed to touchpad scrolling.
+// Pure logic component, not a MouseArea.
+// Subscribes to a WheelSource for wheel events.
+// Mouse wheel (NoScrollPhase) is left for Flickable's built-in handling.
+// Touchpad phases drive flickable.contentY directly, with a flick on ScrollEnd.
 QtObject {
     id: root
 
@@ -26,7 +30,8 @@ QtObject {
                 return;
             }
             if (wheel.phase === Qt.ScrollEnd) {
-                // Begin/End fire twice; only flick once when we still have velocity.
+                // Begin/End fire twice.
+                // Flick only once, and only while velocity remains.
                 if (root._velocity !== 0) {
                     root.flickable.flick(0, root._velocity);
                     root._velocity = 0;

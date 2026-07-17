@@ -15,7 +15,7 @@ let
     ps.secretstorage
   ]);
 
-  # Private runtime deps — visible only to the quickshell process and its
+  # Private runtime deps, visible only to the quickshell process and its
   # children, never added to the user's global environment.
   qsWrapped = customLib.wrapWithPrivateDeps qs {
     bin = "quickshell";
@@ -140,15 +140,15 @@ in
     };
   };
 
-  # Hyprland layerrule for quickshell blur effect.
-  # ignore_alpha 0.1 skips blur on pixels with alpha <= 0.1, so the transparent
-  # PanelWindow background is not blurred, only the pill (alpha 0.7, at the time of writing) is.
-  # When the pill is slid off-screen it is clipped, leaving only the transparent
-  # background, so blur disappears without any extra logic.
-  # no_anim keeps Hyprland from animating the layer surface itself. The Bar
-  # resizes 1px <-> 1000px on hover, and Hyprland stretches the client buffer
-  # into the still-animating box, so the pill renders vertically distorted for a
-  # few frames under load. Quickshell already animates its own show/hide in QML.
+  # ignore_alpha skips blur at or below the threshold, so the transparent
+  # PanelWindow background stays unblurred and only the pill blurs.
+  # A pill slid off-screen is clipped, leaving transparent background, so blur
+  # disappears with no extra logic.
+  #
+  # no_anim stops Hyprland animating the layer surface.
+  # Bar resizes 1px <-> 1000px on hover, and Hyprland stretches the client buffer
+  # into the still-animating box, distorting the pill for a few frames under load.
+  # Quickshell animates its own show/hide in QML.
   wayland.windowManager.hyprland.settings.layerrule = [
     "blur on, match:namespace quickshell"
     "ignore_alpha 0.01, match:namespace quickshell"

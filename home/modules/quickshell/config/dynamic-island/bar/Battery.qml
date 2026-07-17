@@ -4,6 +4,8 @@ import "../"
 import "../base"
 
 Row {
+    id: root
+
     anchors.verticalCenter: parent.verticalCenter
     spacing: Spacing.spacing4
 
@@ -37,9 +39,9 @@ Row {
     }
 
     TintedIcon {
-        source: batteryIconSource
+        source: root.batteryIconSource
         size: Typography.fontSize20
-        color: batteryColor
+        color: root.batteryColor
         anchors.verticalCenter: parent.verticalCenter
     }
 

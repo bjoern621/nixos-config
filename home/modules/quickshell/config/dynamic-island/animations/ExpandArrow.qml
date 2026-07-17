@@ -1,6 +1,8 @@
 import QtQuick
+// Root qmldir, not "../base".
+// animations/qmldir declares only Colors, Typography and Spacing, so
+// SquishBehavior and TintedIcon resolve from here.
 import "../"
-import "../base"
 
 Item {
     id: root
@@ -23,10 +25,7 @@ Item {
     }
 
     rotation: expanded ? expandedRotation : collapsedRotation
-    Behavior on rotation {
-        NumberAnimation {
-            duration: 200
-            easing.type: Easing.OutCubic
-        }
+    SquishBehavior on rotation {
+        duration: 200
     }
 }

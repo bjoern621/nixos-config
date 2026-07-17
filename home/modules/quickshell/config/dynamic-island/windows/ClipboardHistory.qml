@@ -32,7 +32,9 @@ Scope {
         if (clipVisible) {
             searchText = "";
             updateFilter();
-            // cancelFlick() kills any in-flight wheel-flick momentum from the previous open; positionViewAtBeginning() handles originY correctly (setting contentY = 0 directly leaves blank space above row 0 if a flick was still animating).
+            // cancelFlick() kills in-flight wheel momentum from the previous open.
+            // positionViewAtBeginning() accounts for originY.
+            // contentY = 0 leaves blank space above row 0 while a flick still animates.
             clipList.cancelFlick();
             clipList.positionViewAtBeginning();
             clipList.reset();
@@ -49,7 +51,10 @@ Scope {
         listProc.running = true;
     }
 
-    // resetIndex=false skips the `currentIndex = 0` write so background refreshes (listProc) and deletes don't clobber a hover-set selection from MouseArea. User-driven calls (open, search) keep the default reset.
+    // resetIndex=false skips the `currentIndex = 0` write.
+    // Background refreshes (listProc) and deletes must not clobber a hover-set
+    // selection from MouseArea.
+    // User-driven calls (open, search) keep the default reset.
     function updateFilter(resetIndex = true) {
         const query = searchText.toLowerCase();
         if (query === "") {

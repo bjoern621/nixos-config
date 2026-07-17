@@ -11,8 +11,17 @@
 // Differences vs. upstream:
 //   - Score-only; no positions, no extended-search syntax, no async.
 //   - ASCII-focused char-class table (non-ASCII counted as letter, no normalization).
-//   - Public API mimics fzf-for-js: `new Fzf(items, { selector, limit }).find(query)`
-//     returns `[{ item, score }, ...]` sorted high-to-low.
+//   - No item/selector/limit wrapper. Callers own their model, ranking, and cutoff.
+//
+// API:
+//   scoreLower(text, lowerText, pattern) -> score, or -Infinity when pattern is
+//     not a subsequence of text. Rank by score descending.
+//   highlightHtml(text, pattern) -> HTML-escaped text, matched chars wrapped in <u>.
+//
+// Both take an already-lowercased `pattern`.
+// scoreLower also takes `text` pre-lowercased as `lowerText`.
+// Lowercasing stays with the caller: the model is re-scored on every keystroke,
+// so `lowerText` is cached per item at index time and the query lowercased once.
 
 var SCORE_MATCH = 16;
 var SCORE_GAP_START = -3;
@@ -44,15 +53,10 @@ function bonusFor(prev, curr) {
     return 0;
 }
 
-// Returns best fuzzy score or -Infinity if pattern is not a subsequence.
-// Caller must pre-lowercase `pattern`.
-function scoreText(text, pattern) {
-    text = (text == null) ? "" : String(text);
-    return scoreLower(text, text.toLowerCase(), pattern);
-}
-
-// Same as scoreText but caller supplies already-lowercased `lowerText`.
-// Hot-path entry point: avoids re-lowercasing on every keystroke.
+// Returns best fuzzy score, or -Infinity if pattern is not a subsequence.
+// `text` supplies char classes for boundary and camel bonuses.
+// `lowerText` is the same string lowercased and drives matching.
+// Caller pre-lowercases both it and `pattern`.
 function scoreLower(text, lowerText, pattern) {
     var pl = pattern.length;
     if (pl === 0) return 0;
@@ -171,7 +175,8 @@ function matchPositions(text, lowerText, pattern) {
     return pi === pl ? out : [];
 }
 
-// HTML-escape and wrap matched indices in <b>. Caller passes lowercased pattern.
+// HTML-escapes text and wraps matched indices in <u>.
+// Caller passes a lowercased pattern.
 function highlightHtml(text, pattern) {
     var lower = (text == null ? "" : String(text)).toLowerCase();
     var positions = matchPositions(text, lower, pattern);
@@ -190,35 +195,3 @@ function highlightHtml(text, pattern) {
 function escapeHtml(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-
-// fzf-for-js compatible API: `new Fzf(items, { selector, limit }).find(query)`
-function Fzf(items, options) {
-    options = options || {};
-    this.items = items;
-    this.selector = options.selector || function (x) { return String(x); };
-    this.limit = options.limit > 0 ? options.limit : items.length;
-
-    this.targets = new Array(items.length);
-    for (var i = 0; i < items.length; i++) {
-        var t = this.selector(items[i]);
-        this.targets[i] = (t == null) ? "" : String(t);
-    }
-}
-
-Fzf.prototype.find = function (query) {
-    var lowerQuery = (query == null ? "" : String(query)).toLowerCase();
-    var n = this.items.length;
-    var results = [];
-    if (lowerQuery.length === 0) {
-        var lim = this.limit < n ? this.limit : n;
-        for (var i = 0; i < lim; i++) results.push({ item: this.items[i], score: 0 });
-        return results;
-    }
-    for (var i = 0; i < n; i++) {
-        var s = scoreText(this.targets[i], lowerQuery);
-        if (s > -Infinity) results.push({ item: this.items[i], score: s });
-    }
-    results.sort(function (a, b) { return b.score - a.score; });
-    if (results.length > this.limit) results.length = this.limit;
-    return results;
-};

@@ -1,16 +1,20 @@
 import QtQuick
 
-// Content replace transition: when `contentKey` changes,
-// the content scales down + fades out, the `displayValue`
-// updates at the midpoint, then scales back up + fades in.
+// Swaps content when `contentKey` changes.
+// Scales down + fades out, swaps `displayValue` at midpoint, scales up + fades in.
 //
-// IMPORTANT: content must bind to `displayValue`, not directly
-// to the source property, so the visual update is deferred.
+// Content must bind to `displayValue`, never the source property.
+// Direct binding skips the deferred swap, so old content never shows during scale-down.
+//
+// Needs an explicit size.
+// implicitWidth/implicitHeight track childrenRect, which loops when content
+// anchors back to the container (centerIn, fill).
 //
 // Usage:
 //   ContentReplace {
 //       id: replace
 //       contentKey: someChangingValue
+//       width: 24; height: 24
 //       Text { text: replace.displayValue }
 //   }
 Item {
@@ -18,7 +22,10 @@ Item {
 
     default property alias content: contentArea.data
     property var contentKey
-    property var displayValue: contentKey
+    // Seeded on first key, never bound.
+    // A binding tracks contentKey live and defeats the first midpoint swap.
+    property var displayValue
+    // Total transition, split across fade-out and fade-in.
     property int duration: 150
 
     clip: true
@@ -35,56 +42,57 @@ Item {
     SequentialAnimation {
         id: replaceAnim
 
-        // Phase 1: scale down + fade out (old content)
         ParallelAnimation {
             NumberAnimation {
                 target: contentArea
                 property: "opacity"
                 to: 0
-                duration: root.duration
+                duration: root.duration / 2
                 easing.type: Easing.InCubic
             }
             NumberAnimation {
                 target: contentArea
                 property: "scale"
                 to: 0.5
-                duration: root.duration
+                duration: root.duration / 2
                 easing.type: Easing.InCubic
             }
         }
 
-        // Swap content at midpoint
+        // Swap lands at midpoint, between the two phases.
         ScriptAction {
             script: root.displayValue = root.contentKey
         }
 
-        // Phase 2: scale up + fade in (new content)
         ParallelAnimation {
             NumberAnimation {
                 target: contentArea
                 property: "opacity"
                 to: 1
-                duration: root.duration
+                duration: root.duration / 2
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
                 target: contentArea
                 property: "scale"
                 to: 1.0
-                duration: root.duration
+                duration: root.duration / 2
                 easing.type: Easing.OutCubic
             }
         }
     }
 
-    property var _prevKey: undefined
+    // Dedicated latch.
+    // A contentKey passing through undefined would re-arm the seed path and
+    // swallow the next transition.
+    property bool _seeded: false
 
     onContentKeyChanged: {
-        if (_prevKey === undefined) {
-            _prevKey = contentKey;
+        if (!_seeded) {
+            _seeded = true;
+            displayValue = contentKey;
             return;
         }
-        _prevKey = contentKey;
 
         replaceAnim.stop();
         contentArea.opacity = 1;

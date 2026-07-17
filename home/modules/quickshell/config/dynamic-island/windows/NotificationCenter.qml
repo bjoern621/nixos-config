@@ -25,8 +25,6 @@ Variants {
 
         readonly property bool shouldShow: cornerHover.hovered || panelHover.hovered
 
-        onShouldShowChanged: shouldShow ? centerReveal.show() : centerReveal.hide()
-
         Rectangle {
             id: interactionZone
             color: "transparent"
@@ -48,6 +46,7 @@ Variants {
 
         PopReveal {
             id: centerReveal
+            showing: notifCorner.shouldShow
             edge: Qt.BottomEdge | Qt.RightEdge
             transformOriginValue: Item.BottomRight
             showDuration: 80
@@ -142,6 +141,9 @@ Variants {
                             ContentReplace {
                                 id: dndIconReplace
                                 contentKey: Globals.doNotDisturb ? "../icons/icons8-do-not-disturb.svg" : "../icons/icons8-bell.svg"
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: Typography.fontSize16
+                                height: Typography.fontSize16
 
                                 TintedIcon {
                                     anchors.centerIn: parent

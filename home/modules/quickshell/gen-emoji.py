@@ -31,6 +31,17 @@ EMOJI_LINE = re.compile(
 )
 SKIP_GROUPS = {"Component"}
 
+# Sanity floors.
+# Upstream reformat breaking EMOJI_LINE, or a CLDR path change emptying
+# load_annotations, both yield valid JSON and a successful derivation.
+# Floors sit far below real dataset size.
+# They catch a broken parse, not upstream churn.
+MIN_GROUPS = 8
+MIN_EMOJIS = 1000
+# CLDR annotates no skin-tone variant, so share sits well under half
+# even when parsing is intact.
+MIN_KEYWORD_SHARE = 0.25
+
 
 def load_annotations(*xml_paths: str) -> dict[str, list[str]]:
     """cp -> de-duplicated list of keyword tokens, lower-cased."""
@@ -51,6 +62,38 @@ def load_annotations(*xml_paths: str) -> dict[str, list[str]]:
                 if t not in bucket:
                     bucket.append(t)
     return out
+
+
+def validate(groups: list[dict], emojis: list[dict]) -> None:
+    """Exit non-zero on a silently empty or keyword-less dataset."""
+    errors: list[str] = []
+
+    if len(groups) < MIN_GROUPS:
+        errors.append(
+            f"{len(groups)} groups, expected >= {MIN_GROUPS}; group headers unparsed?"
+        )
+    if len(emojis) < MIN_EMOJIS:
+        errors.append(
+            f"{len(emojis)} emojis, expected >= {MIN_EMOJIS}; EMOJI_LINE regex stale?"
+        )
+
+    iconless = [g["name"] for g in groups if not g["icon"]]
+    if iconless:
+        errors.append(f"groups matched no emoji: {', '.join(iconless)}")
+
+    if emojis:
+        share = sum(1 for e in emojis if e["k"]) / len(emojis)
+        if share < MIN_KEYWORD_SHARE:
+            errors.append(
+                f"{share:.1%} of emojis carry keywords, "
+                f"expected >= {MIN_KEYWORD_SHARE:.0%}; "
+                "CLDR annotations path or schema changed?"
+            )
+
+    for err in errors:
+        sys.stderr.write(f"gen-emoji: {err}\n")
+    if errors:
+        sys.exit(1)
 
 
 def main() -> None:
@@ -89,7 +132,9 @@ def main() -> None:
                 continue
             char, name = m.group(1), m.group(2)
             # CLDR annotations strip U+FE0F variation selectors.
-            stripped = char.replace("️", "")
+            # Escape, not literal: U+FE0F renders invisible,
+            # and an editor strips it unnoticed.
+            stripped = char.replace("\ufe0f", "")
             tokens = keywords.get(stripped) or keywords.get(char) or []
             kw = "|".join(tokens)
             if not groups[current_index]["icon"]:
@@ -97,6 +142,8 @@ def main() -> None:
             emojis.append(
                 {"c": char, "n": name, "k": kw, "g": current_index}
             )
+
+    validate(groups, emojis)
 
     json.dump(
         {"groups": groups, "emojis": emojis},

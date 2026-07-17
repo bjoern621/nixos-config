@@ -3,11 +3,15 @@ singleton Colors 1.0 Colors.qml
 singleton Typography 1.0 Typography.qml
 singleton Globals 1.0 Globals.qml
 singleton Clock 1.0 Clock.qml
+singleton ShellStartup 1.0 ShellStartup.qml
 singleton GracefulShutdown 1.0 GracefulShutdown.qml
 singleton LoadingHost 1.0 LoadingHost.qml
 singleton NotificationListener 1.0 NotificationListener.qml
 singleton PopupHost 1.0 PopupHost.qml
-WallpaperPersist 1.0 WallpaperPersist.qml
+singleton WallpaperPersist 1.0 WallpaperPersist.qml
+singleton VolumeService 1.0 VolumeService.qml
+singleton BluetoothConnector 1.0 BluetoothConnector.qml
+singleton NowPlayingModel 1.0 NowPlayingModel.qml
 WallpaperBackend 1.0 WallpaperBackend.qml
 WallpaperAccent 1.0 WallpaperAccent.qml
 TintedIcon 1.0 TintedIcon.qml
