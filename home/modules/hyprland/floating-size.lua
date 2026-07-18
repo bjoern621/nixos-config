@@ -20,8 +20,8 @@ hl.on("window.open", function(w)
     local m = w.monitor
     if m == nil then return end
     hl.dispatch(hl.dsp.window.resize({
-        x = m.size.width / m.scale * 0.5,
-        y = m.size.height / m.scale * 0.6,
+        x = m.size.width / m.scale * 0.6,
+        y = m.size.height / m.scale * 0.7,
         window = w,
     }))
 end)
