@@ -4,14 +4,13 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    # TEMPORARY: Hyprland flake broken (missing default-linux/flake.nix).
-    # Using nixpkgs.hyprland until upstream pin is fixed.
-    # Revert by uncommenting below and restoring hyprland module to:
-    #   inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland
-    # hyprland = {
-    #   url = "github:hyprwm/Hyprland/179c2bce0355289c60271fb00b89f2d5511618d5";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    # Hyprland from the flake, pinned to the release hyprglass targets (0.55.4).
+    # The hyprglass plugin (home/modules/hyprland/hyprglass.nix) builds against
+    # this exact package, so compositor and plugin share one ABI. Bump together.
+    hyprland = {
+      url = "github:hyprwm/Hyprland/v0.55.4";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     home-manager = {
       url = "github:nix-community/home-manager";

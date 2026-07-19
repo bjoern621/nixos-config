@@ -10,10 +10,9 @@
     enable = true;
     xwayland.enable = true;
 
-    # TEMPORARY: Using nixpkgs packages until Hyprland flake is fixed.
-    # Revert to: inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland
-    package = pkgs.hyprland;
-    portalPackage = pkgs.xdg-desktop-portal-hyprland;
+    # Flake build so Hyprland plugins (hyprglass) link against a matching ABI.
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
 
     # https://wiki.hypr.land/Useful-Utilities/Systemd-start/#uwsm
     withUWSM = true;
