@@ -11,8 +11,11 @@ Rectangle {
     property bool pressed: false
     readonly property bool lit: active || hovered || pressed
 
+    // Corner radius, overridable per surface (classic power buttons want slight, not round).
+    property real cornerRadius: Shape.usesBlur ? height / 2 : NeoTokens.pillRadius
+
     anchors.fill: parent
-    radius: Shape.usesBlur ? height / 2 : NeoTokens.pillRadius
+    radius: cornerRadius
 
     color: pressed ? Colors.selectedPressed : active ? Colors.selectedBackground : hovered ? Colors.hoverItemHovered : "transparent"
 

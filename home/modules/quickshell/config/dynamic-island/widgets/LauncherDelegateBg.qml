@@ -12,10 +12,15 @@ Rectangle {
     property bool pressed: false
     readonly property bool lit: active || hovered || pressed
 
-    anchors.fill: parent
-    radius: Shape.usesBlur ? Spacing.spacing8 : NeoTokens.pillRadius
+    // Corner radius, overridable per surface (calendar days want round in classic).
+    property real cornerRadius: Shape.usesBlur ? Spacing.spacing8 : NeoTokens.pillRadius
+    // Active/selected fill, overridable per surface (calendar today wants vibrant).
+    property color activeColor: Colors.selectedBackground
 
-    color: Shape.usesBlur ? (pressed ? Colors.hoverItemPressed : (active || hovered) ? Colors.hoverItemHovered : "transparent") : (pressed ? Colors.selectedPressed : active ? Colors.selectedBackground : hovered ? Colors.hoverItemHovered : "transparent")
+    anchors.fill: parent
+    radius: cornerRadius
+
+    color: Shape.usesBlur ? (pressed ? Colors.hoverItemPressed : active ? activeColor : hovered ? Colors.hoverItemHovered : "transparent") : (pressed ? Colors.selectedPressed : active ? activeColor : hovered ? Colors.hoverItemHovered : "transparent")
 
     border.width: lit ? Shape.thinBorderWidth : 0
     border.color: Colors.pillBorder

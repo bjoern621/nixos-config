@@ -15,6 +15,8 @@ Pressable {
     ButtonBg {
         hovered: root.hovered
         pressed: root.pressed
+        // Power blocks read as launcher rows: slightly rounded, not full pill.
+        cornerRadius: Spacing.spacing8
 
         Row {
             anchors.verticalCenter: parent.verticalCenter

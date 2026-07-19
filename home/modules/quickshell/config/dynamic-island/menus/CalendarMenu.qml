@@ -252,10 +252,13 @@ Item {
 
                                             property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
 
-                                            // Today reads as the launcher's selected row: accent + ink border in neo.
+                                            // Neo: today = launcher selected row (accent + ink border).
+                                            // Classic: today = round, vibrant red; hover round too.
                                             LauncherDelegateBg {
                                                 active: parent.isToday
                                                 hovered: parent.hovered
+                                                cornerRadius: Shape.usesBlur ? height / 2 : NeoTokens.pillRadius
+                                                activeColor: Shape.usesBlur ? Colors.calendarToday : Colors.selectedBackground
                                             }
 
                                             Label {
