@@ -262,7 +262,8 @@ Scope {
 
             LauncherListView {
                 id: clipList
-                width: parent.width
+                // Reserve a gutter for the scroll handle only while it shows.
+                width: parent.width - (scrollable ? 14 : 0)
                 height: Math.min(contentHeight, clipScope.maxVisibleHeight)
                 model: clipScope.filteredEntries
 
@@ -354,7 +355,7 @@ Scope {
                         }
                         width: Spacing.spacing24
                         height: Spacing.spacing24
-                        radius: height / 2
+                        radius: Shape.pill(height)
                         color: trashTap.pressed ? Colors.hoverItemPressed : trashHover.hovered ? Colors.hoverItemHovered : "transparent"
                         border.color: trashHover.hovered ? Colors.pillBorder : "transparent"
                         opacity: rowHover.hovered ? 1.0 : 0.0
@@ -388,6 +389,15 @@ Scope {
                         }
                     }
                 }
+            }
+
+            // Shared draggable handle, sibling of the list.
+            ScrollHandle {
+                target: clipList
+                visible: clipList.scrollable
+                anchors.right: parent.right
+                anchors.top: clipList.top
+                anchors.bottom: clipList.bottom
             }
         }
     }

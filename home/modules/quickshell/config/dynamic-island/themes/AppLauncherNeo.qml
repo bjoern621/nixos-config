@@ -1,7 +1,4 @@
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.Hyprland._GlobalShortcuts
-import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
 import QtQuick
@@ -20,23 +17,8 @@ import "../lib/fzf.js" as FzfLib
 Scope {
     id: launcherScope
 
-    readonly property int maxResults: 50
     readonly property int rowHeight: 42
     readonly property int maxVisibleRows: 7
-    // Per-field weights: name dominates, comment is tiebreaker.
-    readonly property var fieldWeights: [3.0, 1.5, 1.2, 0.7]
-
-    // Globals.launcherVisible is the sole holder, and Bar reads it for its pill.
-    readonly property bool launcherVisible: Globals.launcherVisible
-    property string searchText: ""
-    property var indexedApps: []
-    property var filteredApps: []
-    property int activeIndex: 0
-    // Keyboard nav briefly suppresses hover-select so a list scrolling under a
-    // stationary cursor does not steal the selection.
-    property bool kbdLock: false
-
-    readonly property var selectedApp: (filteredApps.length > 0 && activeIndex >= 0 && activeIndex < filteredApps.length) ? filteredApps[activeIndex].app : null
 
     // Neobrutalism palette. Opaque throughout, no alpha, no blur.
     // Selection + kbd pills pull the wallpaper accent (Colors.accentColor);
@@ -56,148 +38,11 @@ Scope {
         readonly property int shadow: 7
     }
 
-    onLauncherVisibleChanged: {
-        if (launcherVisible) {
-            searchText = "";
-            updateFilter();
-            resultsList.positionViewAtBeginning();
-        }
-    }
-
-    onSearchTextChanged: updateFilter()
-
-    function rebuildAppList() {
-        const apps = DesktopEntries.applications.values.filter(a => !a.noDisplay).sort((a, b) => a.name.localeCompare(b.name));
-        indexedApps = apps.map(app => {
-            const kw = app.keywords;
-            const keywords = kw && kw.length ? Array.prototype.join.call(kw, " ") : "";
-            const fields = [app.name || "", app.genericName || "", keywords, app.comment || ""];
-            return {
-                app,
-                fields,
-                lower: fields.map(f => f.toLowerCase())
-            };
-        });
-    }
-
-    function updateFilter() {
-        const query = searchText.toLowerCase();
-        if (query === "") {
-            filteredApps = indexedApps.slice(0, maxResults).map(e => ({
-                        app: e.app,
-                        query: ""
-                    }));
-            activeIndex = 0;
-            resultsList.positionViewAtBeginning();
-            return;
-        }
-
-        const weights = fieldWeights;
-        const scored = [];
-        for (let i = 0; i < indexedApps.length; i++) {
-            const e = indexedApps[i];
-            let best = -Infinity;
-            for (let f = 0; f < e.fields.length; f++) {
-                const raw = FzfLib.scoreLower(e.fields[f], e.lower[f], query);
-                if (raw === -Infinity)
-                    continue;
-                const weighted = raw * weights[f];
-                if (weighted > best)
-                    best = weighted;
-            }
-            if (best > -Infinity)
-                scored.push({
-                    app: e.app,
-                    score: best
-                });
-        }
-        scored.sort((a, b) => b.score - a.score || a.app.name.localeCompare(b.app.name));
-
-        const limit = Math.min(scored.length, maxResults);
-        const out = new Array(limit);
-        for (let i = 0; i < limit; i++)
-            out[i] = {
-                app: scored[i].app,
-                query: query
-            };
-        filteredApps = out;
-        activeIndex = 0;
-        resultsList.positionViewAtBeginning();
-    }
-
-    function move(delta) {
-        const n = filteredApps.length;
-        if (n === 0)
-            return;
-        activeIndex = Math.max(0, Math.min(activeIndex + delta, n - 1));
-        kbdLock = true;
-        kbdTimer.restart();
-        resultsList.positionViewAtIndex(activeIndex, ListView.Contain);
-    }
-
-    function launchSelected() {
-        if (selectedApp)
-            launchApp(selectedApp);
-    }
-
-    function launchApp(app) {
-        Globals.launcherVisible = false;
-        Quickshell.execDetached(["uwsm", "app", "--", app.id + ".desktop"]);
-    }
-
-    function focusedScreen() {
-        const mon = Hyprland.focusedMonitor;
-        return mon ? (Quickshell.screens.find(s => s.name === mon.name) ?? null) : null;
-    }
-
-    function toggle() {
-        if (!launcherVisible) {
-            const s = focusedScreen();
-            if (s) {
-                launcherWindow.screen = s;
-                Globals.launcherScreenName = s.name;
-            }
-        }
-        Globals.launcherVisible = !launcherVisible;
-    }
-
-    Timer {
-        id: kbdTimer
-        interval: 250
-        onTriggered: launcherScope.kbdLock = false
-    }
-
-    Component.onCompleted: rebuildAppList()
-
-    Connections {
-        target: DesktopEntries
-        function onApplicationsChanged() {
-            launcherScope.rebuildAppList();
-            launcherScope.updateFilter();
-        }
-    }
-
-    // Hyprland delivers SUPER tap directly to this running quickshell process
-    // via the wlr global-shortcuts protocol. Bypasses the `qs ipc` CLI which
-    // costs ~125ms per call (Qt binary cold start).
-    GlobalShortcut {
-        appid: "quickshell"
-        name: "launcher"
-        description: "Toggle the app launcher"
-        onPressed: launcherScope.toggle()
-    }
-
-    IpcHandler {
-        target: "launcher"
-        function toggle() {
-            launcherScope.toggle();
-        }
-    }
-
     PanelWindow {
         id: launcherWindow
-        visible: launcherScope.launcherVisible
+        visible: LauncherController.launcherVisible
         WlrLayershell.namespace: "quickshell-launcher"
+        screen: Quickshell.screens.find(s => s.name === Globals.launcherScreenName) ?? null
 
         anchors {
             top: true
@@ -208,12 +53,12 @@ Scope {
 
         exclusiveZone: 0
         focusable: true
-        WlrLayershell.keyboardFocus: launcherScope.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: LauncherController.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
         AutoCloseOnFocusLoss {
             watch: panelRoot
-            armed: launcherScope.launcherVisible
+            armed: LauncherController.launcherVisible
             onLost: Globals.launcherVisible = false
         }
 
@@ -225,24 +70,24 @@ Scope {
             Keys.onPressed: event => {
                 const k = event.key;
                 const ctrl = event.modifiers & Qt.ControlModifier;
-                let next = launcherScope.searchText;
+                let next = LauncherController.searchText;
                 if (k === Qt.Key_Escape) {
                     Globals.launcherVisible = false;
                 } else if (k === Qt.Key_Return || k === Qt.Key_Enter) {
-                    launcherScope.launchSelected();
+                    LauncherController.launchSelected();
                 } else if (k === Qt.Key_Down) {
-                    launcherScope.move(1);
+                    LauncherController.move(1);
                 } else if (k === Qt.Key_Up) {
-                    launcherScope.move(-1);
+                    LauncherController.move(-1);
                 } else if (k === Qt.Key_Backspace) {
-                    next = ctrl ? launcherScope.searchText.replace(/\S+\s*$/, "") : launcherScope.searchText.slice(0, -1);
+                    next = ctrl ? LauncherController.searchText.replace(/\S+\s*$/, "") : LauncherController.searchText.slice(0, -1);
                 } else if (k === Qt.Key_Delete || (k === Qt.Key_A && ctrl)) {
                     next = "";
                 } else if (event.text && event.text.length > 0 && !ctrl) {
-                    next = launcherScope.searchText + event.text;
+                    next = LauncherController.searchText + event.text;
                 }
-                if (next !== launcherScope.searchText)
-                    launcherScope.searchText = next;
+                if (next !== LauncherController.searchText)
+                    LauncherController.searchText = next;
                 event.accepted = true;
             }
 
@@ -334,7 +179,7 @@ Scope {
                                 height: 24
 
                                 Text {
-                                    visible: launcherScope.searchText === ""
+                                    visible: LauncherController.searchText === ""
                                     anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: "Anwendung oder Befehl suchen..."
@@ -345,14 +190,14 @@ Scope {
                                 }
 
                                 Row {
-                                    visible: launcherScope.searchText !== ""
+                                    visible: LauncherController.searchText !== ""
                                     anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: 2
 
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        text: launcherScope.searchText
+                                        text: LauncherController.searchText
                                         color: theme.textPrimary
                                         font.family: theme.font
                                         font.pixelSize: 15
@@ -379,7 +224,7 @@ Scope {
                         Item {
                             id: resultsRegion
                             width: parent.width
-                            readonly property bool empty: launcherScope.filteredApps.length === 0 && launcherScope.searchText !== ""
+                            readonly property bool empty: LauncherController.filteredApps.length === 0 && LauncherController.searchText !== ""
                             implicitHeight: empty ? 120 : contentCol.implicitHeight + 16
 
                             // Empty state, centered in the results region.
@@ -402,7 +247,7 @@ Scope {
                                 spacing: 4
 
                                 Item {
-                                    visible: launcherScope.filteredApps.length > 0
+                                    visible: LauncherController.filteredApps.length > 0
                                     width: parent.width
                                     height: 22
 
@@ -424,7 +269,7 @@ Scope {
                                         anchors.right: parent.right
                                         anchors.rightMargin: 10
                                         anchors.verticalCenter: parent.verticalCenter
-                                        text: (launcherScope.activeIndex + 1) + "/" + launcherScope.filteredApps.length
+                                        text: (LauncherController.activeIndex + 1) + "/" + LauncherController.filteredApps.length
                                         color: theme.textMuted
                                         font.family: theme.font
                                         font.pixelSize: 12
@@ -449,19 +294,25 @@ Scope {
                                     anchors.rightMargin: listWrap.scrollable ? 14 : 0
                                     height: Math.min(contentHeight, launcherScope.maxVisibleRows * launcherScope.rowHeight)
                                     clip: true
-                                    model: launcherScope.filteredApps
+                                    model: LauncherController.filteredApps
                                     boundsBehavior: Flickable.StopAtBounds
                                     spacing: 4
 
-                                    // Scroll proportional to wheel delta (120 = one mouse notch).
-                                    // ~1.5 rows per notch; keeps trackpad fine-scroll smooth.
-                                    WheelHandler {
-                                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                                        onWheel: event => {
-                                            const rowStep = (launcherScope.rowHeight + resultsList.spacing) * 1.5;
-                                            const maxY = Math.max(0, resultsList.contentHeight - resultsList.height);
-                                            const delta = -(event.angleDelta.y / 120) * rowStep;
-                                            resultsList.contentY = Math.max(0, Math.min(resultsList.contentY + delta, maxY));
+                                    // Shared wheel step: ~1.5 rows per notch, mouse + touchpad.
+                                    StepWheel {
+                                        target: resultsList
+                                        rowStride: launcherScope.rowHeight + resultsList.spacing
+                                    }
+
+                                    // Controller owns selection; scroll it into view here.
+                                    Connections {
+                                        target: LauncherController
+                                        function onActiveIndexChanged() {
+                                            resultsList.positionViewAtIndex(LauncherController.activeIndex, ListView.Contain);
+                                        }
+                                        function onLauncherVisibleChanged() {
+                                            if (LauncherController.launcherVisible)
+                                                resultsList.positionViewAtBeginning();
                                         }
                                     }
 
@@ -469,7 +320,7 @@ Scope {
                                         id: del
                                         required property var modelData
                                         required property int index
-                                        readonly property bool active: launcherScope.activeIndex === index
+                                        readonly property bool active: LauncherController.activeIndex === index
                                         readonly property bool lit: active || hov.hovered || tap.pressed
                                         width: resultsList.width
                                         height: launcherScope.rowHeight
@@ -548,63 +399,26 @@ Scope {
                                             id: hov
                                             cursorShape: Qt.PointingHandCursor
                                             onHoveredChanged: {
-                                                if (hovered && !launcherScope.kbdLock)
-                                                    launcherScope.activeIndex = del.index;
+                                                if (hovered && !LauncherController.kbdLock)
+                                                    LauncherController.activeIndex = del.index;
                                             }
                                         }
 
                                         TapHandler {
                                             id: tap
-                                            onTapped: launcherScope.launchApp(del.modelData.app)
+                                            onTapped: LauncherController.launchApp(del.modelData.app)
                                         }
                                     }
                                 }
 
-                                    // Neobrutalist scrollbar: cream track, black bordered handle.
-                                    // Drives resultsList.contentY; handle geometry from visibleArea.
-                                    Rectangle {
-                                        id: scrollTrack
+                                    // Shared draggable handle. Neo defaults (cream track,
+                                    // ink border/handle, accent on press) apply since neo is active.
+                                    ScrollHandle {
+                                        target: resultsList
                                         visible: listWrap.scrollable
-                                        width: 8
                                         anchors.right: parent.right
                                         anchors.top: parent.top
                                         anchors.bottom: parent.bottom
-                                        radius: 4
-                                        color: theme.hoverPaper
-                                        border.width: 2
-                                        border.color: theme.ink
-
-                                        readonly property real minHandle: 24
-                                        readonly property real handleH: Math.max(minHandle, height * resultsList.visibleArea.heightRatio)
-                                        readonly property real travel: height - handleH
-
-                                        Rectangle {
-                                            id: scrollHandle
-                                            x: 0
-                                            width: parent.width
-                                            radius: 4
-                                            height: scrollTrack.handleH
-                                            y: scrollTrack.travel * resultsList.visibleArea.yPosition / Math.max(0.0001, 1 - resultsList.visibleArea.heightRatio)
-                                            color: dragArea.pressed ? theme.selAccent : theme.ink
-
-                                            MouseArea {
-                                                id: dragArea
-                                                anchors.fill: parent
-                                                anchors.margins: -4
-                                                cursorShape: Qt.PointingHandCursor
-                                                drag.target: parent
-                                                drag.axis: Drag.YAxis
-                                                drag.minimumY: 0
-                                                drag.maximumY: scrollTrack.travel
-                                                onPositionChanged: {
-                                                    if (!pressed || scrollTrack.travel <= 0)
-                                                        return;
-                                                    const frac = scrollHandle.y / scrollTrack.travel;
-                                                    const maxY = Math.max(0, resultsList.contentHeight - resultsList.height);
-                                                    resultsList.contentY = frac * maxY;
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -631,15 +445,15 @@ Scope {
                                     width: 16
                                     height: 16
                                     anchors.verticalCenter: parent.verticalCenter
-                                    visible: launcherScope.selectedApp && launcherScope.selectedApp.icon
-                                    source: launcherScope.selectedApp && launcherScope.selectedApp.icon ? ("image://icon/" + launcherScope.selectedApp.icon) : ""
+                                    visible: LauncherController.selectedApp && LauncherController.selectedApp.icon
+                                    source: LauncherController.selectedApp && LauncherController.selectedApp.icon ? ("image://icon/" + LauncherController.selectedApp.icon) : ""
                                     sourceSize: Qt.size(width, width)
                                 }
 
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: launcherScope.selectedApp ? launcherScope.selectedApp.name : "Kein Treffer"
-                                    color: launcherScope.selectedApp ? theme.textPrimary : theme.textMuted
+                                    text: LauncherController.selectedApp ? LauncherController.selectedApp.name : "Kein Treffer"
+                                    color: LauncherController.selectedApp ? theme.textPrimary : theme.textMuted
                                     font.family: theme.font
                                     font.pixelSize: 12
                                     font.weight: Font.ExtraBold

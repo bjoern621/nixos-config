@@ -28,11 +28,9 @@ Item {
         duration: root.squishDuration
     }
 
-    Rectangle {
-        anchors.fill: parent
-        radius: height / 2
-        color: root.pressed ? Colors.hoverItemPressed : root.hovered ? Colors.hoverItemHovered : "transparent"
-        border.color: root.hovered || root.pressed ? Colors.pillBorder : "transparent"
+    ButtonBg {
+        hovered: root.hovered
+        pressed: root.pressed
     }
 
     // Keyed on source: a button whose icon never changes seeds once, never animates.

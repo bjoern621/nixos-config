@@ -128,6 +128,18 @@ Variants {
                 }
             }
 
+            // Neo hard offset shadow behind the pill. No-op in classic (offset 0).
+            Rectangle {
+                visible: !Shape.usesBlur
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.horizontalCenterOffset: Shape.shadowOffset
+                y: pill.y + Shape.shadowOffset
+                width: pill.implicitWidth
+                height: pill.implicitHeight
+                radius: pill.radius
+                color: NeoTokens.ink
+            }
+
             Rectangle {
                 id: pill
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -136,10 +148,10 @@ Variants {
                 implicitWidth: contentRow.implicitWidth + Spacing.spacing24
                 implicitHeight: 32
 
-                radius: implicitHeight / 2
+                radius: Shape.pill(implicitHeight)
                 color: Colors.pillBackground
 
-                border.width: 1
+                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                 border.color: Colors.pillBorder
 
                 Row {

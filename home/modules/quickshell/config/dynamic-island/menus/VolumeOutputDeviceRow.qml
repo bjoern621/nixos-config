@@ -27,11 +27,11 @@ Item {
     scale: sinkTap.pressed ? 0.97 : 1.0
     SquishBehavior on scale {}
 
-    Rectangle {
-        anchors.fill: parent
-        radius: Spacing.spacing8
-        color: root.isDefault ? Qt.rgba(1, 1, 1, 0.06) : root.isBluetoothLocked ? Qt.rgba(1, 1, 1, 0.08) : sinkTap.pressed ? Colors.hoverItemPressed : sinkHover.hovered ? Colors.hoverItemHovered : "transparent"
-        border.color: root.isDefault ? Colors.accentColor : root.isBluetoothLocked ? Colors.pillBorder : sinkHover.hovered || sinkTap.pressed ? Colors.pillBorder : "transparent"
+    // Selected sink = accent + 2px ink border (launcher selection). Locked shows lit cream.
+    LauncherDelegateBg {
+        active: root.isDefault
+        hovered: sinkHover.hovered || root.isBluetoothLocked
+        pressed: sinkTap.pressed
     }
 
     Item {
@@ -64,7 +64,8 @@ Item {
             TintedIcon {
                 source: "../icons/icons8-done.svg"
                 size: Typography.fontSize14
-                color: Colors.accentColor
+                // On the selected (accent) background, tint with foreground ink/text.
+                color: Colors.textColor
                 visible: root.isDefault && !root.isBusyTarget
                 width: visible ? Typography.fontSize12 : 0
                 anchors.verticalCenter: parent.verticalCenter
@@ -109,7 +110,8 @@ Item {
                     text: root.outputDevice.name
                     font.pixelSize: Typography.fontSize12
                     font.weight: root.isDefault ? Font.Bold : Font.Normal
-                    color: root.isDefault ? Colors.accentColor : root.isBluetoothLocked ? Colors.textColorMuted : Colors.textColor
+                    // Selected row text sits on selectedBackground: use foreground text color.
+                    color: root.isBluetoothLocked ? Colors.textColorMuted : Colors.textColor
                     elide: Text.ElideRight
                     width: Math.min(implicitWidth, nameWithBluetooth.width - (bluetoothIcon.visible ? bluetoothIcon.width + nameWithBluetooth.spacing : 0))
                 }
@@ -118,7 +120,7 @@ Item {
                     id: bluetoothIcon
                     source: "../icons/icons8-bluetooth.svg"
                     size: Typography.fontSize14
-                    color: root.isDefault ? Colors.accentColor : root.isBluetoothLocked ? Colors.textColorMuted : Colors.textColorMuted
+                    color: root.isDefault ? Colors.textColor : Colors.textColorMuted
                     visible: root.outputDevice.isBluetooth
                     width: visible ? Typography.fontSize14 : 0
                     anchors.verticalCenter: parent.verticalCenter

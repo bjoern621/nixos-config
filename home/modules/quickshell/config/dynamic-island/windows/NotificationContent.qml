@@ -98,7 +98,7 @@ Item {
             Repeater {
                 model: root.actions
 
-                delegate: Rectangle {
+                delegate: Item {
                     id: actionBtn
                     required property var modelData
 
@@ -106,13 +106,15 @@ Item {
                     implicitHeight: 26
                     width: implicitWidth
                     height: implicitHeight
-                    radius: height / 2
-                    color: actionTap.pressed ? Colors.hoverItemPressed : actionHover.hovered ? Colors.hoverItemHovered : "transparent"
-                    border.width: 1
-                    border.color: actionHover.hovered ? Colors.pillBorder : Colors.separatorColor
 
                     scale: actionTap.pressed ? 0.85 : 1.0
                     SquishBehavior on scale {}
+
+                    // Action button bg. Classic round pill, neo cream hover + accent press.
+                    ButtonBg {
+                        hovered: actionHover.hovered
+                        pressed: actionTap.pressed
+                    }
 
                     HoverHandler {
                         id: actionHover

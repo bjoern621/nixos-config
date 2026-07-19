@@ -13,7 +13,7 @@ Rectangle {
 
     width: 40
     height: 40
-    radius: height / 2
+    radius: Shape.pill(height)
     opacity: exitHover.hovered ? 1 : 0
     color: exitTap.pressed ? Colors.hoverItemPressed : exitHover.hovered ? Colors.hoverItemHovered : "transparent"
     border.color: exitHover.hovered || exitTap.pressed ? Colors.pillBorder : "transparent"

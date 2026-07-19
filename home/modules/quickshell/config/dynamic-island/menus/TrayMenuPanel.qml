@@ -25,9 +25,9 @@ Rectangle {
     width: implicitWidth
     height: implicitHeight
 
-    radius: Spacing.spacing12
+    radius: Shape.cardRadius
     color: Colors.pillBackground
-    border.width: 1
+    border.width: Shape.usesBlur ? 1 : Shape.borderWidth
     border.color: Colors.pillBorder
 
     HoverHandler {
@@ -85,14 +85,15 @@ Rectangle {
                     color: Colors.separatorColor
                 }
 
-                Rectangle {
+                Item {
                     id: itemBg
                     visible: !row.modelData.isSeparator
                     anchors.fill: parent
-                    radius: Spacing.spacing4
-                    color: row.interactive && itemMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
-                    border.color: row.interactive && itemMouse.containsMouse ? Colors.pillBorder : "transparent"
-                    // NO Behavior on color; hover must be instant
+
+                    // Menu rows use the shared row background.
+                    LauncherDelegateBg {
+                        hovered: row.interactive && itemMouse.containsMouse
+                    }
 
                     Text {
                         id: checkMark

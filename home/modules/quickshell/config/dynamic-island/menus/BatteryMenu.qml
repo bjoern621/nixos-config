@@ -1,36 +1,23 @@
-import Quickshell.Services.UPower
 import QtQuick
 import "../"
 
+// Battery detail menu. Theme-aware: Card gives neo offset shadow + ink border.
+// Pure display; all reads/formatting live in BatteryController.
 Item {
     id: root
 
-    readonly property var dev: UPower.displayDevice
-    readonly property bool isCharging: dev.state === UPowerDeviceState.Charging
-    readonly property bool isDischarging: dev.state === UPowerDeviceState.Discharging
-    readonly property bool isFullyCharged: dev.state === UPowerDeviceState.FullyCharged
-
     readonly property int contentPadding: Spacing.spacing12
 
-    implicitWidth: 200
-    implicitHeight: layout.height + 2 * contentPadding
+    // Grow by shadowOffset: Card draws neo shadow inside bottom-right (0 in classic).
+    implicitWidth: 200 + Shape.shadowOffset
+    implicitHeight: layout.height + 2 * contentPadding + Shape.shadowOffset
 
-    function formatTime(seconds) {
-        if (seconds <= 0)
-            return "—";
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        if (h > 0)
-            return h + " Std " + m + " Min";
-        return m + " Min";
+    BatteryController {
+        id: controller
     }
 
-    Rectangle {
+    Card {
         anchors.fill: parent
-        radius: Spacing.spacing12
-        color: Colors.pillBackground
-        border.width: 1
-        border.color: Colors.pillBorder
 
         Column {
             id: layout
@@ -40,13 +27,13 @@ Item {
             spacing: Spacing.spacing6
 
             Label {
-                text: root.isCharging ? "Wird geladen" : root.isFullyCharged ? "Vollständig geladen" : root.isDischarging ? "Wird entladen" : "Unbekannt"
+                text: controller.statusText
                 font.pixelSize: Typography.fontSize14
             }
 
             // Time remaining
             Item {
-                visible: root.isDischarging && root.dev.timeToEmpty > 0
+                visible: controller.isDischarging && controller.dev.timeToEmpty > 0
                 width: parent.width
                 height: timeLeftKey.implicitHeight
                 Label {
@@ -57,14 +44,14 @@ Item {
                     anchors.left: parent.left
                 }
                 Label {
-                    text: root.formatTime(root.dev.timeToEmpty)
+                    text: controller.formatTime(controller.dev.timeToEmpty)
                     font.weight: Font.Normal
                     anchors.right: parent.right
                 }
             }
 
             Item {
-                visible: root.isCharging && root.dev.timeToFull > 0
+                visible: controller.isCharging && controller.dev.timeToFull > 0
                 width: parent.width
                 height: timeFullKey.implicitHeight
                 Label {
@@ -75,7 +62,7 @@ Item {
                     anchors.left: parent.left
                 }
                 Label {
-                    text: root.formatTime(root.dev.timeToFull)
+                    text: controller.formatTime(controller.dev.timeToFull)
                     font.weight: Font.Normal
                     anchors.right: parent.right
                 }
@@ -83,7 +70,7 @@ Item {
 
             // Power draw / charge
             Item {
-                visible: Math.abs(root.dev.changeRate) > 0
+                visible: controller.hasPowerFlow
                 width: parent.width
                 height: powerKey.implicitHeight
                 Label {
@@ -94,7 +81,7 @@ Item {
                     anchors.left: parent.left
                 }
                 Label {
-                    text: root.isCharging ? "+" + Math.abs(root.dev.changeRate).toFixed(1) + " W" : "-" + Math.abs(root.dev.changeRate).toFixed(1) + " W"
+                    text: controller.formatPower()
                     font.weight: Font.Normal
                     anchors.right: parent.right
                 }
@@ -112,7 +99,7 @@ Item {
                     anchors.left: parent.left
                 }
                 Label {
-                    text: root.dev.energy.toFixed(1) + " / " + root.dev.energyCapacity.toFixed(1) + " Wh"
+                    text: controller.formatEnergy()
                     font.weight: Font.Normal
                     anchors.right: parent.right
                 }
@@ -120,7 +107,7 @@ Item {
 
             // Health
             Item {
-                visible: root.dev.healthSupported
+                visible: controller.dev.healthSupported
                 width: parent.width
                 height: healthKey.implicitHeight
                 Label {
@@ -131,7 +118,7 @@ Item {
                     anchors.left: parent.left
                 }
                 Label {
-                    text: Math.round(root.dev.healthPercentage * 100) + " %"
+                    text: controller.formatHealth()
                     font.weight: Font.Normal
                     anchors.right: parent.right
                 }

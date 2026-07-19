@@ -11,7 +11,7 @@ Rectangle {
 
     radius: Spacing.spacing8
     color: Colors.hoverItemHovered
-    border.width: 1
+    border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
     border.color: accent ? Colors.accentColor : Colors.pillBorder
 
     TintedIcon {

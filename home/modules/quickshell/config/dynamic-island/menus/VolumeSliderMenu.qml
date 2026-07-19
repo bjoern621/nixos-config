@@ -1,14 +1,16 @@
 pragma ComponentBehavior: Bound
 
-import Quickshell
-import Quickshell.Services.Pipewire
 import QtQuick
 import "../"
 import "../base"
-import "BluetoothUtils.js" as BluetoothUtils
 
 Item {
     id: root
+
+    // Behavior lives in the controller. Instantiated once, tracker + models survive here.
+    VolumeMenuController {
+        id: controller
+    }
 
     // Read by Bar.qml to keep the menu open while a slider is held.
     readonly property bool sliderActive: masterSlider.pressed || root._anyAppSliderPressed
@@ -33,70 +35,22 @@ Item {
 
     readonly property int contentPadding: Spacing.spacing12
 
-    implicitWidth: 300
-    implicitHeight: mainLayout.height + 2 * contentPadding
-
-    readonly property var sinkNodes: {
-        const nodes = Pipewire.nodes.values;
-        const result = [];
-        if (!nodes)
-            return result;
-        for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i];
-            if (n.isSink && !n.isStream)
-                result.push(n);
-        }
-        return result;
-    }
-
-    readonly property var streamNodes: {
-        const nodes = Pipewire.nodes.values;
-        const result = [];
-        if (!nodes)
-            return result;
-        for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i];
-            if (n.isStream && n.audio)
-                result.push(n);
-        }
-        return result;
-    }
-
-    // Connect and audio switch live in BluetoothConnector: machine-global state, menu is per-screen.
-    readonly property var outputDevices: {
-        return BluetoothUtils.buildOutputDevices(root.sinkNodes, BluetoothConnector.targets);
-    }
+    // Neo card draws its offset shadow inside the bottom-right gutter.
+    // Pad size by shadowOffset so paper stays 300 wide, content unchanged (0 in classic).
+    implicitWidth: 300 + Shape.shadowOffset
+    implicitHeight: mainLayout.height + 2 * contentPadding + Shape.shadowOffset
 
     property bool outputExpanded: false
 
-    // PwObjectTracker keeps audio data current for every node read here.
-    PwObjectTracker {
-        objects: {
-            var list = [];
-            if (Pipewire.defaultAudioSink)
-                list.push(Pipewire.defaultAudioSink);
-            var sinks = root.sinkNodes;
-            for (var i = 0; i < sinks.length; i++)
-                list.push(sinks[i]);
-            var streams = root.streamNodes;
-            for (var i = 0; i < streams.length; i++)
-                list.push(streams[i]);
-            return list;
-        }
-    }
-
-    Rectangle {
+    Card {
+        id: card
         anchors.fill: parent
-        radius: Spacing.spacing12
-        color: Colors.pillBackground
-        border.width: 1
-        border.color: Colors.pillBorder
 
         Column {
             id: mainLayout
             x: root.contentPadding
             y: root.contentPadding
-            width: parent.width - 2 * root.contentPadding
+            width: card.paperWidth - 2 * root.contentPadding
             spacing: Spacing.spacing8
 
             Row {
@@ -110,30 +64,24 @@ Item {
                     height: 32
                     anchors.verticalCenter: parent.verticalCenter
 
-                    iconSource: VolumeService.iconSource
-                    onTapped: {
-                        if (VolumeService.audioNode)
-                            VolumeService.audioNode.muted = !VolumeService.audioNode.muted;
-                    }
+                    iconSource: controller.iconSource
+                    onTapped: controller.toggleMute()
                 }
 
                 StepSlider {
                     id: masterSlider
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - muteButton.width - pctLabel.width - 2 * parent.spacing
-                    externalValue: VolumeService.audioNode?.volume ?? 0
+                    externalValue: controller.audioNode?.volume ?? 0
                     stepSize: 0.05
-                    isMuted: VolumeService.muted
+                    isMuted: controller.muted
 
-                    onMoved: newValue => {
-                        if (VolumeService.audioNode)
-                            VolumeService.audioNode.volume = newValue;
-                    }
+                    onMoved: newValue => controller.setMasterVolume(newValue)
                 }
 
                 Label {
                     id: pctLabel
-                    text: VolumeService.volume + " %"
+                    text: controller.volume + " %"
                     width: 40
                     horizontalAlignment: Text.AlignRight
                     anchors.verticalCenter: parent.verticalCenter
@@ -155,11 +103,9 @@ Item {
                 scale: outputTap.pressed ? 0.97 : 1.0
                 SquishBehavior on scale {}
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Spacing.spacing8
-                    color: outputTap.pressed ? Colors.hoverItemPressed : outputHover.hovered ? Colors.hoverItemHovered : "transparent"
-                    border.color: outputHover.hovered || outputTap.pressed ? Colors.pillBorder : "transparent"
+                // Button toggle bg. Squish scale carries press feedback.
+                ButtonBg {
+                    hovered: outputHover.hovered
                 }
 
                 Label {
@@ -183,7 +129,7 @@ Item {
                     spacing: Spacing.spacing6
 
                     Label {
-                        text: Pipewire.defaultAudioSink?.description ?? "---"
+                        text: controller.defaultSinkDescription
                         font.pixelSize: Typography.fontSize12
                         color: Colors.textColor
                         elide: Text.ElideRight
@@ -217,27 +163,22 @@ Item {
                     width: parent.width
 
                     Repeater {
-                        model: root.outputDevices
+                        model: controller.outputDevices
 
                         VolumeOutputDeviceRow {
                             required property var modelData
                             outputDevice: modelData
-                            defaultSinkId: Pipewire.defaultAudioSink?.id ?? -1
+                            defaultSinkId: controller.defaultSinkId
 
-                            onSinkActivated: sinkNode => {
-                                BluetoothConnector.cancelAutoSwitch();
-                                Pipewire.preferredDefaultAudioSink = sinkNode;
-                            }
-                            onBluetoothActivated: (deviceName, mac) => {
-                                BluetoothConnector.connectDevice(deviceName, mac);
-                            }
+                            onSinkActivated: sinkNode => controller.activateSink(sinkNode)
+                            onBluetoothActivated: (deviceName, mac) => controller.activateBluetooth(deviceName, mac)
                         }
                     }
                 }
             }
 
             Rectangle {
-                visible: root.streamNodes.length > 0
+                visible: controller.streamNodes.length > 0
                 width: parent.width
                 height: 1
                 color: Colors.separatorColor
@@ -245,7 +186,7 @@ Item {
 
             // Per-application volume
             Label {
-                visible: root.streamNodes.length > 0
+                visible: controller.streamNodes.length > 0
                 text: "Anwendungen"
                 font.pixelSize: Typography.fontSize12
                 color: Colors.textColorMuted
@@ -254,13 +195,13 @@ Item {
 
             Column {
                 id: appsColumn
-                visible: root.streamNodes.length > 0
+                visible: controller.streamNodes.length > 0
                 width: parent.width
                 spacing: Spacing.spacing12
 
                 Repeater {
                     id: appRepeater
-                    model: root.streamNodes
+                    model: controller.streamNodes
 
                     onItemAdded: root._appRowGeneration++
                     onItemRemoved: root._appRowGeneration++
@@ -268,6 +209,7 @@ Item {
                     VolumeApplicationVolumeRow {
                         required property var modelData
                         streamNode: modelData
+                        controller: controller
                     }
                 }
             }

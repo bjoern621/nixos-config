@@ -50,8 +50,9 @@ QtObject {
 
     // Design theme: which visual language the shell renders.
     // "classic" = translucent pill UI; "neo" = neobrutalist.
-    // ThemeSwitcher writes it, ThemePersist restores it, themed windows dispatch on it.
-    // Only the app launcher switches on it now; other windows follow later.
+    // ThemeSwitcher writes it, ThemePersist restores it.
+    // Token facades (Colors/Shape/Typography) resolve their values from it;
+    // ThemedLoader swaps a feature's per-theme view on it.
     property string designTheme: "classic"
     // Fallback until a wallpaper is picked.
     // See WallpaperPersist.qml, WallpaperAccent.qml, WallpaperChooser.qml.

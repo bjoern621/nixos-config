@@ -195,7 +195,7 @@ Item {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: height / 2
+                            radius: Shape.pill(height)
                             color: iconMouse.pressed || iconItem.menuShown ? Colors.hoverItemPressed : iconMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
                             border.color: iconMouse.containsMouse || iconMouse.pressed || iconItem.menuShown ? Colors.pillBorder : "transparent"
                             // NO Behavior on color; hover must be instant
@@ -214,7 +214,7 @@ Item {
                             visible: iconItem.needsAttention
                             width: trayRoot.attentionDotSize
                             height: trayRoot.attentionDotSize
-                            radius: height / 2
+                            radius: Shape.pill(height)
                             color: Colors.accentColor
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom

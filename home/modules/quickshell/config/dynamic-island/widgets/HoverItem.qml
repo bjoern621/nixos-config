@@ -80,12 +80,10 @@ Item {
     scale: root.clickable && tapHandler.pressed ? root.pressedScale : 1.0
     SquishBehavior on scale {}
 
-    Rectangle {
+    ButtonBg {
         id: background
-        anchors.fill: parent
-        radius: height / 2
-        color: root.clickable && root.pressed ? Colors.hoverItemPressed : root.hovered ? Colors.hoverItemHovered : "transparent"
-        border.color: root.hovered || (root.clickable && root.pressed) ? Colors.pillBorder : "transparent"
+        hovered: root.hovered
+        pressed: root.clickable && root.pressed
     }
 
     Item {
@@ -98,7 +96,7 @@ Item {
         // Rectangle {
         //     anchors.fill: parent
         //     color: "transparent"
-        //     border.width: 1
+        //     border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
         //     border.color: "blue"
         // }
     }

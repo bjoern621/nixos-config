@@ -88,7 +88,7 @@ Item {
 
         radius: Spacing.spacing12
         color: Colors.pillBackground
-        border.width: 1
+        border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
         border.color: Colors.pillBorder
 
         // Click-eater: absorbs clicks on panel padding,

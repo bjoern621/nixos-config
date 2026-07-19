@@ -6,68 +6,18 @@ import "../"
 Scope {
     id: toastScope
 
+    // Behavior only: model, expiry check, add/hide/remove, D-Bus.
+    ToastController {
+        id: controller
+    }
+
     readonly property int cardWidth: 340
     readonly property int sideMargin: Spacing.spacing16
     readonly property int topOffset: 52
-    readonly property int maxVisibleToasts: 5
     readonly property int toastSlotReservedHeight: 120
 
-    ListModel {
-        id: notifModel
-    }
-
-    Connections {
-        target: NotificationListener
-        function onNotificationReceived(uid, notification) {
-            toastScope._addEntry(uid, notification);
-        }
-        function onNotificationClosed(uid) {
-            toastScope._hideEntry(uid);
-        }
-    }
-
-    function _addEntry(uid, n) {
-        if (Globals.doNotDisturb)
-            return;
-        if (notifModel.count >= toastScope.maxVisibleToasts)
-            notifModel.remove(0);
-
-        notifModel.append({
-            uid: uid,
-            appName: n.appName || "",
-            summary: n.summary || "",
-            body: n.body || "",
-            urgency: n.urgency ?? 1,
-            expireTimeout: n.expireTimeout ?? -1,
-            active: true
-        });
-    }
-
-    function _indexOf(uid) {
-        for (let i = 0; i < notifModel.count; i++) {
-            if (notifModel.get(i).uid === uid)
-                return i;
-        }
-        return -1;
-    }
-
-    // Starts the hide animation. The delegate drops itself once it has played out.
-    function _hideEntry(uid) {
-        const i = _indexOf(uid);
-        if (i >= 0)
-            notifModel.setProperty(i, "active", false);
-    }
-
-    // Removes the toast only. The notification stays tracked so the notification
-    // center keeps its actions until it is dismissed there.
-    function _removeEntry(uid) {
-        const i = _indexOf(uid);
-        if (i >= 0)
-            notifModel.remove(i);
-    }
-
     PanelWindow {
-        visible: notifModel.count > 0
+        visible: controller.model.count > 0
 
         anchors {
             top: true
@@ -77,7 +27,7 @@ Scope {
         color: "transparent"
 
         implicitWidth: toastScope.cardWidth + toastScope.sideMargin * 2
-        implicitHeight: toastScope.topOffset + toastScope.maxVisibleToasts * (toastScope.toastSlotReservedHeight + Spacing.spacing8) + Spacing.spacing8
+        implicitHeight: toastScope.topOffset + controller.maxVisibleToasts * (toastScope.toastSlotReservedHeight + Spacing.spacing8) + Spacing.spacing8
 
         mask: Region {
             item: notifColumn
@@ -95,7 +45,7 @@ Scope {
             spacing: Spacing.spacing8
 
             Repeater {
-                model: notifModel
+                model: controller.model
                 delegate: Item {
                     id: toastDelegate
                     required property string uid
@@ -106,7 +56,7 @@ Scope {
                     required property real expireTimeout
                     required property bool active
 
-                    readonly property var actions: NotificationListener.actionsFor(toastDelegate.uid)
+                    readonly property var actions: controller.actionsFor(toastDelegate.uid)
 
                     // 0 keeps the toast up until it is dismissed by hand: either the
                     // client asked for no expiry, or the urgency is critical.
@@ -118,8 +68,13 @@ Scope {
                         return toastDelegate.expireTimeout > 0 ? Math.round(toastDelegate.expireTimeout) : 5000;
                     }
 
+                    // Card body plus the neo shadow gutter below/right.
+                    // Classic shadowOffset=0, so height matches the body exactly.
+                    readonly property real cardBodyHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
+                    readonly property real fullHeight: cardBodyHeight + Shape.shadowOffset
+
                     width: toastScope.cardWidth
-                    height: card.implicitHeight
+                    height: fullHeight
                     clip: true
 
                     NumberAnimation {
@@ -129,7 +84,7 @@ Scope {
                         to: 0
                         duration: 150
                         easing.type: Easing.InCubic
-                        onFinished: toastScope._removeEntry(toastDelegate.uid)
+                        onFinished: controller.removeEntry(toastDelegate.uid)
                     }
 
                     Component.onCompleted: popReveal.show()
@@ -145,41 +100,36 @@ Scope {
                         showDuration: 250
                         hideDuration: 150
                         width: parent.width
-                        height: card.implicitHeight
+                        height: toastDelegate.fullHeight
                         onHidden: collapseAnim.start()
 
-                        Rectangle {
+                        // Theme-aware card: classic glass, neo cream + ink + offset shadow.
+                        Card {
                             id: card
                             width: toastScope.cardWidth
-                            implicitHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
-                            height: implicitHeight
-                            color: Colors.pillBackground
-                            border.width: 1
-                            border.color: Colors.pillBorder
-                            radius: Spacing.spacing8
+                            height: toastDelegate.fullHeight
 
                             scale: cardTap.pressed ? 0.97 : 1.0
                             SquishBehavior on scale {}
 
                             HoverHandler {
                                 id: cardHover
-                                cursorShape: NotificationListener.hasClickAction(toastDelegate.uid) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                cursorShape: controller.hasClickAction(toastDelegate.uid) ? Qt.PointingHandCursor : Qt.ArrowCursor
                             }
 
                             TapHandler {
                                 id: cardTap
                                 gesturePolicy: TapHandler.ReleaseWithinBounds
                                 onTapped: {
-                                    if (NotificationListener.invokeDefault(toastDelegate.uid))
-                                        toastScope._hideEntry(toastDelegate.uid);
+                                    if (controller.invokeDefault(toastDelegate.uid))
+                                        controller.hideEntry(toastDelegate.uid);
                                 }
                             }
 
-                            // Drawn before the content so the hover tint sits over the
-                            // card background but under the text.
+                            // Drawn over the paper, under the text: hover tint.
                             Rectangle {
                                 anchors.fill: parent
-                                radius: parent.radius
+                                radius: card.radius
                                 color: cardTap.pressed ? Colors.hoverItemPressed : cardHover.hovered ? Colors.hoverItemHovered : "transparent"
                             }
 
@@ -202,14 +152,14 @@ Scope {
                                 expiryAnimationRunning: toastDelegate.active && toastDelegate.expiryMs > 0
                                 expiryDuration: toastDelegate.expiryMs
                                 expiryPaused: cardHover.hovered
-                                onExpired: toastScope._hideEntry(toastDelegate.uid)
+                                onExpired: controller.hideEntry(toastDelegate.uid)
                                 onActionInvoked: index => {
-                                    NotificationListener.invokeAction(toastDelegate.uid, index);
-                                    toastScope._hideEntry(toastDelegate.uid);
+                                    controller.invokeAction(toastDelegate.uid, index);
+                                    controller.hideEntry(toastDelegate.uid);
                                 }
                             }
 
-                            Rectangle {
+                            Item {
                                 id: closeBtn
                                 anchors {
                                     right: parent.right
@@ -219,10 +169,6 @@ Scope {
                                 }
                                 width: Spacing.spacing24
                                 height: Spacing.spacing24
-                                radius: height / 2
-                                color: closeTap.pressed ? Colors.hoverItemPressed : closeHover.hovered ? Colors.hoverItemHovered : "transparent"
-                                border.width: 1
-                                border.color: closeHover.hovered ? Colors.pillBorder : "transparent"
                                 opacity: cardHover.hovered ? 1.0 : 0.0
                                 // An item at zero opacity still takes input.
                                 visible: closeBtn.opacity > 0
@@ -237,6 +183,12 @@ Scope {
                                 scale: closeTap.pressed ? 0.85 : 1.0
                                 SquishBehavior on scale {}
 
+                                // Close button bg. Classic round pill, neo cream hover + accent press.
+                                ButtonBg {
+                                    hovered: closeHover.hovered
+                                    pressed: closeTap.pressed
+                                }
+
                                 HoverHandler {
                                     id: closeHover
                                     cursorShape: Qt.PointingHandCursor
@@ -246,8 +198,8 @@ Scope {
                                     id: closeTap
                                     gesturePolicy: TapHandler.ReleaseWithinBounds
                                     onTapped: {
-                                        NotificationListener.dismiss(toastDelegate.uid);
-                                        toastScope._hideEntry(toastDelegate.uid);
+                                        controller.dismiss(toastDelegate.uid);
+                                        controller.hideEntry(toastDelegate.uid);
                                     }
                                 }
 

@@ -144,15 +144,27 @@ Scope {
 
                 Item {
                     id: content
-                    width: contentCol.width
-                    height: contentCol.height
+                    width: panel.width
+                    height: panel.height
 
                     MouseArea {
                         anchors.fill: parent
                     }
 
+                    // Neo needs a cream panel so ink text is readable on the dim.
+                    // Classic stays transparent: content floats on the dim as before.
+                    Card {
+                        id: panel
+                        readonly property int pad: Spacing.spacing24
+                        fill: Shape.usesBlur ? "transparent" : Colors.pillBackground
+                        borderColor: Shape.usesBlur ? "transparent" : Colors.pillBorder
+                        width: contentCol.implicitWidth + 2 * pad + Shape.shadowOffset
+                        height: contentCol.implicitHeight + 2 * pad + Shape.shadowOffset
+
                     Column {
                         id: contentCol
+                        x: panel.pad
+                        y: panel.pad
                         spacing: Spacing.spacing24
 
                         Text {
@@ -212,7 +224,7 @@ Scope {
                                             height: parent.height - Spacing.spacing40
                                             radius: Spacing.spacing12
                                             color: Qt.rgba(0.1, 0.1, 0.12, 0.85)
-                                            border.width: 1
+                                            border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                                             border.color: Qt.rgba(1, 1, 1, 0.18)
 
                                             Column {
@@ -334,7 +346,7 @@ Scope {
                                 height: 36
                                 radius: Spacing.spacing8
                                 color: Colors.pillBackground
-                                border.width: 1
+                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                                 border.color: Colors.pillBorder
 
                                 Rectangle {
@@ -369,7 +381,7 @@ Scope {
                                 height: 36
                                 radius: Spacing.spacing8
                                 color: Colors.pillBackground
-                                border.width: 1
+                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                                 border.color: Colors.pillBorder
 
                                 Rectangle {
@@ -399,6 +411,7 @@ Scope {
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

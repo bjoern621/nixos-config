@@ -19,14 +19,25 @@ Item {
     implicitWidth: 340
     implicitHeight: panel.implicitHeight
 
+    // Neo hard offset shadow behind the panel. No-op in classic (offset 0).
+    Rectangle {
+        visible: !Shape.usesBlur
+        x: Shape.shadowOffset
+        y: Shape.shadowOffset
+        width: panel.width
+        height: panel.height
+        radius: panel.radius
+        color: NeoTokens.ink
+    }
+
     Rectangle {
         id: panel
         anchors.fill: parent
         implicitHeight: content.implicitHeight + 2 * Spacing.spacing16
 
-        radius: Spacing.spacing12
+        radius: Shape.cardRadius
         color: Colors.pillBackground
-        border.width: 1
+        border.width: Shape.usesBlur ? 1 : Shape.borderWidth
         border.color: Colors.pillBorder
     }
 
@@ -77,9 +88,9 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: dismissLabel.implicitWidth + 2 * Spacing.spacing16
                 height: 36
-                radius: height / 2
+                radius: Shape.pill(height)
                 color: dismissTap.pressed ? Colors.hoverItemPressed : dismissHover.hovered ? Colors.hoverItemHovered : "transparent"
-                border.width: 1
+                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                 border.color: Colors.pillBorder
 
                 scale: dismissTap.pressed ? 0.96 : 1.0

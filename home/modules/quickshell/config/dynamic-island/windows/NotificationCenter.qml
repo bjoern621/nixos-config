@@ -11,6 +11,11 @@ Variants {
         required property var modelData
         screen: modelData
 
+        // Behavior only: history, DND, clear, D-Bus passthroughs.
+        NotificationCenterController {
+            id: controller
+        }
+
         anchors.bottom: true
         anchors.right: true
         exclusiveZone: 0
@@ -64,18 +69,19 @@ Variants {
                 id: panelHover
             }
 
-            Rectangle {
+            // Theme-aware panel: classic glass, neo cream + ink + offset shadow.
+            // Card draws the shadow inside, so the paper occupies width/height minus
+            // shadowOffset; content lives on the paper.
+            Card {
                 id: centerPanel
-                implicitWidth: 320
-                implicitHeight: Spacing.spacing12 + headerRow.height + Spacing.spacing8 + separator.height + Spacing.spacing8 + (NotificationListener.history.count > 0 ? clearArea.height + Spacing.spacing8 : 0) + listArea.height + Spacing.spacing12
 
+                readonly property int contentWidth: 320
+                readonly property real contentHeight: Spacing.spacing12 + headerRow.height + Spacing.spacing8 + separator.height + Spacing.spacing8 + (controller.hasHistory ? clearArea.height + Spacing.spacing8 : 0) + listArea.height + Spacing.spacing12
+
+                implicitWidth: contentWidth + Shape.shadowOffset
+                implicitHeight: contentHeight + Shape.shadowOffset
                 width: implicitWidth
                 height: implicitHeight
-                color: Colors.pillBackground
-                border.color: Colors.pillBorder
-                border.width: 1
-                radius: Spacing.spacing12
-                clip: true
 
                 Row {
                     id: headerRow
@@ -100,19 +106,23 @@ Variants {
                         width: parent.width - dndPill.implicitWidth
                     }
 
-                    Rectangle {
+                    Item {
                         id: dndPill
                         implicitWidth: dndRow.implicitWidth + Spacing.spacing12 * 2
                         implicitHeight: 26
                         width: implicitWidth
                         height: implicitHeight
-                        radius: height / 2
                         anchors.verticalCenter: parent.verticalCenter
-                        color: dndTap.pressed ? Colors.hoverItemPressed : dndHover.hovered ? Colors.hoverItemHovered : Globals.doNotDisturb ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
-                        border.color: (dndHover.hovered || Globals.doNotDisturb) ? Colors.pillBorder : "transparent"
 
                         scale: dndTap.pressed ? 0.85 : 1.0
                         SquishBehavior on scale {}
+
+                        // DND toggle bg. On-state (active) = blue accent, neo cream hover.
+                        ButtonBg {
+                            active: controller.dnd
+                            hovered: dndHover.hovered
+                            pressed: dndTap.pressed
+                        }
 
                         HoverHandler {
                             id: dndHover
@@ -120,7 +130,7 @@ Variants {
                         }
                         TapHandler {
                             id: dndTap
-                            onTapped: Globals.doNotDisturb = !Globals.doNotDisturb
+                            onTapped: controller.toggleDnd()
                         }
 
                         Row {
@@ -134,13 +144,13 @@ Variants {
                                 text: "Nicht stören"
                                 font.family: Typography.fontFamily
                                 font.pixelSize: Typography.fontSize12
-                                color: Globals.doNotDisturb ? Colors.textColor : Colors.textColorMuted
-                                font.bold: Globals.doNotDisturb
+                                color: controller.dnd ? Colors.textColor : Colors.textColorMuted
+                                font.bold: controller.dnd
                             }
 
                             ContentReplace {
                                 id: dndIconReplace
-                                contentKey: Globals.doNotDisturb ? "../icons/icons8-do-not-disturb.svg" : "../icons/icons8-bell.svg"
+                                contentKey: controller.dnd ? "../icons/icons8-do-not-disturb.svg" : "../icons/icons8-bell.svg"
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: Typography.fontSize16
                                 height: Typography.fontSize16
@@ -180,21 +190,24 @@ Variants {
                         rightMargin: Spacing.spacing12
                     }
                     height: clearBtn.implicitHeight
-                    visible: NotificationListener.history.count > 0
+                    visible: controller.hasHistory
 
-                    Rectangle {
+                    Item {
                         id: clearBtn
                         anchors {
                             left: parent.left
                             right: parent.right
                         }
                         implicitHeight: 26
-                        radius: height / 2
-                        color: clearTap.pressed ? Colors.hoverItemPressed : clearHover.hovered ? Colors.hoverItemHovered : "transparent"
-                        border.color: clearHover.hovered ? Colors.pillBorder : "transparent"
 
                         scale: clearTap.pressed ? 0.85 : 1.0
                         SquishBehavior on scale {}
+
+                        // Clear button bg. Classic round pill, neo cream hover + accent press.
+                        ButtonBg {
+                            hovered: clearHover.hovered
+                            pressed: clearTap.pressed
+                        }
 
                         HoverHandler {
                             id: clearHover
@@ -202,7 +215,7 @@ Variants {
                         }
                         TapHandler {
                             id: clearTap
-                            onTapped: NotificationListener.clearHistory()
+                            onTapped: controller.clearHistory()
                         }
 
                         Row {
@@ -228,8 +241,9 @@ Variants {
 
                 NotificationList {
                     id: listArea
+                    controller: controller
                     anchors {
-                        top: NotificationListener.history.count > 0 ? clearArea.bottom : separator.bottom
+                        top: controller.hasHistory ? clearArea.bottom : separator.bottom
                         left: parent.left
                         right: parent.right
                         topMargin: Spacing.spacing8

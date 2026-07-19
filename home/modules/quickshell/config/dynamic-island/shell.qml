@@ -4,6 +4,7 @@ import Quickshell
 import "animations"
 import "bar"
 import "base"
+import "logic"
 import "menus"
 import "osd"
 import "themes"
@@ -18,6 +19,8 @@ ShellRoot {
     property var _wallpaperPersist: WallpaperPersist
     property var _themePersist: ThemePersist
     property var _notificationListener: NotificationListener
+    // Always-loaded launcher behavior + sole owner of the launcher GlobalShortcut.
+    property var _launcherController: LauncherController
 
     WallpaperBackend {}
     WallpaperAccent {}
@@ -31,11 +34,9 @@ ShellRoot {
     ModalOverlay {}
 
     // App launcher renders one design variant, chosen by Globals.designTheme.
-    // Mutually-exclusive LazyLoaders: only the matching variant is loaded, so at
-    // rest exactly one owns the "launcher" GlobalShortcut/IpcHandler.
-    // At the instant of a switch both briefly coexist (Quickshell defers handler
-    // unregistration), logging one benign "another handler is registered" warning;
-    // once the old variant unloads the survivor's handler is the live one.
+    // Both views are pure presentation bound to LauncherController; the shortcut
+    // and all logic live in the always-loaded controller, so swapping views no
+    // longer double-registers the "launcher" handler.
     LazyLoader {
         active: Globals.designTheme !== "neo"
         AppLauncher {}

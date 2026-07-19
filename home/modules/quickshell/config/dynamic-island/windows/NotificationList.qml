@@ -4,7 +4,13 @@ import QtQuick.Controls as QQC
 import "../"
 
 Item {
-    implicitHeight: NotificationListener.history.count === 0 ? emptyText.implicitHeight + Spacing.spacing8 : Math.min(340, notifFlick.contentHeight)
+    id: root
+
+    // Center controller: history model + D-Bus passthroughs.
+    property var controller
+    readonly property int historyCount: controller ? controller.history.count : 0
+
+    implicitHeight: root.historyCount === 0 ? emptyText.implicitHeight + Spacing.spacing8 : Math.min(340, notifFlick.contentHeight)
 
     clip: true
 
@@ -16,7 +22,7 @@ Item {
         font.pixelSize: Typography.fontSize12
         font.weight: Font.Normal
         color: Colors.textColorMuted
-        visible: NotificationListener.history.count === 0
+        visible: root.historyCount === 0
     }
 
     Flickable {
@@ -25,7 +31,7 @@ Item {
         contentHeight: notifCol.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
-        visible: NotificationListener.history.count > 0
+        visible: root.historyCount > 0
 
         WheelSource {
             id: wheelSource
@@ -43,9 +49,9 @@ Item {
             width: notifFlick.width
 
             Repeater {
-                model: NotificationListener.history
+                model: root.controller ? root.controller.history : null
 
-                delegate: Rectangle {
+                delegate: Item {
                     id: histEntry
                     required property string uid
                     required property string appName
@@ -58,23 +64,25 @@ Item {
                     width: notifCol.width
                     implicitHeight: entryContent.implicitHeight + Spacing.spacing12 * 2
                     height: implicitHeight
-                    color: entryTap.pressed ? Colors.hoverItemPressed : entryHover.hovered ? Colors.hoverItemHovered : "transparent"
-                    border.width: 1
-                    border.color: entryHover.hovered ? Colors.pillBorder : "transparent"
-                    radius: Spacing.spacing8
 
                     scale: entryTap.pressed ? 0.97 : 1.0
                     SquishBehavior on scale {}
 
+                    // Launcher row bg: cream hover, ink border when lit, radius 5.
+                    LauncherDelegateBg {
+                        hovered: entryHover.hovered
+                        pressed: entryTap.pressed
+                    }
+
                     HoverHandler {
                         id: entryHover
-                        cursorShape: NotificationListener.hasClickAction(histEntry.uid) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        cursorShape: root.controller.hasClickAction(histEntry.uid) ? Qt.PointingHandCursor : Qt.ArrowCursor
                     }
 
                     TapHandler {
                         id: entryTap
                         gesturePolicy: TapHandler.ReleaseWithinBounds
-                        onTapped: NotificationListener.invokeDefault(histEntry.uid)
+                        onTapped: root.controller.invokeDefault(histEntry.uid)
                     }
 
                     NotificationContent {
@@ -92,8 +100,8 @@ Item {
                         summary: histEntry.summary
                         body: histEntry.body
                         urgency: histEntry.urgency
-                        actions: NotificationListener.actionsFor(histEntry.uid)
-                        onActionInvoked: index => NotificationListener.invokeAction(histEntry.uid, index)
+                        actions: root.controller.actionsFor(histEntry.uid)
+                        onActionInvoked: index => root.controller.invokeAction(histEntry.uid, index)
                     }
 
                     Text {
@@ -109,7 +117,7 @@ Item {
                         color: Colors.textColorMuted
                     }
 
-                    Rectangle {
+                    Item {
                         id: deleteBtn
                         anchors {
                             right: parent.right
@@ -119,10 +127,6 @@ Item {
                         }
                         width: Spacing.spacing24
                         height: Spacing.spacing24
-                        radius: height / 2
-                        color: deleteTap.pressed ? Colors.hoverItemPressed : deleteHover.hovered ? Colors.hoverItemHovered : "transparent"
-                        border.width: 1
-                        border.color: deleteHover.hovered ? Colors.pillBorder : "transparent"
                         opacity: entryHover.hovered ? 1.0 : 0.0
                         // An item at zero opacity still takes input.
                         visible: deleteBtn.opacity > 0
@@ -137,6 +141,12 @@ Item {
                         scale: deleteTap.pressed ? 0.85 : 1.0
                         SquishBehavior on scale {}
 
+                        // Delete button bg. Classic round pill, neo cream hover + accent press.
+                        ButtonBg {
+                            hovered: deleteHover.hovered
+                            pressed: deleteTap.pressed
+                        }
+
                         HoverHandler {
                             id: deleteHover
                             cursorShape: Qt.PointingHandCursor
@@ -144,7 +154,7 @@ Item {
                         TapHandler {
                             id: deleteTap
                             gesturePolicy: TapHandler.ReleaseWithinBounds
-                            onTapped: NotificationListener.removeAt(histEntry.index)
+                            onTapped: root.controller.removeAt(histEntry.index)
                         }
 
                         TintedIcon {

@@ -17,11 +17,10 @@ Item {
     scale: tapHandler.pressed ? 0.85 : 1.0
     SquishBehavior on scale {}
 
-    Rectangle {
-        anchors.fill: parent
-        radius: height / 2
-        color: tapHandler.pressed ? Colors.hoverItemPressed : hoverHandler.hovered ? Colors.hoverItemHovered : "transparent"
-        border.color: hoverHandler.hovered || tapHandler.pressed ? Colors.pillBorder : "transparent"
+    // Button bg: cream hover, 2px ink border when lit, radius 5 (neo).
+    // Squish scale carries press feedback.
+    ButtonBg {
+        hovered: hoverHandler.hovered
     }
 
     ContentReplace {

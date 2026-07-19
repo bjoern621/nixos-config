@@ -243,9 +243,15 @@ Scope {
                 width: parent.width
                 spacing: Spacing.spacing8
 
+                // Wrapper lets the scroll handle overlay the grid's right edge.
+                Item {
+                    width: parent.width
+                    height: emojiGrid.height
+
                 LauncherGridView {
                     id: emojiGrid
-                    width: parent.width
+                    // Reserve a gutter for the scroll handle only while it shows.
+                    width: parent.width - (scrollable ? 14 : 0)
                     height: Math.min(contentHeight, emojiScope.cellSize * emojiScope.gridRows)
                     cellWidth: emojiScope.cellSize
                     cellHeight: emojiScope.cellSize
@@ -291,6 +297,16 @@ Scope {
                             id: emojiCellTap
                             onTapped: emojiScope.selectEmoji(emojiCell.modelData)
                         }
+                    }
+                }
+
+                    // Shared draggable handle, sibling of the grid.
+                    ScrollHandle {
+                        target: emojiGrid
+                        visible: emojiGrid.scrollable
+                        anchors.right: parent.right
+                        anchors.top: emojiGrid.top
+                        anchors.bottom: emojiGrid.bottom
                     }
                 }
 

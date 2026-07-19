@@ -22,7 +22,7 @@ Row {
             required property int index
 
             width: 3
-            radius: width / 2
+            radius: Shape.pill(width)
             color: Colors.accentColor
             anchors.verticalCenter: parent.verticalCenter
 

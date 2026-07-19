@@ -1,102 +1,33 @@
 import QtQuick
-import Quickshell.Services.Mpris
 import "../"
 import "../base"
 
-// View over NowPlayingModel. Bar is per-screen, so everything with a side effect
-// (Spotify process, track history, cooldown) lives in the singleton, not here.
+// Theme-aware view over NowPlayingController + NowPlayingModel.
+// Bar is per-screen, so side effects (Spotify, history, cooldown) live in the
+// singleton; per-instance behavior (position poll, seek, queue) in the controller.
 Item {
     id: root
 
+    // Set by Bar. Public interface.
     property var player: null
-    readonly property bool hasPlayer: player !== null
-    readonly property bool isPlaying: hasPlayer && player.playbackState === MprisPlaybackState.Playing
-
-    // Null-check player once, here, not at every UI call site.
-    readonly property string trackTitle: hasPlayer ? player.trackTitle : ""
-    readonly property string trackArtist: hasPlayer ? player.trackArtist : ""
-    readonly property string trackAlbum: hasPlayer ? player.trackAlbum : ""
-    readonly property string trackArtUrl: hasPlayer ? player.trackArtUrl : ""
-    readonly property real trackLength: hasPlayer ? player.length : 0
-    readonly property bool canGoNext: hasPlayer && player.canGoNext
-    readonly property bool canGoPrevious: hasPlayer && player.canGoPrevious
 
     readonly property int contentPadding: Spacing.spacing12
 
-    property bool queueExpanded: false
+    // Content + neo shadow gutter (shadowOffset 0 in classic).
+    implicitWidth: 280 + Shape.shadowOffset
+    implicitHeight: menuLayout.height + 2 * contentPadding + Shape.shadowOffset
 
-    implicitWidth: 280
-    implicitHeight: menuLayout.height + 2 * contentPadding
-
-    // Position has two sources and one reader.
-    // _syncPolledPosition writes polledPosition, slider handlers write seekPosition.
-    // currentPosition binds over both, so nothing writes it imperatively.
-    // An imperative write kills a binding for good, stranding the scrubber on the
-    // previous track once paused.
-    property real polledPosition: 0
-    property real seekPosition: 0
-    // Suppresses player-driven updates after a seek, else the slider snaps back.
-    property bool seekInProgress: false
-    readonly property bool seekActive: positionSlider.pressed || seekInProgress
-    readonly property real currentPosition: seekActive ? seekPosition : polledPosition
-
-    // MPRIS position is poll-only, so every source of truth has to re-read it.
-    function _syncPolledPosition() {
-        root.polledPosition = root.hasPlayer && root.player.positionSupported ? root.player.position : 0;
+    NowPlayingController {
+        id: controller
+        player: root.player
+        // seekActive needs the live slider press state.
+        sliderPressed: positionSlider.pressed
     }
 
-    onPlayerChanged: _syncPolledPosition()
-    Component.onCompleted: _syncPolledPosition()
-
-    Timer {
-        id: seekGuardTimer
-        interval: 500
-        onTriggered: {
-            // Player had time to apply the seek. Re-read before handing the slider back.
-            root._syncPolledPosition();
-            root.seekInProgress = false;
-        }
-    }
-
-    Timer {
-        id: positionTimer
-        interval: 250
-        repeat: true
-        running: root.isPlaying
-        onTriggered: root._syncPolledPosition()
-    }
-
-    Connections {
-        target: root.player
-        enabled: root.hasPlayer
-
-        // postTrackChanged fires once properties are updated. Without this the scrubber
-        // keeps the old track's position while paused, since positionTimer is stopped.
-        function onPostTrackChanged() {
-            root._syncPolledPosition();
-        }
-    }
-
-    onQueueExpandedChanged: {
-        if (queueExpanded && root.hasPlayer)
-            NowPlayingModel.refreshSpotifyData();
-    }
-
-    function formatTime(seconds) {
-        if (seconds <= 0 || !isFinite(seconds))
-            return "0:00";
-        const m = Math.floor(seconds / 60);
-        const s = Math.floor(seconds % 60);
-        return m + ":" + (s < 10 ? "0" : "") + s;
-    }
-
-    Rectangle {
+    // Neo card: cream fill + ink border + offset shadow. Classic: glass + hairline.
+    Card {
         anchors.fill: parent
-        radius: Spacing.spacing12
-        color: Colors.pillBackground
-        border.width: 1
-        border.color: Colors.pillBorder
-        visible: root.hasPlayer
+        visible: controller.hasPlayer
 
         Column {
             id: menuLayout
@@ -131,7 +62,7 @@ Item {
                     Image {
                         id: albumArt
                         anchors.fill: parent
-                        source: root.trackArtUrl
+                        source: controller.trackArtUrl
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         visible: status === Image.Ready
@@ -157,7 +88,7 @@ Item {
 
                     Connections {
                         target: root.player
-                        enabled: root.hasPlayer
+                        enabled: controller.hasPlayer
                         function onTrackChanged() {
                             albumArtContainer.pulsing = true;
                             artBounceTimer.restart();
@@ -178,14 +109,14 @@ Item {
                     spacing: Spacing.spacing2
 
                     Label {
-                        text: root.trackTitle
+                        text: controller.trackTitle
                         font.pixelSize: Typography.fontSize16
                         elide: Text.ElideRight
                         width: parent.width
                     }
 
                     Label {
-                        text: root.trackArtist
+                        text: controller.trackArtist
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -194,8 +125,8 @@ Item {
                     }
 
                     Label {
-                        visible: root.trackAlbum !== ""
-                        text: root.trackAlbum
+                        visible: controller.trackAlbum !== ""
+                        text: controller.trackAlbum
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -220,26 +151,18 @@ Item {
                     handleVerticalSize: Spacing.spacing12
                     // StepSlider ignores externalValue while pressed, and currentPosition
                     // follows the drag, so this stays a plain binding.
-                    externalValue: root.trackLength > 0 ? root.currentPosition / root.trackLength : 0
+                    externalValue: controller.trackLength > 0 ? controller.currentPosition / controller.trackLength : 0
 
+                    // Guards live in the controller.
                     onPressedChanged: {
-                        if (pressed && root.trackLength > 0)
-                            root.seekPosition = value * root.trackLength;
+                        if (pressed)
+                            controller.setSeekFraction(value);
                     }
-
                     onValueChanged: {
-                        if (pressed && root.trackLength > 0)
-                            root.seekPosition = value * root.trackLength;
+                        if (pressed)
+                            controller.setSeekFraction(value);
                     }
-
-                    onMoved: newValue => {
-                        if (root.hasPlayer && root.player.canSeek && root.trackLength > 0) {
-                            root.player.position = newValue * root.trackLength;
-                            root.seekPosition = newValue * root.trackLength;
-                            root.seekInProgress = true;
-                            seekGuardTimer.restart();
-                        }
-                    }
+                    onMoved: newValue => controller.commitSeek(newValue)
                 }
 
                 Item {
@@ -248,7 +171,7 @@ Item {
 
                     Label {
                         id: elapsedLabel
-                        text: root.formatTime(root.currentPosition)
+                        text: controller.formatTime(controller.currentPosition)
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -256,7 +179,7 @@ Item {
                     }
 
                     Label {
-                        text: root.formatTime(root.trackLength)
+                        text: controller.formatTime(controller.trackLength)
                         font.pixelSize: Typography.fontSize12
                         font.weight: Font.Normal
                         color: Colors.textColorMuted
@@ -272,45 +195,39 @@ Item {
 
                 IconButton {
                     source: "../icons/icons8-skip-to-start.svg"
-                    iconColor: root.canGoPrevious ? Colors.textColor : Colors.textColorMuted
-                    onClicked: {
-                        if (root.hasPlayer)
-                            root.player.previous();
-                    }
+                    iconColor: controller.canGoPrevious ? Colors.textColor : Colors.textColorMuted
+                    onClicked: controller.previous()
                 }
 
                 IconButton {
-                    source: root.isPlaying ? "../icons/icons8-pause.svg" : "../icons/icons8-play.svg"
-                    onClicked: {
-                        if (root.hasPlayer)
-                            root.player.togglePlaying();
-                    }
+                    source: controller.isPlaying ? "../icons/icons8-pause.svg" : "../icons/icons8-play.svg"
+                    onClicked: controller.togglePlaying()
                 }
 
                 IconButton {
                     source: "../icons/icons8-end.svg"
-                    iconColor: root.canGoNext ? Colors.textColor : Colors.textColorMuted
-                    onClicked: {
-                        if (root.hasPlayer)
-                            root.player.next();
-                    }
+                    iconColor: controller.canGoNext ? Colors.textColor : Colors.textColorMuted
+                    onClicked: controller.next()
                 }
             }
 
             // --- Wiedergabeliste Toggle ---
-            Item {
+            Pressable {
                 id: queueToggle
                 width: parent.width
                 height: 28
+                pressedScale: 0.96
+                onClicked: controller.toggleQueue()
+                // Prefetch on hover so open shows data, not skeletons.
+                onHoveredChanged: {
+                    if (hovered)
+                        controller.prefetchQueue();
+                }
 
-                property bool hovered: queueToggleHover.hovered
-                property bool pressed: queueToggleTap.pressed
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: height / 2
-                    color: queueToggle.pressed ? Colors.hoverItemPressed : queueToggle.hovered ? Colors.hoverItemHovered : "transparent"
-                    border.color: queueToggle.hovered || queueToggle.pressed ? Colors.pillBorder : "transparent"
+                // Queue-toggle button bg. Classic round pill, neo cream hover + accent press.
+                ButtonBg {
+                    hovered: queueToggle.hovered
+                    pressed: queueToggle.pressed
                 }
 
                 Row {
@@ -335,7 +252,7 @@ Item {
 
                     ExpandArrow {
                         id: chevronIcon
-                        expanded: root.queueExpanded
+                        expanded: controller.queueExpanded
                         collapsedRotation: 0
                         expandedRotation: 180
                         iconSize: Typography.fontSize16
@@ -343,28 +260,12 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
-
-                HoverHandler {
-                    id: queueToggleHover
-                    cursorShape: Qt.PointingHandCursor
-                    onHoveredChanged: {
-                        if (hovered && !root.queueExpanded)
-                            NowPlayingModel.refreshSpotifyData();
-                    }
-                }
-                TapHandler {
-                    id: queueToggleTap
-                    onTapped: root.queueExpanded = !root.queueExpanded
-                }
-
-                scale: queueToggleTap.pressed ? 0.96 : 1.0
-                SquishBehavior on scale {}
             }
 
             // --- Expandable Track List ---
             ExpandSection {
                 id: trackListWrapper
-                expanded: root.queueExpanded
+                expanded: controller.queueExpanded
 
                 Column {
                     id: trackListColumn
@@ -401,7 +302,7 @@ Item {
                                     Rectangle {
                                         width: parent.width * 0.65
                                         height: Typography.fontSize14
-                                        radius: height / 2
+                                        radius: Shape.pill(height)
                                         color: Colors.progressBackground
                                         opacity: skeletonPulse.pulseOpacity
                                     }
@@ -409,7 +310,7 @@ Item {
                                     Rectangle {
                                         width: parent.width * 0.4
                                         height: Typography.fontSize12
-                                        radius: height / 2
+                                        radius: Shape.pill(height)
                                         color: Colors.progressBackground
                                         opacity: skeletonPulse.pulseOpacity
                                     }
@@ -426,7 +327,7 @@ Item {
                         id: skeletonPulse
                         property real pulseOpacity: 0.4
                         SequentialAnimation on pulseOpacity {
-                            running: root.queueExpanded && (NowPlayingModel.recentSkeletonCount > 0 || NowPlayingModel.queueSkeletonCount > 0)
+                            running: controller.queueExpanded && (NowPlayingModel.recentSkeletonCount > 0 || NowPlayingModel.queueSkeletonCount > 0)
                             loops: Animation.Infinite
                             NumberAnimation {
                                 from: 0.4
@@ -512,7 +413,7 @@ Item {
                             }
                         }
 
-                        delegate: Item {
+                        delegate: Pressable {
                             id: trackDelegate
                             required property string title
                             required property string artist
@@ -522,19 +423,23 @@ Item {
                             required property int index
 
                             property bool isCurrent: type === "current"
-                            property bool hovered: trackDelegateHover.hovered
-                            property bool pressed: trackDelegateTap.pressed
 
                             width: trackListView.width
                             height: trackDelegateRow.implicitHeight + Spacing.spacing8
+                            pressedScale: 0.97
 
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: Spacing.spacing4
-                                color: trackDelegate.isCurrent ? Colors.hoverItemHovered : trackDelegate.pressed ? Colors.hoverItemPressed : trackDelegate.hovered ? Colors.hoverItemHovered : "transparent"
-                                opacity: trackDelegate.isCurrent ? 0.3 : 1
-                                border.color: trackDelegate.isCurrent ? Colors.accentColor : (trackDelegate.hovered || trackDelegate.pressed) ? Colors.pillBorder : "transparent"
-                                border.width: trackDelegate.isCurrent || trackDelegate.hovered || trackDelegate.pressed ? 1 : 0
+                            onClicked: {
+                                if (isCurrent)
+                                    controller.togglePlaying();
+                                else
+                                    controller.playUri(uri);
+                            }
+
+                            // Launcher row bg: current track = accent selection, 2px ink border.
+                            LauncherDelegateBg {
+                                active: trackDelegate.isCurrent
+                                hovered: trackDelegate.hovered
+                                pressed: trackDelegate.pressed
                             }
 
                             Row {
@@ -563,9 +468,9 @@ Item {
                                     // Play/pause indicator for current track
                                     Rectangle {
                                         visible: trackDelegate.isCurrent
-                                        width: root.isPlaying ? 26 : 20
-                                        height: root.isPlaying ? 18 : 20
-                                        radius: root.isPlaying ? Spacing.spacing4 : height / 2
+                                        width: controller.isPlaying ? 26 : 20
+                                        height: controller.isPlaying ? 18 : 20
+                                        radius: controller.isPlaying ? Spacing.spacing4 : Shape.pill(height)
                                         color: Qt.rgba(0, 0, 0, 0.35)
                                         anchors.centerIn: parent
 
@@ -583,15 +488,15 @@ Item {
                                         }
 
                                         MusicBars {
-                                            visible: root.isPlaying
-                                            playing: root.isPlaying
+                                            visible: controller.isPlaying
+                                            playing: controller.isPlaying
                                             // Collapsed ExpandSection still animates its children.
-                                            barHidden: !root.queueExpanded
+                                            barHidden: !controller.queueExpanded
                                             anchors.centerIn: parent
                                         }
 
                                         TintedIcon {
-                                            visible: !root.isPlaying
+                                            visible: !controller.isPlaying
                                             anchors.centerIn: parent
                                             source: "../icons/icons8-play.svg"
                                             size: Typography.fontSize12
@@ -625,27 +530,6 @@ Item {
                                     }
                                 }
                             }
-
-                            HoverHandler {
-                                id: trackDelegateHover
-                                cursorShape: Qt.PointingHandCursor
-                            }
-
-                            TapHandler {
-                                id: trackDelegateTap
-                                onTapped: {
-                                    if (trackDelegate.isCurrent) {
-                                        if (root.hasPlayer)
-                                            root.player.togglePlaying();
-                                    } else if (trackDelegate.uri) {
-                                        NowPlayingModel.playSpotifyUri(trackDelegate.uri);
-                                    }
-                                }
-                            }
-
-                            scale: trackDelegateTap.pressed ? 0.97 : 1.0
-                            transformOrigin: Item.Center
-                            SquishBehavior on scale {}
                         }
                     }
 

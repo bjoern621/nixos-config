@@ -310,8 +310,9 @@ Scope {
                                             height: chooserScope.cardHeight
                                             radius: Spacing.spacing8
                                             color: Colors.pillBackground
-                                            border.width: card.isSelected ? 2 : 1
-                                            border.color: card.isSelected ? Colors.accentColor : cardMouse.containsMouse ? Colors.pillBorder : Qt.rgba(1, 1, 1, 0.1)
+                                            // Neo: visible ink border, thick accent when selected.
+                                            border.width: card.isSelected ? (Shape.usesBlur ? 2 : Shape.borderWidth) : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
+                                            border.color: card.isSelected ? Colors.accentColor : cardMouse.containsMouse ? Colors.pillBorder : (Shape.usesBlur ? Qt.rgba(1, 1, 1, 0.1) : Colors.pillBorder)
 
                                             Rectangle {
                                                 anchors.fill: parent
@@ -381,7 +382,7 @@ Scope {
                                 height: 36
                                 radius: Spacing.spacing8
                                 color: Colors.pillBackground
-                                border.width: 1
+                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                                 border.color: Colors.pillBorder
 
                                 Rectangle {
@@ -420,7 +421,7 @@ Scope {
                                 height: 36
                                 radius: Spacing.spacing8
                                 color: Colors.pillBackground
-                                border.width: 1
+                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                                 border.color: cancelMouse.containsMouse || cancelMouse.pressed ? Colors.pillBorder : Colors.pillBorder
 
                                 Rectangle {
@@ -456,7 +457,7 @@ Scope {
                                 height: 36
                                 radius: Spacing.spacing8
                                 color: Colors.pillBackground
-                                border.width: 1
+                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
                                 border.color: applyMouse.containsMouse || applyMouse.pressed ? Colors.pillBorder : Colors.pillBorder
 
                                 Rectangle {

@@ -1,6 +1,9 @@
 singleton Globals 1.0 base/Globals.qml
 singleton Clock 1.0 base/Clock.qml
+singleton ClassicTokens 1.0 base/ClassicTokens.qml
+singleton NeoTokens 1.0 base/NeoTokens.qml
 singleton Colors 1.0 base/Colors.qml
+singleton Shape 1.0 base/Shape.qml
 singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml
 singleton ShellStartup 1.0 base/ShellStartup.qml
@@ -43,6 +46,12 @@ TouchpadBoost 1.0 widgets/TouchpadBoost.qml
 WheelSource 1.0 widgets/WheelSource.qml
 Tooltip 1.0 widgets/Tooltip.qml
 AutoCloseOnFocusLoss 1.0 widgets/AutoCloseOnFocusLoss.qml
+Pressable 1.0 widgets/Pressable.qml
+StepWheel 1.0 widgets/StepWheel.qml
+ScrollHandle 1.0 widgets/ScrollHandle.qml
+ThemedLoader 1.0 widgets/ThemedLoader.qml
+Card 1.0 widgets/Card.qml
+ButtonBg 1.0 widgets/ButtonBg.qml
 
 VolumeSliderMenu 1.0 menus/VolumeSliderMenu.qml
 CalendarMenu 1.0 menus/CalendarMenu.qml
@@ -91,3 +100,22 @@ singleton WallpaperPersist 1.0 base/WallpaperPersist.qml
 ThemeSwitcher 1.0 windows/ThemeSwitcher.qml
 singleton ThemePersist 1.0 base/ThemePersist.qml
 AppLauncherNeo 1.0 themes/AppLauncherNeo.qml
+
+# Headless feature controllers (behavior, no visuals).
+PowerController 1.0 logic/PowerController.qml
+singleton LauncherController 1.0 logic/LauncherController.qml
+CalendarController 1.0 logic/CalendarController.qml
+BatteryController 1.0 logic/BatteryController.qml
+NowPlayingController 1.0 logic/NowPlayingController.qml
+VolumeMenuController 1.0 logic/VolumeMenuController.qml
+ToastController 1.0 logic/ToastController.qml
+NotificationCenterController 1.0 logic/NotificationCenterController.qml
+
+# Theme primitives. Views are loaded by url via ThemedLoader, not registered here.
+Surface 1.0 themes/classic/Surface.qml
+ActionButton 1.0 themes/classic/ActionButton.qml
+NeoSurface 1.0 themes/neo/NeoSurface.qml
+NeoButton 1.0 themes/neo/NeoButton.qml
+NeoPill 1.0 themes/neo/NeoPill.qml
+NeoSeparator 1.0 themes/neo/NeoSeparator.qml
+NeoIconTile 1.0 themes/neo/NeoIconTile.qml

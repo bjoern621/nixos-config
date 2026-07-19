@@ -2,31 +2,14 @@ import QtQuick
 import "../"
 import "../base"
 
+// Theme-aware calendar grid. One view: neo/classic differ only in tokens and Card,
+// not layout, so a split view would duplicate the whole grid. Logic in the controller.
 Item {
     id: root
 
-    // The year the grid shows. It tracks todayYear, so a midnight rollover into a new
-    // year carries the grid with it, until the user navigates to some other year: that
-    // one is absolute and stays put. Navigating back to the current year unpins.
-    readonly property int displayYear: _yearPinned ? _pinnedYear : todayYear
-    property bool _yearPinned: false
-    property int _pinnedYear: 0
-    property int _targetYear: 0
-    // displayYear only catches up on readyToSwap.
-    // Steps before then accumulate onto the in-flight target, else clicks drop years.
-    property bool _transitioning: false
-
-    function navigateYear(direction) {
-        _targetYear = (_transitioning ? _targetYear : displayYear) + direction;
-        _transitioning = true;
-        gridSlide.transition(direction > 0 ? 1 : -1);
+    CalendarController {
+        id: controller
     }
-
-    readonly property var today: Clock.date
-    readonly property int todayYear: today.getFullYear()
-    readonly property int todayMonth: today.getMonth()
-    readonly property int todayDay: today.getDate()
-    readonly property var germanLocale: Qt.locale("de_DE")
 
     readonly property int dayCellSize: 24
     readonly property int weekNumberColumnWidth: 24
@@ -35,31 +18,15 @@ Item {
     readonly property int monthVerticalGap: Spacing.spacing12
     readonly property int contentPadding: Spacing.spacing12
 
-    implicitWidth: 4 * monthWidth + 3 * monthHorizontalGap + 2 * contentPadding
-    implicitHeight: layout.height + 2 * contentPadding
+    // Card paper holds the content; shadowOffset is extra gutter for the neo shadow
+    // (classic shadowOffset=0). implicitSize carries it so Bar sizes the menu to fit.
+    readonly property int contentWidth: 4 * monthWidth + 3 * monthHorizontalGap + 2 * contentPadding
+    readonly property int contentHeight: layout.height + 2 * contentPadding
+    implicitWidth: contentWidth + Shape.shadowOffset
+    implicitHeight: contentHeight + Shape.shadowOffset
 
-    function getDaysInMonth(year, month) {
-        return new Date(year, month + 1, 0).getDate();
-    }
-
-    function getFirstDayOffset(year, month) {
-        return (new Date(year, month, 1).getDay() + 6) % 7;
-    }
-
-    function getIsoWeekNumber(year, month, day) {
-        var dt = new Date(year, month, day);
-        dt.setHours(0, 0, 0, 0);
-        dt.setDate(dt.getDate() + 3 - (dt.getDay() + 6) % 7);
-        var y1 = new Date(dt.getFullYear(), 0, 4);
-        return 1 + Math.round(((dt - y1) / 86400000 - 3 + (y1.getDay() + 6) % 7) / 7);
-    }
-
-    Rectangle {
+    Card {
         anchors.fill: parent
-        radius: Spacing.spacing12
-        color: Colors.pillBackground
-        border.width: 1
-        border.color: Colors.pillBorder
 
         Column {
             id: layout
@@ -81,13 +48,8 @@ Item {
                     scale: prevYearMouse.pressed ? 0.85 : 1.0
                     SquishBehavior on scale {}
 
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width
-                        height: parent.height
-                        radius: height / 2
-                        color: parent.hovered ? Colors.hoverItemHovered : "transparent"
-                        border.color: parent.hovered ? Colors.pillBorder : "transparent"
+                    ButtonBg {
+                        hovered: parent.hovered
                     }
 
                     TintedIcon {
@@ -111,25 +73,20 @@ Item {
                     width: yearLabel.implicitWidth + 24
                     height: 28
 
-                    property bool canNavigate: root.displayYear !== root.todayYear
+                    property bool canNavigate: controller.displayYear !== controller.todayYear
                     property bool hovered: yearMouse.containsMouse && canNavigate
 
                     scale: yearMouse.pressed && canNavigate ? 0.85 : 1.0
                     SquishBehavior on scale {}
 
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width
-                        height: parent.height
-                        radius: height / 2
-                        color: parent.hovered ? Colors.hoverItemHovered : "transparent"
-                        border.color: parent.hovered ? Colors.pillBorder : "transparent"
+                    ButtonBg {
+                        hovered: parent.hovered
                     }
 
                     Label {
                         id: yearLabel
                         anchors.centerIn: parent
-                        text: root.displayYear
+                        text: controller.displayYear
                         font.pixelSize: Typography.fontSize16
                     }
 
@@ -140,7 +97,7 @@ Item {
                         cursorShape: parent.canNavigate ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
                             if (parent.canNavigate) {
-                                root.navigateYear(root.todayYear - root.displayYear);
+                                root.navigateYear(controller.todayYear - controller.displayYear);
                             }
                         }
                     }
@@ -156,13 +113,8 @@ Item {
                     scale: nextYearMouse.pressed ? 0.85 : 1.0
                     SquishBehavior on scale {}
 
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width
-                        height: parent.height
-                        radius: height / 2
-                        color: parent.hovered ? Colors.hoverItemHovered : "transparent"
-                        border.color: parent.hovered ? Colors.pillBorder : "transparent"
+                    ButtonBg {
+                        hovered: parent.hovered
                     }
 
                     TintedIcon {
@@ -186,9 +138,7 @@ Item {
                 id: gridSlide
 
                 onReadyToSwap: direction => {
-                    root._pinnedYear = root._targetYear;
-                    root._yearPinned = root._targetYear !== root.todayYear;
-                    root._transitioning = false;
+                    controller.commitNavigate();
                     gridSlide.completeTransition();
                 }
 
@@ -206,14 +156,14 @@ Item {
 
                             required property int index
                             property int monthIndex: index
-                            property int daysInMonth: root.getDaysInMonth(root.displayYear, monthIndex)
-                            property int firstDayOffset: root.getFirstDayOffset(root.displayYear, monthIndex)
+                            property int daysInMonth: controller.getDaysInMonth(controller.displayYear, monthIndex)
+                            property int firstDayOffset: controller.getFirstDayOffset(controller.displayYear, monthIndex)
 
                             width: root.monthWidth
                             spacing: Spacing.spacing2
 
                             Label {
-                                text: root.germanLocale.monthName(mCol.monthIndex, Locale.LongFormat)
+                                text: controller.germanLocale.monthName(mCol.monthIndex, Locale.LongFormat)
                                 font.pixelSize: Typography.fontSize14
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
@@ -273,7 +223,7 @@ Item {
                                             for (var i = 0; i < 7; i++) {
                                                 var d = wRow.firstDay + i;
                                                 if (d >= 1 && d <= mCol.daysInMonth)
-                                                    return root.getIsoWeekNumber(root.displayYear, mCol.monthIndex, d);
+                                                    return controller.getIsoWeekNumber(controller.displayYear, mCol.monthIndex, d);
                                             }
                                             return "";
                                         }
@@ -295,20 +245,17 @@ Item {
                                             required property int index
                                             property int dayNumber: wRow.firstDay + index
                                             property bool isValidDay: dayNumber >= 1 && dayNumber <= mCol.daysInMonth
-                                            property bool isToday: isValidDay && root.displayYear === root.todayYear && mCol.monthIndex === root.todayMonth && dayNumber === root.todayDay
+                                            property bool isToday: isValidDay && controller.displayYear === controller.todayYear && mCol.monthIndex === controller.todayMonth && dayNumber === controller.todayDay
 
                                             width: root.dayCellSize
                                             height: root.dayCellSize
 
                                             property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
 
-                                            Rectangle {
-                                                anchors.centerIn: parent
-                                                width: root.dayCellSize
-                                                height: root.dayCellSize
-                                                radius: (root.dayCellSize) / 2
-                                                color: dayCell.isToday ? Colors.calendarToday : dayCell.hovered ? Colors.hoverItemHovered : "transparent"
-                                                border.color: dayCell.hovered ? Colors.pillBorder : "transparent"
+                                            // Today reads as the launcher's selected row: accent + ink border in neo.
+                                            LauncherDelegateBg {
+                                                active: parent.isToday
+                                                hovered: parent.hovered
                                             }
 
                                             Label {
@@ -335,5 +282,11 @@ Item {
                 }
             }
         }
+    }
+
+    // View owns the ContentSlide; controller accumulates the year step.
+    function navigateYear(direction) {
+        controller.beginNavigate(direction);
+        gridSlide.transition(direction > 0 ? 1 : -1);
     }
 }

@@ -1,25 +1,32 @@
 pragma Singleton
 import QtQuick
 
+// Theme-aware color facade.
+// Property names are stable; values resolve from the active token table so every
+// `Colors.*` reference tracks Globals.designTheme with no per-call-site change.
 QtObject {
+    readonly property var _t: Globals.designTheme === "neo" ? NeoTokens : ClassicTokens
+
     // Text colors
-    readonly property color textColor: "#ffffff"
-    readonly property color textColorMuted: "#aaaaaa"
+    readonly property color textColor: _t.textColor
+    readonly property color textColorMuted: _t.textColorMuted
 
     // Background colors
-    readonly property color pillBackground: Qt.rgba(0, 0, 0, 0.5)
-    readonly property color pillBorder: Qt.rgba(1, 1, 1, 0.2)
-    readonly property color separatorColor: Qt.rgba(1, 1, 1, 0.2)
-    readonly property color hoverItemHovered: Qt.rgba((1 - 0.75) + (accentColor.r * 0.75), (1 - 0.75) + (accentColor.g * 0.75), (1 - 0.75) + (accentColor.b * 0.75), 0.12)
-    readonly property color hoverItemPressed: Qt.rgba((1 - 0.75) + (accentColor.r * 0.75), (1 - 0.75) + (accentColor.g * 0.75), (1 - 0.75) + (accentColor.b * 0.75), 0.19)
+    readonly property color pillBackground: _t.pillBackground
+    readonly property color pillBorder: _t.pillBorder
+    readonly property color separatorColor: _t.separatorColor
+    readonly property color hoverItemHovered: _t.hoverItemHovered
+    readonly property color hoverItemPressed: _t.hoverItemPressed
+    readonly property color selectedBackground: _t.selectedBackground
+    readonly property color selectedPressed: _t.selectedPressed
 
     // Accent / progress colors
-    readonly property color calendarToday: "#d5071b"
-    readonly property color accentColor: Globals.accentColor
-    readonly property color progressBackground: Qt.rgba(1, 1, 1, 0.12)
-    readonly property color progressMuted: "#666666"
+    readonly property color calendarToday: _t.calendarToday
+    readonly property color accentColor: _t.accentColor
+    readonly property color progressBackground: _t.progressBackground
+    readonly property color progressMuted: _t.progressMuted
 
     // Battery warning colors
-    readonly property color batteryWarning: "#fed330"
-    readonly property color batteryCritical: "#fc5c65"
+    readonly property color batteryWarning: _t.batteryWarning
+    readonly property color batteryCritical: _t.batteryCritical
 }

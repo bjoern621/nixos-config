@@ -1,7 +1,4 @@
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.Hyprland._GlobalShortcuts
-import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
 import QtQuick
@@ -9,151 +6,21 @@ import "../"
 import "../base"
 import "../lib/fzf.js" as FzfLib
 
+// Classic launcher view: glass chrome, list. Pure presentation.
+// All behavior (app index, fzf, selection, launch, toggle, shortcut) lives in
+// the LauncherController singleton. The neo-only readout data (resultCount,
+// activeIndex) is simply not shown here.
 Scope {
     id: launcherScope
 
-    readonly property int maxResults: 50
     readonly property int rowHeight: 44
     readonly property int maxVisibleRows: 8
-    // Per-field weights: name dominates, comment is tiebreaker.
-    readonly property var fieldWeights: [3.0, 1.5, 1.2, 0.7]
-
-    // Globals.launcherVisible is the sole holder, and Bar reads it for its pill.
-    // A local copy needs syncing and drifts.
-    readonly property bool launcherVisible: Globals.launcherVisible
-    property string searchText: ""
-    // Each entry: { app, fields:[4], lower:[4] }
-    property var indexedApps: []
-    property var filteredApps: []
-
-    onLauncherVisibleChanged: {
-        if (launcherVisible) {
-            searchText = "";
-            updateFilter();
-            // cancelFlick() kills in-flight wheel momentum from the previous
-            // open. positionViewAtBeginning() accounts for originY; contentY = 0
-            // leaves blank space above row 0 while a flick is still animating.
-            resultsList.cancelFlick();
-            resultsList.positionViewAtBeginning();
-            resultsList.reset();
-        }
-    }
-
-    onSearchTextChanged: updateFilter()
-
-    function rebuildAppList() {
-        const apps = DesktopEntries.applications.values.filter(a => !a.noDisplay).sort((a, b) => a.name.localeCompare(b.name));
-        indexedApps = apps.map(app => {
-            // keywords is a QML sequence (QList<QString>), not a JS array:
-            // Array.isArray is false for it, so join must go through the prototype.
-            const kw = app.keywords;
-            const keywords = kw && kw.length ? Array.prototype.join.call(kw, " ") : "";
-            const fields = [app.name || "", app.genericName || "", keywords, app.comment || ""];
-            return {
-                app,
-                fields,
-                lower: fields.map(f => f.toLowerCase())
-            };
-        });
-    }
-
-    function updateFilter() {
-        const query = searchText.toLowerCase();
-        if (query === "") {
-            filteredApps = indexedApps.slice(0, maxResults).map(e => ({
-                app: e.app,
-                query: ""
-            }));
-            resultsList.currentIndex = 0;
-            resultsList.hoveredIndex = -1;
-            return;
-        }
-
-        const weights = fieldWeights;
-        const scored = [];
-        for (let i = 0; i < indexedApps.length; i++) {
-            const e = indexedApps[i];
-            let best = -Infinity;
-            for (let f = 0; f < e.fields.length; f++) {
-                const raw = FzfLib.scoreLower(e.fields[f], e.lower[f], query);
-                if (raw === -Infinity)
-                    continue;
-                const weighted = raw * weights[f];
-                if (weighted > best)
-                    best = weighted;
-            }
-            if (best > -Infinity)
-                scored.push({
-                    app: e.app,
-                    score: best
-                });
-        }
-        scored.sort((a, b) => b.score - a.score || a.app.name.localeCompare(b.app.name));
-
-        const limit = Math.min(scored.length, maxResults);
-        const out = new Array(limit);
-        for (let i = 0; i < limit; i++)
-            out[i] = {
-                app: scored[i].app,
-                query: query
-            };
-        filteredApps = out;
-        resultsList.currentIndex = 0;
-        resultsList.hoveredIndex = -1;
-    }
-
-    function launchApp(app) {
-        Globals.launcherVisible = false;
-        Quickshell.execDetached(["uwsm", "app", "--", app.id + ".desktop"]);
-    }
-
-    function focusedScreen() {
-        const mon = Hyprland.focusedMonitor;
-        return mon ? (Quickshell.screens.find(s => s.name === mon.name) ?? null) : null;
-    }
-
-    function toggle() {
-        if (!launcherVisible) {
-            const s = focusedScreen();
-            if (s) {
-                launcherWindow.screen = s;
-                Globals.launcherScreenName = s.name;
-            }
-        }
-        Globals.launcherVisible = !launcherVisible;
-    }
-
-    Component.onCompleted: rebuildAppList()
-
-    Connections {
-        target: DesktopEntries
-        function onApplicationsChanged() {
-            launcherScope.rebuildAppList();
-            launcherScope.updateFilter();
-        }
-    }
-
-    // Hyprland delivers SUPER tap directly to this running quickshell process
-    // via the wlr global-shortcuts protocol. Bypasses the `qs ipc` CLI which
-    // costs ~125ms per call (Qt binary cold start).
-    GlobalShortcut {
-        appid: "quickshell"
-        name: "launcher"
-        description: "Toggle the app launcher"
-        onPressed: launcherScope.toggle()
-    }
-
-    IpcHandler {
-        target: "launcher"
-        function toggle() {
-            launcherScope.toggle();
-        }
-    }
 
     PanelWindow {
         id: launcherWindow
-        visible: launcherScope.launcherVisible
+        visible: Globals.launcherVisible
         WlrLayershell.namespace: "quickshell-launcher"
+        screen: Quickshell.screens.find(s => s.name === Globals.launcherScreenName) ?? null
 
         anchors {
             top: true
@@ -164,49 +31,66 @@ Scope {
 
         exclusiveZone: 0
         focusable: true
-        WlrLayershell.keyboardFocus: launcherScope.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: Globals.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
         AutoCloseOnFocusLoss {
             watch: panel
-            armed: launcherScope.launcherVisible
+            armed: Globals.launcherVisible
             onLost: Globals.launcherVisible = false
         }
 
         LauncherPanel {
             id: panel
             anchors.fill: parent
-            searchText: launcherScope.searchText
+            searchText: LauncherController.searchText
             placeholder: "Suchen..."
-            emptyVisible: launcherScope.filteredApps.length === 0 && launcherScope.searchText !== ""
+            emptyVisible: LauncherController.resultCount === 0 && LauncherController.searchText !== ""
 
-            onSearchEdited: text => launcherScope.searchText = text
+            onSearchEdited: text => LauncherController.searchText = text
             onEscaped: Globals.launcherVisible = false
-            onAccepted: {
-                const apps = launcherScope.filteredApps;
-                if (apps.length > 0)
-                    launcherScope.launchApp(apps[resultsList.effectiveIndex].app);
-            }
+            onAccepted: LauncherController.launchSelected()
             onNavigated: (dx, dy) => {
-                if (dy === 0)
-                    return;
-                const next = resultsList.effectiveIndex + dy;
-                resultsList.keyboardNav = true;
-                if (next >= 0 && next < launcherScope.filteredApps.length)
-                    resultsList.currentIndex = next;
+                if (dy !== 0)
+                    LauncherController.move(dy);
             }
 
-            LauncherListView {
+            ListView {
                 id: resultsList
-                width: parent.width
+                // Reserve a gutter for the scroll handle only while it shows.
+                width: parent.width - (scrollable ? 14 : 0)
                 height: Math.min(contentHeight, launcherScope.maxVisibleRows * launcherScope.rowHeight)
-                model: launcherScope.filteredApps
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                model: LauncherController.filteredApps
+
+                readonly property bool scrollable: contentHeight > height + 1
+
+                // Shared wheel step (~1.5 rows/notch), like the neo launcher.
+                StepWheel {
+                    target: resultsList
+                    rowStride: launcherScope.rowHeight
+                }
+
+                // Scroll the active row into view, and reset to top on open.
+                Connections {
+                    target: LauncherController
+                    function onActiveIndexChanged() {
+                        resultsList.positionViewAtIndex(LauncherController.activeIndex, ListView.Contain);
+                    }
+                    function onLauncherVisibleChanged() {
+                        if (LauncherController.launcherVisible) {
+                            resultsList.cancelFlick();
+                            resultsList.positionViewAtBeginning();
+                        }
+                    }
+                }
 
                 delegate: Item {
                     id: delegateRoot
                     required property var modelData
                     required property int index
-                    readonly property bool active: resultsList.effectiveIndex === index
+                    readonly property bool active: LauncherController.activeIndex === index
                     width: resultsList.width
                     height: launcherScope.rowHeight
 
@@ -264,13 +148,26 @@ Scope {
 
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor
+                        onHoveredChanged: {
+                            if (hovered && !LauncherController.kbdLock)
+                                LauncherController.activeIndex = delegateRoot.index;
+                        }
                     }
 
                     TapHandler {
                         id: delegateTap
-                        onTapped: launcherScope.launchApp(delegateRoot.modelData.app)
+                        onTapped: LauncherController.launchApp(delegateRoot.modelData.app)
                     }
                 }
+            }
+
+            // Shared draggable handle, sibling of the list.
+            ScrollHandle {
+                target: resultsList
+                visible: resultsList.scrollable
+                anchors.right: parent.right
+                anchors.top: resultsList.top
+                anchors.bottom: resultsList.bottom
             }
         }
     }
