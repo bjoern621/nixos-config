@@ -86,3 +86,8 @@ MusicBars 1.0 bar/MusicBars.qml
 
 WallpaperChooser 1.0 windows/WallpaperChooser.qml
 singleton WallpaperPersist 1.0 base/WallpaperPersist.qml
+
+# Design-theme system: switcher window, persisted state, launcher variants.
+ThemeSwitcher 1.0 windows/ThemeSwitcher.qml
+singleton ThemePersist 1.0 base/ThemePersist.qml
+AppLauncherNeo 1.0 themes/AppLauncherNeo.qml

@@ -47,6 +47,12 @@ QtObject {
     property string launcherScreenName: ""
 
     property bool doNotDisturb: false
+
+    // Design theme: which visual language the shell renders.
+    // "classic" = translucent pill UI; "neo" = neobrutalist.
+    // ThemeSwitcher writes it, ThemePersist restores it, themed windows dispatch on it.
+    // Only the app launcher switches on it now; other windows follow later.
+    property string designTheme: "classic"
     // Fallback until a wallpaper is picked.
     // See WallpaperPersist.qml, WallpaperAccent.qml, WallpaperChooser.qml.
     property url wallpaperPath: "file:///home/bjoern/.local/share/wallpapers/Mist.jpg"

@@ -16,3 +16,4 @@ WallpaperBackend 1.0 WallpaperBackend.qml
 WallpaperAccent 1.0 WallpaperAccent.qml
 TintedIcon 1.0 TintedIcon.qml
 Label 1.0 Label.qml
+singleton ThemePersist 1.0 ThemePersist.qml

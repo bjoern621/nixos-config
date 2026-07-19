@@ -32,6 +32,7 @@
     ./smart-gaps.nix
     ./floating-size.nix
     ./wallpaper-chooser.nix
+    ./theme-switcher.nix
     ./hypridle.nix
   ];
 

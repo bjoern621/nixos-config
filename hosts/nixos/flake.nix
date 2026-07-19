@@ -4,9 +4,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    # Hyprland from the flake, pinned to the release hyprglass targets (0.55.4).
-    # The hyprglass plugin (home/modules/hyprland/hyprglass.nix) builds against
-    # this exact package, so compositor and plugin share one ABI. Bump together.
     hyprland = {
       url = "github:hyprwm/Hyprland/v0.55.4";
       inputs.nixpkgs.follows = "nixpkgs";
