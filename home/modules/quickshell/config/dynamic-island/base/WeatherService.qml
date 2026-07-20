@@ -8,10 +8,13 @@ import "../menus/WeatherUtils.js" as WeatherUtils
 // Weather for the calendar menu. Singleton: location + forecast are machine-global,
 // the menu is per-screen. One geolocate, one forecast feed every Bar's calendar.
 //
-// Location resolves from the public IP and is cached on disk, so geolocation runs
-// at most once per _locFreshMs, and a stale cache still covers a provider outage.
-// Providers are tried in order (ipwho.is, then geojs) for robustness. The forecast
-// comes from Open-Meteo (no key). Everything runs through curl; QML parses the JSON.
+// Upstream services (HTTPS via curl, no API key, no account):
+//   ipwho.is            geolocation, primary.  public IP -> lat/lon/city
+//   get.geojs.io        geolocation, fallback. same contract
+//   api.open-meteo.com  forecast.              lat/lon -> current + 24h hourly
+// The public IP reaches only the geolocation host; Open-Meteo receives coordinates,
+// never the IP. Location is cached on disk and re-resolved at most every _locFreshMs,
+// so a rate-limit or outage falls back to the stale cache. QML parses the JSON.
 Singleton {
     id: root
 
