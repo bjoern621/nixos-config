@@ -16,8 +16,6 @@ singleton VolumeService 1.0 VolumeService.qml
 singleton BluetoothConnector 1.0 BluetoothConnector.qml
 singleton NetworkService 1.0 NetworkService.qml
 singleton NowPlayingModel 1.0 NowPlayingModel.qml
-singleton AlbumArtAccent 1.0 AlbumArtAccent.qml
-AccentExtractor 1.0 AccentExtractor.qml
 WallpaperBackend 1.0 WallpaperBackend.qml
 WallpaperAccent 1.0 WallpaperAccent.qml
 TintedIcon 1.0 TintedIcon.qml

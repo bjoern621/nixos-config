@@ -18,8 +18,6 @@ singleton BluetoothService 1.0 base/BluetoothService.qml
 singleton NetworkService 1.0 base/NetworkService.qml
 singleton WeatherService 1.0 base/WeatherService.qml
 singleton NowPlayingModel 1.0 base/NowPlayingModel.qml
-singleton AlbumArtAccent 1.0 base/AlbumArtAccent.qml
-AccentExtractor 1.0 base/AccentExtractor.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
@@ -54,7 +52,6 @@ ScrollHandle 1.0 widgets/ScrollHandle.qml
 ScrollView 1.0 widgets/ScrollView.qml
 ThemedLoader 1.0 widgets/ThemedLoader.qml
 Card 1.0 widgets/Card.qml
-AmbientGlow 1.0 widgets/AmbientGlow.qml
 ButtonBg 1.0 widgets/ButtonBg.qml
 StaticButton 1.0 widgets/StaticButton.qml
 

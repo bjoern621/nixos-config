@@ -13,8 +13,6 @@ Item {
     property color fill: Colors.pillBackground
     property color borderColor: Colors.pillBorder
     property int borderWidth: Shape.borderWidth
-    // Clip content to the paper so a child bloom stays inside the card.
-    property bool clipContent: false
 
     readonly property int _off: Shape.shadowOffset
     readonly property real paperWidth: width - _off
@@ -39,7 +37,6 @@ Item {
         color: root.fill
         border.width: root.borderWidth
         border.color: root.borderColor
-        clip: root.clipContent
 
         Item {
             id: holder

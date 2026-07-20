@@ -20,8 +20,7 @@ let
   qsWrapped = customLib.wrapWithPrivateDeps qs {
     bin = "quickshell";
     binDeps = [
-      pkgs.imagemagick # WallpaperAccent + AlbumArtAccent color extraction
-      pkgs.curl # AlbumArtAccent: fetch remote cover art (magick has no https delegate)
+      pkgs.imagemagick # WallpaperAccent color extraction
       pkgs.libnotify # notify-send for desktop notifications
       pkgs.networkmanager # nmcli: NetworkService reads + monitor + network_backend.py
       pkgs.qrencode # network menu wifi QR code
