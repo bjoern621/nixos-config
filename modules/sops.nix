@@ -2,7 +2,7 @@
 
 # Secrets live encrypted in secrets/, decrypted to /run/secrets at activation.
 # Consumers declare sops.secrets.<name> themselves and read
-# config.sops.secrets.<name>.path. See modules/cachix-push.nix.
+# config.sops.secrets.<name>.path. See modules/attic-push.nix.
 #
 # Two age keys, public halves in .sops.yaml:
 #   /var/lib/sops-nix/key.txt    host, generated on first activation, decrypts
