@@ -23,14 +23,14 @@ home/modules/      # Home Manager modules (user-level config)
 
 Use the custom `sysconf-*` commands instead of raw NixOS commands:
 
-| Command             | Use instead of                                  | What it does                                                |
-| ------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
-| `sysconf-reload`    | `sudo nixos-rebuild switch`                     | Copies hardware config and rebuilds the system              |
-| `sysconf-update`    | `nix flake update && sudo nixos-rebuild switch` | Updates all flake inputs then rebuilds                      |
-| `sysconf-pull`      | `git pull && sudo nixos-rebuild switch`         | Pulls latest config from remote then rebuilds               |
-| `sysconf-help`      | (none)                                          | Shows help for all sysconf commands                         |
-| `sysconf-audio-fix` | (none)                                          | Reloads TAS2781 speaker driver (workaround for suspend bug) |
-| `sysconf-fix-monitors` | (none)                                       | Re-applies Hyprland monitor config (workaround for the mixed-scale cursor wall + layer-shell offset) |
+| Command                | Use instead of                                  | What it does                                                                                         |
+| ---------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `sysconf-reload`       | `sudo nixos-rebuild switch`                     | Copies hardware config and rebuilds the system                                                       |
+| `sysconf-update`       | `nix flake update && sudo nixos-rebuild switch` | Updates all flake inputs then rebuilds                                                               |
+| `sysconf-pull`         | `git pull && sudo nixos-rebuild switch`         | Pulls latest config from remote then rebuilds                                                        |
+| `sysconf-help`         | (none)                                          | Shows help for all sysconf commands                                                                  |
+| `sysconf-audio-fix`    | (none)                                          | Reloads TAS2781 speaker driver (workaround for suspend bug)                                          |
+| `sysconf-fix-monitors` | (none)                                          | Re-applies Hyprland monitor config (workaround for the mixed-scale cursor wall + layer-shell offset) |
 
 ## Module Conventions
 
@@ -243,13 +243,13 @@ Verify with: `hyprctl layers | grep quickshell`
 
 **Patterns by window type:**
 
-| Type                       | Pattern                                                                     | Example                                     |
-| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------- |
-| Toggled overlay (IPC/flag) | `visible: <flag>` bound to the owning Scope's property                      | AppLauncher, ClipboardHistory, EmojiPicker  |
-| Transient OSD              | `visible: false` default, set `true` before `show()`, `false` on `onHidden` | VolumeOsd, BrightnessOsd                    |
-| Notification-driven        | `visible: <model>.count > 0`                                                | NotificationToast                           |
-| Hover-triggered            | Keep mapped, **shrink** `implicitHeight` when idle                          | Bar (1000px idle-collapses to `0`, which the surface clamps to a 1px trigger strip) |
-| Hover-triggered, fixed size| Keep mapped, shrink the **`mask` region** when idle                         | PowerCorner, NotificationCenter             |
+| Type                        | Pattern                                                                     | Example                                                                             |
+| --------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Toggled overlay (IPC/flag)  | `visible: <flag>` bound to the owning Scope's property                      | AppLauncher, ClipboardHistory, EmojiPicker                                          |
+| Transient OSD               | `visible: false` default, set `true` before `show()`, `false` on `onHidden` | VolumeOsd, BrightnessOsd                                                            |
+| Notification-driven         | `visible: <model>.count > 0`                                                | NotificationToast                                                                   |
+| Hover-triggered             | Keep mapped, **shrink** `implicitHeight` when idle                          | Bar (1000px idle-collapses to `0`, which the surface clamps to a 1px trigger strip) |
+| Hover-triggered, fixed size | Keep mapped, shrink the **`mask` region** when idle                         | PowerCorner, NotificationCenter                                                     |
 
 **When adding a new PanelWindow**, always implement one of these patterns. Never leave a PanelWindow permanently mapped with no visibility management.
 
@@ -265,12 +265,31 @@ PanelWindow {
 }
 ```
 
-| Namespace              | Windows                        | Rules live in            |
-| ---------------------- | ------------------------------ | ------------------------ |
-| `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay | `quickshell.nix`         |
-| `quickshell-noblur`    | ScreenCorners, WallpaperChooser | (none; opts out of blur) |
-| `quickshell-launcher`  | AppLauncher                    | `hyprland/app-launcher.nix` |
-| `quickshell-clipboard` | ClipboardHistory               | `hyprland/clipboard-history.nix` |
-| `quickshell-emoji`     | EmojiPicker                    | `hyprland/emoji-picker.nix` |
+| Namespace              | Windows                                                        | Rules live in                    |
+| ---------------------- | -------------------------------------------------------------- | -------------------------------- |
+| `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay | `quickshell.nix`                 |
+| `quickshell-noblur`    | ScreenCorners, WallpaperChooser                                | (none; opts out of blur)         |
+| `quickshell-launcher`  | AppLauncher                                                    | `hyprland/app-launcher.nix`      |
+| `quickshell-clipboard` | ClipboardHistory                                               | `hyprland/clipboard-history.nix` |
+| `quickshell-emoji`     | EmojiPicker                                                    | `hyprland/emoji-picker.nix`      |
 
 `quickshell-noblur` exists for windows that are purely decorative or opaque and gain nothing from blur. Per the One Concern Per File convention, a window with its own namespace carries its layerrules in that app's module, not in `quickshell.nix`.
+
+# Caveman
+
+Respond terse like smart caveman. All technical substance stay. Only fluff die.
+
+Rules:
+
+- Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging
+- Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
+- Pattern: [thing] [action] [reason]. [next step].
+- Not: "Sure! I'd be happy to help you with that."
+- Yes: "Bug in auth middleware. Fix:"
+
+Switch level: /caveman lite|full|ultra|wenyan
+Stop: "stop caveman" or "normal mode"
+
+Auto-Clarity: drop caveman for security warnings, irreversible actions, user confused. Resume after.
+
+Boundaries: code/commits/PRs written normal.
