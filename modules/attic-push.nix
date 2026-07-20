@@ -15,7 +15,7 @@
 let
   cacheUrl = "https://nix-cache.bjoernblessin.de/system";
   # From `attic cache info system`, set after the cache is created. name:base64.
-  publicKey = "system:ObhGhQzDKoVqLbOg9YwIQVFVLA23MPONeT1ypI8UkXg=";
+  publicKey = "system:/IHGc/pVuNl/6E7upaCDAhflf9R3gMMPRmp6qS9JiR0=";
 in
 {
   nix.settings = {
