@@ -11,7 +11,6 @@ hl.bind("SUPER + Super_L", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.dsp.global("qu
 -- no_anim stops the surface stretching on resize.
 hl.layer_rule({
     match = { namespace = "quickshell-launcher" },
-    blur = false,
     ignore_alpha = 0.01,
     no_anim = true,
 })
