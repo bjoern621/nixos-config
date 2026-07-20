@@ -3,14 +3,16 @@
 // Weather parsing + presentation, shared by WeatherService (parse) and
 // WeatherWidget (describe). No QML types, so it stays a plain library.
 
-// ipapi.co /json -> { ok, lat, lon, city }.
-// Rate-limited or error responses lack numeric lat/lon -> ok:false.
+// IP-geolocation JSON -> { ok, lat, lon, city }. Handles ipwho.is (numbers) and
+// geojs (strings) alike via parseFloat. Rate-limited or error responses lack a
+// finite lat/lon -> ok:false.
 function parseLocation(jsonText) {
     try {
         var d = JSON.parse(jsonText);
-        if (typeof d.latitude !== "number" || typeof d.longitude !== "number")
+        var lat = parseFloat(d.latitude), lon = parseFloat(d.longitude);
+        if (!isFinite(lat) || !isFinite(lon))
             return { ok: false };
-        return { ok: true, lat: d.latitude, lon: d.longitude, city: d.city || "" };
+        return { ok: true, lat: lat, lon: lon, city: d.city || "" };
     } catch (e) {
         return { ok: false };
     }

@@ -37,16 +37,14 @@ ShellRoot {
     // Both views are pure presentation bound to LauncherController; the shortcut
     // and all logic live in the always-loaded controller, so swapping views no
     // longer double-registers the "launcher" handler.
-    // FPS BISECTION: real launchers disabled, FpsTest takes the shortcut.
     LazyLoader {
-        active: false
+        active: Globals.designTheme !== "neo"
         AppLauncher {}
     }
     LazyLoader {
-        active: false
+        active: Globals.designTheme === "neo"
         AppLauncherNeo {}
     }
-    // FpsTest {} // TEMP unblock: no FpsTest.qml exists, this broke every reload. Restore once FpsTest.qml is back.
 
     ClipboardHistory {}
     EmojiPicker {}

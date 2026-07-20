@@ -11,18 +11,27 @@ import Quickshell.Services.Mpris
 Singleton {
     id: root
 
-    // Prefer playing player, fall back to paused. Bar picks the same way.
+    // Prefer a playing player that carries real metadata, then any playing, then
+    // paused. Bar picks the same way.
+    // A browser media session (Spotify/YouTube web) crams "Title - Artist" into the
+    // title and leaves artist + artUrl empty, so a non-empty artist marks the richer
+    // source (desktop Spotify). Without this the web player wins the tie and the
+    // menu shows a mashed title, no artist/album, and no cover.
     readonly property var player: {
         const players = Mpris.players.values;
-        let paused = null;
+        let playingRich = null, playingAny = null, paused = null;
         for (let i = 0; i < players.length; i++) {
             const p = players[i];
-            if (p.playbackState === MprisPlaybackState.Playing)
-                return p;
-            if (!paused && p.playbackState === MprisPlaybackState.Paused)
+            if (p.playbackState === MprisPlaybackState.Playing) {
+                if (!playingAny)
+                    playingAny = p;
+                if (!playingRich && p.trackArtist)
+                    playingRich = p;
+            } else if (!paused && p.playbackState === MprisPlaybackState.Paused) {
                 paused = p;
+            }
         }
-        return paused;
+        return playingRich || playingAny || paused;
     }
     readonly property bool hasPlayer: player !== null
     readonly property string trackTitle: hasPlayer ? player.trackTitle : ""

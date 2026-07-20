@@ -31,18 +31,25 @@ Variants {
         property bool isHovered: false
         property bool pillHidden: true
 
-        // MPRIS player lookup: prefer playing, fall back to paused
+        // MPRIS player lookup: prefer a playing player with real metadata, then
+        // any playing, then paused. Mirrors NowPlayingModel.player.
+        // A browser media session leaves artist empty (crams it into the title), so
+        // a non-empty artist marks the richer desktop player.
         readonly property var mprisPlayer: {
             const players = Mpris.players.values;
-            let paused = null;
+            let playingRich = null, playingAny = null, paused = null;
             for (let i = 0; i < players.length; i++) {
                 const p = players[i];
-                if (p.playbackState === MprisPlaybackState.Playing)
-                    return p;
-                if (!paused && p.playbackState === MprisPlaybackState.Paused)
+                if (p.playbackState === MprisPlaybackState.Playing) {
+                    if (!playingAny)
+                        playingAny = p;
+                    if (!playingRich && p.trackArtist)
+                        playingRich = p;
+                } else if (!paused && p.playbackState === MprisPlaybackState.Paused) {
                     paused = p;
+                }
             }
-            return paused;
+            return playingRich || playingAny || paused;
         }
         readonly property bool hasMprisPlayer: mprisPlayer !== null
 
