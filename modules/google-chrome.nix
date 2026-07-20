@@ -29,6 +29,12 @@
         installation_mode = "force_installed";
         update_url = "https://clients2.google.com/service/update2/crx";
       };
+
+      # Tabliss - A Beautiful New Tab
+      "hipekcciheckooncpjeljhnekcoolahp" = {
+        installation_mode = "force_installed";
+        update_url = "https://clients2.google.com/service/update2/crx";
+      };
     };
 
     # 1 = restore the last session ("Continue where you left off")
