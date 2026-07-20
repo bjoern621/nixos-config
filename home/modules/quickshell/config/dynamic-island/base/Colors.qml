@@ -30,4 +30,7 @@ QtObject {
     // Battery warning colors
     readonly property color batteryWarning: _t.batteryWarning
     readonly property color batteryCritical: _t.batteryCritical
+
+    // Weather timeline "now" tick
+    readonly property color nowMarker: _t.nowMarker
 }

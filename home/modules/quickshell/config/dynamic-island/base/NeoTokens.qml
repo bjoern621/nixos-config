@@ -29,6 +29,8 @@ QtObject {
     readonly property color progressMuted: "#7a7768"
     readonly property color batteryWarning: "#fed330"
     readonly property color batteryCritical: "#fc5c65"
+    // "Now" tick on the weather timeline. Same red in both themes (semantic, like battery).
+    readonly property color nowMarker: "#f01e2c"
 
     // Selection pills darken the accent on press.
     readonly property color accentPressed: Qt.darker(accentColor, 1.12)

@@ -23,6 +23,8 @@ QtObject {
     readonly property color progressMuted: "#666666"
     readonly property color batteryWarning: "#fed330"
     readonly property color batteryCritical: "#fc5c65"
+    // "Now" tick on the weather timeline. Same red in both themes (semantic, like battery).
+    readonly property color nowMarker: "#f01e2c"
 
     // Shape
     readonly property bool usesBlur: true

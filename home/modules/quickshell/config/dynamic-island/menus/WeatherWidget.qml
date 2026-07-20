@@ -55,7 +55,6 @@ Item {
 
     readonly property var _cur: _dayAt(displayHour)
     readonly property string _base: _cur ? _cur.base : "clear"
-    readonly property var _desc: _cur ? WeatherUtils.describe(_cur.code, _cur.isDay) : ({ icon: "wx-cloudy", label: "" })
 
     // ---- placeholder until a forecast lands ----
     Text {
@@ -76,7 +75,7 @@ Item {
         visible: root.svc.ready
         radius: Shape.cardRadius
         color: "#0b1020"
-        border.width: Shape.thinBorderWidth
+        border.width: Shape.borderWidth
         border.color: Colors.pillBorder
         clip: true
 
@@ -89,58 +88,15 @@ Item {
             animating: root.active && root.svc.ready
         }
 
-        // HUD chip
-        Rectangle {
-            id: hud
+        // Current temperature. No chrome; ink outline keeps it legible over any sky.
+        Text {
             x: Spacing.spacing12
-            y: Spacing.spacing12
-            radius: Spacing.spacing8
-            color: Qt.rgba(0.05, 0.06, 0.09, 0.42)
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.2)
-            width: hudRow.width + Spacing.spacing12 * 2
-            height: hudRow.height + Spacing.spacing8 * 2
-
-            Row {
-                id: hudRow
-                x: Spacing.spacing12
-                y: Spacing.spacing8
-                spacing: Spacing.spacing8
-
-                TintedIcon {
-                    source: "../icons/" + root._desc.icon + ".svg"
-                    size: 30
-                    color: "white"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 0
-
-                    Text {
-                        text: {
-                            let h = Math.floor(root.displayHour) % 24, m = Math.round((root.displayHour - Math.floor(root.displayHour)) * 60);
-                            if (m === 60) { m = 0; h = (h + 1) % 24; }
-                            return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
-                        }
-                        font { family: Typography.fontFamily; pixelSize: Typography.fontSize12; weight: Font.Normal }
-                        color: Qt.rgba(1, 1, 1, 0.85)
-                    }
-                    Text {
-                        text: Math.round(root._tempAt(root.displayHour)) + "°"
-                        font { family: Typography.fontFamily; pixelSize: Typography.fontSize24; weight: Typography.weightBold }
-                        color: "white"
-                    }
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root._desc.label + (root.svc.city.length ? " · " + root.svc.city : "")
-                    font { family: Typography.fontFamily; pixelSize: Typography.fontSize12; weight: Font.Normal }
-                    color: Qt.rgba(1, 1, 1, 0.85)
-                }
-            }
+            y: Spacing.spacing8
+            text: Math.round(root._tempAt(root.displayHour)) + "°"
+            font { family: Typography.fontFamily; pixelSize: Typography.fontSize32; weight: Typography.weightHeavy }
+            color: "white"
+            style: Text.Outline
+            styleColor: "#111111"
         }
     }
 
@@ -153,10 +109,8 @@ Item {
         anchors.right: parent.right
         height: root.ribbonHeight
         visible: root.svc.ready
-        radius: Spacing.spacing4
+        radius: Shape.cardRadius
         color: "transparent"
-        border.width: Shape.thinBorderWidth
-        border.color: Colors.pillBorder
         clip: true
 
         readonly property real segW: width / 24
@@ -216,14 +170,42 @@ Item {
             onHeightChanged: requestPaint()
         }
 
-        // now / scrub marker
+        // ink frame above the color band (segments fill edge-to-edge and would hide a plain border)
         Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            radius: ribbon.radius
+            border.width: Shape.borderWidth
+            border.color: Colors.pillBorder
+        }
+
+        // live "now" marker: red tick at wall-clock hour, always shown
+        Rectangle {
+            width: Math.max(3, Shape.borderWidth)
+            height: ribbon.height
+            x: root.liveHour / 24 * ribbon.width - width / 2
+            color: Colors.nowMarker
+            Rectangle {
+                width: 12; height: 12
+                radius: Shape.usesBlur ? 6 : 2
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                color: Colors.nowMarker
+                border.width: Shape.thinBorderWidth
+                border.color: Colors.pillBorder
+            }
+        }
+
+        // scrub marker: neutral, only while dragging the ribbon
+        Rectangle {
+            visible: root.scrubbing
             width: 2
             height: ribbon.height
-            x: root.displayHour / 24 * ribbon.width - 1
+            x: root.scrubHour / 24 * ribbon.width - 1
             color: Colors.textColor
             Rectangle {
-                width: 10; height: 10; radius: 5
+                width: 10; height: 10
+                radius: Shape.usesBlur ? 5 : 2
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 color: Colors.pillBackground
@@ -259,7 +241,7 @@ Item {
                 required property var modelData
                 x: modelData[1] * parent.width - (modelData[1] === 0 ? 0 : (modelData[1] === 1 ? width : width / 2))
                 text: modelData[0]
-                font { family: Typography.fontFamily; pixelSize: Typography.fontSize12; weight: Font.Normal }
+                font { family: Typography.fontFamily; pixelSize: Typography.fontSize12; weight: Typography.weightNormal }
                 color: Colors.textColorMuted
             }
         }
