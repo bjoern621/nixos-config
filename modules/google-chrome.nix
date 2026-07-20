@@ -45,6 +45,9 @@
     WelcomePageOnOSUpgradeEnabled = false;
     DefaultBrowserSettingEnabled = false;
 
+    NTPFooterManagementNoticeEnabled = false;
+    NTPFooterExtensionAttributionEnabled = false;
+
     PasswordManagerEnabled = false;
 
     TranslateEnabled = false;
