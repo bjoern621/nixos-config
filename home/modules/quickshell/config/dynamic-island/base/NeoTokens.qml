@@ -16,8 +16,10 @@ QtObject {
     readonly property color pillBackground: paper
     readonly property color pillBorder: ink
     readonly property color separatorColor: ink
-    readonly property color hoverItemHovered: hoverPaper
-    readonly property color hoverItemPressed: "#e2e0cd"
+    // Hover feedback: faint accent wash over paper (parallels classic's accent tint).
+    // Opaque result: Qt.tint composites over the opaque paper base, no alpha.
+    readonly property color hoverItemHovered: Qt.tint(paper, Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.18))
+    readonly property color hoverItemPressed: Qt.tint(paper, Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.30))
     // Selected/active item background: solid accent, like the launcher selection.
     readonly property color selectedBackground: accentColor
     readonly property color selectedPressed: accentPressed

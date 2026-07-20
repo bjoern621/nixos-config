@@ -8,6 +8,9 @@ WheelHandler {
     property real rowStride: 42        // rowHeight + spacing
     property real rowsPerNotch: 1.5
 
+    // Emitted on every notch. Consumers drop keyboard-nav mode on it.
+    signal scrolled
+
     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     onWheel: event => {
         if (!target)
@@ -16,5 +19,6 @@ WheelHandler {
         const maxY = Math.max(0, target.contentHeight - target.height);
         const delta = -(event.angleDelta.y / 120) * step;
         target.contentY = Math.max(0, Math.min(target.contentY + delta, maxY));
+        scrolled();
     }
 }

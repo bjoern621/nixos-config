@@ -36,8 +36,10 @@ Item {
         restoreMode: Binding.RestoreBinding
     }
 
+    // Classic: segmented thin pills with a gap around a thin capsule handle.
     Item {
         id: fillTrack
+        visible: Shape.usesBlur
         anchors {
             left: parent.left
             right: handle.horizontalCenter
@@ -63,26 +65,9 @@ Item {
         }
     }
 
-    Rectangle {
-        id: handle
-        x: root.trackPadding + (root.width - 2 * root.trackPadding - width) * Math.max(0, Math.min(1, root.value))
-        y: (root.height - height) / 2
-        width: 4
-        height: root.handleVerticalSize
-        radius: root.handleVerticalSize / 2
-        color: root.fillColor
-
-        Behavior on x {
-            enabled: !sliderArea.pressed
-            NumberAnimation {
-                duration: 80
-                easing.type: Easing.OutCubic
-            }
-        }
-    }
-
     Item {
         id: emptyTrack
+        visible: Shape.usesBlur
         anchors {
             left: handle.horizontalCenter
             leftMargin: Spacing.spacing6
@@ -98,6 +83,63 @@ Item {
             height: 8
             radius: 4
             color: root.trackColor
+        }
+    }
+
+    // Neo: continuous ink-bordered track, accent fill inset inside the border, under the circular handle.
+    Rectangle {
+        id: neoTrack
+        visible: !Shape.usesBlur
+        anchors {
+            left: parent.left
+            right: parent.right
+            verticalCenter: parent.verticalCenter
+        }
+        height: 8
+        radius: height / 2
+        color: root.trackColor
+        border.width: NeoTokens.thinBorderWidth
+        border.color: NeoTokens.ink
+        clip: true
+
+        Rectangle {
+            id: neoFill
+            x: NeoTokens.thinBorderWidth
+            y: NeoTokens.thinBorderWidth
+            height: parent.height - 2 * NeoTokens.thinBorderWidth
+            // fill to handle center, minus left border inset; neoTrack left == root left.
+            width: Math.max(0, handle.x + handle.width / 2 - NeoTokens.thinBorderWidth)
+            radius: parent.radius - NeoTokens.thinBorderWidth
+            color: root.fillColor
+
+            Behavior on width {
+                enabled: !sliderArea.pressed
+                NumberAnimation {
+                    duration: 80
+                    easing.type: Easing.OutCubic
+                }
+            }
+        }
+    }
+
+    // Classic: thin accent capsule (width 4). Neo: paper circle with ink border.
+    Rectangle {
+        id: handle
+        x: root.trackPadding + (root.width - 2 * root.trackPadding - width) * Math.max(0, Math.min(1, root.value))
+        y: (root.height - height) / 2
+        width: Shape.usesBlur ? 4 : root.handleVerticalSize
+        height: root.handleVerticalSize
+        radius: root.handleVerticalSize / 2
+        color: Shape.usesBlur ? root.fillColor : NeoTokens.paper
+        border.width: Shape.usesBlur ? 0 : NeoTokens.borderWidth
+        border.color: NeoTokens.ink
+
+        Behavior on x {
+            enabled: !sliderArea.pressed
+            NumberAnimation {
+                duration: 80
+                easing.type: Easing.OutCubic
+            }
         }
     }
 

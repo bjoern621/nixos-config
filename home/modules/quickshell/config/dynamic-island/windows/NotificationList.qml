@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import QtQuick.Controls as QQC
 import "../"
 
 Item {
@@ -28,21 +27,20 @@ Item {
     Flickable {
         id: notifFlick
         anchors.fill: parent
+        // Reserve a gutter for the scroll handle only while it shows.
+        anchors.rightMargin: scrollable ? 14 : 0
         contentHeight: notifCol.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         visible: root.historyCount > 0
 
-        WheelSource {
-            id: wheelSource
-        }
+        readonly property bool scrollable: contentHeight > height + 1
 
-        TouchpadBoost {
-            flickable: notifFlick
-            wheelSource: wheelSource
+        // Shared wheel step, no inertia. Same behavior as the app launcher.
+        StepWheel {
+            target: notifFlick
+            rowStride: 60
         }
-
-        QQC.ScrollBar.vertical: ThinScrollBar {}
 
         Column {
             id: notifCol
@@ -167,5 +165,14 @@ Item {
                 }
             }
         }
+    }
+
+    // Shared draggable handle, sibling of the flickable.
+    ScrollHandle {
+        target: notifFlick
+        visible: notifFlick.visible && notifFlick.scrollable
+        anchors.right: parent.right
+        anchors.top: notifFlick.top
+        anchors.bottom: notifFlick.bottom
     }
 }

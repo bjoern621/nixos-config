@@ -18,6 +18,7 @@
     ./hyprpolkit.nix
     ./monitors.nix
     ./no_update_notice.nix
+    ./debug-overlay.nix
     ./windowrules.nix
     ./mozza-mail.nix
     ./disable_middle_click_paste.nix

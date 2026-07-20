@@ -34,17 +34,12 @@ Item {
         }
     }
 
-    // Single wheel-event source shared by TouchpadBoost (inertia) and the selection-mode switch.
+    // Shared wheel step, no inertia. Same behavior as the app launcher.
     // Parented to the view, not left in its data: a Flickable reparents child items into contentItem,
     // sizing them contentWidth x contentHeight, which misses the empty viewport below a short list.
-    WheelSource {
-        id: wheelSource
+    StepWheel {
         parent: root.view
-        onWheelReceived: selection.keyboardNav = false
-    }
-
-    TouchpadBoost {
-        flickable: root.view
-        wheelSource: wheelSource
+        target: root.view
+        onScrolled: selection.keyboardNav = false
     }
 }

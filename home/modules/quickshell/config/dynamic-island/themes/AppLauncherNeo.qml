@@ -30,7 +30,6 @@ Scope {
         readonly property color ink: "#111111"
         readonly property color selAccent: Colors.accentColor
         readonly property color selPressed: Qt.darker(Colors.accentColor, 1.12)
-        readonly property color hoverPaper: "#f0eede"
         readonly property color textPrimary: "#111111"
         readonly property color textMuted: "#3a382f"
         readonly property color placeholder: "#7a7768"
@@ -328,7 +327,7 @@ Scope {
                                         Rectangle {
                                             anchors.fill: parent
                                             radius: 4
-                                            color: tap.pressed ? theme.selPressed : del.active ? theme.selAccent : hov.hovered ? theme.hoverPaper : "transparent"
+                                            color: tap.pressed ? theme.selPressed : del.active ? theme.selAccent : hov.hovered ? Colors.hoverItemHovered : "transparent"
                                             border.width: del.lit ? 2 : 0
                                             border.color: theme.ink
                                         }

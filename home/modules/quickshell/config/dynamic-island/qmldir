@@ -41,9 +41,6 @@ LauncherGridView 1.0 widgets/LauncherGridView.qml
 LauncherSelection 1.0 widgets/LauncherSelection.qml
 LauncherViewBehavior 1.0 widgets/LauncherViewBehavior.qml
 LauncherDelegateBg 1.0 widgets/LauncherDelegateBg.qml
-ThinScrollBar 1.0 widgets/ThinScrollBar.qml
-TouchpadBoost 1.0 widgets/TouchpadBoost.qml
-WheelSource 1.0 widgets/WheelSource.qml
 Tooltip 1.0 widgets/Tooltip.qml
 AutoCloseOnFocusLoss 1.0 widgets/AutoCloseOnFocusLoss.qml
 Pressable 1.0 widgets/Pressable.qml
