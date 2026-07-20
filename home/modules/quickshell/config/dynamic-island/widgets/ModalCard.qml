@@ -83,38 +83,14 @@ Item {
             width: parent.width
             height: dismissBtn.height
 
-            Rectangle {
+            StaticButton {
                 id: dismissBtn
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: dismissLabel.implicitWidth + 2 * Spacing.spacing16
-                height: 36
-                radius: Shape.pill(height)
-                color: dismissTap.pressed ? Colors.hoverItemPressed : dismissHover.hovered ? Colors.hoverItemHovered : "transparent"
-                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-                border.color: Colors.pillBorder
-
-                scale: dismissTap.pressed ? 0.96 : 1.0
-                SquishBehavior on scale {}
-
-                Text {
-                    id: dismissLabel
-                    text: root.dismissText
-                    font.family: Typography.fontFamily
-                    font.pixelSize: Typography.fontSize14
-                    font.weight: Font.Bold
-                    color: Colors.textColor
-                    anchors.centerIn: parent
-                }
-
-                HoverHandler {
-                    id: dismissHover
-                    cursorShape: Qt.PointingHandCursor
-                }
-
-                TapHandler {
-                    id: dismissTap
-                    onTapped: root.dismissed()
-                }
+                height: 36 + Shape.buttonShadowOffset
+                centered: true
+                fontPixelSize: Typography.fontSize14
+                label: root.dismissText
+                onClicked: root.dismissed()
             }
         }
     }

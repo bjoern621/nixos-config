@@ -43,12 +43,13 @@ Scope {
         WlrLayershell.namespace: "quickshell-launcher"
         screen: Quickshell.screens.find(s => s.name === Globals.launcherScreenName) ?? null
 
-        anchors {
-            top: true
-            left: true
-            right: true
-            bottom: true
-        }
+        // Card-sized surface, protocol-centered (no anchors set).
+        // Fullscreen transparent surface cost ~30fps: battery iGPU is
+        // bandwidth-bound, blends full 2944x1840 layer per frame.
+        // Height fixed at card upper bound: constant size avoids layer
+        // resize per keystroke.
+        implicitWidth: cardWrap.width
+        implicitHeight: 580
 
         exclusiveZone: 0
         focusable: true
@@ -90,7 +91,8 @@ Scope {
                 event.accepted = true;
             }
 
-            // Dismiss on click outside the card.
+            // Dismiss on click in surface slack around card.
+            // Clicks fully outside surface land on other windows; focus loss closes.
             MouseArea {
                 anchors.fill: parent
                 onClicked: Globals.launcherVisible = false
@@ -290,7 +292,7 @@ Scope {
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     // Reserve gutter for the scrollbar only when it shows.
-                                    anchors.rightMargin: listWrap.scrollable ? 14 : 0
+                                    anchors.rightMargin: listWrap.scrollable ? Spacing.scrollGutter : 0
                                     height: Math.min(contentHeight, launcherScope.maxVisibleRows * launcherScope.rowHeight)
                                     clip: true
                                     model: LauncherController.filteredApps

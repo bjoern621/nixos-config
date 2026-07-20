@@ -8,6 +8,7 @@ QtObject {
     // Color
     readonly property color textColor: "#ffffff"
     readonly property color textColorMuted: "#aaaaaa"
+    readonly property color placeholder: "#aaaaaa"
     readonly property color pillBackground: Qt.rgba(0, 0, 0, 0.5)
     readonly property color pillBorder: Qt.rgba(1, 1, 1, 0.2)
     readonly property color separatorColor: Qt.rgba(1, 1, 1, 0.2)
@@ -29,6 +30,7 @@ QtObject {
     readonly property int thinBorderWidth: 1
     readonly property int cardRadius: 12
     readonly property int shadowOffset: 0
+    readonly property int buttonShadowOffset: 0
     // Large so Shape.pill(dim) clamps to dim/2 (fully rounded pills).
     readonly property int pillRadius: 9999
 

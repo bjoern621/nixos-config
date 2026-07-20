@@ -263,7 +263,7 @@ Scope {
             LauncherListView {
                 id: clipList
                 // Reserve a gutter for the scroll handle only while it shows.
-                width: parent.width - (scrollable ? 14 : 0)
+                width: parent.width - (scrollable ? Spacing.scrollGutter : 0)
                 height: Math.min(contentHeight, clipScope.maxVisibleHeight)
                 model: clipScope.filteredEntries
 

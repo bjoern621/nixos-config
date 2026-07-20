@@ -341,74 +341,22 @@ Scope {
                             anchors.horizontalCenter: parent.horizontalCenter
                             spacing: Spacing.spacing12
 
-                            Rectangle {
-                                width: 140
-                                height: 36
-                                radius: Spacing.spacing8
-                                color: Colors.pillBackground
-                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-                                border.color: Colors.pillBorder
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                    color: cancelMouse.pressed ? Colors.hoverItemPressed : cancelMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
-                                }
-
-                                scale: cancelMouse.pressed ? 0.92 : 1.0
-                                SquishBehavior on scale {}
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Abbrechen"
-                                    font.family: Typography.fontFamily
-                                    font.pixelSize: Typography.fontSize14
-                                    font.weight: Font.Bold
-                                    color: Colors.textColor
-                                }
-
-                                MouseArea {
-                                    id: cancelMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: switcherScope.cancel()
-                                }
+                            StaticButton {
+                                width: 140 + Shape.buttonShadowOffset
+                                height: 36 + Shape.buttonShadowOffset
+                                centered: true
+                                fontPixelSize: Typography.fontSize14
+                                label: "Abbrechen"
+                                onClicked: switcherScope.cancel()
                             }
 
-                            Rectangle {
-                                width: 140
-                                height: 36
-                                radius: Spacing.spacing8
-                                color: Colors.pillBackground
-                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-                                border.color: Colors.pillBorder
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                    color: applyMouse.pressed ? Colors.hoverItemPressed : applyMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
-                                }
-
-                                scale: applyMouse.pressed ? 0.92 : 1.0
-                                SquishBehavior on scale {}
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Anwenden"
-                                    font.family: Typography.fontFamily
-                                    font.pixelSize: Typography.fontSize14
-                                    font.weight: Font.Bold
-                                    color: Colors.textColor
-                                }
-
-                                MouseArea {
-                                    id: applyMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: switcherScope.apply()
-                                }
+                            StaticButton {
+                                width: 140 + Shape.buttonShadowOffset
+                                height: 36 + Shape.buttonShadowOffset
+                                centered: true
+                                fontPixelSize: Typography.fontSize14
+                                label: "Anwenden"
+                                onClicked: switcherScope.apply()
                             }
                         }
                     }

@@ -1,6 +1,8 @@
 import Quickshell
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
+import Quickshell.Wayland
+import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import "../"
 
@@ -21,6 +23,11 @@ Variants {
         exclusiveZone: 0
         color: "transparent"
 
+        // Bar is hover-only. It grabs the keyboard solely while the network menu's
+        // password field is up, then releases it. Per-screen: only the Bar whose
+        // menu is prompting claims focus.
+        WlrLayershell.keyboardFocus: (networkView.passwordActive || bluetoothView.renameActive) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
         property bool isHovered: false
         property bool pillHidden: true
 
@@ -39,12 +46,20 @@ Variants {
         }
         readonly property bool hasMprisPlayer: mprisPlayer !== null
 
-        implicitHeight: !pillHidden ? 1000 : 0
+        // Pill-only strip while out; 1000px only while a popup shows.
+        // Battery iGPU is bandwidth-bound: each near-fullscreen layer blend costs
+        // double-digit fps, and 1000px tall at this width is near-fullscreen.
+        implicitHeight: pillHidden ? 0 : anyPopupShown ? 1000 : 56
 
         // Aggregate over direct children of contentRow; each child manages its own popup
         // (including any submenus nested inside that popup's outer Item).
         readonly property bool anyPopupOpen: {
             for (const c of contentRow.children) if (c.popupOpen) return true;
+            return false;
+        }
+        // Visibility test, not popupOpen: surface must stay tall through popup fade-out.
+        readonly property bool anyPopupShown: {
+            for (const c of contentRow.children) if (c.popupItem && c.popupItem.visible) return true;
             return false;
         }
         // A Region follows its item's geometry but not its visibility, so a closed popup
@@ -65,12 +80,14 @@ Variants {
             Region { item: root.maskItem(nowPlayingHoverItem.popupItem) }
             Region { item: root.maskItem(calendarHoverItem.popupItem) }
             Region { item: root.maskItem(systemTray.popupItem) }
+            Region { item: root.maskItem(networkHoverItem.popupItem) }
+            Region { item: root.maskItem(bluetoothHoverItem.popupItem) }
             Region { item: root.maskItem(volumeHoverItem.popupItem) }
             Region { item: root.maskItem(batteryHoverItem.popupItem) }
         }
 
         // Launcher maps on one screen, so only that Bar slides out.
-        // Without the name test every screen's surface grows to 1000px.
+        // Without the name test every screen's surface grows.
         readonly property bool launcherOnThisScreen: Globals.launcherVisible && Globals.launcherScreenName === root.modelData.name
 
         readonly property bool shouldShowPill: zoneHover.hovered || anyPopupOpen || launcherOnThisScreen
@@ -215,6 +232,8 @@ Variants {
                         pressedScale: 0.96
                         menuOnClick: true
                         menu: calendarMenu
+                        // Calendar open/close gates the weather fetch + scene animation.
+                        onPopupOpenChanged: WeatherService.setMenuOpen(popupOpen)
                         DateTime {}
                     }
 
@@ -233,6 +252,50 @@ Variants {
                     }
 
                     Rectangle {
+                        width: 1
+                        height: Spacing.spacing16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    HoverItem {
+                        id: networkHoverItem
+                        clickable: false
+                        menu: networkMenu
+                        // Menu open/close drives the singleton's scan loop + throughput.
+                        onPopupOpenChanged: {
+                            if (popupOpen)
+                                NetworkService.openMenu();
+                            else
+                                NetworkService.closeMenu();
+                        }
+                        NetworkIcon {}
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: Spacing.spacing16
+                        color: Colors.separatorColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    HoverItem {
+                        id: bluetoothHoverItem
+                        visible: BluetoothService.hasAdapter
+                        clickable: false
+                        menu: bluetoothMenu
+                        // Menu open/close refcounts discovery in the singleton.
+                        onPopupOpenChanged: {
+                            if (popupOpen)
+                                BluetoothService.openMenu();
+                            else
+                                BluetoothService.closeMenu();
+                        }
+                        BluetoothIcon {}
+                    }
+
+                    Rectangle {
+                        visible: BluetoothService.hasAdapter
                         width: 1
                         height: Spacing.spacing16
                         color: Colors.separatorColor
@@ -316,6 +379,52 @@ Variants {
             }
 
             Item {
+                id: networkAnchor
+                width: 0
+                height: 0
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + networkHoverItem.x + networkHoverItem.width / 2
+                y: pill.y + pill.implicitHeight
+            }
+
+            HoverMenu {
+                id: networkMenu
+                width: networkView.implicitWidth
+                anchors.top: networkAnchor.top
+                anchors.horizontalCenter: networkAnchor.horizontalCenter
+                contentInteracting: networkView.interactionActive
+                onHidden: networkView.resetState()
+
+                NetworkMenu {
+                    id: networkView
+                    width: parent ? parent.width : 0
+                    height: implicitHeight
+                }
+            }
+
+            Item {
+                id: bluetoothAnchor
+                width: 0
+                height: 0
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + bluetoothHoverItem.x + bluetoothHoverItem.width / 2
+                y: pill.y + pill.implicitHeight
+            }
+
+            HoverMenu {
+                id: bluetoothMenu
+                width: bluetoothView.implicitWidth
+                anchors.top: bluetoothAnchor.top
+                anchors.horizontalCenter: bluetoothAnchor.horizontalCenter
+                contentInteracting: bluetoothView.interactionActive
+                onHidden: bluetoothView.resetState()
+
+                BluetoothMenu {
+                    id: bluetoothView
+                    width: parent ? parent.width : 0
+                    height: implicitHeight
+                }
+            }
+
+            Item {
                 id: calendarAnchor
                 width: 0
                 height: 0
@@ -333,6 +442,7 @@ Variants {
                     id: calendarView
                     width: implicitWidth
                     height: implicitHeight
+                    weatherActive: calendarHoverItem.popupOpen
                 }
             }
 

@@ -40,6 +40,8 @@ QtObject {
     readonly property int thinBorderWidth: 2
     readonly property int cardRadius: 6
     readonly property int shadowOffset: 7
+    // Buttons carry a lighter shadow than their containing card, roughly half.
+    readonly property int buttonShadowOffset: 4
     // Sharp neobrutalist pills/buttons, never fully rounded.
     readonly property int pillRadius: 5
 

@@ -16,12 +16,12 @@ Item {
     implicitWidth: surface.implicitWidth
     implicitHeight: surface.implicitHeight
 
-    // Each button footprint = face + its own offset shadow.
-    readonly property int shadowOffset: NeoTokens.shadowOffset
+    // Each button footprint = face + its own offset shadow, lighter than the surface's.
+    readonly property int buttonShadowOffset: Shape.buttonShadowOffset
 
     NeoSurface {
         id: surface
-        contentWidth: root.buttonWidth + root.shadowOffset + 2 * root.pad
+        contentWidth: root.buttonWidth + root.buttonShadowOffset + 2 * root.pad
         contentHeight: col.implicitHeight + 2 * root.pad
 
         Column {
@@ -33,10 +33,10 @@ Item {
             Repeater {
                 model: root.controller ? root.controller.actions : []
 
-                NeoButton {
+                StaticButton {
                     required property var modelData
-                    width: root.buttonWidth + root.shadowOffset
-                    height: root.buttonHeight + root.shadowOffset
+                    width: root.buttonWidth + root.buttonShadowOffset
+                    height: root.buttonHeight + root.buttonShadowOffset
                     iconSource: modelData.iconSource
                     label: modelData.label
                     onClicked: root.controller.triggerAction(modelData.action)

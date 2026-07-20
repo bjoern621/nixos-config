@@ -7,6 +7,9 @@ import "../base"
 Item {
     id: root
 
+    // True while this screen's calendar popup is open; gates the weather scene animation.
+    property bool weatherActive: false
+
     CalendarController {
         id: controller
     }
@@ -18,9 +21,12 @@ Item {
     readonly property int monthVerticalGap: Spacing.spacing12
     readonly property int contentPadding: Spacing.spacing12
 
+    // Month grid spans the full content; weather band matches it.
+    readonly property int gridWidth: 4 * monthWidth + 3 * monthHorizontalGap
+
     // Card paper holds the content; shadowOffset is extra gutter for the neo shadow
     // (classic shadowOffset=0). implicitSize carries it so Bar sizes the menu to fit.
-    readonly property int contentWidth: 4 * monthWidth + 3 * monthHorizontalGap + 2 * contentPadding
+    readonly property int contentWidth: gridWidth + 2 * contentPadding
     readonly property int contentHeight: layout.height + 2 * contentPadding
     implicitWidth: contentWidth + Shape.shadowOffset
     implicitHeight: contentHeight + Shape.shadowOffset
@@ -34,103 +40,47 @@ Item {
             y: root.contentPadding
             spacing: root.contentPadding
 
+            WeatherWidget {
+                width: root.gridWidth
+                active: root.weatherActive
+            }
+
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: Spacing.spacing16
 
-                Item {
-                    width: 28
-                    height: 28
+                StaticButton {
+                    width: 28 + Shape.buttonShadowOffset
+                    height: 28 + Shape.buttonShadowOffset
                     anchors.verticalCenter: parent.verticalCenter
-
-                    property bool hovered: prevYearMouse.containsMouse
-
-                    scale: prevYearMouse.pressed ? 0.85 : 1.0
-                    SquishBehavior on scale {}
-
-                    ButtonBg {
-                        hovered: parent.hovered
-                    }
-
-                    TintedIcon {
-                        anchors.centerIn: parent
-                        source: "../icons/icons8-arrow-down.svg"
-                        size: Typography.fontSize14
-                        rotation: 90
-                    }
-
-                    MouseArea {
-                        id: prevYearMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.navigateYear(-1)
-                    }
+                    centered: true
+                    iconSource: "../icons/icons8-arrow-down.svg"
+                    iconSize: Typography.fontSize14
+                    iconRotation: 90
+                    onClicked: root.navigateYear(-1)
                 }
 
-                Item {
+                StaticButton {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: yearLabel.implicitWidth + 24
-                    height: 28
-
-                    property bool canNavigate: controller.displayYear !== controller.todayYear
-                    property bool hovered: yearMouse.containsMouse && canNavigate
-
-                    scale: yearMouse.pressed && canNavigate ? 0.85 : 1.0
-                    SquishBehavior on scale {}
-
-                    ButtonBg {
-                        hovered: parent.hovered
-                    }
-
-                    Label {
-                        id: yearLabel
-                        anchors.centerIn: parent
-                        text: controller.displayYear
-                        font.pixelSize: Typography.fontSize16
-                    }
-
-                    MouseArea {
-                        id: yearMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: parent.canNavigate ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: {
-                            if (parent.canNavigate) {
-                                root.navigateYear(controller.todayYear - controller.displayYear);
-                            }
-                        }
-                    }
+                    width: 60 + Shape.buttonShadowOffset
+                    height: 28 + Shape.buttonShadowOffset
+                    // Jump back to today's year; inert while already there.
+                    enabled: controller.displayYear !== controller.todayYear
+                    centered: true
+                    label: controller.displayYear
+                    fontPixelSize: Typography.fontSize16
+                    onClicked: root.navigateYear(controller.todayYear - controller.displayYear)
                 }
 
-                Item {
-                    width: 28
-                    height: 28
+                StaticButton {
+                    width: 28 + Shape.buttonShadowOffset
+                    height: 28 + Shape.buttonShadowOffset
                     anchors.verticalCenter: parent.verticalCenter
-
-                    property bool hovered: nextYearMouse.containsMouse
-
-                    scale: nextYearMouse.pressed ? 0.85 : 1.0
-                    SquishBehavior on scale {}
-
-                    ButtonBg {
-                        hovered: parent.hovered
-                    }
-
-                    TintedIcon {
-                        anchors.centerIn: parent
-                        source: "../icons/icons8-arrow-down.svg"
-                        size: Typography.fontSize14
-                        rotation: -90
-                    }
-
-                    MouseArea {
-                        id: nextYearMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.navigateYear(1)
-                    }
+                    centered: true
+                    iconSource: "../icons/icons8-arrow-down.svg"
+                    iconSize: Typography.fontSize14
+                    iconRotation: -90
+                    onClicked: root.navigateYear(1)
                 }
             }
 

@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Bluetooth backend helper for Quickshell volume output switching.
+"""Bluetooth backend helper for Quickshell.
 
 Purpose:
-Run bluetoothctl connect workflow as a standalone backend process.
+Run the operations Quickshell.Bluetooth cannot do over D-Bus as a standalone
+process: the connect + PipeWire hand-off workflow, and rfkill-aware power on.
+A soft rfkill block cannot be cleared by writing Adapter1.Powered, so power on
+routes here.
 
 Related files:
-- menus/VolumeSliderMenu.qml: UI state machine and status rendering.
+- base/BluetoothService.qml: menu state + actions over the native module.
+- menus/VolumeSliderMenu.qml: audio output UI state machine.
 - menus/BluetoothUtils.js: sink parsing and matching helpers.
 
 Specific concern:
-- Execute bluetoothctl operations (show, power, trust, connect, info).
+- Execute bluetoothctl / rfkill operations (show, unblock, power, trust, connect).
 - Emit STATUS:/RESULT: lines consumed by the QML Process parser.
 - Avoid any UI logic or PipeWire model shaping.
 """
@@ -162,22 +166,64 @@ def connect_device(mac: str) -> int:
         return 1
 
 
+def _power_radio(state: str) -> int:
+    _print_status("CHECK_BACKEND")
+    code, _ = _run_bluetoothctl("show")
+    if code != 0:
+        _print_result("BACKEND_UNAVAILABLE")
+        return 0
+
+    if state == "on":
+        # _ensure_powered rfkill-unblocks then powers on, and is a no-op when
+        # already powered. Idempotent: repeated "power on" stays OK.
+        _print_result("OK" if _ensure_powered() else "FAIL")
+        return 0
+
+    # state == "off". power off is idempotent; a second call still reports OK.
+    code, output = _run_bluetoothctl("power", "off")
+    _echo(output)
+    _print_result("OK" if (code == 0 and not _is_powered()) else "FAIL")
+    return 0
+
+
+def power_radio(state: str) -> int:
+    """Set adapter power, guaranteeing exactly one RESULT: line."""
+    try:
+        return _power_radio(state)
+    except Exception as exc:
+        print(f"bluetooth_backend: {exc!r}", file=sys.stderr, flush=True)
+        _print_result("FAIL")
+        return 1
+
+
 def main() -> int:
     # Argv errors emit RESULT:FAIL too.
     # QML has no other exit signal to wait on.
-    if len(sys.argv) < 3:
-        print("Usage: bluetooth_backend.py connect <MAC>", file=sys.stderr)
+    if len(sys.argv) < 2:
+        print("Usage: bluetooth_backend.py <connect <MAC> | power <on|off>>", file=sys.stderr)
         _print_result("FAIL")
         return 2
 
     command = sys.argv[1]
-    if command != "connect":
-        print(f"Unknown command: {command}", file=sys.stderr)
-        _print_result("FAIL")
-        return 2
 
-    mac = sys.argv[2]
-    return connect_device(mac)
+    if command == "connect":
+        if len(sys.argv) < 3:
+            print("Usage: bluetooth_backend.py connect <MAC>", file=sys.stderr)
+            _print_result("FAIL")
+            return 2
+        return connect_device(sys.argv[2])
+
+    if command == "power":
+        state = sys.argv[2] if len(sys.argv) >= 3 else ""
+        if state not in ("on", "off"):
+            print("Usage: bluetooth_backend.py power <on|off>", file=sys.stderr)
+            _print_result("FAIL")
+            return 2
+        return power_radio(state)
+
+    print(f"Unknown command: {command}", file=sys.stderr)
+    _print_result("FAIL")
+    return 2
 
 
 if __name__ == "__main__":

@@ -28,6 +28,8 @@ Item {
     Card {
         anchors.fill: parent
         visible: controller.hasPlayer
+        // Keep the album-art glow contained inside the card.
+        clipContent: true
 
         Column {
             id: menuLayout
@@ -41,64 +43,85 @@ Item {
                 width: parent.width
                 spacing: Spacing.spacing12
 
-                // Album art
-                Rectangle {
-                    id: albumArtContainer
+                // Album art, with the cover accent blooming around the thumbnail.
+                Item {
+                    id: artSlot
                     width: 56
                     height: 56
-                    radius: Spacing.spacing8
-                    color: Colors.progressBackground
-                    clip: true
 
-                    // Squishy pulse on track change
-                    property bool pulsing: false
-
-                    scale: pulsing ? 0.92 : 1.0
-                    SquishBehavior on scale {
-                        bouncy: true
-                        duration: 200
+                    // Cover glow: the accent blooms around the image, tinting the
+                    // card near it. Sits behind the opaque thumbnail, so only the
+                    // ring around the image shows. Scoped here, not Globals accent.
+                    AmbientGlow {
+                        anchors.centerIn: parent
+                        width: parent.width + 2 * Spacing.spacing24
+                        height: parent.height + 2 * Spacing.spacing24
+                        // Source overspills the thumbnail so real color shows in the
+                        // ring; the opaque thumbnail only masks the center.
+                        sourceInset: Spacing.spacing4
+                        sourceRadius: Spacing.spacing8
+                        blurMax: 28
+                        glowColor: AlbumArtAccent.accentColor
+                        intensity: 0.9
                     }
 
-                    Image {
-                        id: albumArt
+                    Rectangle {
+                        id: albumArtContainer
                         anchors.fill: parent
-                        source: controller.trackArtUrl
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        visible: status === Image.Ready
+                        radius: Spacing.spacing8
+                        color: Colors.progressBackground
+                        clip: true
 
-                        // Smooth fade-in when image loads
-                        opacity: status === Image.Ready ? 1 : 0
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 200
-                                easing.type: Easing.OutCubic
+                        // Squishy pulse on track change
+                        property bool pulsing: false
+
+                        scale: pulsing ? 0.92 : 1.0
+                        SquishBehavior on scale {
+                            bouncy: true
+                            duration: 200
+                        }
+
+                        Image {
+                            id: albumArt
+                            anchors.fill: parent
+                            source: controller.trackArtUrl
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            visible: status === Image.Ready
+
+                            // Smooth fade-in when image loads
+                            opacity: status === Image.Ready ? 1 : 0
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 200
+                                    easing.type: Easing.OutCubic
+                                }
                             }
                         }
-                    }
 
-                    // Fallback icon when no art
-                    TintedIcon {
-                        visible: albumArt.status !== Image.Ready
-                        anchors.centerIn: parent
-                        source: "../icons/icons8-audio.svg"
-                        size: Typography.fontSize20
-                        color: Colors.textColorMuted
-                    }
-
-                    Connections {
-                        target: root.player
-                        enabled: controller.hasPlayer
-                        function onTrackChanged() {
-                            albumArtContainer.pulsing = true;
-                            artBounceTimer.restart();
+                        // Fallback icon when no art
+                        TintedIcon {
+                            visible: albumArt.status !== Image.Ready
+                            anchors.centerIn: parent
+                            source: "../icons/icons8-audio.svg"
+                            size: Typography.fontSize20
+                            color: Colors.textColorMuted
                         }
-                    }
 
-                    Timer {
-                        id: artBounceTimer
-                        interval: 50
-                        onTriggered: albumArtContainer.pulsing = false
+                        Connections {
+                            target: root.player
+                            enabled: controller.hasPlayer
+                            function onTrackChanged() {
+                                albumArtContainer.pulsing = true;
+                                artBounceTimer.restart();
+                            }
+                        }
+
+                        Timer {
+                            id: artBounceTimer
+                            interval: 50
+                            onTriggered: albumArtContainer.pulsing = false
+                        }
                     }
                 }
 
@@ -193,19 +216,31 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: Spacing.spacing16
 
-                IconButton {
-                    source: "../icons/icons8-skip-to-start.svg"
+                StaticButton {
+                    width: 40 + Shape.buttonShadowOffset
+                    height: 40 + Shape.buttonShadowOffset
+                    centered: true
+                    iconSize: Typography.fontSize24
+                    iconSource: "../icons/icons8-skip-to-start.svg"
                     iconColor: controller.canGoPrevious ? Colors.textColor : Colors.textColorMuted
                     onClicked: controller.previous()
                 }
 
-                IconButton {
-                    source: controller.isPlaying ? "../icons/icons8-pause.svg" : "../icons/icons8-play.svg"
+                StaticButton {
+                    width: 40 + Shape.buttonShadowOffset
+                    height: 40 + Shape.buttonShadowOffset
+                    centered: true
+                    iconSize: Typography.fontSize24
+                    iconSource: controller.isPlaying ? "../icons/icons8-pause.svg" : "../icons/icons8-play.svg"
                     onClicked: controller.togglePlaying()
                 }
 
-                IconButton {
-                    source: "../icons/icons8-end.svg"
+                StaticButton {
+                    width: 40 + Shape.buttonShadowOffset
+                    height: 40 + Shape.buttonShadowOffset
+                    centered: true
+                    iconSize: Typography.fontSize24
+                    iconSource: "../icons/icons8-end.svg"
                     iconColor: controller.canGoNext ? Colors.textColor : Colors.textColorMuted
                     onClicked: controller.next()
                 }

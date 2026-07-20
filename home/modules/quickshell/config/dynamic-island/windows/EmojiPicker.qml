@@ -21,11 +21,17 @@ Scope {
     property bool emojiVisible: false
     property string searchText: ""
     property int selectedGroup: 0
-    // Loaded from $QUICKSHELL_EMOJI_DATA (built at home-manager rebuild).
+    // Populated from the worker's "loaded" reply (parsed off-thread).
     property var groups: []
-    // Each indexed entry: { c, n, k, g, lower }
-    property var indexedEmojis: []
     property var filteredEmojis: []
+    property bool dataLoaded: false
+
+    // Filtering runs in emojiWorker off the UI thread. Only one query is in
+    // flight at a time: a request arriving mid-query sets queryPending, and the
+    // result handler dispatches the latest once the current one returns. Newest
+    // query always wins, and no stale intermediate result reaches the grid.
+    property bool queryBusy: false
+    property bool queryPending: false
 
     // Tooltip target: set by hovered emoji/category delegate, cleared on exit.
     property Item hoveredCell: null
@@ -35,7 +41,7 @@ Scope {
     onEmojiVisibleChanged: {
         if (emojiVisible) {
             searchText = "";
-            updateFilter();
+            requestFilter();
             emojiScope.rewindGrid();
             emojiGrid.reset();
         } else {
@@ -53,77 +59,78 @@ Scope {
 
     onSearchTextChanged: {
         hoveredCell = null;
-        updateFilter();
+        requestFilter();
     }
     onSelectedGroupChanged: {
         hoveredCell = null;
         if (searchText === "")
-            updateFilter();
+            requestFilter();
         emojiScope.rewindGrid();
         emojiGrid.currentIndex = 0;
         emojiGrid.hoveredIndex = -1;
     }
 
+    // Reads the JSON on the UI thread, hands the raw text to the worker.
+    // Parse + index happen off-thread. Reload re-sends, worker rebuilds.
     FileView {
         id: emojiDataFile
         path: Quickshell.env("QUICKSHELL_EMOJI_DATA") || ""
         blockLoading: false
-        onLoaded: emojiScope.parseData(emojiDataFile.text())
+        onLoaded: emojiWorker.sendMessage({
+            type: "load",
+            text: emojiDataFile.text(),
+            // Worker base URL is not lib/, so resolve fzf.js here and pass it in.
+            fzfUrl: Qt.resolvedUrl("../lib/fzf.js")
+        })
         onLoadFailed: error => console.warn("[EmojiPicker] failed to load:", error)
     }
 
-    function parseData(text) {
-        try {
-            const data = JSON.parse(text);
-            emojiScope.groups = data.groups || [];
-            const src = data.emojis || [];
-            const out = new Array(src.length);
-            for (let i = 0; i < src.length; i++) {
-                const e = src[i];
-                const combined = e.k ? (e.n + " " + e.k) : e.n;
-                out[i] = {
-                    c: e.c,
-                    n: e.n,
-                    k: e.k || "",
-                    g: e.g,
-                    lower: combined.toLowerCase()
-                };
+    WorkerScript {
+        id: emojiWorker
+        source: "../lib/emoji-worker.js"
+        onMessage: msg => {
+            if (msg.type === "loaded") {
+                if (!msg.ok) {
+                    console.warn("[EmojiPicker] worker load failed:", msg.error);
+                    return;
+                }
+                emojiScope.groups = msg.groups;
+                emojiScope.dataLoaded = true;
+                emojiScope.requestFilter();
+            } else if (msg.type === "result") {
+                emojiScope.queryBusy = false;
+                // A newer query queued while this ran: skip the stale result,
+                // dispatch the latest instead of flashing it on the grid.
+                if (emojiScope.queryPending) {
+                    emojiScope.dispatchQuery();
+                    return;
+                }
+                emojiScope.filteredEmojis = msg.items;
+                emojiGrid.currentIndex = 0;
             }
-            emojiScope.indexedEmojis = out;
-            emojiScope.updateFilter();
-        } catch (err) {
-            console.warn("[EmojiPicker] failed to parse:", err);
         }
     }
 
-    function updateFilter() {
-        const query = searchText.toLowerCase();
-        if (query === "") {
-            // No search: filter to selected group, keep CLDR order.
-            const g = selectedGroup;
-            filteredEmojis = indexedEmojis.filter(e => e.g === g);
-            emojiGrid.currentIndex = 0;
+    // Coalesced request: the worker sees one query at a time, always the newest.
+    function requestFilter() {
+        if (!dataLoaded)
+            return;
+        if (queryBusy) {
+            queryPending = true;
             return;
         }
-        const scored = [];
-        for (let i = 0; i < indexedEmojis.length; i++) {
-            const e = indexedEmojis[i];
-            // Match against combined name+keywords (e.lower); pass it as `text`
-            // too because scoreLower's outer loop bounds by text.length.
-            const s = FzfLib.scoreLower(e.lower, e.lower, query);
-            if (s > -Infinity)
-                scored.push({
-                    e,
-                    score: s
-                });
-        }
-        scored.sort((a, b) => b.score - a.score);
-        const limit = Math.min(scored.length, maxResults);
-        const out = new Array(limit);
-        for (let i = 0; i < limit; i++)
-            out[i] = scored[i].e;
-        filteredEmojis = out;
-        emojiGrid.currentIndex = 0;
+        dispatchQuery();
+    }
+
+    function dispatchQuery() {
+        queryBusy = true;
+        queryPending = false;
+        emojiWorker.sendMessage({
+            type: "query",
+            query: searchText.toLowerCase(),
+            group: selectedGroup,
+            maxResults: maxResults
+        });
     }
 
     function selectEmoji(emoji) {
@@ -208,8 +215,9 @@ Scope {
             anchors.fill: parent
             searchText: emojiScope.searchText
             placeholder: "Emoji suchen..."
-            panelWidth: emojiScope.cellSize * emojiScope.gridCols + 2 * Spacing.spacing12
-            emptyVisible: emojiScope.indexedEmojis.length > 0 && emojiScope.filteredEmojis.length === 0 && emojiScope.searchText !== ""
+            // Extra gutter width so all gridCols columns survive next to the bar.
+            panelWidth: emojiScope.cellSize * emojiScope.gridCols + 2 * Spacing.spacing12 + Spacing.scrollGutter
+            emptyVisible: emojiScope.dataLoaded && emojiScope.filteredEmojis.length === 0 && emojiScope.searchText !== ""
 
             onSearchEdited: text => emojiScope.searchText = text
             onEscaped: emojiScope.emojiVisible = false
@@ -251,7 +259,7 @@ Scope {
                 LauncherGridView {
                     id: emojiGrid
                     // Reserve a gutter for the scroll handle only while it shows.
-                    width: parent.width - (scrollable ? 14 : 0)
+                    width: parent.width - (scrollable ? Spacing.scrollGutter : 0)
                     height: Math.min(contentHeight, emojiScope.cellSize * emojiScope.gridRows)
                     cellWidth: emojiScope.cellSize
                     cellHeight: emojiScope.cellSize
@@ -308,6 +316,16 @@ Scope {
                         anchors.top: emojiGrid.top
                         anchors.bottom: emojiGrid.bottom
                     }
+                }
+
+                // Neo: full-bleed ink divider above the category strip (app-launcher style).
+                // Tracks the strip's visibility; bleeds past the 12px panel margins.
+                Rectangle {
+                    visible: !Shape.usesBlur && emojiScope.searchText === "" && emojiScope.groups.length > 0
+                    x: -Spacing.spacing12
+                    width: parent.width + 2 * Spacing.spacing12
+                    height: Shape.borderWidth
+                    color: Colors.separatorColor
                 }
 
                 // Category strip: hidden during search (results span all groups).

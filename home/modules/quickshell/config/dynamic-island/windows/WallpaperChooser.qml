@@ -377,114 +377,36 @@ Scope {
                             spacing: Spacing.spacing12
 
                             // Wallpaper hinzufügen (open folder)
-                            Rectangle {
-                                width: 190
-                                height: 36
-                                radius: Spacing.spacing8
-                                color: Colors.pillBackground
-                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-                                border.color: Colors.pillBorder
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                    color: addMouse.pressed ? Colors.hoverItemPressed : addMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
-                                }
-
-                                scale: addMouse.pressed ? 0.92 : 1.0
-                                SquishBehavior on scale {}
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Hintergrund hinzufügen"
-                                    font.family: Typography.fontFamily
-                                    font.pixelSize: Typography.fontSize14
-                                    font.weight: Font.Bold
-                                    color: Colors.textColor
-                                }
-
-                                MouseArea {
-                                    id: addMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        chooserScope.cancel();
-                                        openFolderProc.running = true;
-                                    }
+                            StaticButton {
+                                width: 190 + Shape.buttonShadowOffset
+                                height: 36 + Shape.buttonShadowOffset
+                                centered: true
+                                fontPixelSize: Typography.fontSize14
+                                label: "Hintergrund hinzufügen"
+                                onClicked: {
+                                    chooserScope.cancel();
+                                    openFolderProc.running = true;
                                 }
                             }
 
                             // Abbrechen (Cancel)
-                            Rectangle {
-                                width: 140
-                                height: 36
-                                radius: Spacing.spacing8
-                                color: Colors.pillBackground
-                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-                                border.color: cancelMouse.containsMouse || cancelMouse.pressed ? Colors.pillBorder : Colors.pillBorder
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                    color: cancelMouse.pressed ? Colors.hoverItemPressed : cancelMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
-                                }
-
-                                scale: cancelMouse.pressed ? 0.92 : 1.0
-                                SquishBehavior on scale {}
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Abbrechen"
-                                    font.family: Typography.fontFamily
-                                    font.pixelSize: Typography.fontSize14
-                                    font.weight: Font.Bold
-                                    color: Colors.textColor
-                                }
-
-                                MouseArea {
-                                    id: cancelMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: chooserScope.cancel()
-                                }
+                            StaticButton {
+                                width: 140 + Shape.buttonShadowOffset
+                                height: 36 + Shape.buttonShadowOffset
+                                centered: true
+                                fontPixelSize: Typography.fontSize14
+                                label: "Abbrechen"
+                                onClicked: chooserScope.cancel()
                             }
 
                             // Anwenden (Apply)
-                            Rectangle {
-                                width: 140
-                                height: 36
-                                radius: Spacing.spacing8
-                                color: Colors.pillBackground
-                                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-                                border.color: applyMouse.containsMouse || applyMouse.pressed ? Colors.pillBorder : Colors.pillBorder
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                    color: applyMouse.pressed ? Colors.hoverItemPressed : applyMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
-                                }
-
-                                scale: applyMouse.pressed ? 0.92 : 1.0
-                                SquishBehavior on scale {}
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Anwenden"
-                                    font.family: Typography.fontFamily
-                                    font.pixelSize: Typography.fontSize14
-                                    font.weight: Font.Bold
-                                    color: Colors.textColor
-                                }
-
-                                MouseArea {
-                                    id: applyMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: chooserScope.apply()
-                                }
+                            StaticButton {
+                                width: 140 + Shape.buttonShadowOffset
+                                height: 36 + Shape.buttonShadowOffset
+                                centered: true
+                                fontPixelSize: Typography.fontSize14
+                                label: "Anwenden"
+                                onClicked: chooserScope.apply()
                             }
                         }
                     }

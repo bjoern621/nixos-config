@@ -14,7 +14,12 @@ singleton PopupHost 1.0 base/PopupHost.qml
 singleton WallpaperPersist 1.0 base/WallpaperPersist.qml
 singleton VolumeService 1.0 base/VolumeService.qml
 singleton BluetoothConnector 1.0 base/BluetoothConnector.qml
+singleton BluetoothService 1.0 base/BluetoothService.qml
+singleton NetworkService 1.0 base/NetworkService.qml
+singleton WeatherService 1.0 base/WeatherService.qml
 singleton NowPlayingModel 1.0 base/NowPlayingModel.qml
+singleton AlbumArtAccent 1.0 base/AlbumArtAccent.qml
+AccentExtractor 1.0 base/AccentExtractor.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
@@ -46,12 +51,17 @@ AutoCloseOnFocusLoss 1.0 widgets/AutoCloseOnFocusLoss.qml
 Pressable 1.0 widgets/Pressable.qml
 StepWheel 1.0 widgets/StepWheel.qml
 ScrollHandle 1.0 widgets/ScrollHandle.qml
+ScrollView 1.0 widgets/ScrollView.qml
 ThemedLoader 1.0 widgets/ThemedLoader.qml
 Card 1.0 widgets/Card.qml
+AmbientGlow 1.0 widgets/AmbientGlow.qml
 ButtonBg 1.0 widgets/ButtonBg.qml
+StaticButton 1.0 widgets/StaticButton.qml
 
 VolumeSliderMenu 1.0 menus/VolumeSliderMenu.qml
 CalendarMenu 1.0 menus/CalendarMenu.qml
+WeatherWidget 1.0 menus/WeatherWidget.qml
+SkyScene 1.0 menus/SkyScene.qml
 BatteryMenu 1.0 menus/BatteryMenu.qml
 NowPlayingMenu 1.0 menus/NowPlayingMenu.qml
 PowerMenu 1.0 menus/PowerMenu.qml
@@ -64,6 +74,14 @@ OverlayExitButton 1.0 menus/OverlayExitButton.qml
 VolumeMuteButton 1.0 menus/VolumeMuteButton.qml
 VolumeOutputDeviceRow 1.0 menus/VolumeOutputDeviceRow.qml
 VolumeApplicationVolumeRow 1.0 menus/VolumeApplicationVolumeRow.qml
+NetworkMenu 1.0 menus/NetworkMenu.qml
+NetworkRow 1.0 menus/NetworkRow.qml
+VpnRow 1.0 menus/VpnRow.qml
+SignalBars 1.0 menus/SignalBars.qml
+NetChip 1.0 menus/NetChip.qml
+NetToggle 1.0 menus/NetToggle.qml
+BluetoothMenu 1.0 menus/BluetoothMenu.qml
+BluetoothDeviceRow 1.0 menus/BluetoothDeviceRow.qml
 
 VolumeOsd 1.0 osd/VolumeOsd.qml
 BrightnessOsd 1.0 osd/BrightnessOsd.qml
@@ -82,6 +100,9 @@ NotificationCenter 1.0 windows/NotificationCenter.qml
 
 Battery 1.0 bar/Battery.qml
 VolumeIcon 1.0 bar/VolumeIcon.qml
+NetworkIcon 1.0 bar/NetworkIcon.qml
+NetworkGlyph 1.0 bar/NetworkGlyph.qml
+BluetoothIcon 1.0 bar/BluetoothIcon.qml
 DateTime 1.0 bar/DateTime.qml
 WorkspaceIndicator 1.0 bar/WorkspaceIndicator.qml
 Workspace3Apps 1.0 bar/Workspace3Apps.qml
@@ -110,9 +131,7 @@ NotificationCenterController 1.0 logic/NotificationCenterController.qml
 
 # Theme primitives. Views are loaded by url via ThemedLoader, not registered here.
 Surface 1.0 themes/classic/Surface.qml
-ActionButton 1.0 themes/classic/ActionButton.qml
 NeoSurface 1.0 themes/neo/NeoSurface.qml
-NeoButton 1.0 themes/neo/NeoButton.qml
 NeoPill 1.0 themes/neo/NeoPill.qml
 NeoSeparator 1.0 themes/neo/NeoSeparator.qml
 NeoIconTile 1.0 themes/neo/NeoIconTile.qml

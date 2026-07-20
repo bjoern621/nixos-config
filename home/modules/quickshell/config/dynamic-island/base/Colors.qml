@@ -10,6 +10,7 @@ QtObject {
     // Text colors
     readonly property color textColor: _t.textColor
     readonly property color textColorMuted: _t.textColorMuted
+    readonly property color placeholder: _t.placeholder
 
     // Background colors
     readonly property color pillBackground: _t.pillBackground

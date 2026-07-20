@@ -46,7 +46,7 @@ ShellRoot {
         active: false
         AppLauncherNeo {}
     }
-    FpsTest {}
+    // FpsTest {} // TEMP unblock: no FpsTest.qml exists, this broke every reload. Restore once FpsTest.qml is back.
 
     ClipboardHistory {}
     EmojiPicker {}

@@ -35,6 +35,12 @@ Item {
     property bool emptyVisible: false
     property string emptyText: "Keine Ergebnisse"
 
+    readonly property bool neo: !Shape.usesBlur
+    // Neo header matches AppLauncherNeo: 50px flush, ink divider beneath.
+    readonly property int neoHeaderHeight: 50
+    // Y distance from panel top to the content column (header block above it).
+    readonly property int headerBlock: neo ? (neoHeaderHeight + Shape.borderWidth + Spacing.spacing8) : (Spacing.spacing12 + searchBarHeight + Spacing.spacing8)
+
     default property alias contentData: contentSlot.data
 
     signal accepted
@@ -80,15 +86,30 @@ Item {
         onClicked: root.escaped()
     }
 
+    // Neo hard offset shadow: solid, no blur, down-right. Classic: shadowOffset 0, hidden.
+    // Panel and shadow each shift by half the offset so the pair stays centered.
+    Rectangle {
+        visible: Shape.shadowOffset > 0
+        width: panel.width
+        height: panel.height
+        radius: panel.radius
+        color: Colors.separatorColor
+        anchors.centerIn: parent
+        anchors.horizontalCenterOffset: Shape.shadowOffset / 2
+        anchors.verticalCenterOffset: Shape.shadowOffset / 2
+    }
+
     Rectangle {
         id: panel
         width: root.panelWidth
-        height: contentColumn.implicitHeight + 2 * Spacing.spacing12
+        height: root.headerBlock + contentColumn.implicitHeight + Spacing.spacing12
         anchors.centerIn: parent
+        anchors.horizontalCenterOffset: -Shape.shadowOffset / 2
+        anchors.verticalCenterOffset: -Shape.shadowOffset / 2
 
-        radius: Spacing.spacing12
+        radius: Shape.usesBlur ? Spacing.spacing12 : Shape.cardRadius
         color: Colors.pillBackground
-        border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
+        border.width: Shape.usesBlur ? 1 : Shape.borderWidth
         border.color: Colors.pillBorder
 
         // Click-eater: absorbs clicks on panel padding,
@@ -98,21 +119,42 @@ Item {
             anchors.fill: parent
         }
 
+        // Header. Classic: rounded box inset 12px.
+        // Neo: flush full-width 50px header, followed by the flush ink divider.
+        LauncherSearchBar {
+            id: searchBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.topMargin: root.neo ? 0 : Spacing.spacing12
+            anchors.leftMargin: root.neo ? 0 : Spacing.spacing12
+            anchors.rightMargin: root.neo ? 0 : Spacing.spacing12
+            height: root.neo ? root.neoHeaderHeight : root.searchBarHeight
+            text: root.searchText
+            placeholder: root.placeholder
+            accent: root.searchAccent
+        }
+
+        // Neo: full-bleed ink divider under the header (app-launcher style).
+        Rectangle {
+            id: headerDivider
+            visible: root.neo
+            anchors.top: searchBar.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: Shape.borderWidth
+            color: Colors.separatorColor
+        }
+
         Column {
             id: contentColumn
-            anchors {
-                fill: parent
-                margins: Spacing.spacing12
-            }
+            anchors.top: root.neo ? headerDivider.bottom : searchBar.bottom
+            anchors.topMargin: Spacing.spacing8
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: Spacing.spacing12
+            anchors.rightMargin: Spacing.spacing12
             spacing: Spacing.spacing8
-
-            LauncherSearchBar {
-                width: parent.width
-                height: root.searchBarHeight
-                text: root.searchText
-                placeholder: root.placeholder
-                accent: root.searchAccent
-            }
 
             Item {
                 id: contentSlot

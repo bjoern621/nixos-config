@@ -25,7 +25,7 @@ Item {
             Repeater {
                 model: root.controller ? root.controller.actions : []
 
-                ActionButton {
+                StaticButton {
                     required property var modelData
                     width: root.buttonWidth
                     height: root.buttonHeight

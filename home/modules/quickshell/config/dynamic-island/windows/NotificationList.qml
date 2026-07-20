@@ -28,7 +28,7 @@ Item {
         id: notifFlick
         anchors.fill: parent
         // Reserve a gutter for the scroll handle only while it shows.
-        anchors.rightMargin: scrollable ? 14 : 0
+        anchors.rightMargin: scrollable ? Spacing.scrollGutter : 0
         contentHeight: notifCol.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
