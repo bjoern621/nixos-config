@@ -15,17 +15,16 @@ let
     # Positions must match home/modules/hyprland/monitors.lua: externals in a
     # row at the top, eDP-1 centered below. The intermediate scale-1 pass uses
     # x=1088 because eDP-1 is 2944 logical wide at that scale (2560 - 1472).
+    #
+    # Runtime monitor changes go through `hyprctl eval` + hl.monitor. `hyprctl
+    # keyword monitor` is dead under the Lua parser ("keyword can't work with
+    # non-legacy parsers. Use eval."). Two separate eval passes preserve the
+    # scale 2 -> 1 -> 2 toggle that forces the recompute.
     set -euo pipefail
 
-    hyprctl --batch "\
-      keyword monitor eDP-1,2944x1840@90,1088x1440,1 ; \
-      keyword monitor desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64,2560x1440@144,0x0,1 ; \
-      keyword monitor desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63,2560x1440@144,2560x0,1" > /dev/null
+    hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1088x1440", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })' > /dev/null
 
-    hyprctl --batch "\
-      keyword monitor eDP-1,2944x1840@90,1824x1440,2 ; \
-      keyword monitor desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64,2560x1440@144,0x0,1 ; \
-      keyword monitor desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63,2560x1440@144,2560x0,1" > /dev/null
+    hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })' > /dev/null
 
     echo "Monitors re-applied. Cursor wall and bar offset should be cleared."
   '';

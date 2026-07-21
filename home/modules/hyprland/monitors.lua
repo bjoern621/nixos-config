@@ -21,13 +21,19 @@ hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 -- The guard uses `test`, not `[ ... ]`: Hyprland parses a leading `[` in an
 -- exec command as a window-rule prefix and strips it, which would leave the
 -- shell with a dangling `&& ...` and silently skip the disable.
+--
+-- `hyprctl keyword monitor` is dead under the Lua parser ("keyword can't work
+-- with non-legacy parsers. Use eval."). Runtime monitor changes go through
+-- `hyprctl eval` with the hl.monitor API instead. Re-enable must pass
+-- `disabled = false` explicitly; setting mode/position alone leaves the
+-- disabled flag latched.
 hl.bind(
     "switch:on:Lid Switch",
-    hl.dsp.exec_cmd([[test "$(hyprctl monitors | grep -c '^Monitor ')" -gt 1 && hyprctl keyword monitor "eDP-1, disable"]]),
+    hl.dsp.exec_cmd([[test "$(hyprctl monitors | grep -c '^Monitor ')" -gt 1 && hyprctl eval 'hl.monitor({ output = "eDP-1", disabled = true })']]),
     { locked = true }
 )
 hl.bind(
     "switch:off:Lid Switch",
-    hl.dsp.exec_cmd("hyprctl keyword monitor eDP-1, 2944x1840@90, 1824x1440, 2"),
+    hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, disabled = false })']]),
     { locked = true }
 )
