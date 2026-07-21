@@ -54,7 +54,9 @@ in
       RuntimeDirectoryMode = "0700";
       # attic wants config at $XDG_CONFIG_HOME/attic/config.toml.
       Environment = "XDG_CONFIG_HOME=/run/attic-watch-store";
-      ExecStartPre = "${pkgs.coreutils}/bin/install -Dm400 ${config.sops.templates."attic.toml".path} /run/attic-watch-store/attic/config.toml";
+      ExecStartPre = "${pkgs.coreutils}/bin/install -Dm400 ${
+        config.sops.templates."attic.toml".path
+      } /run/attic-watch-store/attic/config.toml";
       ExecStart = "${pkgs.attic-client}/bin/attic watch-store hh:system";
       Restart = "on-failure";
       RestartSec = 5;
