@@ -118,16 +118,20 @@ Item {
         visible: root.svc.ready
         radius: Shape.cardRadius
         color: "transparent"
+        // ink frame drawn by this rect; band inset by borderWidth sits inside it.
+        border.width: Shape.borderWidth
+        border.color: Colors.pillBorder
         clip: true
 
         readonly property real segW: width / 24
 
-        // color band + curve, masked to the ribbon's rounded corners.
-        // clip is rectangular; layer.enabled rounds the corners so the band
-        // does not square off inside the rounded ink frame.
+        // color band + curve, inset inside the ink frame so the border crops it.
+        // margins = borderWidth keeps the band off the frame; layer.enabled
+        // rounds the band to the frame's inner radius (outer minus border).
         Rectangle {
             anchors.fill: parent
-            radius: ribbon.radius
+            anchors.margins: ribbon.border.width
+            radius: ribbon.radius - ribbon.border.width
             color: "transparent"
             clip: true
             layer.enabled: true
@@ -210,15 +214,6 @@ Item {
                 onWidthChanged: requestPaint()
                 onHeightChanged: requestPaint()
             }
-        }
-
-        // ink frame above the color band (segments fill edge-to-edge and would hide a plain border)
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-            radius: ribbon.radius
-            border.width: Shape.borderWidth
-            border.color: Colors.pillBorder
         }
 
         // live "now" marker: red vertical stripe at wall-clock hour, rounded caps, always shown
