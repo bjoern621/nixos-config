@@ -70,6 +70,9 @@ IM=$(ls -d /nix/store/*imagemagick*/bin | head -1)
 grim -o DP-7 - | $IM/magick png:- -crop 400x220+2160+0 +repage -resize 200% shot.png
 ```
 
+To summon a specific UI part and crop tight to its layer surface, see the
+`screenshot-ui` skill; it drives the show, locate, capture, move loop.
+
 ## Driving notifications
 
 `notify-send` is private to the quickshell wrapper and not on `PATH`. Use gdbus:
