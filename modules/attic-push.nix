@@ -4,6 +4,10 @@
 # Server + storage live in hh-cluster-infra: atticd on k3s, NAR chunks in Garage
 # S3.
 #
+# attic cache create system
+# attic cache configure system --public
+# attic cache info system
+#
 # Read is public (anonymous), so pull needs only the URL + cache public key.
 # Push needs a JWT token; watch-store uploads local build outputs as they land,
 # mirroring the old cachix-watch-store. Upstream paths (cache.nixos.org) are
@@ -15,7 +19,7 @@
 let
   cacheUrl = "https://nix-cache.bjoernblessin.de/system";
   # From `attic cache info system`, set after the cache is created. name:base64.
-  publicKey = "system:/IHGc/pVuNl/6E7upaCDAhflf9R3gMMPRmp6qS9JiR0=";
+  publicKey = "system:jijFAA9mMhpgAPDnf4JF3FlOMrh15y4JT8845k6Q92g=";
 in
 {
   nix.settings = {
