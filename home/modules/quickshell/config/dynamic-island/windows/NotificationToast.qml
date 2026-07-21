@@ -159,7 +159,7 @@ Scope {
                                 }
                             }
 
-                            Item {
+                            MiniIconButton {
                                 id: closeBtn
                                 anchors {
                                     right: parent.right
@@ -167,11 +167,10 @@ Scope {
                                     top: parent.top
                                     topMargin: Spacing.spacing8
                                 }
-                                width: Spacing.spacing24
-                                height: Spacing.spacing24
+                                source: "../icons/icons8-close.svg"
+                                // Reveal on card hover only. Zero opacity still takes input, so gate visible.
                                 opacity: cardHover.hovered ? 1.0 : 0.0
-                                // An item at zero opacity still takes input.
-                                visible: closeBtn.opacity > 0
+                                visible: opacity > 0
 
                                 Behavior on opacity {
                                     NumberAnimation {
@@ -180,34 +179,9 @@ Scope {
                                     }
                                 }
 
-                                scale: closeTap.pressed ? 0.85 : 1.0
-                                SquishBehavior on scale {}
-
-                                // Close button bg. Classic round pill, neo cream hover + accent press.
-                                ButtonBg {
-                                    hovered: closeHover.hovered
-                                    pressed: closeTap.pressed
-                                }
-
-                                HoverHandler {
-                                    id: closeHover
-                                    cursorShape: Qt.PointingHandCursor
-                                }
-
-                                TapHandler {
-                                    id: closeTap
-                                    gesturePolicy: TapHandler.ReleaseWithinBounds
-                                    onTapped: {
-                                        controller.dismiss(toastDelegate.uid);
-                                        controller.hideEntry(toastDelegate.uid);
-                                    }
-                                }
-
-                                TintedIcon {
-                                    anchors.centerIn: parent
-                                    size: Spacing.spacing12
-                                    source: "../icons/icons8-close.svg"
-                                    color: Colors.textColorMuted
+                                onClicked: {
+                                    controller.dismiss(toastDelegate.uid);
+                                    controller.hideEntry(toastDelegate.uid);
                                 }
                             }
                         }

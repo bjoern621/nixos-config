@@ -124,16 +124,21 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            ExpandArrow {
+            MiniIconButton {
                 visible: root.hasDetail
-                expanded: root.expanded
-                collapsedRotation: 0
-                expandedRotation: 180
                 anchors.verticalCenter: parent.verticalCenter
+                onClicked: root.detailToggled()
+
+                ExpandArrow {
+                    anchors.centerIn: parent
+                    expanded: root.expanded
+                    collapsedRotation: 0
+                    expandedRotation: 180
+                }
             }
         }
 
-        // Connect/disconnect hit area: left of the chevron only.
+        // Connect/disconnect hit area: left of the chevron button.
         Item {
             anchors.left: parent.left
             anchors.top: parent.top
@@ -146,21 +151,6 @@ Item {
             TapHandler {
                 id: hitTap
                 onTapped: root.activated()
-            }
-        }
-
-        // Chevron area toggles the detail panel.
-        Item {
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: root.hasDetail ? 34 : 0
-            visible: root.hasDetail
-            HoverHandler {
-                cursorShape: Qt.PointingHandCursor
-            }
-            TapHandler {
-                onTapped: root.detailToggled()
             }
         }
     }

@@ -53,6 +53,13 @@ Item {
         return ei.temp + (ej.temp - ei.temp) * f;
     }
 
+    // Fractional hour to "HH:MM". Clamps to the 0..24 scrub range.
+    function _fmtHour(h) {
+        const total = Math.round(Math.max(0, Math.min(24, h)) * 60);
+        const hh = Math.floor(total / 60), mm = total % 60;
+        return (hh < 10 ? "0" + hh : hh) + ":" + (mm < 10 ? "0" + mm : mm);
+    }
+
     readonly property var _cur: _dayAt(displayHour)
     readonly property string _base: _cur ? _cur.base : "clear"
 
@@ -115,59 +122,70 @@ Item {
 
         readonly property real segW: width / 24
 
-        Repeater {
-            model: root.svc.dayHours
-            delegate: Rectangle {
-                required property var modelData
-                required property int index
-                x: index * ribbon.segW
-                width: ribbon.segW + 1
-                height: ribbon.height
-                color: modelData ? WeatherUtils.conditionColor(modelData.base, modelData.isDay) : "transparent"
-            }
-        }
-
-        // temperature curve over the segments
-        Canvas {
-            id: curve
+        // color band + curve, masked to the ribbon's rounded corners.
+        // clip is rectangular; layer.enabled rounds the corners so the band
+        // does not square off inside the rounded ink frame.
+        Rectangle {
             anchors.fill: parent
-            onPaint: {
-                const a = root.svc.dayHours;
-                const ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                if (!a || a.length < 2)
-                    return;
-                let tmin = 999, tmax = -999;
-                for (let k = 0; k < a.length; k++) {
-                    if (!a[k]) continue;
-                    tmin = Math.min(tmin, a[k].temp);
-                    tmax = Math.max(tmax, a[k].temp);
+            radius: ribbon.radius
+            color: "transparent"
+            clip: true
+            layer.enabled: true
+
+            Repeater {
+                model: root.svc.dayHours
+                delegate: Rectangle {
+                    required property var modelData
+                    required property int index
+                    x: index * ribbon.segW
+                    width: ribbon.segW + 1
+                    height: ribbon.height
+                    color: modelData ? WeatherUtils.conditionColor(modelData.base, modelData.isDay) : "transparent"
                 }
-                if (tmax - tmin < 6) { tmin -= 3; tmax += 3; }
-                const pad = 5;
-                const pts = [];
-                for (let k = 0; k < a.length; k++) {
-                    if (!a[k]) continue;
-                    const x = (k + 0.5) / 24 * width;
-                    const y = height - pad - (a[k].temp - tmin) / (tmax - tmin) * (height - 2 * pad);
-                    pts.push([x, y]);
-                }
-                function trace() {
-                    ctx.beginPath();
-                    for (let k = 0; k < pts.length; k++)
-                        k === 0 ? ctx.moveTo(pts[k][0], pts[k][1]) : ctx.lineTo(pts[k][0], pts[k][1]);
-                    ctx.stroke();
-                }
-                ctx.lineJoin = "round"; ctx.lineCap = "round";
-                ctx.strokeStyle = "rgba(255,253,245,0.85)"; ctx.lineWidth = 4; trace();
-                ctx.strokeStyle = "rgba(20,20,20,0.9)"; ctx.lineWidth = 1.8; trace();
             }
-            Connections {
-                target: root.svc
-                function onDayHoursChanged() { curve.requestPaint(); }
+
+            // temperature curve over the segments
+            Canvas {
+                id: curve
+                anchors.fill: parent
+                onPaint: {
+                    const a = root.svc.dayHours;
+                    const ctx = getContext("2d");
+                    ctx.clearRect(0, 0, width, height);
+                    if (!a || a.length < 2)
+                        return;
+                    let tmin = 999, tmax = -999;
+                    for (let k = 0; k < a.length; k++) {
+                        if (!a[k]) continue;
+                        tmin = Math.min(tmin, a[k].temp);
+                        tmax = Math.max(tmax, a[k].temp);
+                    }
+                    if (tmax - tmin < 6) { tmin -= 3; tmax += 3; }
+                    const pad = 5;
+                    const pts = [];
+                    for (let k = 0; k < a.length; k++) {
+                        if (!a[k]) continue;
+                        const x = (k + 0.5) / 24 * width;
+                        const y = height - pad - (a[k].temp - tmin) / (tmax - tmin) * (height - 2 * pad);
+                        pts.push([x, y]);
+                    }
+                    function trace() {
+                        ctx.beginPath();
+                        for (let k = 0; k < pts.length; k++)
+                            k === 0 ? ctx.moveTo(pts[k][0], pts[k][1]) : ctx.lineTo(pts[k][0], pts[k][1]);
+                        ctx.stroke();
+                    }
+                    ctx.lineJoin = "round"; ctx.lineCap = "round";
+                    ctx.strokeStyle = "rgba(255,253,245,0.85)"; ctx.lineWidth = 4; trace();
+                    ctx.strokeStyle = "rgba(20,20,20,0.9)"; ctx.lineWidth = 1.8; trace();
+                }
+                Connections {
+                    target: root.svc
+                    function onDayHoursChanged() { curve.requestPaint(); }
+                }
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
             }
-            onWidthChanged: requestPaint()
-            onHeightChanged: requestPaint()
         }
 
         // ink frame above the color band (segments fill edge-to-edge and would hide a plain border)
@@ -179,21 +197,13 @@ Item {
             border.color: Colors.pillBorder
         }
 
-        // live "now" marker: red tick at wall-clock hour, always shown
+        // live "now" marker: red vertical stripe at wall-clock hour, rounded caps, always shown
         Rectangle {
-            width: Math.max(3, Shape.borderWidth)
+            width: Math.max(4, Shape.borderWidth)
             height: ribbon.height
             x: root.liveHour / 24 * ribbon.width - width / 2
+            radius: width / 2
             color: Colors.nowMarker
-            Rectangle {
-                width: 12; height: 12
-                radius: Shape.usesBlur ? 6 : 2
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                color: Colors.nowMarker
-                border.width: Shape.thinBorderWidth
-                border.color: Colors.pillBorder
-            }
         }
 
         // scrub marker: neutral, only while dragging the ribbon
@@ -223,6 +233,32 @@ Item {
             }
             onPressed: mouse => apply(mouse.x)
             onPositionChanged: mouse => { if (pressed) apply(mouse.x); }
+        }
+    }
+
+    // ---- scrub time readout ----
+    // Floats above the pointer while dragging the ribbon. Child of root, not
+    // the clipped ribbon, so it can sit outside the timeline bounds. Tracks the
+    // scrub position and instant-follows the pointer (no show/hide animation).
+    Rectangle {
+        id: scrubLabel
+        visible: root.scrubbing && root.svc.ready
+        anchors.bottom: ribbon.top
+        anchors.bottomMargin: Spacing.spacing4
+        x: Math.max(0, Math.min(root.width - width, root.scrubHour / 24 * ribbon.width - width / 2))
+        width: scrubText.implicitWidth + Spacing.spacing8 * 2
+        height: scrubText.implicitHeight + Spacing.spacing4 * 2
+        radius: Shape.usesBlur ? height / 2 : Shape.cardRadius
+        color: Colors.pillBackground
+        border.width: Shape.borderWidth
+        border.color: Colors.pillBorder
+
+        Text {
+            id: scrubText
+            anchors.centerIn: parent
+            text: root._fmtHour(root.scrubHour)
+            font { family: Typography.fontFamily; pixelSize: Typography.fontSize12; weight: Typography.weightBold }
+            color: Colors.textColor
         }
     }
 

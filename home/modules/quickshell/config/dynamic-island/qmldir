@@ -33,6 +33,7 @@ ExpandArrow 1.0 animations/ExpandArrow.qml
 HoverItem 1.0 widgets/HoverItem.qml
 HoverMenu 1.0 widgets/HoverMenu.qml
 IconButton 1.0 widgets/IconButton.qml
+MiniIconButton 1.0 widgets/MiniIconButton.qml
 StepSlider 1.0 widgets/StepSlider.qml
 ModalCard 1.0 widgets/ModalCard.qml
 OsdWindow 1.0 widgets/OsdWindow.qml

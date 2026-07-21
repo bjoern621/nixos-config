@@ -115,7 +115,7 @@ Item {
                         color: Colors.textColorMuted
                     }
 
-                    Item {
+                    MiniIconButton {
                         id: deleteBtn
                         anchors {
                             right: parent.right
@@ -123,11 +123,10 @@ Item {
                             top: parent.top
                             topMargin: Spacing.spacing8
                         }
-                        width: Spacing.spacing24
-                        height: Spacing.spacing24
+                        source: "../icons/icons8-close.svg"
+                        // Reveal on row hover only. Zero opacity still takes input, so gate visible.
                         opacity: entryHover.hovered ? 1.0 : 0.0
-                        // An item at zero opacity still takes input.
-                        visible: deleteBtn.opacity > 0
+                        visible: opacity > 0
 
                         Behavior on opacity {
                             NumberAnimation {
@@ -136,31 +135,7 @@ Item {
                             }
                         }
 
-                        scale: deleteTap.pressed ? 0.85 : 1.0
-                        SquishBehavior on scale {}
-
-                        // Delete button bg. Classic round pill, neo cream hover + accent press.
-                        ButtonBg {
-                            hovered: deleteHover.hovered
-                            pressed: deleteTap.pressed
-                        }
-
-                        HoverHandler {
-                            id: deleteHover
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                        TapHandler {
-                            id: deleteTap
-                            gesturePolicy: TapHandler.ReleaseWithinBounds
-                            onTapped: root.controller.removeAt(histEntry.index)
-                        }
-
-                        TintedIcon {
-                            anchors.centerIn: parent
-                            size: Spacing.spacing12
-                            source: "../icons/icons8-close.svg"
-                            color: Colors.textColorMuted
-                        }
+                        onClicked: root.controller.removeAt(histEntry.index)
                     }
                 }
             }

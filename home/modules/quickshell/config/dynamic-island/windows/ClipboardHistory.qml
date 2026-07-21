@@ -345,7 +345,7 @@ Scope {
                         onTapped: clipScope.selectEntry(clipDelegate.modelData)
                     }
 
-                    Rectangle {
+                    MiniIconButton {
                         id: trashBtn
                         anchors {
                             right: parent.right
@@ -353,12 +353,10 @@ Scope {
                             top: parent.top
                             topMargin: Spacing.spacing8
                         }
-                        width: Spacing.spacing24
-                        height: Spacing.spacing24
-                        radius: Shape.pill(height)
-                        color: trashTap.pressed ? Colors.hoverItemPressed : trashHover.hovered ? Colors.hoverItemHovered : "transparent"
-                        border.color: trashHover.hovered ? Colors.pillBorder : "transparent"
+                        source: "../icons/icons8-trash.svg"
+                        // Reveal on row hover only.
                         opacity: rowHover.hovered ? 1.0 : 0.0
+                        visible: opacity > 0
 
                         Behavior on opacity {
                             NumberAnimation {
@@ -367,26 +365,7 @@ Scope {
                             }
                         }
 
-                        scale: trashTap.pressed ? 0.85 : 1.0
-                        SquishBehavior on scale {}
-
-                        HoverHandler {
-                            id: trashHover
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                        TapHandler {
-                            id: trashTap
-                            // Exclusive grab on press so the row's select TapHandler doesn't also fire.
-                            gesturePolicy: TapHandler.ReleaseWithinBounds
-                            onTapped: clipScope.deleteEntry(clipDelegate.modelData)
-                        }
-
-                        TintedIcon {
-                            anchors.centerIn: parent
-                            size: Spacing.spacing12
-                            source: "../icons/icons8-trash.svg"
-                            color: Colors.textColorMuted
-                        }
+                        onClicked: clipScope.deleteEntry(clipDelegate.modelData)
                     }
                 }
             }
