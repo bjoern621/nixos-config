@@ -21,9 +21,10 @@ Scope {
 
     property bool clipVisible: false
     property string searchText: ""
-    // Each entry: { raw, display, lower, isImage, imagePath, clipId }
+    // Each entry: { raw, display, lower, isImage, imagePath, clipId }.
+    // allEntries: full cliphist list, the filter source (plain array, no view
+    // bound to it). Filtered view lives in clipModel.
     property var allEntries: []
-    property var filteredEntries: []
     // Map clipId -> integer version (bumped each decode). Used to bust Image cache.
     property var imageVersions: ({})
     property var imageDecodeQueue: []
@@ -52,33 +53,44 @@ Scope {
     }
 
     // resetIndex=false skips the `currentIndex = 0` write.
-    // Background refreshes (listProc) and deletes must not clobber a hover-set
-    // selection from MouseArea.
+    // Background refreshes (listProc) must not clobber a hover-set selection.
     // User-driven calls (open, search) keep the default reset.
     function updateFilter(resetIndex = true) {
         const query = searchText.toLowerCase();
+        let out;
         if (query === "") {
-            filteredEntries = allEntries;
-            if (resetIndex)
-                clipList.currentIndex = 0;
-            return;
+            out = allEntries;
+        } else {
+            const scored = [];
+            for (let i = 0; i < allEntries.length; i++) {
+                const e = allEntries[i];
+                const s = FzfLib.scoreLower(e.display, e.lower, query);
+                if (s > -Infinity)
+                    scored.push({
+                        e,
+                        score: s
+                    });
+            }
+            scored.sort((a, b) => b.score - a.score);
+            const limit = Math.min(scored.length, maxResults);
+            out = new Array(limit);
+            for (let i = 0; i < limit; i++)
+                out[i] = scored[i].e;
         }
-        const scored = [];
-        for (let i = 0; i < allEntries.length; i++) {
-            const e = allEntries[i];
-            const s = FzfLib.scoreLower(e.display, e.lower, query);
-            if (s > -Infinity)
-                scored.push({
-                    e,
-                    score: s
-                });
+        // Full rebuild. A new query changes every row and resetting scroll to top
+        // is intended; clear()+append is a model reset (contentY -> 0).
+        // Deletes take the incremental path in deleteEntry instead.
+        clipModel.clear();
+        for (let i = 0; i < out.length; i++) {
+            const e = out[i];
+            clipModel.append({
+                raw: e.raw,
+                display: e.display,
+                isImage: e.isImage,
+                imagePath: e.imagePath,
+                clipId: e.clipId
+            });
         }
-        scored.sort((a, b) => b.score - a.score);
-        const limit = Math.min(scored.length, maxResults);
-        const out = new Array(limit);
-        for (let i = 0; i < limit; i++)
-            out[i] = scored[i].e;
-        filteredEntries = out;
         if (resetIndex)
             clipList.currentIndex = 0;
     }
@@ -92,16 +104,18 @@ Scope {
 
     function deleteEntry(entry) {
         // Fire-and-forget so rapid deletes don't queue on a Process object;
-        // the local model is updated optimistically.
+        // local model updated optimistically.
         Quickshell.execDetached(["bash", "-c", "printf '%s' \"$1\" | cliphist delete", "cliphist-delete", entry.raw]);
-        // Reassigning filteredEntries is a full ListView model reset (plain JS
-        // array, not ListModel); relayout snaps contentY to 0.
-        // Stash position; clipList restores after contentHeight settles.
-        // Qt.callLater here would fire pre-relayout, restoring the old value
-        // before the snap wipes it.
-        clipList.pendingRestoreY = clipList.contentY;
         allEntries = allEntries.filter(e => e.clipId !== entry.clipId);
-        updateFilter(false);
+        // Incremental remove, not a model reset: ListView shifts the rows below
+        // up, holds contentY, destroys only the one delegate. No jump, no flicker.
+        // Reassigning an array model would full-reset and snap contentY to 0.
+        for (let i = 0; i < clipModel.count; i++) {
+            if (clipModel.get(i).clipId === entry.clipId) {
+                clipModel.remove(i);
+                break;
+            }
+        }
     }
 
     function decodeNextImage() {
@@ -129,6 +143,12 @@ Scope {
                 clipWindow.screen = s;
         }
         clipVisible = !clipVisible;
+    }
+
+    // Filtered view bound to the ListView. updateFilter rebuilds it; deleteEntry
+    // removes one row (incremental), so a delete never resets the ListView.
+    ListModel {
+        id: clipModel
     }
 
     Component.onCompleted: refresh()
@@ -249,20 +269,20 @@ Scope {
             anchors.fill: parent
             searchText: clipScope.searchText
             placeholder: "Zwischenablage durchsuchen..."
-            emptyVisible: clipScope.filteredEntries.length === 0 && clipScope.searchText !== ""
+            emptyVisible: clipModel.count === 0 && clipScope.searchText !== ""
 
             onSearchEdited: text => clipScope.searchText = text
             onEscaped: clipScope.clipVisible = false
             onAccepted: {
-                if (clipScope.filteredEntries.length > 0)
-                    clipScope.selectEntry(clipScope.filteredEntries[clipList.effectiveIndex]);
+                if (clipModel.count > 0)
+                    clipScope.selectEntry(clipModel.get(clipList.effectiveIndex));
             }
             onNavigated: (dx, dy) => {
                 if (dy === 0)
                     return;
                 const next = clipList.effectiveIndex + dy;
                 clipList.keyboardNav = true;
-                if (next >= 0 && next < clipScope.filteredEntries.length)
+                if (next >= 0 && next < clipModel.count)
                     clipList.currentIndex = next;
             }
 
@@ -271,27 +291,19 @@ Scope {
                 // Reserve a gutter for the scroll handle only while it shows.
                 width: parent.width - (scrollable ? Spacing.scrollGutter : 0)
                 height: Math.min(contentHeight, clipScope.maxVisibleHeight)
-                model: clipScope.filteredEntries
-
-                // deleteEntry stashes scroll here before the model reset.
-                // contentHeight shrinks on every delete, so its change means
-                // relayout is done; Qt.callLater defers past the contentY=0 snap.
-                property real pendingRestoreY: -1
-                onContentHeightChanged: {
-                    if (pendingRestoreY < 0)
-                        return;
-                    const y = pendingRestoreY;
-                    pendingRestoreY = -1;
-                    Qt.callLater(() => contentY = Math.max(0, Math.min(y, contentHeight - height)));
-                }
+                model: clipModel
 
                 delegate: Item {
                     id: clipDelegate
-                    required property var modelData
                     required property int index
+                    required property string raw
+                    required property string display
+                    required property bool isImage
+                    required property string imagePath
+                    required property string clipId
                     readonly property bool active: clipList.effectiveIndex === index
                     width: clipList.width
-                    height: modelData.isImage ? clipScope.imageRowHeight : clipScope.textRowHeight
+                    height: clipDelegate.isImage ? clipScope.imageRowHeight : clipScope.textRowHeight
 
                     LauncherDelegateBg {
                         active: clipDelegate.active
@@ -299,16 +311,16 @@ Scope {
                     }
 
                     Image {
-                        visible: modelData.isImage
+                        visible: clipDelegate.isImage
                         anchors {
                             fill: parent
                             margins: Spacing.spacing4
                         }
                         source: {
-                            if (!modelData.isImage)
+                            if (!clipDelegate.isImage)
                                 return "";
-                            const v = clipScope.imageVersions[modelData.clipId];
-                            return v ? "file://" + modelData.imagePath + "?v=" + v : "";
+                            const v = clipScope.imageVersions[clipDelegate.clipId];
+                            return v ? "file://" + clipDelegate.imagePath + "?v=" + v : "";
                         }
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
@@ -320,7 +332,7 @@ Scope {
                     TintedIcon {
                         // Placeholder while image decode pending
                         id: clipPendingIcon
-                        visible: modelData.isImage && !clipScope.imageVersions[modelData.clipId]
+                        visible: clipDelegate.isImage && !clipScope.imageVersions[clipDelegate.clipId]
                         anchors.centerIn: parent
                         source: "../icons/icons8-spinner.svg"
                         size: Typography.fontSize24
@@ -337,14 +349,14 @@ Scope {
                     }
 
                     Text {
-                        visible: !clipDelegate.modelData.isImage
+                        visible: !clipDelegate.isImage
                         anchors {
                             fill: parent
                             leftMargin: Spacing.spacing12
                             // Keeps elided text clear of the trash button.
                             rightMargin: Spacing.spacing8 + Spacing.spacing24 + Spacing.spacing8
                         }
-                        text: clipDelegate.modelData.display
+                        text: clipDelegate.display
                         font.family: Typography.fontFamily
                         font.pixelSize: Typography.fontSize14
                         font.weight: Font.Normal
@@ -360,7 +372,10 @@ Scope {
 
                     TapHandler {
                         id: clipDelegateTap
-                        onTapped: clipScope.selectEntry(clipDelegate.modelData)
+                        onTapped: clipScope.selectEntry({
+                            raw: clipDelegate.raw,
+                            isImage: clipDelegate.isImage
+                        })
                     }
 
                     MiniIconButton {
@@ -383,7 +398,10 @@ Scope {
                             }
                         }
 
-                        onClicked: clipScope.deleteEntry(clipDelegate.modelData)
+                        onClicked: clipScope.deleteEntry({
+                            raw: clipDelegate.raw,
+                            clipId: clipDelegate.clipId
+                        })
                     }
                 }
             }

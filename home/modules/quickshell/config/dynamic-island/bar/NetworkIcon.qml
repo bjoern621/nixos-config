@@ -3,38 +3,38 @@ import "../"
 import "../base"
 import "../animations"
 
-// Bar network indicator: wifi/ethernet/off glyph with a VPN badge overlay.
-// State comes from the NetworkService singleton, matching VolumeIcon's shape.
-Item {
+// Bar network indicator: wifi/ethernet/off glyph, plus a VPN shield to its right
+// while a tunnel is active. State comes from the NetworkService singleton.
+Row {
     id: root
 
     anchors.verticalCenter: parent.verticalCenter
-    width: 18
-    height: 18
+    spacing: Spacing.spacing4
 
-    ContentReplace {
-        id: iconReplace
-        contentKey: NetworkService.iconMode + ":" + NetworkService.iconLevel
-        anchors.fill: parent
+    Item {
+        width: 18
+        height: 18
+        anchors.verticalCenter: parent.verticalCenter
 
-        NetworkGlyph {
+        ContentReplace {
+            id: iconReplace
+            contentKey: NetworkService.iconMode + ":" + NetworkService.iconLevel
             anchors.fill: parent
-            mode: NetworkService.iconMode
-            level: NetworkService.iconLevel
-            color: Colors.textColor
+
+            NetworkGlyph {
+                anchors.fill: parent
+                mode: NetworkService.iconMode
+                level: NetworkService.iconLevel
+                color: Colors.textColor
+            }
         }
     }
 
-    // VPN active: small accent chip in the top-right corner.
-    Rectangle {
+    // VPN active: shield glyph right of the network icon.
+    VpnGlyph {
+        width: 14
+        height: 14
+        anchors.verticalCenter: parent.verticalCenter
         visible: NetworkService.vpnActive
-        width: 8
-        height: 8
-        radius: 2
-        x: parent.width - width + 1
-        y: -1
-        color: Colors.accentColor
-        border.width: Shape.thinBorderWidth
-        border.color: Colors.pillBorder
     }
 }

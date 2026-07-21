@@ -53,20 +53,42 @@ Variants {
         }
         readonly property bool hasMprisPlayer: mprisPlayer !== null
 
-        // Pill-only strip while out; 1000px only while a popup shows.
+        // Pill-only strip while out; grows to clear the shown popup while one is up.
         // Battery iGPU is bandwidth-bound: each near-fullscreen layer blend costs
-        // double-digit fps, and 1000px tall at this width is near-fullscreen.
-        implicitHeight: pillHidden ? 0 : anyPopupShown ? 1000 : 56
+        // double-digit fps, so the surface tracks the actual popup bottom rather than
+        // a fixed near-fullscreen ceiling. Small menus keep a small surface; a menu
+        // taller than the screen is clamped by the compositor, not this value.
+        implicitHeight: pillHidden ? 0 : anyPopupShown ? Math.max(56, Math.ceil(popupBottom) + Spacing.spacing8) : 56
 
-        // Aggregate over direct children of contentRow; each child manages its own popup
+        // Bottom edge of the tallest shown popup, in root coords. Each popup is a
+        // direct child of interactionZone (anchored to root top, y=0), so its bottom
+        // is popupItem.y + popupItem.height. statusGroup wraps its own HoverItems.
+        readonly property real popupBottom: {
+            let maxB = 0;
+            const scan = list => {
+                for (const c of list) {
+                    const p = c.popupItem;
+                    if (p && p.visible && p.y + p.height > maxB)
+                        maxB = p.y + p.height;
+                }
+            };
+            scan(contentRow.children);
+            scan(statusGroup.children);
+            return maxB;
+        }
+
+        // Aggregate over popup-bearing children; each manages its own popup
         // (including any submenus nested inside that popup's outer Item).
+        // statusGroup is a bare Row wrapper, so its HoverItems are scanned directly.
         readonly property bool anyPopupOpen: {
             for (const c of contentRow.children) if (c.popupOpen) return true;
+            for (const c of statusGroup.children) if (c.popupOpen) return true;
             return false;
         }
         // Visibility test, not popupOpen: surface must stay tall through popup fade-out.
         readonly property bool anyPopupShown: {
             for (const c of contentRow.children) if (c.popupItem && c.popupItem.visible) return true;
+            for (const c of statusGroup.children) if (c.popupItem && c.popupItem.visible) return true;
             return false;
         }
         // A Region follows its item's geometry but not its visibility, so a closed popup
@@ -265,77 +287,62 @@ Variants {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    HoverItem {
-                        id: networkHoverItem
-                        clickable: false
-                        menu: networkMenu
-                        // Menu open/close drives the singleton's scan loop + throughput.
-                        onPopupOpenChanged: {
-                            if (popupOpen)
-                                NetworkService.openMenu();
-                            else
-                                NetworkService.closeMenu();
-                        }
-                        NetworkIcon {}
-                    }
-
-                    Rectangle {
-                        width: 1
-                        height: Spacing.spacing16
-                        color: Colors.separatorColor
+                    // WLAN, bluetooth, audio, battery form one tight group; no inner separators.
+                    Row {
+                        id: statusGroup
+                        spacing: Spacing.spacing4
                         anchors.verticalCenter: parent.verticalCenter
-                    }
 
-                    HoverItem {
-                        id: bluetoothHoverItem
-                        visible: BluetoothService.hasAdapter
-                        clickable: false
-                        menu: bluetoothMenu
-                        // Menu open/close refcounts discovery in the singleton.
-                        onPopupOpenChanged: {
-                            if (popupOpen)
-                                BluetoothService.openMenu();
-                            else
-                                BluetoothService.closeMenu();
+                        HoverItem {
+                            id: networkHoverItem
+                            clickable: false
+                            menu: networkMenu
+                            // Menu open/close drives the singleton's scan loop + throughput.
+                            onPopupOpenChanged: {
+                                if (popupOpen)
+                                    NetworkService.openMenu();
+                                else
+                                    NetworkService.closeMenu();
+                            }
+                            NetworkIcon {}
                         }
-                        BluetoothIcon {}
-                    }
 
-                    Rectangle {
-                        visible: BluetoothService.hasAdapter
-                        width: 1
-                        height: Spacing.spacing16
-                        color: Colors.separatorColor
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    HoverItem {
-                        id: volumeHoverItem
-                        clickable: true
-                        menu: volumeMenu
-                        // Claim keyed by screen: a plain bool is last-writer-wins across Bars.
-                        onPopupOpenChanged: Globals.setVolumeSliderOpen(root.modelData.name, popupOpen)
-                        onClicked: {
-                            if (Pipewire.defaultAudioSink?.audio)
-                                Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
+                        HoverItem {
+                            id: bluetoothHoverItem
+                            visible: BluetoothService.hasAdapter
+                            clickable: false
+                            menu: bluetoothMenu
+                            // Menu open/close refcounts discovery in the singleton.
+                            onPopupOpenChanged: {
+                                if (popupOpen)
+                                    BluetoothService.openMenu();
+                                else
+                                    BluetoothService.closeMenu();
+                            }
+                            BluetoothIcon {}
                         }
-                        VolumeIcon {
-                            id: volumeIcon
+
+                        HoverItem {
+                            id: volumeHoverItem
+                            clickable: true
+                            menu: volumeMenu
+                            // Claim keyed by screen: a plain bool is last-writer-wins across Bars.
+                            onPopupOpenChanged: Globals.setVolumeSliderOpen(root.modelData.name, popupOpen)
+                            onClicked: {
+                                if (Pipewire.defaultAudioSink?.audio)
+                                    Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
+                            }
+                            VolumeIcon {
+                                id: volumeIcon
+                            }
                         }
-                    }
 
-                    Rectangle {
-                        width: 1
-                        height: Spacing.spacing16
-                        color: Colors.separatorColor
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    HoverItem {
-                        id: batteryHoverItem
-                        clickable: false
-                        menu: batteryMenu
-                        Battery {}
+                        HoverItem {
+                            id: batteryHoverItem
+                            clickable: false
+                            menu: batteryMenu
+                            Battery {}
+                        }
                     }
                 }
             }
@@ -366,7 +373,7 @@ Variants {
                 id: volumeAnchor
                 width: 0
                 height: 0
-                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + volumeHoverItem.x + volumeHoverItem.width / 2
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + statusGroup.x + volumeHoverItem.x + volumeHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
 
@@ -389,7 +396,7 @@ Variants {
                 id: networkAnchor
                 width: 0
                 height: 0
-                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + networkHoverItem.x + networkHoverItem.width / 2
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + statusGroup.x + networkHoverItem.x + networkHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
 
@@ -412,7 +419,7 @@ Variants {
                 id: bluetoothAnchor
                 width: 0
                 height: 0
-                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + bluetoothHoverItem.x + bluetoothHoverItem.width / 2
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + statusGroup.x + bluetoothHoverItem.x + bluetoothHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
 
@@ -457,7 +464,7 @@ Variants {
                 id: batteryAnchor
                 width: 0
                 height: 0
-                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + batteryHoverItem.x + batteryHoverItem.width / 2
+                x: pill.x + (pill.implicitWidth - contentRow.implicitWidth) / 2 + statusGroup.x + batteryHoverItem.x + batteryHoverItem.width / 2
                 y: pill.y + pill.implicitHeight
             }
 

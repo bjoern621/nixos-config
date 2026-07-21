@@ -163,11 +163,16 @@ Item {
                     if (tmax - tmin < 6) { tmin -= 3; tmax += 3; }
                     const pad = 5;
                     const pts = [];
+                    // Track day extremes for their temp markers. peak = warmest (top
+                    // of curve), low = coldest. .t is actual temp; x/y use scaled tmin/tmax.
+                    let peak = null, low = null;
                     for (let k = 0; k < a.length; k++) {
                         if (!a[k]) continue;
                         const x = (k + 0.5) / 24 * width;
                         const y = height - pad - (a[k].temp - tmin) / (tmax - tmin) * (height - 2 * pad);
                         pts.push([x, y]);
+                        if (!peak || a[k].temp > peak.t) peak = { x, y, t: a[k].temp };
+                        if (!low || a[k].temp < low.t) low = { x, y, t: a[k].temp };
                     }
                     function trace() {
                         ctx.beginPath();
@@ -178,6 +183,25 @@ Item {
                     ctx.lineJoin = "round"; ctx.lineCap = "round";
                     ctx.strokeStyle = "rgba(255,253,245,0.85)"; ctx.lineWidth = 4; trace();
                     ctx.strokeStyle = "rgba(20,20,20,0.9)"; ctx.lineWidth = 1.8; trace();
+
+                    // Extreme markers: dot + outlined temp. dir=+1 puts the label
+                    // below its point (peak sits near the top), dir=-1 above (low near bottom).
+                    function extreme(p, dir) {
+                        if (!p) return;
+                        const label = Math.round(p.t) + "°";
+                        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                        ctx.font = 'bold ' + Typography.fontSize12 + 'px "' + Typography.fontFamily + '"';
+                        const halfW = ctx.measureText(label).width / 2 + 2;
+                        const lx = Math.max(halfW, Math.min(width - halfW, p.x));
+                        const ly = Math.max(8, Math.min(height - 8, p.y + dir * 11));
+                        ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+                        ctx.fillStyle = "rgba(255,253,245,0.95)"; ctx.fill();
+                        ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(20,20,20,0.9)"; ctx.stroke();
+                        ctx.lineWidth = 3; ctx.strokeStyle = "rgba(20,20,20,0.9)"; ctx.strokeText(label, lx, ly);
+                        ctx.fillStyle = "rgba(255,253,245,0.98)"; ctx.fillText(label, lx, ly);
+                    }
+                    extreme(peak, 1);
+                    extreme(low, -1);
                 }
                 Connections {
                     target: root.svc
