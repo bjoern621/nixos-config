@@ -58,7 +58,12 @@ Variants {
         // double-digit fps, so the surface tracks the actual popup bottom rather than
         // a fixed near-fullscreen ceiling. Small menus keep a small surface; a menu
         // taller than the screen is clamped by the compositor, not this value.
-        implicitHeight: pillHidden ? 0 : anyPopupShown ? Math.max(56, Math.ceil(popupBottom) + Spacing.spacing8) : 56
+        // Latched, not popupBottom directly: the surface grows to fit but never shrinks
+        // while a popup stays open, so a popup that resizes its own content (calendar
+        // year nav: taller year -> shorter year) does not resize the layer surface under
+        // it, which Hyprland reflects as a visible shift. Reset on close keeps the win:
+        // the next popup starts from its own footprint.
+        implicitHeight: pillHidden ? 0 : anyPopupShown ? Math.max(56, Math.ceil(popupSurfaceBottom) + Spacing.spacing8) : 56
 
         // Bottom edge of the tallest shown popup, in root coords. Each popup is a
         // direct child of interactionZone (anchored to root top, y=0), so its bottom
@@ -76,6 +81,13 @@ Variants {
             scan(statusGroup.children);
             return maxB;
         }
+
+        // popupBottom held at its high-water mark for the current open session.
+        // Grows with popupBottom, never shrinks until all popups close.
+        property real popupSurfaceBottom: 0
+        onPopupBottomChanged: if (anyPopupShown && popupBottom > popupSurfaceBottom)
+            popupSurfaceBottom = popupBottom;
+        onAnyPopupShownChanged: popupSurfaceBottom = anyPopupShown ? popupBottom : 0
 
         // Aggregate over popup-bearing children; each manages its own popup
         // (including any submenus nested inside that popup's outer Item).
