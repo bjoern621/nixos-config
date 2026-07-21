@@ -9,8 +9,9 @@ __pycache__/
 /result
 /result-*
 
-# Written by the dev shell hook; embeds a nix store path that rots on GC
-/.luarc.json
+# Written by the dev shell hook into the current directory; embeds a nix store
+# path that rots on GC. Unanchored: the hook lands it wherever the shell opens.
+.luarc.json
 
 # Non-free assets
 #modules/fancy-boot/darwin/logo.png

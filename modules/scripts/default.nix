@@ -9,5 +9,6 @@
     ./sysconf-help.nix
     ./sysconf-audio-fix.nix
     ./sysconf-fix-monitors.nix
+    ./sysconf-selftest.nix
   ];
 }
