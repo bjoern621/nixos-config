@@ -94,6 +94,12 @@ Scope {
         // Fire-and-forget so rapid deletes don't queue on a Process object;
         // the local model is updated optimistically.
         Quickshell.execDetached(["bash", "-c", "printf '%s' \"$1\" | cliphist delete", "cliphist-delete", entry.raw]);
+        // Reassigning filteredEntries is a full ListView model reset (plain JS
+        // array, not ListModel); relayout snaps contentY to 0.
+        // Stash position; clipList restores after contentHeight settles.
+        // Qt.callLater here would fire pre-relayout, restoring the old value
+        // before the snap wipes it.
+        clipList.pendingRestoreY = clipList.contentY;
         allEntries = allEntries.filter(e => e.clipId !== entry.clipId);
         updateFilter(false);
     }
@@ -266,6 +272,18 @@ Scope {
                 width: parent.width - (scrollable ? Spacing.scrollGutter : 0)
                 height: Math.min(contentHeight, clipScope.maxVisibleHeight)
                 model: clipScope.filteredEntries
+
+                // deleteEntry stashes scroll here before the model reset.
+                // contentHeight shrinks on every delete, so its change means
+                // relayout is done; Qt.callLater defers past the contentY=0 snap.
+                property real pendingRestoreY: -1
+                onContentHeightChanged: {
+                    if (pendingRestoreY < 0)
+                        return;
+                    const y = pendingRestoreY;
+                    pendingRestoreY = -1;
+                    Qt.callLater(() => contentY = Math.max(0, Math.min(y, contentHeight - height)));
+                }
 
                 delegate: Item {
                     id: clipDelegate

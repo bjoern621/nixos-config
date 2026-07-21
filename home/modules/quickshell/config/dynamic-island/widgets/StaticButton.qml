@@ -40,9 +40,9 @@ Pressable {
         : 0
     SquishBehavior on faceOffset { duration: 90 }
 
-    // Hard ink offset shadow, neo only.
+    // Hard ink offset shadow, neo only. Disabled buttons read flat, no shadow.
     Rectangle {
-        visible: root.neo
+        visible: root.neo && root.enabled
         x: root.shadowOffset
         y: root.shadowOffset
         width: root.faceWidth
