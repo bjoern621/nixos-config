@@ -16,6 +16,9 @@
     ../../modules/homelab/storage.nix
     ../../modules/homelab/monitoring.nix
     ../../modules/homelab/ssh-hardening.nix
+    # Telemetry push targets (vmk3s stores, pi-4b-hh stores) resolve over the
+    # tailnet only. Joining needs a one-time `tailscale up` after deploy.
+    ../../modules/tailscale-client.nix
   ];
 
   boot.loader.systemd-boot.enable = true;

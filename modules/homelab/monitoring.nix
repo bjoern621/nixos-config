@@ -1,74 +1,58 @@
 { ... }:
 
-let
-  grafanaDatasources = builtins.fromJSON (builtins.readFile ./monitoring/grafana-datasources.json);
-  grafanaDashboardProviders = builtins.fromJSON (
-    builtins.readFile ./monitoring/grafana-dashboard-providers.json
-  );
-in
+# Collector-only host per the observability architecture: no local stores,
+# no Grafana. Telemetry pushes over the tailnet to the vmk3s in-cluster
+# stack and the pi-4b-hh stack. Grafana on either target shows this host.
 
 {
-  services.prometheus = {
+  imports = [ ../telemetry-agent.nix ];
+
+  services.telemetry-agent = {
     enable = true;
-    listenAddress = "0.0.0.0";
-    port = 9090;
 
-    exporters.node = {
-      enable = true;
-      enabledCollectors = [
-        "systemd"
-      ];
-    };
+    # Docker runs workloads here; per-container CPU/mem/net via docker_stats.
+    dockerStats = true;
 
-    globalConfig = {
-      scrape_interval = "15s";
-      evaluation_interval = "15s";
+    stacks = {
+      vmk3s = {
+        metricsUrl = "http://victoria-metrics-vmk3s.tail115f30.ts.net:8428/api/v1/write";
+        logsUrl = "http://victoria-logs-vmk3s.tail115f30.ts.net:9428/insert/opentelemetry/v1/logs";
+        tracesUrl = "http://victoria-traces-vmk3s.tail115f30.ts.net:10428/insert/opentelemetry/v1/traces";
+      };
+      pi-hh = {
+        metricsUrl = "http://pi-4b-hh.tail115f30.ts.net:8428/api/v1/write";
+        logsUrl = "http://pi-4b-hh.tail115f30.ts.net:9428/insert/opentelemetry/v1/logs";
+        tracesUrl = "http://pi-4b-hh.tail115f30.ts.net:10428/insert/opentelemetry/v1/traces";
+      };
     };
 
     scrapeConfigs = [
       {
-        job_name = "prometheus";
-        static_configs = [
-          {
-            targets = [ "127.0.0.1:9090" ];
-          }
-        ];
+        job_name = "smartctl";
+        static_configs = [ { targets = [ "127.0.0.1:9633" ]; } ];
       }
       {
-        job_name = "homelab-node";
-        static_configs = [
-          {
-            targets = [ "127.0.0.1:9100" ];
-          }
-        ];
+        job_name = "libvirt";
+        static_configs = [ { targets = [ "127.0.0.1:9177" ]; } ];
       }
     ];
   };
 
-  services.grafana = {
+  # Disk health for the storage pool drives.
+  services.prometheus.exporters.smartctl = {
     enable = true;
-    provision = {
-      enable = true;
-      datasources.settings = grafanaDatasources;
-      dashboards.settings = grafanaDashboardProviders;
-    };
-    settings = {
-      server = {
-        http_addr = "0.0.0.0";
-        http_port = 3000;
-      };
-      security = {
-        # Default key. Grafana still requires a stable secret_key to encrypt data source and other stored secrets.
-        secret_key = "SW2YcwTIb9zpOOhoPsMm";
-      };
-    };
+    listenAddress = "127.0.0.1";
   };
 
-  environment.etc."grafana-dashboards/homelab-health.json".source =
-    ./monitoring/homelab-health-dashboard.json;
+  # Per-VM CPU/mem/block/net from libvirt (vmk3s VM visible from outside).
+  # qemu:///system socket is group libvirtd.
+  services.prometheus.exporters.libvirt = {
+    enable = true;
+    listenAddress = "127.0.0.1";
+    group = "libvirtd";
+  };
 
-  networking.firewall.allowedTCPPorts = [
-    3000 # Grafana UI
-    # 9090 # Prometheus UI
-  ];
+  # Docker default json-file driver bypasses journald; without this the
+  # collector never sees container logs.
+  virtualisation.docker.logDriver = "journald";
 }

@@ -9,6 +9,10 @@
     ../../modules/admin-ssh-keys.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
+    # Replica exporters in the cluster collector reach the pi hh stores over
+    # the tailnet. Pod traffic NATs through the host's tailscale0. Joining
+    # needs a one-time `tailscale up` after deploy.
+    ../../modules/tailscale-client.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 

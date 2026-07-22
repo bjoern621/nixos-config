@@ -11,6 +11,8 @@
     ../../modules/tailscale-client.nix
     ../../modules/smokeping.nix
     ../../modules/pi-backup
+    ../../modules/telemetry-agent.nix
+    ../../modules/victoria-stack.nix
   ];
 
   services.admin-ssh-keys.users = [ "ops" ];
@@ -152,6 +154,40 @@
       keepDaily = 30;
       keepWeekly = 12;
     };
+  };
+
+  # Local observability stack per the architecture diagram: full store set
+  # (VM, VL, VT, 14d) + Grafana. Ingests replicas from vmk3s and homelab
+  # over the tailnet; own collector pushes the same fan-out back.
+  services.victoria-stack.enable = true;
+
+  services.telemetry-agent = {
+    enable = true;
+    stacks = {
+      local = {
+        metricsUrl = "http://127.0.0.1:8428/api/v1/write";
+        logsUrl = "http://127.0.0.1:9428/insert/opentelemetry/v1/logs";
+        tracesUrl = "http://127.0.0.1:10428/insert/opentelemetry/v1/traces";
+      };
+      vmk3s = {
+        metricsUrl = "http://victoria-metrics-vmk3s.tail115f30.ts.net:8428/api/v1/write";
+        logsUrl = "http://victoria-logs-vmk3s.tail115f30.ts.net:9428/insert/opentelemetry/v1/logs";
+        tracesUrl = "http://victoria-traces-vmk3s.tail115f30.ts.net:10428/insert/opentelemetry/v1/traces";
+      };
+    };
+    scrapeConfigs = [
+      {
+        job_name = "smartctl";
+        static_configs = [ { targets = [ "127.0.0.1:9633" ]; } ];
+      }
+    ];
+  };
+
+  # Health of the backup HDD. USB-SATA bridges often hide SMART; exporter
+  # reports nothing in that case instead of failing.
+  services.prometheus.exporters.smartctl = {
+    enable = true;
+    listenAddress = "127.0.0.1";
   };
 
   # Updates enter via CI stable flake.lock PRs (update-flake-locks.yml).
