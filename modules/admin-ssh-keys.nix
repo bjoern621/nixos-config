@@ -5,7 +5,7 @@ let
 
   adminKeys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKjTT3sunIot4AmUwDX3NbdS44g+oz9/enIXuxH2knmq laptop"
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoKgh7gTGHoM9dXQK/2VMJAf/IaExYsCX1/trFrw1qS pc"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDa/Ud+7DiJ1sEpdPW9oPeGq6Qia0E1dauxev8jDyl7J pc"
   ];
 in
 {
