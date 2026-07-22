@@ -45,11 +45,13 @@
   };
 
   # Per-VM CPU/mem/block/net from libvirt (vmk3s VM visible from outside).
-  # qemu:///system socket is group libvirtd.
+  # The rw socket gates on polkit action org.libvirt.unix.manage, which the
+  # DynamicUser service cannot pass. The read-only socket answers the stats
+  # reads the exporter does without polkit.
   services.prometheus.exporters.libvirt = {
     enable = true;
     listenAddress = "127.0.0.1";
-    group = "libvirtd";
+    libvirtUri = "qemu+unix:///system?socket=/run/libvirt/libvirt-sock-ro";
   };
 
   # Docker default json-file driver bypasses journald; without this the
