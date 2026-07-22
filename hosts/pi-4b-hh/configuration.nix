@@ -188,6 +188,10 @@
   services.prometheus.exporters.smartctl = {
     enable = true;
     listenAddress = "127.0.0.1";
+    # Seagate One Touch bridge blocks ATA passthrough (sat and sat,12 both
+    # fail). SCSI mode yields health status and capacity only, no
+    # temperature or attribute data. Enough for a disk-failing alert.
+    extraFlags = [ "--smartctl.scan-device-type=scsi" ];
   };
 
   # Updates enter via CI stable flake.lock PRs (update-flake-locks.yml).
