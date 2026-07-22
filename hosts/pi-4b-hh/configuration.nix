@@ -191,7 +191,11 @@
     # Seagate One Touch bridge blocks ATA passthrough (sat and sat,12 both
     # fail). SCSI mode yields health status and capacity only, no
     # temperature or attribute data. Enough for a disk-failing alert.
-    extraFlags = [ "--smartctl.scan-device-type=scsi" ];
+    # Pinned by-id with explicit type; the auto scan probes with sat and
+    # marks the device failed.
+    extraFlags = [
+      "--smartctl.device=/dev/disk/by-id/usb-Seagate_One_Touch_w_PW_00000000NC1E1WXR-0:0;scsi"
+    ];
   };
 
   # Updates enter via CI stable flake.lock PRs (update-flake-locks.yml).
