@@ -45,14 +45,22 @@
   };
 
   # Per-VM CPU/mem/block/net from libvirt (vmk3s VM visible from outside).
-  # The rw socket gates on polkit action org.libvirt.unix.manage, which the
-  # DynamicUser service cannot pass. The read-only socket answers the stats
-  # reads the exporter does without polkit.
+  # The rw socket gates on polkit action org.libvirt.unix.manage. The
+  # read-only socket is not enough: virStoragePoolRefresh is a write
+  # operation, and the exporter fails the whole scrape on it. The polkit
+  # rule below passes exactly this service user.
   services.prometheus.exporters.libvirt = {
     enable = true;
     listenAddress = "127.0.0.1";
-    libvirtUri = "qemu+unix:///system?socket=/run/libvirt/libvirt-sock-ro";
   };
+
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (action.id == "org.libvirt.unix.manage" && subject.user == "libvirt-exporter") {
+        return polkit.Result.YES;
+      }
+    });
+  '';
 
   # Docker default json-file driver bypasses journald; without this the
   # collector never sees container logs.
