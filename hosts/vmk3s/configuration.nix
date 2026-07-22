@@ -9,6 +9,10 @@
     ../../modules/admin-ssh-keys.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
+    # Replica exporters in the cluster collector reach the pi hh stores over
+    # the tailnet. Pod traffic NATs through the host's tailscale0. Joining
+    # needs a one-time `tailscale up` after deploy.
+    ../../modules/tailscale-client.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
@@ -71,6 +75,25 @@
     enable = true;
     role = "server";
     extraFlags = [ "--disable=traefik" ];
+
+    # k3s CoreDNS imports coredns-custom keys matching *.server. Pods resolve
+    # via CoreDNS, not the host resolver, so MagicDNS names need this
+    # explicit forward to reach the tailnet stores by ts.net FQDN.
+    manifests.coredns-custom.content = {
+      apiVersion = "v1";
+      kind = "ConfigMap";
+      metadata = {
+        name = "coredns-custom";
+        namespace = "kube-system";
+      };
+      data."ts.server" = ''
+        ts.net:53 {
+            errors
+            cache 30
+            forward . 100.100.100.100
+        }
+      '';
+    };
   };
 
   environment.systemPackages = with pkgs; [
