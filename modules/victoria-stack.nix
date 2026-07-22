@@ -62,6 +62,11 @@ in
         http_addr = "0.0.0.0";
         http_port = 3000;
       };
+      # Module refuses Grafana's built-in default secret_key. Key generated
+      # once on first start, never in the repo. Encrypts datasource secrets
+      # in the Grafana DB; losing it only invalidates stored credentials,
+      # and the provisioned datasources carry none.
+      settings.security.secret_key = "$__file{/var/lib/grafana/secret_key}";
       provision = {
         enable = true;
         datasources.settings = {
@@ -92,6 +97,12 @@ in
         };
       };
     };
+
+    systemd.services.grafana.preStart = ''
+      if [ ! -f /var/lib/grafana/secret_key ]; then
+        (umask 077; ${pkgs.coreutils}/bin/head -c 32 /dev/urandom | ${pkgs.coreutils}/bin/base64 -w0 > /var/lib/grafana/secret_key)
+      fi
+    '';
 
     # Ingest (8428/9428/10428) for remote collectors and Grafana (3000) for
     # admins, tailnet only. LAN stays closed.
