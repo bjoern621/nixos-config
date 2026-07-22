@@ -26,12 +26,27 @@ let
     name: stack:
     lib.nameValuePair "otlphttp/${name}-logs" {
       logs_endpoint = stack.logsUrl;
+      # Explicit stream fields. VictoriaLogs otherwise streams on every
+      # resource attribute, so churny attributes multiply streams.
+      headers."VL-Stream-Fields" = "host.name,unit,container.name";
       sending_queue = {
         enabled = true;
         storage = "file_storage";
       };
     }
   ) cfg.stacks;
+
+  # Collector-to-collector forward (standard OTLP paths derive from the base
+  # endpoint). Used by hosts that feed another collector instead of stores.
+  forwardExporter = lib.optionalAttrs (cfg.otlpForward != null) {
+    "otlphttp/forward" = {
+      endpoint = cfg.otlpForward;
+      sending_queue = {
+        enabled = true;
+        storage = "file_storage";
+      };
+    };
+  };
 
   tracedStacks = lib.filterAttrs (_: stack: stack.tracesUrl != null) cfg.stacks;
 
@@ -83,6 +98,19 @@ in
       description = "Bind address for the OTLP receiver (ports 4317 gRPC, 4318 HTTP).";
     };
 
+    otlpForward = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "http://127.0.0.1:30318";
+      description = "OTLP/HTTP base endpoint of another collector to forward all signals to. Alternative or addition to `stacks`.";
+    };
+
+    hostMetrics = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Collect hostmetrics. Off where another collector already reports this machine (vmk3s: the DaemonSet's hostmetrics against the node root).";
+    };
+
     scrapeConfigs = lib.mkOption {
       type = lib.types.listOf lib.types.attrs;
       default = [ ];
@@ -101,6 +129,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.stacks != { } || cfg.otlpForward != null;
+        message = "services.telemetry-agent: set `stacks`, `otlpForward` or both; the agent needs somewhere to push.";
+      }
+    ];
+
     services.opentelemetry-collector = {
       enable = true;
       # journald and hostmetrics receivers live in contrib only.
@@ -169,6 +204,8 @@ in
             ];
           };
 
+        }
+        // lib.optionalAttrs cfg.hostMetrics {
           hostmetrics = {
             collection_interval = "30s";
             scrapers = {
@@ -196,7 +233,8 @@ in
               };
             };
           };
-
+        }
+        // {
           otlp.protocols = {
             grpc.endpoint = "${cfg.otlpListenAddress}:4317";
             http.endpoint = "${cfg.otlpListenAddress}:4318";
@@ -236,7 +274,7 @@ in
           batch.timeout = "5s";
         };
 
-        exporters = metricsExporters // logsExporters // tracesExporters;
+        exporters = metricsExporters // logsExporters // tracesExporters // forwardExporter;
 
         service = {
           extensions = [
@@ -257,17 +295,17 @@ in
           pipelines = {
             metrics = {
               receivers = [
-                "hostmetrics"
                 "prometheus"
                 "otlp"
               ]
+              ++ lib.optional cfg.hostMetrics "hostmetrics"
               ++ lib.optional cfg.dockerStats "docker_stats";
               processors = [
                 "memory_limiter"
                 "resource/host"
                 "batch"
               ];
-              exporters = lib.attrNames metricsExporters;
+              exporters = lib.attrNames (metricsExporters // forwardExporter);
             };
             logs = {
               receivers = [
@@ -279,17 +317,17 @@ in
                 "resource/host"
                 "batch"
               ];
-              exporters = lib.attrNames logsExporters;
+              exporters = lib.attrNames (logsExporters // forwardExporter);
             };
           }
-          // lib.optionalAttrs (tracedStacks != { }) {
+          // lib.optionalAttrs (tracedStacks != { } || cfg.otlpForward != null) {
             traces = {
               receivers = [ "otlp" ];
               processors = [
                 "memory_limiter"
                 "batch"
               ];
-              exporters = lib.attrNames tracesExporters;
+              exporters = lib.attrNames (tracesExporters // forwardExporter);
             };
           };
         };

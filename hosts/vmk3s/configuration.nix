@@ -9,8 +9,20 @@
     ../../modules/admin-ssh-keys.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
+    ../../modules/telemetry-agent.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
+
+  # Host journald (k3s.service, sshd, kernel) is the one signal the
+  # in-cluster DaemonSet cannot read. Forwarded via OTLP into the collector's
+  # NodePort, so it inherits the full store fan-out including the pi replica.
+  # hostMetrics stays off: the DaemonSet's hostmetrics against the node root
+  # already reports this machine.
+  services.telemetry-agent = {
+    enable = true;
+    hostMetrics = false;
+    otlpForward = "http://127.0.0.1:30318";
+  };
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
