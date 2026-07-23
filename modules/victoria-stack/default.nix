@@ -57,6 +57,10 @@ in
       declarativePlugins = with pkgs.grafanaPlugins; [
         victoriametrics-metrics-datasource
         victoriametrics-logs-datasource
+        # Plugin id marcusolsson-dynamictext, matches the cluster Grafana's
+        # GF_INSTALL_PLUGINS. Backs the live-ticking telemetry-freshness
+        # panel on the fleet dashboard.
+        marcusolsson-dynamictext-panel
       ];
       settings.server = {
         http_addr = "0.0.0.0";
