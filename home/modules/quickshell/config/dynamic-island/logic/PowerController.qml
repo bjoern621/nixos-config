@@ -57,7 +57,9 @@ QtObject {
                 Quickshell.execDetached(["systemctl", "hibernate"]);
                 break;
             case "logout":
-                GracefulShutdown.start("Abmelden...", ["hyprctl", "dispatch", "exit"]);
+                // uwsm session: `exit` dispatcher pulls Hyprland out from under clients.
+                // `uwsm stop` brings session down in order (same as SUPER+M bind).
+                GracefulShutdown.start("Abmelden...", ["uwsm", "stop"]);
                 break;
             }
         });

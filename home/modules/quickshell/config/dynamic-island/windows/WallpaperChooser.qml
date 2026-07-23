@@ -49,7 +49,7 @@ Scope {
         }
 
         // Switch to empty workspace to hide windows
-        workspaceProc.command = ["hyprctl", "dispatch", "workspace", "name:wallpaper"];
+        workspaceProc.command = ["hyprctl", "dispatch", 'hl.dsp.focus({ workspace = "name:wallpaper" })'];
         workspaceProc.running = true;
 
         // Show on focused screen
@@ -78,7 +78,7 @@ Scope {
         chooserScope.chooserVisible = false;
         // Switch back to previous workspace
         if (chooserScope.previousWorkspaceId > 0) {
-            workspaceProc.command = ["hyprctl", "dispatch", "workspace", String(previousWorkspaceId)];
+            workspaceProc.command = ["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + previousWorkspaceId + " })"];
             workspaceProc.running = true;
         }
     }

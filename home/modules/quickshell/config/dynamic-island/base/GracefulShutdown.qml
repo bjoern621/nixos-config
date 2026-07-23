@@ -128,7 +128,8 @@ Singleton {
                         title: clients[i].title || "",
                         alive: true
                     });
-                    Quickshell.execDetached(["hyprctl", "dispatch", "closewindow", "address:" + clients[i].address]);
+                    // Lua config: dispatch takes Lua expression, old word syntax no-ops.
+                    Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.window.close({ window = "address:' + clients[i].address + '" })']);
                 }
             }
         }
