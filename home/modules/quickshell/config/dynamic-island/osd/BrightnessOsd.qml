@@ -64,7 +64,7 @@ Scope {
         }
     }
 
-    // Hyprland routes the keybind here through `hyprctl dispatch global`,
+    // Hyprland routes the keybind here through `hyprctl dispatch 'hl.dsp.global(...)'`,
     // reaching this running process.
     // `qs ipc call` cold-starts a Qt binary per keypress (~125ms),
     // which the OSD would sit behind.

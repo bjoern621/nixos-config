@@ -122,7 +122,7 @@ Write shots into the session scratchpad and read them back to inspect.
 
 ## Move a part
 
-Layer surfaces are positioned by their own anchors, not by the compositor, so `hyprctl dispatch movewindow` does not touch them.
+Layer surfaces are positioned by their own anchors, not by the compositor, so the `hl.dsp.window.move` dispatcher does not touch them.
 Two situations need a move.
 
 **Summon a hover menu.**
@@ -131,9 +131,9 @@ Save the pointer, warp onto the item, nudge a pixel so a Wayland enter fires, sc
 
 ```bash
 read PX PY < <(hyprctl cursorpos | tr -d ',')
-hyprctl dispatch movecursor <bar_item_x> <bar_item_y>
+hyprctl dispatch 'hl.dsp.cursor.move({ x = <bar_item_x>, y = <bar_item_y> })'
 # nudge one pixel, capture, then restore:
-hyprctl dispatch movecursor "$PX" "$PY"
+hyprctl dispatch "hl.dsp.cursor.move({ x = $PX, y = $PY })"
 ```
 
 Warping onto a surface the pointer already occupies emits no motion event, so no hover fires; move away first, then onto the target.

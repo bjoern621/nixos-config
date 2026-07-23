@@ -12,20 +12,23 @@ Each Nix module should be **self-contained** and **concern-oriented**. Configura
 
 ### Example: Wrong vs Right
 
-**Wrong:** Adding Hyprland layerrules for quickshell inside `windowrules.nix`:
+**Wrong:** Adding Hyprland layer rules for quickshell to a shared rules file in the hyprland module:
 
-```nix
-# windowrules.nix
-layerrule = [ "blur on, match:namespace quickshell" ];
+```lua
+-- home/modules/hyprland/rules.lua
+hl.layer_rule({ match = { namespace = "quickshell" }, blur = true })
 ```
 
-**Right:** Adding them in `quickshell.nix` where they belong:
+**Right:** Keeping them in a Lua file next to `quickshell.nix`, wired from that module:
 
 ```nix
 # quickshell.nix
-wayland.windowManager.hyprland.settings.layerrule = [
-  "blur on, match:namespace quickshell"
-];
+wayland.windowManager.hyprland.extraLuaFiles."quickshell-layerrules".content = ./layerrules.lua;
+```
+
+```lua
+-- layerrules.lua
+hl.layer_rule({ match = { namespace = "quickshell" }, blur = true })
 ```
 
 ### When Multiple Files Are Needed

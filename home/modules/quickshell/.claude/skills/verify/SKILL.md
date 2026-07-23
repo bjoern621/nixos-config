@@ -117,10 +117,12 @@ Clients only send actions to a server that advertises `actions`.
 For pointer clicks:
 
 ```bash
-hyprctl dispatch movecursor <x> <y>      # global layout coords, logical px
+hyprctl dispatch 'hl.dsp.cursor.move({ x = <x>, y = <y> })'
 nix run nixpkgs#wlrctl -- pointer click left
 ```
 
+Coordinates are global layout coordinates in logical px.
+The `hyprctl dispatch` argument is a Lua expression; the old `movecursor <x> <y>` word syntax is a parse error since the Lua migration.
 Warping the cursor onto a surface it already sits on produces no motion event,
 so no Wayland enter and no `HoverHandler.hovered`. Move away first, then onto the
 target, then nudge a pixel. Restore the pointer afterwards with
