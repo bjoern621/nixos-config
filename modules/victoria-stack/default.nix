@@ -73,6 +73,23 @@ in
         # JSON works against both.
         datasources.settings = {
           apiVersion = 1;
+          # Grafana cannot change the uid of an already provisioned
+          # datasource in place ("data source not found" at boot). Delete by
+          # name first; idempotent, datasources are fully re-provisioned.
+          deleteDatasources = [
+            {
+              name = "VictoriaMetrics";
+              orgId = 1;
+            }
+            {
+              name = "VictoriaLogs";
+              orgId = 1;
+            }
+            {
+              name = "VictoriaTraces";
+              orgId = 1;
+            }
+          ];
           datasources = [
             {
               name = "VictoriaMetrics";
