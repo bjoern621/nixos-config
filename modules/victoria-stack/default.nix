@@ -69,11 +69,14 @@ in
       settings.security.secret_key = "$__file{/var/lib/grafana/secret_key}";
       provision = {
         enable = true;
+        # Uids match the vmk3s in-cluster Grafana so the same dashboard
+        # JSON works against both.
         datasources.settings = {
           apiVersion = 1;
           datasources = [
             {
               name = "VictoriaMetrics";
+              uid = "victoriametrics";
               type = "victoriametrics-metrics-datasource";
               access = "proxy";
               url = "http://127.0.0.1:8428";
@@ -81,6 +84,7 @@ in
             }
             {
               name = "VictoriaLogs";
+              uid = "victorialogs";
               type = "victoriametrics-logs-datasource";
               access = "proxy";
               url = "http://127.0.0.1:9428";
@@ -89,9 +93,25 @@ in
             # /select/jaeger. Core Jaeger datasource works unmodified.
             {
               name = "VictoriaTraces";
+              uid = "victoriatraces";
               type = "jaeger";
               access = "proxy";
               url = "http://127.0.0.1:10428/select/jaeger";
+            }
+          ];
+        };
+        # Dashboards mirror the in-cluster Grafana. Canonical copies live in
+        # hh-cluster-infra (argocd/applications/observability/manifests/
+        # dashboards); the files in ./dashboards are synced copies.
+        dashboards.settings = {
+          apiVersion = 1;
+          providers = [
+            {
+              name = "default";
+              type = "file";
+              allowUiUpdates = false;
+              options.path = ./dashboards;
+              options.foldersFromFilesStructure = false;
             }
           ];
         };

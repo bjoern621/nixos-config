@@ -12,7 +12,7 @@
     ../../modules/smokeping.nix
     ../../modules/pi-backup
     ../../modules/telemetry-agent.nix
-    ../../modules/victoria-stack.nix
+    ../../modules/victoria-stack
   ];
 
   services.admin-ssh-keys.users = [ "ops" ];
@@ -179,6 +179,25 @@
       {
         job_name = "smartctl";
         static_configs = [ { targets = [ "127.0.0.1:9633" ]; } ];
+      }
+      # Self-monitoring of the local stores and Grafana. Scraped by the
+      # agent instead of the stores so the results reach every stack via
+      # the standard fan-out, mirroring the cluster collector.
+      {
+        job_name = "victoria-metrics";
+        static_configs = [ { targets = [ "127.0.0.1:8428" ]; } ];
+      }
+      {
+        job_name = "victoria-logs";
+        static_configs = [ { targets = [ "127.0.0.1:9428" ]; } ];
+      }
+      {
+        job_name = "victoria-traces";
+        static_configs = [ { targets = [ "127.0.0.1:10428" ]; } ];
+      }
+      {
+        job_name = "grafana";
+        static_configs = [ { targets = [ "127.0.0.1:3000" ]; } ];
       }
     ];
   };
