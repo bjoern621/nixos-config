@@ -82,7 +82,17 @@
   services.k3s = {
     enable = true;
     role = "server";
-    extraFlags = [ "--disable=traefik" ];
+    # Pin the node to its stable LAN IPv4. Without --node-ip, k3s
+    # auto-detects node addresses and also picks up the global IPv6 that
+    # the router hands out via RA. The ISP rotates that prefix, so the
+    # address later vanishes from the interface and kubelet logs "failed to
+    # validate secondaryNodeIP" every status cycle. .80 is the same address
+    # the traefik LoadBalancer already depends on, so it is effectively
+    # static (DHCP reservation on the router).
+    extraFlags = [
+      "--disable=traefik"
+      "--node-ip=192.168.178.80"
+    ];
   };
 
   environment.systemPackages = with pkgs; [
