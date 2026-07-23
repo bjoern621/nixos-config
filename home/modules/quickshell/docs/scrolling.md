@@ -40,8 +40,9 @@ ScrollView {
 gives a list that grows to its content and then scrolls.
 Rows bind their width to `parent.width`, so they shrink with the `Column` when
 the gutter appears and never sit under the bar.
-`wheelStride` (rows per notch) turns on proportional wheel stepping; left at `0`
-the native `Flickable` wheel applies.
+The wheel steps by default; `wheelStride` overrides the step size for off-size
+rows.
+See the Wheel behavior section.
 
 ### ListView / GridView, manual gutter
 
@@ -77,6 +78,27 @@ all columns beside the bar.
 `ListView` / `GridView` + sibling `ScrollHandle` for a large or unbounded model,
 or for fixed-cell grids.
 Both reserve the same `Spacing.scrollGutter`; the difference is who reserves it.
+
+## Wheel behavior
+
+Every scrollable surface scrolls with `StepWheel`: a proportional step of
+`rowsPerNotch` rows per mouse notch (default 1.5), with no inertia.
+The stepped feel is the shell-wide convention, so a surface must not fall back to
+the native `Flickable` wheel, whose momentum reads as inconsistent next to the
+stepped surfaces.
+`StepWheel` accepts mouse and touchpad; `rowStride` is one row's height, plus the
+column spacing when the column has any.
+
+Each container opts in differently:
+
+- `ScrollView`: stepped by default through its internal `StepWheel`, so a plain
+  `ScrollView` is already correct. `wheelStride` overrides the step size for rows
+  far from the default.
+- `ListView` / `GridView` through `LauncherViewBehavior`: the behavior already
+  carries a `StepWheel`, so nothing is added.
+- A bare `Flickable` or `ListView` without that behavior: add a `StepWheel` child
+  whose `target` is the view and whose `rowStride` is the row height, as
+  `AppLauncher` and `NotificationList` do.
 
 ## Styling
 

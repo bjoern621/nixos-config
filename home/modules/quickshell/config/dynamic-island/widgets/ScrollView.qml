@@ -15,8 +15,9 @@ Item {
 
     default property alias content: column.data
     property alias spacing: column.spacing
-    // Rows per wheel notch; 0 keeps the Flickable's native wheel.
-    property real wheelStride: 0
+    // Wheel step per notch, px. Defaults to one standard menu row.
+    // Always stepped, never the native inertial wheel; override for off-size rows.
+    property real wheelStride: 42
 
     readonly property alias flickable: flick
     readonly property bool scrollable: flick.contentHeight > flick.height + 1
@@ -35,7 +36,6 @@ Item {
         StepWheel {
             target: flick
             rowStride: root.wheelStride
-            enabled: root.wheelStride > 0
         }
 
         Column {
