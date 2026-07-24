@@ -6,7 +6,7 @@ local terminal = "alacritty"
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + W", hl.dsp.window.close())
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
-hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen_state({ internal = 2, client = 0 }))
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen_state({ internal = 2, client = 0, action = "toggle" }))
 -- uwsm session: `exit` dispatcher pulls Hyprland out from under its clients.
 -- `uwsm stop` brings the graphical session down in order.
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("uwsm stop"))
