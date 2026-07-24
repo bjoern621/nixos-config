@@ -44,6 +44,14 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Local screen-sharing repo. Provides the kmsgrab CAP_SYS_ADMIN wrapper module.
+    # path: tracks the working tree, so uncommitted edits apply on rebuild; swap for a
+    # github: URL once the repo is pushed.
+    screen-sharing = {
+      url = "path:/home/bjoern/git/screen-sharing";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -60,6 +68,14 @@
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         modules = [
           ./configuration.nix
+
+          inputs.screen-sharing.nixosModules.screenShareDev
+          {
+            services.screenShareDev = {
+              enable = true;
+              user = "bjoern";
+            };
+          }
 
           {
             # https://wiki.hypr.land/Nix/Cachix/
