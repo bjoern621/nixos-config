@@ -22,7 +22,10 @@ Item {
         id: track
         anchors.fill: parent
         radius: 4
-        color: root.checked ? Colors.selectedBackground : Colors.progressBackground
+        // Hover tints track. Off: accent wash (like buttons). On: darker accent, distinct from rest.
+        color: root.checked
+            ? (hover.hovered ? Colors.selectedPressed : Colors.selectedBackground)
+            : (hover.hovered ? Colors.hoverItemHovered : Colors.progressBackground)
         border.width: Shape.thinBorderWidth
         border.color: Colors.pillBorder
     }
@@ -66,6 +69,7 @@ Item {
     }
 
     HoverHandler {
+        id: hover
         cursorShape: Qt.PointingHandCursor
     }
     TapHandler {

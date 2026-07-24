@@ -14,6 +14,8 @@ Item {
 
     readonly property var _modes: ["off", "on", "airplane"]
     readonly property int _index: Math.max(0, _modes.indexOf(mode))
+    // Cell under the cursor (-1 none). Drives per-cell hover feedback.
+    property int _hoveredIndex: -1
     readonly property int _inset: Shape.thinBorderWidth
     readonly property real _segW: (width - 2 * _inset) / 3
 
@@ -36,7 +38,8 @@ Item {
         y: root._inset
         x: root._inset + root._index * root._segW
         radius: Math.max(2, Shape.pill(height) - root._inset)
-        color: Colors.selectedBackground
+        // Darker accent while the active cell is hovered: distinct on-hover.
+        color: root._hoveredIndex === root._index ? Colors.selectedPressed : Colors.selectedBackground
         border.width: Shape.thinBorderWidth
         border.color: Colors.pillBorder
 
@@ -64,6 +67,17 @@ Item {
                 width: root._segW
                 height: parent.height
 
+                // Hover wash on inactive cells (matches button hover); active cell
+                // darkens its knob instead, so it renders above the knob but hides there.
+                Rectangle {
+                    anchors.fill: parent
+                    radius: knob.radius
+                    visible: cellHover.hovered && !cell.active
+                    color: Colors.hoverItemHovered
+                    border.width: Shape.thinBorderWidth
+                    border.color: Colors.pillBorder
+                }
+
                 RadioModeGlyph {
                     anchors.centerIn: parent
                     width: 18
@@ -75,7 +89,10 @@ Item {
                 }
 
                 HoverHandler {
+                    id: cellHover
                     cursorShape: Qt.PointingHandCursor
+                    onHoveredChanged: root._hoveredIndex = hovered ? cell.index
+                        : (root._hoveredIndex === cell.index ? -1 : root._hoveredIndex)
                 }
                 TapHandler {
                     id: tap
