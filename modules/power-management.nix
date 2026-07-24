@@ -62,8 +62,13 @@
       CPU_SCALING_MIN_FREQ_ON_BAT = 400000;
 
       # --- Platform profile ---
+      # ideapad_laptop maps profile to EC power mode, which owns fan curve.
+      # low-power picks EC quiet curve: fan barely ramps under sustained
+      # load, chassis soaks until untouchable. Only balanced/performance
+      # let EC spin fan up. CPU_* keys above cannot compensate; they cut
+      # heat production, not heat removal.
       PLATFORM_PROFILE_ON_AC = "balanced";
-      PLATFORM_PROFILE_ON_BAT = "low-power";
+      PLATFORM_PROFILE_ON_BAT = "balanced";
 
       # --- Audio ---
       # Disable audio power saving — the TAS2781 speaker amplifier
