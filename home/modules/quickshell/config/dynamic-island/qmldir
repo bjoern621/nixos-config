@@ -75,6 +75,8 @@ VolumeOutputDeviceRow 1.0 menus/VolumeOutputDeviceRow.qml
 VolumeApplicationVolumeRow 1.0 menus/VolumeApplicationVolumeRow.qml
 NetworkMenu 1.0 menus/NetworkMenu.qml
 NetworkRow 1.0 menus/NetworkRow.qml
+EthernetRow 1.0 menus/EthernetRow.qml
+DeviceFacts 1.0 menus/DeviceFacts.qml
 VpnRow 1.0 menus/VpnRow.qml
 SignalBars 1.0 menus/SignalBars.qml
 NetChip 1.0 menus/NetChip.qml

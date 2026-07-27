@@ -138,15 +138,45 @@ function parseGeneral(text) {
     };
 }
 
-// `nmcli -t -f IP4.ADDRESS,IP4.GATEWAY,IP4.DNS,GENERAL.HWADDR device show <dev>`
-// yields `KEY:VALUE` lines; IP4.DNS repeats with [n] suffixes.
-function parseDeviceDetail(text) {
-    const detail = {
-        ip: "",
+function emptyDetail(device) {
+    return {
+        device: device || "",
+        type: "",
+        stateCode: 0,
+        state: "unknown",
+        connection: "",
+        mac: "",
+        speed: "",
+        ip4: "",
         gateway: "",
         dns: [],
-        mac: ""
+        ip6: ""
     };
+}
+
+// NMDeviceState numeric codes. 40-99 span preparing/config/need-auth/ip-check,
+// all of which read as "connecting" to the user.
+function deviceStateKind(code) {
+    if (code >= 100)
+        return code >= 110 ? (code === 120 ? "failed" : "disconnecting") : "connected";
+    if (code >= 40)
+        return "connecting";
+    if (code === 30)
+        return "disconnected";
+    if (code === 20)
+        return "unavailable";
+    if (code === 10)
+        return "unmanaged";
+    return "unknown";
+}
+
+// `nmcli -t device show` with no device argument dumps every device, one record
+// per device. Values are unescaped and may contain `:` (HWADDR, IPv6), so a
+// record line splits at its first `:` only. List fields repeat with an [n]
+// suffix. A record starts at GENERAL.DEVICE, which nmcli always emits first.
+function parseDevices(text) {
+    const out = [];
+    let cur = null;
     const lines = _lines(text);
     for (let i = 0; i < lines.length; i++) {
         const idx = lines[i].indexOf(":");
@@ -154,18 +184,91 @@ function parseDeviceDetail(text) {
             continue;
         const key = lines[i].substring(0, idx);
         const value = lines[i].substring(idx + 1);
-        if (!value.length || value === "--")
+        if (key === "GENERAL.DEVICE") {
+            cur = emptyDetail(value);
+            out.push(cur);
             continue;
-        if (key.indexOf("IP4.ADDRESS") === 0 && !detail.ip)
-            detail.ip = value; // "192.168.1.5/24"
-        else if (key.indexOf("IP4.GATEWAY") === 0)
-            detail.gateway = value;
-        else if (key.indexOf("IP4.DNS") === 0)
-            detail.dns.push(value);
-        else if (key.indexOf("GENERAL.HWADDR") === 0)
-            detail.mac = value;
+        }
+        if (!cur || !value.length || value === "--")
+            continue;
+        if (key === "GENERAL.TYPE") {
+            cur.type = normalizeType(value);
+        } else if (key === "GENERAL.STATE") {
+            cur.stateCode = parseInt(value, 10) || 0;   // "100 (connected)"
+            cur.state = deviceStateKind(cur.stateCode);
+        } else if (key === "GENERAL.CONNECTION") {
+            cur.connection = value;
+        } else if (key === "GENERAL.HWADDR") {
+            cur.mac = value;
+        } else if (key === "CAPABILITIES.SPEED") {
+            if (value !== "unknown")
+                cur.speed = value;
+        } else if (key.indexOf("IP4.ADDRESS") === 0) {
+            if (!cur.ip4)
+                cur.ip4 = value; // "192.168.1.5/24"
+        } else if (key === "IP4.GATEWAY") {
+            cur.gateway = value;
+        } else if (key.indexOf("IP4.DNS") === 0) {
+            cur.dns.push(value);
+        } else if (key.indexOf("IP6.ADDRESS") === 0) {
+            // Link-local is always present and never useful; prefer a routable one.
+            if (!cur.ip6 && value.indexOf("fe80:") !== 0)
+                cur.ip6 = value;
+        }
     }
-    return detail;
+    return out;
+}
+
+// Facts shown in a device's detail panel, in display order. Empty values drop
+// out. Extension point: one entry here adds the fact to wifi and wired rows both.
+function deviceDetailRows(detail) {
+    if (!detail)
+        return [];
+    const rows = [{
+        label: "IP",
+        value: detail.ip4
+    }, {
+        label: "Gateway",
+        value: detail.gateway
+    }, {
+        label: "DNS",
+        value: (detail.dns || []).join(", ")
+    }, {
+        label: "IPv6",
+        value: detail.ip6
+    }, {
+        label: "Linkrate",
+        value: detail.speed
+    }, {
+        label: "MAC",
+        value: detail.mac
+    }, {
+        label: "Gerät",
+        value: detail.device
+    }];
+    return rows.filter(r => r.value && r.value.length > 0);
+}
+
+// /proc/net/dev: two header lines, then `iface: rx ... tx ...` per interface.
+// Column 0 is rx bytes, column 8 tx bytes. One read covers every interface, so
+// per-device rates cost no extra process.
+function parseProcNetDev(text) {
+    const out = {};
+    const lines = _lines(text);
+    for (let i = 0; i < lines.length; i++) {
+        const idx = lines[i].indexOf(":");
+        if (idx < 0)
+            continue;
+        const name = lines[i].substring(0, idx).trim();
+        const f = lines[i].substring(idx + 1).trim().split(/\s+/);
+        if (!name.length || f.length < 9)
+            continue;
+        out[name] = {
+            rx: parseFloat(f[0]) || 0,
+            tx: parseFloat(f[8]) || 0
+        };
+    }
+    return out;
 }
 
 // Merge a wifi scan with saved profiles into the row model.
@@ -266,27 +369,69 @@ function parseTailscale(text) {
     }
 }
 
-// Active wired connection, if any ethernet profile is up.
-function findEthernet(connections) {
-    for (let i = 0; i < connections.length; i++) {
-        const c = connections[i];
-        if (c.type === "ethernet" && c.active) {
-            return {
-                name: c.name,
-                uuid: c.uuid,
-                device: c.device
-            };
-        }
+// Wired row state. `unavailable` on an ethernet device means no carrier;
+// `disconnected` means the cable is in but no profile is up, which is where
+// "Trennen" leaves the device (nmcli device disconnect also blocks autoconnect).
+function wiredStateLabel(state) {
+    switch (state) {
+    case "connected":
+        return "Verbunden";
+    case "connecting":
+        return "Verbinde...";
+    case "disconnecting":
+        return "Trenne...";
+    case "disconnected":
+        return "Kabel erkannt · nicht verbunden";
+    case "unavailable":
+        return "Kein Kabel";
+    case "failed":
+        return "Verbindung fehlgeschlagen";
+    default:
+        return "Unbekannt";
     }
-    return null;
 }
 
-// Device carrying the active wifi/ethernet connection, for the detail read.
-function activeDevice(connections) {
+// One row per wired device, not per active connection: several ethernet devices
+// (dock, USB adapter, onboard) can each carry an active connection at once, and
+// a device outlives its connection, so the row survives "Trennen" and reports
+// the link state instead of vanishing. Docker/libvirt taps are unmanaged and
+// drop out.
+function buildWiredModel(devices, connections) {
+    const activeByDevice = {};
     for (let i = 0; i < connections.length; i++) {
         const c = connections[i];
-        if (c.active && (c.type === "wifi" || c.type === "ethernet") && c.device.length)
-            return c.device;
+        if (c.active && c.type === "ethernet" && c.device.length)
+            activeByDevice[c.device] = c;
     }
-    return "";
+
+    const rows = [];
+    for (let i = 0; i < devices.length; i++) {
+        const d = devices[i];
+        if (d.type !== "ethernet" || d.state === "unmanaged")
+            continue;
+        const conn = activeByDevice[d.device];
+        const connected = d.state === "connected";
+        rows.push({
+            device: d.device,
+            name: d.connection.length ? d.connection : d.device,
+            uuid: conn ? conn.uuid : "",
+            state: d.state,
+            stateLabel: wiredStateLabel(d.state),
+            connected: connected,
+            // No carrier: nothing to connect to, so the action chip stays hidden.
+            plugged: d.state !== "unavailable",
+            busy: d.state === "connecting" || d.state === "disconnecting",
+            autoconnect: conn ? conn.autoconnect : false,
+            detail: d
+        });
+    }
+
+    rows.sort((a, b) => {
+        if (a.connected !== b.connected)
+            return a.connected ? -1 : 1;
+        if (a.plugged !== b.plugged)
+            return a.plugged ? -1 : 1;
+        return a.device.localeCompare(b.device);
+    });
+    return rows;
 }

@@ -18,6 +18,7 @@ Item {
     property string pendingSsid: ""
     property string passwordText: ""
     property string expandedSsid: ""
+    property string expandedDevice: ""
 
     readonly property int contentPadding: Spacing.spacing12
     readonly property int baseWidth: 340
@@ -31,6 +32,7 @@ Item {
         pendingSsid = "";
         passwordText = "";
         expandedSsid = "";
+        expandedDevice = "";
     }
 
     // Connect / disconnect / prompt decision for a scanned network.
@@ -86,8 +88,10 @@ Item {
                         text: {
                             if (NetworkService.airplaneMode)
                                 return "Flugmodus";
-                            if (NetworkService.ethernetActive)
-                                return "Kabel · " + NetworkService.ethernet.name;
+                            if (NetworkService.wiredConnectedCount > 1)
+                                return "Kabel · " + NetworkService.wiredConnectedCount + " Verbindungen";
+                            if (NetworkService.primaryWiredName.length)
+                                return "Kabel · " + NetworkService.primaryWiredName;
                             if (NetworkService.activeSsid.length)
                                 return "Verbunden · " + NetworkService.activeSsid + (NetworkService.vpnActive ? " · VPN" : "");
                             if (!NetworkService.wifiEnabled)
@@ -248,37 +252,32 @@ Item {
             }
 
             // ---- ethernet ----
-            Item {
-                visible: NetworkService.ethernetActive
+            // One row per wired device, present whether or not it carries a
+            // connection, so a disconnected adapter still reports its link.
+            Rectangle {
+                visible: NetworkService.wiredConnections.length > 0
                 width: parent.width
-                height: visible ? 40 : 0
-
-                LauncherDelegateBg {
-                    active: true
-                }
-                Column {
-                    anchors.left: parent.left
-                    anchors.leftMargin: Spacing.spacing8
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 1
-                    Label {
-                        text: "Kabelverbindung"
-                        font.weight: Font.Bold
+                height: 1
+                color: Colors.separatorColor
+            }
+            Label {
+                visible: NetworkService.wiredConnections.length > 0
+                text: NetworkService.wiredConnections.length > 1 ? "Kabelverbindungen" : "Kabelverbindung"
+                font.pixelSize: Typography.fontSize12
+                font.weight: Font.Normal
+                color: Colors.textColorMuted
+            }
+            Column {
+                visible: NetworkService.wiredConnections.length > 0
+                width: parent.width
+                Repeater {
+                    model: NetworkService.wiredConnections
+                    EthernetRow {
+                        required property var modelData
+                        wired: modelData
+                        expanded: root.expandedDevice === modelData.device
+                        onDetailToggled: root.expandedDevice = (root.expandedDevice === modelData.device ? "" : modelData.device)
                     }
-                    Label {
-                        text: NetworkService.ethernetActive ? NetworkService.ethernet.name : ""
-                        font.pixelSize: Typography.fontSize12
-                        font.weight: Font.Normal
-                        color: Colors.textColorMuted
-                    }
-                }
-                TintedIcon {
-                    source: "../icons/icons8-done.svg"
-                    size: Typography.fontSize14
-                    color: Colors.textColor
-                    anchors.right: parent.right
-                    anchors.rightMargin: Spacing.spacing8
-                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
 

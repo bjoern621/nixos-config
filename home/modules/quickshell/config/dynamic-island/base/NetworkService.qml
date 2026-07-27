@@ -24,7 +24,46 @@ Singleton {
 
     property var wifiNetworks: []
     property var _nmVpns: []
-    property var ethernet: null
+
+    // Every NM device, parsed once per refresh. Detail is per device: with wifi
+    // and ethernet both up, a single "active device" would report one link's IP
+    // on the other's row.
+    property var devices: []
+    readonly property var _devicesByName: {
+        const m = {};
+        for (let i = 0; i < devices.length; i++)
+            m[devices[i].device] = devices[i];
+        return m;
+    }
+    function detailFor(device) {
+        return root._devicesByName[device] || NetworkUtils.emptyDetail(device);
+    }
+
+    // One row per wired device. Several can be connected at once.
+    readonly property var wiredConnections: NetworkUtils.buildWiredModel(devices, _connections)
+    readonly property int wiredConnectedCount: {
+        let n = 0;
+        for (let i = 0; i < wiredConnections.length; i++)
+            if (wiredConnections[i].connected)
+                n++;
+        return n;
+    }
+    // Header line for the wired link. A string, not the row: a consumer pairing
+    // a row lookup with ethernetActive reads one of the two before the other
+    // re-evaluates and dereferences the stale value.
+    readonly property string primaryWiredName: {
+        for (let i = 0; i < wiredConnections.length; i++)
+            if (wiredConnections[i].connected)
+                return wiredConnections[i].name;
+        return "";
+    }
+
+    readonly property string wifiDevice: {
+        for (let i = 0; i < devices.length; i++)
+            if (devices[i].type === "wifi" && devices[i].state === "connected")
+                return devices[i].device;
+        return "";
+    }
 
     // Tailscale up/down live in the daemon, read via `tailscale status --json`.
     property bool tailscaleAvailable: false
@@ -45,20 +84,13 @@ Singleton {
             });
         return list;
     }
-    property var activeDetail: ({
-            ip: "",
-            gateway: "",
-            dns: [],
-            mac: ""
-        })
-
     readonly property string activeSsid: {
         for (let i = 0; i < wifiNetworks.length; i++)
             if (wifiNetworks[i].active)
                 return wifiNetworks[i].ssid;
         return "";
     }
-    readonly property bool ethernetActive: ethernet !== null
+    readonly property bool ethernetActive: wiredConnectedCount > 0
     // Header three-way toggle position. airplane wins; else wifi radio state.
     readonly property string radioMode: airplaneMode ? "airplane" : (wifiEnabled ? "on" : "off")
     readonly property bool vpnActive: {
@@ -92,15 +124,15 @@ Singleton {
     }
 
     // ---- transient action feedback ----
-    // busyKey identifies the spinning element: "wifi:<ssid>" or "vpn:<uuid>".
+    // busyKey identifies the spinning element: "wifi:<ssid>", "eth:<device>" or
+    // "vpn:<uuid>".
     property string busyKey: ""
     property string statusText: ""
 
     // ---- throughput (menu-open only) ----
-    property real rxRate: 0   // bytes/s
-    property real txRate: 0
-    property real _lastRx: -1
-    property real _lastTx: -1
+    // device -> { rx, tx } in bytes/s.
+    property var rates: ({})
+    property var _lastCounters: null
 
     // ---- QR of the active network ----
     property string qrImagePath: ""
@@ -109,7 +141,6 @@ Singleton {
     property int _openMenus: 0
     property var _scan: []
     property var _connections: []
-    property string _activeDevice: ""
 
     // True while a menu is open and wifi can scan. rescanTimer keeps NetworkManager
     // scanning on a fixed interval; exposes that loop as one state for the spinner.
@@ -125,10 +156,8 @@ Singleton {
     function closeMenu() {
         root._openMenus = Math.max(0, root._openMenus - 1);
         if (root._openMenus === 0) {
-            root._lastRx = -1;
-            root._lastTx = -1;
-            root.rxRate = 0;
-            root.txRate = 0;
+            root._lastCounters = null;
+            root.rates = {};
             root.qrImagePath = "";
         }
     }
@@ -140,6 +169,7 @@ Singleton {
         generalProc.running = true;
         wifiProc.running = true;
         connProc.running = true;
+        deviceProc.running = true;
         tailscaleProc.running = true;
     }
 
@@ -185,29 +215,18 @@ Singleton {
                 root._connections = NetworkUtils.parseConnections(connOut.text);
                 root._rebuildWifi();
                 root._nmVpns = NetworkUtils.buildVpnModel(root._connections);
-                root.ethernet = NetworkUtils.findEthernet(root._connections);
-
-                const dev = NetworkUtils.activeDevice(root._connections);
-                root._activeDevice = dev;
-                if (dev.length)
-                    detailProc.running = true;
-                else
-                    root.activeDetail = {
-                        ip: "",
-                        gateway: "",
-                        dns: [],
-                        mac: ""
-                    };
             }
         }
     }
 
+    // Every device in one call. Omitting the device argument dumps them all,
+    // which keeps the read count flat as wired adapters come and go.
     Process {
-        id: detailProc
-        command: ["nmcli", "-t", "-f", "IP4.ADDRESS,IP4.GATEWAY,IP4.DNS,GENERAL.HWADDR", "device", "show", root._activeDevice]
+        id: deviceProc
+        command: ["nmcli", "-t", "-f", "GENERAL.DEVICE,GENERAL.TYPE,GENERAL.STATE,GENERAL.CONNECTION,GENERAL.HWADDR,CAPABILITIES.SPEED,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS,IP6.ADDRESS", "device", "show"]
         stdout: StdioCollector {
-            id: detailOut
-            onStreamFinished: root.activeDetail = NetworkUtils.parseDeviceDetail(detailOut.text)
+            id: deviceOut
+            onStreamFinished: root.devices = NetworkUtils.parseDevices(deviceOut.text)
         }
     }
 
@@ -258,26 +277,30 @@ Singleton {
         id: throughputTimer
         interval: 1500
         repeat: true
-        running: root._openMenus > 0 && root._activeDevice.length > 0
+        running: root._openMenus > 0
         onTriggered: throughputProc.running = true
     }
     Process {
         id: throughputProc
-        command: ["cat", "/sys/class/net/" + root._activeDevice + "/statistics/rx_bytes", "/sys/class/net/" + root._activeDevice + "/statistics/tx_bytes"]
+        command: ["cat", "/proc/net/dev"]
         stdout: StdioCollector {
             id: throughputOut
             onStreamFinished: {
-                const parts = throughputOut.text.trim().split("\n");
-                if (parts.length < 2)
-                    return;
-                const rx = parseFloat(parts[0]);
-                const tx = parseFloat(parts[1]);
-                if (root._lastRx >= 0) {
-                    root.rxRate = Math.max(0, (rx - root._lastRx) / root._throughputIntervalSec);
-                    root.txRate = Math.max(0, (tx - root._lastTx) / root._throughputIntervalSec);
+                const now = NetworkUtils.parseProcNetDev(throughputOut.text);
+                if (root._lastCounters) {
+                    const next = {};
+                    for (const dev in now) {
+                        const prev = root._lastCounters[dev];
+                        if (!prev)
+                            continue;   // interface appeared mid-window; no delta yet
+                        next[dev] = {
+                            rx: Math.max(0, (now[dev].rx - prev.rx) / root._throughputIntervalSec),
+                            tx: Math.max(0, (now[dev].tx - prev.tx) / root._throughputIntervalSec)
+                        };
+                    }
+                    root.rates = next;
                 }
-                root._lastRx = rx;
-                root._lastTx = tx;
+                root._lastCounters = now;
             }
         }
     }
@@ -288,6 +311,10 @@ Singleton {
         if (bytesPerSec >= 1024)
             return Math.round(bytesPerSec / 1024) + " KB/s";
         return Math.round(bytesPerSec) + " B/s";
+    }
+    function throughputText(device) {
+        const r = root.rates[device];
+        return "↓ " + formatRate(r ? r.rx : 0) + " ↑ " + formatRate(r ? r.tx : 0);
     }
 
     // ---- actions with feedback (single-flight) ----
@@ -308,6 +335,16 @@ Singleton {
     }
     function forget(uuid, ssid) {
         _startAction(["forget", uuid], "wifi:" + ssid);
+    }
+    // Wired actions address the device, not a profile: `device disconnect` also
+    // blocks autoconnect, so the link stays down until asked back up, and
+    // `device connect` picks the profile even when none was ever saved.
+    // busyKey "eth:<device>" scopes the spinner to the one adapter.
+    function wiredConnect(device) {
+        _startAction(["device", "connect", device], "eth:" + device);
+    }
+    function wiredDisconnect(device) {
+        _startAction(["device", "disconnect", device], "eth:" + device);
     }
     function vpnUp(uuid) {
         _startAction(["vpn", "up", uuid], "vpn:" + uuid);

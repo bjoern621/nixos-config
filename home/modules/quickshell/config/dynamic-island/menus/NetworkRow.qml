@@ -5,6 +5,7 @@ import Quickshell.Io
 import "../"
 import "../base"
 import "../animations"
+import "NetworkUtils.js" as NetworkUtils
 
 // One wifi network row: signal, name, state, plus an expandable management
 // panel (connect/disconnect, forget, auto-connect, QR). The menu owns
@@ -24,15 +25,18 @@ Item {
     readonly property bool saved: network.saved
     readonly property bool busy: NetworkService.busyKey === ("wifi:" + ssid)
     readonly property bool hasDetail: saved || active
+    // Wifi facts come from the wifi device, never from whichever link nmcli
+    // listed first: ethernet is routinely up at the same time.
+    readonly property var wifiDetail: NetworkService.detailFor(NetworkService.wifiDevice)
 
     width: parent ? parent.width : 0
     height: mainRow.height + detail.height
 
     readonly property string subtitle: {
         if (active) {
-            const ip = NetworkService.activeDetail.ip;
+            const ip = root.wifiDetail.ip4;
             const addr = ip.length ? ip.split("/")[0] : "Verbunden";
-            return addr + " · ↓ " + NetworkService.formatRate(NetworkService.rxRate) + " ↑ " + NetworkService.formatRate(NetworkService.txRate);
+            return addr + " · " + NetworkService.throughputText(NetworkService.wifiDevice);
         }
         if (saved)
             return network.secured ? "Gespeichert · " + network.securityLabel : "Gespeichert";
@@ -170,42 +174,10 @@ Item {
             spacing: Spacing.spacing6
 
             // Connection facts (active only).
-            Grid {
+            DeviceFacts {
                 visible: root.active
-                columns: 2
-                columnSpacing: Spacing.spacing8
-                rowSpacing: 2
-
-                Label {
-                    text: "IP"
-                    font.pixelSize: Typography.fontSize12
-                    font.weight: Font.Normal
-                    color: Colors.textColorMuted
-                }
-                Label {
-                    text: NetworkService.activeDetail.ip || "-"
-                    font.pixelSize: Typography.fontSize12
-                }
-                Label {
-                    text: "Gateway"
-                    font.pixelSize: Typography.fontSize12
-                    font.weight: Font.Normal
-                    color: Colors.textColorMuted
-                }
-                Label {
-                    text: NetworkService.activeDetail.gateway || "-"
-                    font.pixelSize: Typography.fontSize12
-                }
-                Label {
-                    text: "DNS"
-                    font.pixelSize: Typography.fontSize12
-                    font.weight: Font.Normal
-                    color: Colors.textColorMuted
-                }
-                Label {
-                    text: NetworkService.activeDetail.dns.join(", ") || "-"
-                    font.pixelSize: Typography.fontSize12
-                }
+                width: parent.width - Spacing.spacing8 * 2
+                rows: root.active ? NetworkUtils.deviceDetailRows(root.wifiDetail) : []
             }
 
             // Action chips.

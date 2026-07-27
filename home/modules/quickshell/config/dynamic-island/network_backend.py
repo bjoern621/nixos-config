@@ -10,7 +10,7 @@ Related files:
 - menus/NetworkMenu.qml: view + password capture.
 
 Specific concern:
-- Execute nmcli / rfkill mutations (connect, disconnect, forget, vpn, radio, modify).
+- Execute nmcli / rfkill mutations (connect, disconnect, device, forget, vpn, radio, modify).
 - Emit STATUS:/RESULT: lines consumed by the QML Process parser.
 - Guarantee exactly one RESULT: line; QML waits on it with no timeout.
 - No reads, no model shaping. Reads live in QML.
@@ -103,6 +103,19 @@ def cmd_disconnect(argv: list[str]) -> int:
     return 0
 
 
+def cmd_device(argv: list[str]) -> int:
+    # device <connect|disconnect> <ifname>
+    # Wired links are addressed per device, not per profile: several ethernet
+    # adapters can be up at once, `disconnect` blocks autoconnect until asked
+    # back up, and `connect` picks a profile even when none was saved.
+    direction, ifname = argv[0], argv[1]
+    _status("CONNECTING" if direction == "connect" else "DISCONNECTING")
+    code, output = _run(["nmcli", "device", direction, ifname])
+    _echo(output)
+    _connect_result(code, output)
+    return 0
+
+
 def cmd_forget(argv: list[str]) -> int:
     # forget <uuid-or-name>
     code, output = _run(["nmcli", "connection", "delete", argv[0]])
@@ -172,6 +185,7 @@ def cmd_rescan(_argv: list[str]) -> int:
 _COMMANDS = {
     "connect": cmd_connect,
     "disconnect": cmd_disconnect,
+    "device": cmd_device,
     "forget": cmd_forget,
     "vpn": cmd_vpn,
     "tailscale": cmd_tailscale,
