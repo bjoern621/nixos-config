@@ -21,8 +21,12 @@ import "../"
 //       text: hoveredText
 //       subtitle: hoveredSubtitle
 //       screen: hostWindow.screen
+//       anchorWindow: hostWindow
 //       recalcKey: scrollView.contentY
 //   }
+//
+// `anchorWindow` is only needed when the anchor lives in a surface smaller than
+// the screen, such as the card-sized launcher overlays. See `anchorDx`.
 Scope {
     id: root
 
@@ -34,6 +38,17 @@ Scope {
     property var screen: null
     property int verticalSpacing: Spacing.spacing4
     property var recalcKey: 0
+
+    // Surface holding anchorItem, when it is not this window's size.
+    // mapToItem(null, …) is window-relative, so an anchor in a card-sized
+    // overlay reports coordinates this fullscreen window reads as top-left.
+    // Both surfaces are centered on the same screen, so half the size
+    // difference is the offset between them. Layer surfaces carry no position,
+    // hence the derivation rather than reading x/y.
+    // Null for anchors in a fullscreen host: the offset is then zero anyway.
+    property var anchorWindow: null
+    readonly property real anchorDx: anchorWindow ? (tooltipWindow.width - anchorWindow.width) / 2 : 0
+    readonly property real anchorDy: anchorWindow ? (tooltipWindow.height - anchorWindow.height) / 2 : 0
 
     // "above" | "below", relative to anchorItem.
     property string placement: "above"
@@ -91,7 +106,7 @@ Scope {
                 const p = root.anchorItem.mapToItem(null, root.anchorItem.width / 2, 0);
                 const min = Spacing.spacing8;
                 const max = tooltipWindow.width - reveal.width - Spacing.spacing8;
-                return Math.max(min, Math.min(max, p.x - reveal.width / 2));
+                return Math.max(min, Math.min(max, p.x + root.anchorDx - reveal.width / 2));
             }
             y: {
                 if (!root.anchorItem)
@@ -99,10 +114,10 @@ Scope {
                 const _ = root.recalcKey;
                 if (root.placeBelow) {
                     const b = root.anchorItem.mapToItem(null, 0, root.anchorItem.height);
-                    return b.y + root.verticalSpacing;
+                    return b.y + root.anchorDy + root.verticalSpacing;
                 }
                 const p = root.anchorItem.mapToItem(null, 0, 0);
-                return p.y - reveal.height - root.verticalSpacing;
+                return p.y + root.anchorDy - reveal.height - root.verticalSpacing;
             }
 
             Rectangle {

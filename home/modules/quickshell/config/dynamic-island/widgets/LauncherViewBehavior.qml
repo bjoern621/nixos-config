@@ -13,9 +13,14 @@ Item {
     property alias keyboardNav: selection.keyboardNav
     property alias hoveredIndex: selection.hoveredIndex
     readonly property alias effectiveIndex: selection.effectiveIndex
+    property alias rowStride: wheel.rowStride
 
     function reset() {
         selection.reset();
+    }
+
+    function keyboardSelect(index) {
+        selection.keyboardSelect(index);
     }
 
     LauncherSelection {
@@ -34,10 +39,11 @@ Item {
         }
     }
 
-    // Shared wheel step, no inertia. Same behavior as the app launcher.
+    // Shared wheel step, no inertia. Wheel is mouse input, so it drops keyboard nav.
     // Parented to the view, not left in its data: a Flickable reparents child items into contentItem,
     // sizing them contentWidth x contentHeight, which misses the empty viewport below a short list.
     StepWheel {
+        id: wheel
         parent: root.view
         target: root.view
         onScrolled: selection.keyboardNav = false

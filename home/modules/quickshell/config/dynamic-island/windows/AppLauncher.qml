@@ -22,22 +22,20 @@ Scope {
         WlrLayershell.namespace: "quickshell-launcher"
         screen: Quickshell.screens.find(s => s.name === Globals.launcherScreenName) ?? null
 
-        anchors {
-            top: true
-            left: true
-            right: true
-            bottom: true
-        }
+        // No anchors: the compositor centers a card-sized surface.
+        implicitWidth: panel.surfaceWidth
+        implicitHeight: panel.surfaceHeight
 
         exclusiveZone: 0
         focusable: true
-        WlrLayershell.keyboardFocus: Globals.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: Globals.launcherVisible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         color: "transparent"
 
-        AutoCloseOnFocusLoss {
+        LauncherDismiss {
+            hostWindow: launcherWindow
             watch: panel
-            armed: Globals.launcherVisible
-            onLost: Globals.launcherVisible = false
+            active: Globals.launcherVisible
+            onDismissed: Globals.launcherVisible = false
         }
 
         LauncherPanel {
@@ -45,6 +43,7 @@ Scope {
             anchors.fill: parent
             searchText: LauncherController.searchText
             placeholder: "Suchen..."
+            contentMaxHeight: launcherScope.maxVisibleRows * launcherScope.rowHeight
             emptyVisible: LauncherController.resultCount === 0 && LauncherController.searchText !== ""
 
             onSearchEdited: text => LauncherController.searchText = text
@@ -55,33 +54,29 @@ Scope {
                     LauncherController.move(dy);
             }
 
-            ListView {
+            LauncherListView {
                 id: resultsList
                 // Reserve a gutter for the scroll handle only while it shows.
                 width: parent.width - (scrollable ? Spacing.scrollGutter : 0)
                 height: Math.min(contentHeight, launcherScope.maxVisibleRows * launcherScope.rowHeight)
-                clip: true
-                boundsBehavior: Flickable.StopAtBounds
                 model: LauncherController.filteredApps
+                rowStride: launcherScope.rowHeight
 
-                readonly property bool scrollable: contentHeight > height + 1
-
-                // Shared wheel step (~1.5 rows/notch), like the neo launcher.
-                StepWheel {
-                    target: resultsList
-                    rowStride: launcherScope.rowHeight
+                // Selection lives here; the controller reads it back as activeIndex.
+                // Guarded clear: on a theme switch the replacement view may register first.
+                Component.onCompleted: LauncherController.selectionView = resultsList
+                Component.onDestruction: {
+                    if (LauncherController.selectionView === resultsList)
+                        LauncherController.selectionView = null;
                 }
 
-                // Scroll the active row into view, and reset to top on open.
                 Connections {
                     target: LauncherController
-                    function onActiveIndexChanged() {
-                        resultsList.positionViewAtIndex(LauncherController.activeIndex, ListView.Contain);
-                    }
                     function onLauncherVisibleChanged() {
                         if (LauncherController.launcherVisible) {
                             resultsList.cancelFlick();
                             resultsList.positionViewAtBeginning();
+                            resultsList.reset();
                         }
                     }
                 }
@@ -148,10 +143,6 @@ Scope {
 
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor
-                        onHoveredChanged: {
-                            if (hovered && !LauncherController.kbdLock)
-                                LauncherController.activeIndex = delegateRoot.index;
-                        }
                     }
 
                     TapHandler {

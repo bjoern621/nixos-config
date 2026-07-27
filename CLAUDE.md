@@ -351,3 +351,49 @@ PanelWindow {
 | `quickshell-emoji`     | EmojiPicker                    | `hyprland/emoji-picker.lua` |
 
 `quickshell-noblur` exists for windows that are purely decorative or opaque and gain nothing from blur. Per the One Concern Per File convention, a window with its own namespace carries its layer rules in that app's module, not in the quickshell module.
+
+### Launcher Overlays
+
+The app launcher, clipboard history and emoji picker are one kind of thing: a centered, keyboard-driven overlay with a search field over a scrollable result view. They behave identically, and a change to one belongs in the shared piece so the other two get it. A behavioural difference between them is a bug unless the file says why.
+
+The app launcher renders two design variants (`AppLauncher` classic, `AppLauncherNeo`). Both follow every rule below; only their chrome differs.
+
+**Surface.** Card-sized, never fullscreen. The window sets no `anchors`, so the compositor centers it, and takes its size from the panel:
+
+```qml
+implicitWidth: panel.surfaceWidth
+implicitHeight: panel.surfaceHeight
+```
+
+A fullscreen transparent layer costs roughly 30fps on the battery iGPU, which is bandwidth-bound and blends the whole layer every frame.
+
+**Fixed height.** The surface holds the overlay's tallest layout, not its current one, so typing does not resize the layer. Consumers pass that bound as `LauncherPanel.contentMaxHeight`, derived from the same constants that cap the view (`maxVisibleRows * rowHeight`, `maxVisibleHeight`, `cellSize * gridRows`). The panel itself still hugs its content and stays centered in the surface; a short result set leaves transparent slack. A bound that is too small costs a resize, not a clipped panel.
+
+**Closing.** Escape and picking an entry are the host's business. Everything else is `LauncherDismiss`:
+
+```qml
+LauncherDismiss {
+    hostWindow: fooWindow
+    watch: panel
+    active: scope.open
+    onDismissed: scope.open = false
+}
+```
+
+It pairs a `HyprlandFocusGrab` with `AutoCloseOnFocusLoss` because neither covers both cases. A card-sized surface never receives a click meant to dismiss it, so the grab reports the outside click and Hyprland swallows it; the grab stays silent when another overlay steals keyboard focus with no click, which is what focus loss catches.
+
+The host must set `WlrKeyboardFocus.OnDemand`. `Exclusive` pins keyboard focus through clicks on other windows, so `activeFocus` never drops and neither path fires. `OnDemand` without the grab is equally broken: focus-follows-mouse hands focus back to the window under the cursor and the overlay closes itself a moment after opening.
+
+**Scrolling.** `LauncherListView` / `LauncherGridView` for the view, which carry selection and the wheel step, and a `ScrollHandle` placed as a sibling. The view reserves the gutter only while it overflows:
+
+```qml
+width: parent.width - (scrollable ? Spacing.scrollGutter : 0)
+```
+
+The handle is a sibling and not a child because a Flickable reparents its children into `contentItem`.
+
+**Selection.** `LauncherSelection`, reached through the view's `keyboardSelect()`, `reset()` and `effectiveIndex`. Consumers never write `currentIndex` or `hoveredIndex` directly: last input wins, and the distinction between a keystroke claiming the selection and the cursor claiming it lives in one place. Use `reset()` rather than `keyboardSelect(0)` when the model is replaced wholesale, since it also drops the stale hover and re-arms the gate that stops a view mapping under a stationary cursor from claiming the selection.
+
+The launcher additionally registers its view as `LauncherController.selectionView`, so the singleton reads `effectiveIndex` back and drives `keyboardSelect()` regardless of which design variant is loaded. Both variants register, and clear the registration on destruction only if it still points at them, since on a theme switch the replacement view may register first. The clipboard and emoji picker own their state in their own `Scope` and call the view directly.
+
+**Tooltips.** An overlay anchoring a `Tooltip` passes `anchorWindow`, since `mapToItem(null, …)` is window-relative and the tooltip lives on its own fullscreen surface. Omitting it places the bubble as if the card sat at the top-left of the screen.

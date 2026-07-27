@@ -24,10 +24,12 @@ Singleton {
     property string searchText: ""
     property var indexedApps: []
     property var filteredApps: []
-    property int activeIndex: 0
-    // Keyboard nav briefly suppresses hover-select so a list scrolling under a
-    // stationary cursor does not steal the selection.
-    property bool kbdLock: false
+
+    // Loaded launcher view (classic or neo, never both). Its LauncherSelection
+    // owns the selection, so keyboard/mouse precedence matches the clipboard and
+    // emoji overlays: last input wins.
+    property var selectionView: null
+    readonly property int activeIndex: selectionView ? selectionView.effectiveIndex : 0
 
     // Neo readout data. Classic does not display these.
     readonly property int resultCount: filteredApps.length
@@ -64,7 +66,7 @@ Singleton {
                         app: e.app,
                         query: ""
                     }));
-            activeIndex = 0;
+            resetSelection();
             return;
         }
 
@@ -97,17 +99,20 @@ Singleton {
                 query: query
             };
         filteredApps = out;
-        activeIndex = 0;
+        resetSelection();
     }
 
-    // View watches activeIndex to scroll its own list into view.
+    // Every rebuild lands on the first result. Keystroke-driven, so the keyboard
+    // takes the selection back from any hover.
+    function resetSelection() {
+        if (selectionView)
+            selectionView.keyboardSelect(0);
+    }
+
+    // The view clamps to its own count and scrolls the row into view.
     function move(delta) {
-        const n = filteredApps.length;
-        if (n === 0)
-            return;
-        activeIndex = Math.max(0, Math.min(activeIndex + delta, n - 1));
-        kbdLock = true;
-        kbdTimer.restart();
+        if (selectionView)
+            selectionView.keyboardSelect(activeIndex + delta);
     }
 
     function launchSelected() {
@@ -132,11 +137,6 @@ Singleton {
                 Globals.launcherScreenName = s.name;
         }
         Globals.launcherVisible = !launcherVisible;
-    }
-
-    property Timer kbdTimer: Timer {
-        interval: 250
-        onTriggered: controller.kbdLock = false
     }
 
     property Connections _deConn: Connections {

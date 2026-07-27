@@ -52,7 +52,7 @@ Scope {
         listProc.running = true;
     }
 
-    // resetIndex=false skips the `currentIndex = 0` write.
+    // resetIndex=false skips the selection write.
     // Background refreshes (listProc) must not clobber a hover-set selection.
     // User-driven calls (open, search) keep the default reset.
     function updateFilter(resetIndex = true) {
@@ -91,8 +91,9 @@ Scope {
                 clipId: e.clipId
             });
         }
+        // Keystroke-driven, so the keyboard takes the selection back from any hover.
         if (resetIndex)
-            clipList.currentIndex = 0;
+            clipList.keyboardSelect(0);
     }
 
     function selectEntry(entry) {
@@ -246,22 +247,20 @@ Scope {
         visible: clipScope.clipVisible
         WlrLayershell.namespace: "quickshell-clipboard"
 
-        anchors {
-            top: true
-            left: true
-            right: true
-            bottom: true
-        }
+        // No anchors: the compositor centers a card-sized surface.
+        implicitWidth: panel.surfaceWidth
+        implicitHeight: panel.surfaceHeight
 
         exclusiveZone: 0
         focusable: true
-        WlrLayershell.keyboardFocus: clipScope.clipVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: clipScope.clipVisible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         color: "transparent"
 
-        AutoCloseOnFocusLoss {
+        LauncherDismiss {
+            hostWindow: clipWindow
             watch: panel
-            armed: clipScope.clipVisible
-            onLost: clipScope.clipVisible = false
+            active: clipScope.clipVisible
+            onDismissed: clipScope.clipVisible = false
         }
 
         LauncherPanel {
@@ -269,6 +268,7 @@ Scope {
             anchors.fill: parent
             searchText: clipScope.searchText
             placeholder: "Zwischenablage durchsuchen..."
+            contentMaxHeight: clipScope.maxVisibleHeight
             emptyVisible: clipModel.count === 0 && clipScope.searchText !== ""
 
             onSearchEdited: text => clipScope.searchText = text
@@ -278,12 +278,8 @@ Scope {
                     clipScope.selectEntry(clipModel.get(clipList.effectiveIndex));
             }
             onNavigated: (dx, dy) => {
-                if (dy === 0)
-                    return;
-                const next = clipList.effectiveIndex + dy;
-                clipList.keyboardNav = true;
-                if (next >= 0 && next < clipModel.count)
-                    clipList.currentIndex = next;
+                if (dy !== 0)
+                    clipList.keyboardSelect(clipList.effectiveIndex + dy);
             }
 
             LauncherListView {

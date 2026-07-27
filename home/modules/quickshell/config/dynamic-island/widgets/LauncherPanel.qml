@@ -5,20 +5,36 @@ import "../base"
 // (AppLauncher, ClipboardHistory, EmojiPicker).
 //
 // The hosting PanelWindow stays in the parent file: PanelWindow cannot be a QML component root.
-// Wrap with:
+// The three overlays share one window shape. The rules it enforces (card-sized
+// surface, fixed height, dismissal, scrolling, selection) are in the
+// "Launcher Overlays" section of the repo CLAUDE.md.
 //
 //   PanelWindow {
+//       id: fooWindow
 //       visible: scope.open
 //       WlrLayershell.namespace: "quickshell-foo"
 //       focusable: true
 //       color: "transparent"
-//       anchors { top:true; left:true; right:true; bottom:true }
+//       // No anchors: the compositor centers a card-sized surface.
+//       implicitWidth: panel.surfaceWidth
+//       implicitHeight: panel.surfaceHeight
+//       WlrLayershell.keyboardFocus: scope.open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+//
+//       LauncherDismiss {
+//           hostWindow: fooWindow
+//           watch: panel
+//           active: scope.open
+//           onDismissed: scope.open = false
+//       }
+//
 //       LauncherPanel {
+//           id: panel
 //           anchors.fill: parent
 //           searchText: scope.searchText
+//           contentMaxHeight: <view at its tallest>
 //           onSearchEdited: text => scope.searchText = text
 //           ...
-//           ListView { ... }   // default content
+//           LauncherListView { ... }   // default content
 //       }
 //   }
 //
@@ -35,11 +51,28 @@ Item {
     property bool emptyVisible: false
     property string emptyText: "Keine Ergebnisse"
 
+    // Content slot at its tallest, set by the consumer from the same constants
+    // that cap its view. Surface is sized from this, so a short result set
+    // leaves transparent slack instead of resizing the layer per keystroke.
+    property int contentMaxHeight: 0
+
     readonly property bool neo: !Shape.usesBlur
     // Neo header matches AppLauncherNeo: 50px flush, ink divider beneath.
     readonly property int neoHeaderHeight: 50
     // Y distance from panel top to the content column (header block above it).
     readonly property int headerBlock: neo ? (neoHeaderHeight + Shape.borderWidth + Spacing.spacing8) : (Spacing.spacing12 + searchBarHeight + Spacing.spacing8)
+
+    // Panel hugs its content; the surface holds the upper bound.
+    // Live height wins over a too-small contentMaxHeight, so a stale bound
+    // costs a resize instead of clipping the panel.
+    readonly property int panelHeight: headerBlock + contentColumn.implicitHeight + Spacing.spacing12
+    readonly property int panelMaxHeight: headerBlock + Math.max(contentMaxHeight, contentColumn.implicitHeight) + Spacing.spacing12
+
+    // Layer surface size. Host binds implicitWidth/implicitHeight to these.
+    // Neo offsets panel and shadow by half the shadow distance each, so the
+    // pair spans one shadow distance more than the panel itself.
+    readonly property int surfaceWidth: panelWidth + Shape.shadowOffset
+    readonly property int surfaceHeight: panelMaxHeight + Shape.shadowOffset
 
     default property alias contentData: contentSlot.data
 
@@ -75,7 +108,9 @@ Item {
         event.accepted = true;
     }
 
-    // Dismiss on click outside the panel.
+    // Dismiss on click in the surface slack around the panel (shadow offset,
+    // and the vertical gap left when the content is shorter than contentMaxHeight).
+    // Clicks fully outside the surface never arrive; LauncherDismiss closes those.
     // Sits under the panel, so the panel's own MouseArea eats clicks inside the panel first.
     // MouseArea, not TapHandler: PointerHandlers attached to a parent fire
     // even when a descendant handled the gesture,
@@ -102,7 +137,7 @@ Item {
     Rectangle {
         id: panel
         width: root.panelWidth
-        height: root.headerBlock + contentColumn.implicitHeight + Spacing.spacing12
+        height: root.panelHeight
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: -Shape.shadowOffset / 2
         anchors.verticalCenterOffset: -Shape.shadowOffset / 2

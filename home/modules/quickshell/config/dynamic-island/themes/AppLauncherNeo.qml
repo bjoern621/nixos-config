@@ -12,8 +12,10 @@ import "../lib/fzf.js" as FzfLib
 // the one pop of color; everything else is fixed cream/black.
 // No glass, no gradient, no blur: fully flat and loud. hyprglass sits behind the
 // card but the opaque fill hides it entirely (harmless, drop it later if wanted).
-// Shares no chrome/tokens with the other overlays. Only functional pieces are
-// reused (DesktopEntries, fzf scoring, Globals visibility, focus-loss close).
+// Chrome and tokens are its own; the card replaces LauncherPanel rather than
+// restyling it. Behavior follows the "Launcher Overlays" section of the repo
+// CLAUDE.md like the other two, through DesktopEntries, fzf scoring,
+// LauncherController, LauncherListView and LauncherDismiss.
 Scope {
     id: launcherScope
 
@@ -46,20 +48,22 @@ Scope {
         // Card-sized surface, protocol-centered (no anchors set).
         // Fullscreen transparent surface cost ~30fps: battery iGPU is
         // bandwidth-bound, blends full 2944x1840 layer per frame.
-        // Height fixed at card upper bound: constant size avoids layer
-        // resize per keystroke.
+        // Height is the card's upper bound, not its current height: constant
+        // size avoids a layer resize per keystroke. Literal because the card is
+        // bespoke; the LauncherPanel overlays derive theirs from contentMaxHeight.
         implicitWidth: cardWrap.width
         implicitHeight: 580
 
         exclusiveZone: 0
         focusable: true
-        WlrLayershell.keyboardFocus: LauncherController.launcherVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: LauncherController.launcherVisible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         color: "transparent"
 
-        AutoCloseOnFocusLoss {
+        LauncherDismiss {
+            hostWindow: launcherWindow
             watch: panelRoot
-            armed: LauncherController.launcherVisible
-            onLost: Globals.launcherVisible = false
+            active: LauncherController.launcherVisible
+            onDismissed: Globals.launcherVisible = false
         }
 
         Item {
@@ -92,7 +96,7 @@ Scope {
             }
 
             // Dismiss on click in surface slack around card.
-            // Clicks fully outside surface land on other windows; focus loss closes.
+            // Clicks fully outside surface never arrive; focus grab closes those.
             MouseArea {
                 anchors.fill: parent
                 onClicked: Globals.launcherVisible = false
@@ -284,36 +288,32 @@ Scope {
                                     width: parent.width
                                     height: resultsList.height
 
-                                    // True while content overflows the visible window.
-                                    readonly property bool scrollable: resultsList.contentHeight > resultsList.height + 1
-
-                                ListView {
+                                LauncherListView {
                                     id: resultsList
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     // Reserve gutter for the scrollbar only when it shows.
-                                    anchors.rightMargin: listWrap.scrollable ? Spacing.scrollGutter : 0
+                                    anchors.rightMargin: scrollable ? Spacing.scrollGutter : 0
                                     height: Math.min(contentHeight, launcherScope.maxVisibleRows * launcherScope.rowHeight)
-                                    clip: true
                                     model: LauncherController.filteredApps
-                                    boundsBehavior: Flickable.StopAtBounds
                                     spacing: 4
+                                    rowStride: launcherScope.rowHeight + spacing
 
-                                    // Shared wheel step: ~1.5 rows per notch, mouse + touchpad.
-                                    StepWheel {
-                                        target: resultsList
-                                        rowStride: launcherScope.rowHeight + resultsList.spacing
+                                    // Selection lives here; the controller reads it back as activeIndex.
+                                    // Guarded clear: on a theme switch the replacement view may register first.
+                                    Component.onCompleted: LauncherController.selectionView = resultsList
+                                    Component.onDestruction: {
+                                        if (LauncherController.selectionView === resultsList)
+                                            LauncherController.selectionView = null;
                                     }
 
-                                    // Controller owns selection; scroll it into view here.
                                     Connections {
                                         target: LauncherController
-                                        function onActiveIndexChanged() {
-                                            resultsList.positionViewAtIndex(LauncherController.activeIndex, ListView.Contain);
-                                        }
                                         function onLauncherVisibleChanged() {
-                                            if (LauncherController.launcherVisible)
+                                            if (LauncherController.launcherVisible) {
                                                 resultsList.positionViewAtBeginning();
+                                                resultsList.reset();
+                                            }
                                         }
                                     }
 
@@ -399,10 +399,6 @@ Scope {
                                         HoverHandler {
                                             id: hov
                                             cursorShape: Qt.PointingHandCursor
-                                            onHoveredChanged: {
-                                                if (hovered && !LauncherController.kbdLock)
-                                                    LauncherController.activeIndex = del.index;
-                                            }
                                         }
 
                                         TapHandler {
@@ -416,7 +412,7 @@ Scope {
                                     // ink border/handle, accent on press) apply since neo is active.
                                     ScrollHandle {
                                         target: resultsList
-                                        visible: listWrap.scrollable
+                                        visible: resultsList.scrollable
                                         anchors.right: parent.right
                                         anchors.top: parent.top
                                         anchors.bottom: parent.bottom

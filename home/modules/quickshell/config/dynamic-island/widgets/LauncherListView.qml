@@ -18,8 +18,12 @@ ListView {
     property alias keyboardNav: behavior.keyboardNav
     property alias hoveredIndex: behavior.hoveredIndex
     readonly property alias effectiveIndex: behavior.effectiveIndex
+    property alias rowStride: behavior.rowStride
     function reset() {
         behavior.reset();
+    }
+    function keyboardSelect(index) {
+        behavior.keyboardSelect(index);
     }
 
     LauncherViewBehavior {

@@ -18,6 +18,10 @@ Scope {
     readonly property int gridRows: 8
     readonly property int categorySize: 36
 
+    // Content column at its tallest: full grid, then the category strip below
+    // it, plus the neo divider between them. Sizes the layer surface.
+    readonly property int maxContentHeight: cellSize * gridRows + Spacing.spacing8 + categorySize + (Shape.usesBlur ? 0 : Shape.borderWidth + Spacing.spacing8)
+
     property bool emojiVisible: false
     property string searchText: ""
     property int selectedGroup: 0
@@ -57,17 +61,22 @@ Scope {
         emojiGrid.positionViewAtBeginning();
     }
 
+    // Typing claims the selection back from any hover, before the async filter lands.
     onSearchTextChanged: {
         hoveredCell = null;
+        emojiGrid.keyboardSelect(0);
         requestFilter();
     }
+    // Switching group replaces the model, so the selection resets with it.
+    // reset() over keyboardSelect(0): it also drops the previous group's
+    // hoveredIndex and re-arms the pointer gate, so the new grid mapping under
+    // a stationary cursor does not inherit a stale hover.
     onSelectedGroupChanged: {
         hoveredCell = null;
         if (searchText === "")
             requestFilter();
         emojiScope.rewindGrid();
-        emojiGrid.currentIndex = 0;
-        emojiGrid.hoveredIndex = -1;
+        emojiGrid.reset();
     }
 
     // Reads the JSON on the UI thread, hands the raw text to the worker.
@@ -106,7 +115,9 @@ Scope {
                     return;
                 }
                 emojiScope.filteredEmojis = msg.items;
-                emojiGrid.currentIndex = 0;
+                // Re-anchor on the new result set. The query was keystroke- or
+                // group-driven, both of which already reset the selection.
+                emojiGrid.keyboardSelect(0);
             }
         }
     }
@@ -192,22 +203,20 @@ Scope {
         visible: emojiScope.emojiVisible
         WlrLayershell.namespace: "quickshell-emoji"
 
-        anchors {
-            top: true
-            left: true
-            right: true
-            bottom: true
-        }
+        // No anchors: the compositor centers a card-sized surface.
+        implicitWidth: panel.surfaceWidth
+        implicitHeight: panel.surfaceHeight
 
         exclusiveZone: 0
         focusable: true
-        WlrLayershell.keyboardFocus: emojiScope.emojiVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: emojiScope.emojiVisible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         color: "transparent"
 
-        AutoCloseOnFocusLoss {
+        LauncherDismiss {
+            hostWindow: emojiWindow
             watch: panel
-            armed: emojiScope.emojiVisible
-            onLost: emojiScope.emojiVisible = false
+            active: emojiScope.emojiVisible
+            onDismissed: emojiScope.emojiVisible = false
         }
 
         LauncherPanel {
@@ -217,6 +226,7 @@ Scope {
             placeholder: "Emoji suchen..."
             // Extra gutter width so all gridCols columns survive next to the bar.
             panelWidth: emojiScope.cellSize * emojiScope.gridCols + 2 * Spacing.spacing12 + Spacing.scrollGutter
+            contentMaxHeight: emojiScope.maxContentHeight
             emptyVisible: emojiScope.dataLoaded && emojiScope.filteredEmojis.length === 0 && emojiScope.searchText !== ""
 
             onSearchEdited: text => emojiScope.searchText = text
@@ -225,27 +235,8 @@ Scope {
                 if (emojiScope.filteredEmojis.length > 0)
                     emojiScope.selectEmoji(emojiScope.filteredEmojis[emojiGrid.effectiveIndex]);
             }
-            onNavigated: (dx, dy) => {
-                const cols = emojiScope.gridCols;
-                const total = emojiScope.filteredEmojis.length;
-                let next = emojiGrid.effectiveIndex + dx + dy * cols;
-                emojiGrid.keyboardNav = true;
-                if (next < 0)
-                    next = 0;
-                if (next >= total)
-                    next = total - 1;
-                emojiGrid.currentIndex = next;
-            }
-            onPageChange: dy => {
-                const total = emojiScope.filteredEmojis.length;
-                let next = emojiGrid.effectiveIndex + dy * emojiScope.gridCols * emojiScope.gridRows;
-                emojiGrid.keyboardNav = true;
-                if (next < 0)
-                    next = 0;
-                if (next >= total)
-                    next = total - 1;
-                emojiGrid.currentIndex = next;
-            }
+            onNavigated: (dx, dy) => emojiGrid.keyboardSelect(emojiGrid.effectiveIndex + dx + dy * emojiScope.gridCols)
+            onPageChange: dy => emojiGrid.keyboardSelect(emojiGrid.effectiveIndex + dy * emojiScope.gridCols * emojiScope.gridRows)
 
             Column {
                 width: parent.width
@@ -386,6 +377,8 @@ Scope {
         subtitle: emojiScope.hoveredCell ? emojiScope.hoveredSubtitle : ""
         textFormat: Text.StyledText
         screen: emojiWindow.screen
+        // Cells live in the card-sized surface, the tooltip in a fullscreen one.
+        anchorWindow: emojiWindow
         recalcKey: emojiGrid.contentY
     }
 }
