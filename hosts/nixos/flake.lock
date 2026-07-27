@@ -747,8 +747,8 @@
         ]
       },
       "locked": {
-        "lastModified": 1784851374,
-        "narHash": "sha256-OhWRG/OpvPaisU8+iw4MKScbwRaLQ7m6WBDzuFk/M9c=",
+        "lastModified": 1785150886,
+        "narHash": "sha256-UT1C20rynvgOw6ZjHUdH4PcWB16DKRh2LN6Va0BdKG8=",
         "path": "/home/bjoern/git/screen-sharing",
         "type": "path"
       },

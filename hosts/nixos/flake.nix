@@ -69,9 +69,9 @@
         modules = [
           ./configuration.nix
 
-          inputs.screen-sharing.nixosModules.screenShareDev
+          inputs.screen-sharing.nixosModules.screenShare
           {
-            services.screenShareDev = {
+            programs.screenShare = {
               enable = true;
               user = "bjoern";
             };
