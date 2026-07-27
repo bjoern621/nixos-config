@@ -10,6 +10,8 @@
 // (cx,cy,rx,ry,rot,a,b). fillEllipse wraps that. arc() matches HTML5.
 
 var SUNR = 6, SUNS = 20;
+// Lightning timing in ms, not frames: a dropped frame must not stretch the flash.
+var FLASH_MS = 600, BOLT_GAP_MS = 2600, BOLT_JITTER_MS = 3400;
 
 function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 function lerp(a, b, f) { return a + (b - a) * f; }
@@ -59,7 +61,7 @@ function daylight(h) {
 
 function seed(P, w, h) {
     var i, rnd = Math.random;
-    P.frame = P.frame || 0; P.flash = 0; P.bolt = 0; P.w = w; P.h = h;
+    P.frame = P.frame || 0; P.flash = 0; P.boltPts = null; P.nextBolt = BOLT_GAP_MS + rnd()*BOLT_JITTER_MS; P.w = w; P.h = h;
     P.stars = []; for (i = 0; i < 95; i++) P.stars.push({ x:rnd()*w, y:rnd()*h*0.66, r:rnd()*1.1+0.35, tw:rnd()*6.28 });
     P.sparkle = []; for (i = 0; i < 6; i++) P.sparkle.push({ x:rnd()*w, y:rnd()*h*0.5, s:rnd()*2+2.5, tw:rnd()*6.28 });
     P.clouds = []; for (i = 0; i < 9; i++) { var dd = 0.5 + rnd()*0.9; P.clouds.push({ x:rnd()*w, y:h*(0.1+rnd()*0.32), s:dd, v:(0.08+rnd()*0.22)*dd }); }
@@ -79,6 +81,10 @@ function fillCircle(ctx, cx, cy, r) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2
 function paint(ctx, w, h, inp, P) {
     if (!P.stars || P.w !== w || P.h !== h) seed(P, w, h);
     P.frame++;
+    // Wall-clock delta drives lightning. Clamp covers menu reopen after a long
+    // close, where P carries a stale timestamp.
+    var now = Date.now(), dt = P.t ? clamp(now - P.t, 0, 120) : 33;
+    P.t = now;
     var base = inp.base, hour = inp.hour, temp = inp.temp;
     var sev = SEV[base] || 0, dl = daylight(hour), sky = grade(skyAt(hour), sev, base);
     var horizonPix = h * 0.68;
@@ -108,7 +114,7 @@ function paint(ctx, w, h, inp, P) {
     if (base === "rain" || base === "thunder") drawRain(ctx, w, h, base === "thunder" ? 150 : 130, P);
     if (base === "snow") drawSnow(ctx, w, h, P);
     if (base === "fog") drawFog(ctx, w, h, horizonPix, P);
-    if (base === "thunder") drawStorm(ctx, w, h, P);
+    if (base === "thunder") drawStorm(ctx, w, h, dt, P);
 
     var vg = ctx.createRadialGradient(w/2, h*0.44, h*0.3, w/2, h*0.5, h*0.95);
     vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.24)");
@@ -225,17 +231,33 @@ function drawBirds(ctx, w, h, P) {
         ctx.beginPath(); ctx.moveTo(b.x-s, b.y); ctx.lineTo(b.x, b.y-fl-1); ctx.lineTo(b.x+s, b.y); ctx.stroke();
     }
 }
-function drawStorm(ctx, w, h, P) {
-    if (P.flash <= 0 && (P.frame % 150) < 2) { P.flash = 1; P.bolt = Math.random()*w*0.6 + w*0.2; }
-    if (P.flash > 0) {
-        ctx.fillStyle = "rgba(255,252,235," + (P.flash*0.42).toFixed(3) + ")"; ctx.fillRect(0, 0, w, h);
-        var bx = P.bolt, by = h*0.14, pts = [[bx,by]], k;
-        for (k = 0; k < 4; k++) { bx += (Math.random()-0.5)*w*0.06; by += h*0.14; pts.push([bx,by]); }
-        ctx.strokeStyle = "rgba(255,255,255," + P.flash.toFixed(3) + ")"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctx.shadowColor = "rgba(255,246,180,0.9)"; ctx.shadowBlur = 16;
-        ctx.beginPath(); for (k = 0; k < pts.length; k++) { if (k===0) ctx.moveTo(pts[k][0],pts[k][1]); else ctx.lineTo(pts[k][0],pts[k][1]); } ctx.stroke();
-        ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(180,210,255," + P.flash.toFixed(3) + ")"; ctx.lineWidth = 1.6;
-        ctx.beginPath(); for (k = 0; k < pts.length; k++) { if (k===0) ctx.moveTo(pts[k][0],pts[k][1]); else ctx.lineTo(pts[k][0],pts[k][1]); } ctx.stroke();
-        P.flash -= 0.055;
+// Glow is stacked wide strokes, widest and faintest first. Canvas shadowBlur is
+// a software blur per stroke on the render thread: it drops the scene to 0.3fps,
+// which in turn stalls the flash decay and leaves the whole sky white.
+var BOLT_PASS = [[14,[255,246,180],0.10], [9,[255,246,180],0.18], [4,[255,255,255],1], [1.6,[180,210,255],1]];
+
+function strike(w, h, P) {
+    var x = Math.random()*w*0.6 + w*0.2, y = h*0.14, pts = [[x,y]];
+    for (var k = 0; k < 4; k++) { x += (Math.random()-0.5)*w*0.06; y += h*0.14; pts.push([x,y]); }
+    P.boltPts = pts; P.flash = 1;
+}
+
+function drawStorm(ctx, w, h, dt, P) {
+    if (P.flash <= 0) {
+        P.nextBolt -= dt;
+        if (P.nextBolt > 0) return;
+        P.nextBolt = BOLT_GAP_MS + Math.random()*BOLT_JITTER_MS;
+        strike(w, h, P);
     }
+    // Path fixed for the strike's life. Re-rolling it per frame reads as static.
+    var pts = P.boltPts, f = clamp(P.flash, 0, 1), i, k;
+    ctx.fillStyle = rgba([255,252,235], f*0.42); ctx.fillRect(0, 0, w, h);
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    for (i = 0; i < BOLT_PASS.length; i++) {
+        ctx.lineWidth = BOLT_PASS[i][0]; ctx.strokeStyle = rgba(BOLT_PASS[i][1], f*BOLT_PASS[i][2]);
+        ctx.beginPath();
+        for (k = 0; k < pts.length; k++) { if (k === 0) ctx.moveTo(pts[k][0],pts[k][1]); else ctx.lineTo(pts[k][0],pts[k][1]); }
+        ctx.stroke();
+    }
+    P.flash -= dt / FLASH_MS;
 }
