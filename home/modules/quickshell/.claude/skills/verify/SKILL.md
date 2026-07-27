@@ -12,16 +12,31 @@ without a rebuild. `sysconf-reload` is only needed for changes to
 
 ## Reload
 
-Hot reload does not fire for every edit. Force it:
+The watcher compares content, not mtime.
+`touch` and a byte-identical rewrite both do nothing.
+A QML file whose bytes differ reloads the whole config immediately, leaf or entry file alike, so an ordinary edit needs no push.
+Confirm it landed:
 
 ```bash
-touch home/modules/quickshell/config/dynamic-island/shell.qml
-sleep 3
-journalctl --user -u quickshell.service --since "-10s" --no-pager | grep -E "Reloading|Loaded"
+sleep 2
+journalctl --user -u quickshell.service --since "-15s" --no-pager
+```
+
+The watcher covers QML only.
+A `.js` source reaches the engine through a QML `import` and is not watched, so editing one reloads nothing on its own.
+Follow it with an edit to a QML file, or restart.
+
+Restarting is also how to force a reload with nothing to edit:
+
+```bash
+systemctl --user restart quickshell.service
 ```
 
 A reload rebuilds every Scope, which clears transient state such as the toast
 model. That is the fastest way to clear stuck overlays.
+
+A write that replaces the file instead of writing into it (`sed -i`, an editor's atomic save) can leave the watch on the discarded inode, and that file's next edit then passes unnoticed.
+The next reload from any source re-arms it, so editing a second file recovers the watch.
 
 Errors surface only in the journal:
 
@@ -29,8 +44,9 @@ Errors surface only in the journal:
 journalctl --user -u quickshell.service --since "-5min" --no-pager
 ```
 
-A healthy reload logs `Reloading configuration...` then `Configuration Loaded` and nothing else.
+A healthy reload logs `Reloading configuration...` then `Configuration Loaded`.
 Anything in between is real: filtering the output hides the defect rather than the noise.
+Some warnings fire on every load regardless of the change under test, so reload once more without editing to tell a pre-existing one from a new one.
 
 The IDE's QML language server cannot resolve Quickshell types and reports
 `Rectangle was not found`, `Instantiator was not found` and similar for every
