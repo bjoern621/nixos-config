@@ -15,6 +15,7 @@
 
   xdg.configFile."gtk-3.0/bookmarks".text = ''
     file:///home/bjoern/Downloads
+    file:///home/bjoern/git
   '';
 
   home.activation.createDownloads = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
