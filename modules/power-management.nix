@@ -67,8 +67,8 @@
       # load, chassis soaks until untouchable. Only balanced/performance
       # let EC spin fan up. CPU_* keys above cannot compensate; they cut
       # heat production, not heat removal.
-      PLATFORM_PROFILE_ON_AC = "balanced";
-      PLATFORM_PROFILE_ON_BAT = "balanced";
+      PLATFORM_PROFILE_ON_AC = "performance";
+      PLATFORM_PROFILE_ON_BAT = "performance";
 
       # --- Audio ---
       # Disable audio power saving — the TAS2781 speaker amplifier
