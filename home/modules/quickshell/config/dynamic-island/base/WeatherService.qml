@@ -30,7 +30,12 @@ Singleton {
     property int currentCode: -1
     property bool currentIsDay: true
     property real currentHour: 12
-    property var dayHours: []          // 24 entries: { hour, temp, code, isDay, base }
+    // Local sunrise/sunset for the located place, fractional hours. 6/20 until a
+    // forecast lands; those defaults leave SkyScene's hour warp an identity map.
+    property real sunriseHour: 6
+    property real sunsetHour: 20
+    property int windowStartHour: 0    // clock hour of dayHours[0]; the rolling window starts here
+    property var dayHours: []          // 24 entries from now: { hour, temp, code, isDay, base, cloud, precip, snow, wind, windDir }
 
     // True while a calendar menu is open. Drives the fetch. Set from the Bar.
     property bool menuOpen: false
@@ -96,7 +101,7 @@ Singleton {
     function _fetchForecast() {
         if (forecastProc.running)
             return;
-        forecastProc.command = ["curl", "-s", "--max-time", "8", "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,weather_code,is_day" + "&hourly=temperature_2m,weather_code,is_day" + "&forecast_days=1&timezone=auto"];
+        forecastProc.command = ["curl", "-s", "--max-time", "8", "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,weather_code,is_day" + "&hourly=temperature_2m,weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m" + "&daily=sunrise,sunset" + "&forecast_days=2&timezone=auto"];
         forecastProc.running = true;
     }
 
@@ -165,6 +170,9 @@ Singleton {
                     root.currentCode = r.currentCode;
                     root.currentIsDay = r.currentIsDay;
                     root.currentHour = r.currentHour;
+                    if (typeof r.sunriseHour === "number") root.sunriseHour = r.sunriseHour;
+                    if (typeof r.sunsetHour === "number") root.sunsetHour = r.sunsetHour;
+                    if (typeof r.windowStartHour === "number") root.windowStartHour = r.windowStartHour;
                     root.dayHours = r.day;
                     root.ready = true;
                     root.failed = false;
