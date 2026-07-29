@@ -41,6 +41,7 @@
     ../../modules/secureboot.nix
     ../../modules/tpm-luks.nix
     ../../modules/system-packages.nix
+    ../../modules/tas2781-calibration/default.nix
     ../../modules/sops.nix
     ../../modules/attic-push.nix
   ];

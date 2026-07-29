@@ -1,0 +1,36 @@
+ALSA: hda/tas2781: accept V1 calibration data without CRC
+
+Lenovo factory calibration blobs written before the CRC scheme carry
+neither timestamp nor CRC; both words are zero. The V1 parser rejects
+such blobs with "V1 CRC error" and the amplifier protection runs
+uncalibrated. Accept a V1 blob whose timestamp and CRC words are both
+zero and whose data is non-empty.
+
+Observed on the Lenovo Yoga Slim 7 14APU8 (83AA): EFI variable
+CALI_DATA holds four valid 20-byte device blocks followed by zeroed
+timestamp and CRC words.
+
+--- a/sound/hda/codecs/side-codecs/tas2781_hda.c
++++ b/sound/hda/codecs/side-codecs/tas2781_hda.c
+@@ -139,9 +139,18 @@
+ 		 */
+ 		crc = crc32(~0, data, 84) ^ ~0;
+ 		if (crc != tmp_val[21]) {
+-			cali_data->total_sz = 0;
+-			dev_err(p->dev, "%s: V1 CRC error\n", __func__);
+-			return;
++			/*
++			 * Factory blobs written before the CRC scheme have
++			 * zero in both the timestamp and CRC words. Accept
++			 * them if the data itself is non-empty.
++			 */
++			if (tmp_val[20] || tmp_val[21] || !tmp_val[0]) {
++				cali_data->total_sz = 0;
++				dev_err(p->dev, "%s: V1 CRC error\n", __func__);
++				return;
++			}
++			dev_info(p->dev, "%s: V1 data without CRC, accepted\n",
++				 __func__);
+ 		}
+ 
+ 		for (j = p->ndev - 1; j >= 0; j--) {
