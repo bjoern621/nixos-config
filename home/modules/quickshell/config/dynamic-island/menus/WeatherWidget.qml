@@ -3,10 +3,10 @@ import "../"
 import "../base"
 import "WeatherUtils.js" as WeatherUtils
 
-// Calendar weather panel: a stylized sky scene (SkyScene) over a rolling 24h
-// timeline ribbon running from the current hour into tomorrow. The scene reflects
-// "now" by default; dragging the ribbon scrubs it. Animation runs only while the
-// calendar menu is open.
+// Calendar weather panel: a stylized sky scene (SkyScene) over a fixed 24h
+// timeline ribbon anchored at a set clock hour (svc.windowStartHour), so midday
+// sits inland and "now" drifts across it. The scene reflects "now" by default;
+// dragging the ribbon scrubs it. Animation runs only while the calendar menu is open.
 // Caller sets width (calendar grid width); height is reserved so the card does
 // not jump between loading and ready.
 Item {
@@ -23,7 +23,7 @@ Item {
     readonly property int axisHeight: 14
     implicitHeight: sceneHeight + Spacing.spacing8 + ribbonHeight + Spacing.spacing4 + axisHeight
 
-    // Live wall-clock hour, used to place "now" within the rolling window.
+    // Live wall-clock hour, used to place "now" within the fixed window.
     readonly property real liveHour: {
         const d = Clock.date;
         return d.getHours() + d.getMinutes() / 60;
@@ -42,8 +42,8 @@ Item {
         return p < 0 ? p + 1 : p;
     }
 
-    // The ribbon is a 24h window from the current hour; svc.windowStartHour is the
-    // clock hour of cell 0. Position pos in [0,1] runs now..now+24h. Scrubbing
+    // The ribbon is a fixed 24h window; svc.windowStartHour is the clock hour of
+    // cell 0. Position pos in [0,1] runs windowStart..windowStart+24h. Scrubbing
     // overrides "now" until the menu reopens.
     property bool scrubbing: false
     property real scrubPos: 0
@@ -333,8 +333,8 @@ Item {
             }
         }
 
-        // live "now" marker: red vertical stripe at the window position of now, near
-        // the left edge, drifting right until the next refetch. Rounded caps, always shown.
+        // live "now" marker: red vertical stripe at the window position of now.
+        // Drifts left->right across the fixed window as the day advances. Rounded caps, always shown.
         Rectangle {
             width: Math.max(4, Shape.borderWidth)
             height: ribbon.height

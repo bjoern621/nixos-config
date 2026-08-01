@@ -18,10 +18,11 @@ function parseLocation(jsonText) {
     }
 }
 
-// Open-Meteo forecast -> current block + a rolling 24h window from the current
-// hour. Times are local wall-clock (timezone=auto). forecast_days=2 gives ~48
-// hourly slots; the window is sliced from the slot matching current.time, so the
-// timeline runs now .. now+24h and crosses midnight into tomorrow.
+// Open-Meteo forecast -> current block + a fixed 24h window anchored at
+// ANCHOR_HOUR local. Times are local wall-clock (timezone=auto). past_days=1 +
+// forecast_days=2 give ~72 hourly slots; the window starts at the most recent
+// ANCHOR_HOUR slot at or before now, so the ribbon always reads the same clock
+// hours (midday inland) and "now" drifts across it instead of pinning the edge.
 // day[k] = { hour, temp, code, isDay, base, cloud, precip, snow, wind, windDir };
 // k is hours from the window start, hour is that slot's local clock hour (0..23).
 // Missing slots back/forward fill so the ribbon and scene never see a hole.
@@ -37,11 +38,21 @@ function parseForecast(jsonText) {
             return { ok: false };
 
         var ct = cur.time || "";
-        var startHour = parseInt(ct.substring(11, 13), 10);
-        if (!isFinite(startHour)) startHour = 12;
-        // Window start = hourly slot sharing current.time's date+hour ("...THH").
-        var startIdx = 0, key = ct.substring(0, 13);
-        for (var s = 0; s < n; s++) { if (times[s].substring(0, 13) === key) { startIdx = s; break; } }
+        // Slot sharing current.time's date+hour ("...THH"); locates "now" in the feed.
+        var nowIdx = 0, key = ct.substring(0, 13);
+        for (var s = 0; s < n; s++) { if (times[s].substring(0, 13) === key) { nowIdx = s; break; } }
+
+        // Window start = most recent ANCHOR_HOUR slot at or before now. past_days=1
+        // keeps yesterday's ANCHOR_HOUR in range for the pre-anchor hours (00:00..
+        // ANCHOR_HOUR), so "now" always falls inside. No such slot -> feed's first slot.
+        var ANCHOR_HOUR = 3;
+        var startIdx = -1;
+        for (var a = nowIdx; a >= 0; a--) {
+            if (times[a] && parseInt(times[a].substring(11, 13), 10) === ANCHOR_HOUR) { startIdx = a; break; }
+        }
+        if (startIdx < 0) startIdx = 0;
+        var startHour = parseInt(times[startIdx] ? times[startIdx].substring(11, 13) : "", 10);
+        if (!isFinite(startHour)) startHour = ANCHOR_HOUR;
 
         var k, day = [];
         for (k = 0; k < 24; k++) {
@@ -56,10 +67,15 @@ function parseForecast(jsonText) {
         var curHour = ct ? (parseInt(ct.substring(11, 13), 10) + parseInt(ct.substring(14, 16), 10) / 60) : 12;
 
         // daily.sunrise/sunset: local ISO ["YYYY-MM-DDTHH:MM", ...] (timezone=auto).
-        // [0] is today; null when the block is absent so the caller keeps its fallback.
+        // past_days=1 shifts [0] to yesterday, so pick the entry whose date matches
+        // now; null when the block is absent so the caller keeps its fallback.
         var dly = d.daily || {};
-        var sunriseHour = _hourOf(dly.sunrise && dly.sunrise[0]);
-        var sunsetHour = _hourOf(dly.sunset && dly.sunset[0]);
+        var ddates = dly.time || [];
+        var today = ct.substring(0, 10);
+        var di = 0;
+        for (var q = 0; q < ddates.length; q++) { if (ddates[q] === today) { di = q; break; } }
+        var sunriseHour = _hourOf(dly.sunrise && dly.sunrise[di]);
+        var sunsetHour = _hourOf(dly.sunset && dly.sunset[di]);
 
         return {
             ok: true,

@@ -34,8 +34,8 @@ Singleton {
     // forecast lands; those defaults leave SkyScene's hour warp an identity map.
     property real sunriseHour: 6
     property real sunsetHour: 20
-    property int windowStartHour: 0    // clock hour of dayHours[0]; the rolling window starts here
-    property var dayHours: []          // 24 entries from now: { hour, temp, code, isDay, base, cloud, precip, snow, wind, windDir }
+    property int windowStartHour: 0    // clock hour of dayHours[0]; window anchored here, not at now
+    property var dayHours: []          // 24 entries from the anchor hour: { hour, temp, code, isDay, base, cloud, precip, snow, wind, windDir }
 
     // True while a calendar menu is open. Drives the fetch. Set from the Bar.
     property bool menuOpen: false
@@ -101,7 +101,7 @@ Singleton {
     function _fetchForecast() {
         if (forecastProc.running)
             return;
-        forecastProc.command = ["curl", "-s", "--max-time", "8", "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,weather_code,is_day" + "&hourly=temperature_2m,weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m" + "&daily=sunrise,sunset" + "&forecast_days=2&timezone=auto"];
+        forecastProc.command = ["curl", "-s", "--max-time", "8", "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,weather_code,is_day" + "&hourly=temperature_2m,weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m" + "&daily=sunrise,sunset" + "&past_days=1&forecast_days=2&timezone=auto"];
         forecastProc.running = true;
     }
 
