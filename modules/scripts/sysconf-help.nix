@@ -22,8 +22,10 @@ let
     echo "                   Usage: sysconf-stable-update [days]"
     echo "                   Example: sysconf-stable-update 14  # 14-day delay"
     echo ""
-    echo "  sysconf-pull    - Pull latest changes from git repository"
-    echo "                   Usage: sysconf-pull"
+    echo "  sysconf-pull    - Pull latest changes from git repository."
+    echo "                   Fast-forwards by default and aborts on local"
+    echo "                   commits. --hard resets to origin and discards them."
+    echo "                   Usage: sysconf-pull [--hard]"
     echo ""
     echo "  sysconf-fix-monitors - Re-apply Hyprland monitor config to clear a"
     echo "                   mixed-scale coordinate bug (cursor wall on DP-7,"
@@ -45,6 +47,7 @@ let
     echo "  sysconf-reload homelab   # Rebuild homelab explicitly"
     echo "  sysconf-update           # Update dependencies and rebuild detected host"
     echo "  sysconf-pull             # Pull remote changes and rebuild detected host"
+    echo "  sysconf-pull --hard      # Discard local commits, match origin, rebuild"
     echo ""
   '';
 in

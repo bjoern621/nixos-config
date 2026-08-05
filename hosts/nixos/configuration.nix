@@ -22,7 +22,7 @@
     ../../modules/display-manager.nix
     ../../modules/wireguard.nix
     ../../modules/eduvpn-escape.nix
-    ../../modules/systemd-resolved.nix
+    ../../modules/dns.nix
     ../../modules/networkmanager-openvpn.nix
     ../../modules/quickshell.nix
     ../../modules/quickshell-lock.nix
