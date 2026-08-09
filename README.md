@@ -1,3 +1,5 @@
+[![Update flake locks (stable)](https://github.com/bjoern621/nixos-config/actions/workflows/update-flake-locks.yml/badge.svg)](https://github.com/bjoern621/nixos-config/actions/workflows/update-flake-locks.yml)
+
 # NixOS Configuration
 
 Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and Waybar.
