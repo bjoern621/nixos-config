@@ -80,6 +80,7 @@ update_flake() {
   ' "$flake_dir/flake.lock")
 
   local override_args=()
+  local update_names=()
   local rows=()
   local line name owner_repo branch new_sha old_sha new_date old_date
   for line in "${lines[@]}"; do
@@ -101,6 +102,7 @@ update_flake() {
     old_date=$(commit_date "$owner_repo" "$old_sha")
     echo "  $name ($owner_repo@$branch) ${old_sha:0:7} (${old_date:-unknown}) -> ${new_sha:0:7} (${new_date:-unknown})"
     override_args+=(--override-input "$name" "github:$owner_repo/$new_sha")
+    update_names+=("$name")
 
     # Markdown row. The change cell links to a GitHub compare view (old..new),
     # or to the bare commit when there is no prior revision to compare against.
@@ -133,7 +135,11 @@ update_flake() {
     summary "$row"
   done
 
-  (cd "$flake_dir" && nix flake update "${override_args[@]}")
+  # Update only the named github inputs. A bare `nix flake update` re-locks
+  # every input, which fails on non-github inputs a runner can't resolve
+  # (e.g. a path: input to a working tree that exists only on the dev machine)
+  # and would bump untouched inputs to HEAD, past the DELAY_DAYS threshold.
+  (cd "$flake_dir" && nix flake update "${update_names[@]}" "${override_args[@]}")
 }
 
 if [[ $# -eq 0 ]]; then
