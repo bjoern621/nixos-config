@@ -59,6 +59,18 @@ in
     hooks.qemu.attach-guest-nics = attachGuestNics;
   };
 
+  # libvirtd autostarts its marked domains and storage pools once, when the daemon
+  # starts, and never retries a failure.
+  # Guest disks live on /srv/ssd1 (see modules/homelab/mounts.nix), a nofail mount,
+  # so nothing orders it before multi-user.target and libvirtd can win the race.
+  # On a boot that fscks that filesystem the mount lands half a minute late, and
+  # every autostart fails with "Cannot access storage file" until someone starts
+  # the guest by hand.
+  # Ordering after the mount unit closes the race. After rather than Requires,
+  # so a filesystem that genuinely fails to mount still leaves libvirtd running
+  # for the guests that do not live there, which is the point of nofail.
+  systemd.services.libvirtd.after = [ "srv-ssd1.mount" ];
+
   # br0 connects the physical network port (enp3s0) to the VMs. It is managed by
   # systemd-networkd rather than NetworkManager. networkd keeps the bridge as a
   # stable device: a `nixos-rebuild switch` reloads it instead of tearing it down,
