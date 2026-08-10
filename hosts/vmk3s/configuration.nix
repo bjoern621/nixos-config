@@ -29,6 +29,14 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  # Headless guest. Hypervisor QXL display serves only as recovery console.
+  # Its framebuffer console exhausts device VRAM after hours of uptime.
+  # Every console write then fails an eviction and logs "[TTM] Buffer eviction failed".
+  # That line is itself a console write, so the failure self-sustains and floods
+  # the journal telemetry-agent forwards to the cluster log store.
+  # Without the driver QXL stays in VGA text mode, so the recovery console survives.
+  boot.blacklistedKernelModules = [ "qxl" ];
+
   networking.hostName = "vmk3s";
 
   time.timeZone = "Europe/Berlin";
