@@ -46,6 +46,17 @@
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
       };
+
+      # netcup VPS. Reached by rDNS name, not by address: the name is what SCP
+      # keeps pointing at the machine.
+      # root, because `nixos-rebuild --target-host` activates as root and the host
+      # declares no other account.
+      netcup-g12 = {
+        HostName = "v2202608396017497611.powersrv.de";
+        User = "root";
+        IdentityFile = "/home/bjoern/.ssh/id_ed25519";
+        IdentitiesOnly = true;
+      };
     };
   };
 }
