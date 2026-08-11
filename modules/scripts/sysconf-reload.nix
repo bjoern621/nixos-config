@@ -5,15 +5,36 @@ let
     set -euo pipefail
 
     NIXOS_CONFIG="/etc/nixos/config"
-    TARGET_HOST="''${1:-}"
+    TARGET_HOST=""
+    REMOTE=0
+
+    usage() {
+      echo "Usage: sysconf-reload [<host>] [--remote]" >&2
+    }
+
+    for arg in "$@"; do
+      case "$arg" in
+        --remote)
+          REMOTE=1
+          ;;
+        -*)
+          echo "[sysconf-reload] Unknown flag: $arg" >&2
+          usage
+          exit 1
+          ;;
+        *)
+          if [[ -n "$TARGET_HOST" ]]; then
+            echo "[sysconf-reload] More than one host given: $TARGET_HOST and $arg" >&2
+            usage
+            exit 1
+          fi
+          TARGET_HOST="$arg"
+          ;;
+      esac
+    done
 
     if [[ ! -d "$NIXOS_CONFIG" ]]; then
       echo "Missing source repo: $NIXOS_CONFIG" >&2
-      exit 1
-    fi
-
-    if [[ $# -gt 1 ]]; then
-      echo "Usage: sysconf-reload [<host>]" >&2
       exit 1
     fi
 
@@ -45,6 +66,12 @@ let
       fi
       echo "[sysconf-reload] Host argument provided: $TARGET_HOST"
       echo "[sysconf-reload] Skipping host auto-detection because argument was provided."
+    elif [[ $REMOTE -eq 1 ]]; then
+      # The local hostname says which machine is running the script, which is not the
+      # machine a remote deploy is about.
+      echo "[sysconf-reload] --remote needs the host named: it is never the local one." >&2
+      echo "[sysconf-reload] Supported hosts: $VALID_HOSTS" >&2
+      exit 1
     else
       echo "[sysconf-reload] No host argument provided. Detecting active host..."
 
@@ -66,30 +93,67 @@ let
       fi
     fi
 
-    if [[ ! -f /etc/nixos/hardware-configuration.nix ]]; then
-      echo "Missing /etc/nixos/hardware-configuration.nix" >&2
-      exit 1
-    fi
-
-    # Git and file operations run as the invoking user (the repo owner) so the
-    # working tree stays owned by that user. Only nixos-rebuild needs root.
     HARDWARE_TARGET="$NIXOS_CONFIG/hosts/$TARGET_HOST/hardware-configuration.nix"
-    mkdir -p "$NIXOS_CONFIG/hosts/$TARGET_HOST"
-    if [[ /etc/nixos/hardware-configuration.nix -ef "$HARDWARE_TARGET" ]]; then
-      echo "[sysconf-reload] Skipping hardware-configuration.nix copy (source and target are the same file)."
+
+    if [[ $REMOTE -eq 1 ]]; then
+      # /etc/nixos/hardware-configuration.nix describes the machine running the
+      # script, so copying it onto a remote host would overwrite that host's layout
+      # with this one's. A remote host keeps its own, committed with the host.
+      if [[ ! -f "$HARDWARE_TARGET" ]]; then
+        echo "[sysconf-reload] Missing $HARDWARE_TARGET" >&2
+        echo "[sysconf-reload] Write it, or take the machine's own:" >&2
+        echo "[sysconf-reload]   ssh <host> nixos-generate-config --dir /tmp/hw" >&2
+        exit 1
+      fi
+      echo "[sysconf-reload] Remote deploy: keeping the committed hardware-configuration.nix."
     else
-      echo "[sysconf-reload] Copying /etc/nixos/hardware-configuration.nix -> $HARDWARE_TARGET"
-      cp -f /etc/nixos/hardware-configuration.nix "$HARDWARE_TARGET"
+      if [[ ! -f /etc/nixos/hardware-configuration.nix ]]; then
+        echo "Missing /etc/nixos/hardware-configuration.nix" >&2
+        exit 1
+      fi
+
+      # Git and file operations run as the invoking user (the repo owner) so the
+      # working tree stays owned by that user. Only nixos-rebuild needs root.
+      mkdir -p "$NIXOS_CONFIG/hosts/$TARGET_HOST"
+      if [[ /etc/nixos/hardware-configuration.nix -ef "$HARDWARE_TARGET" ]]; then
+        echo "[sysconf-reload] Skipping hardware-configuration.nix copy (source and target are the same file)."
+      else
+        echo "[sysconf-reload] Copying /etc/nixos/hardware-configuration.nix -> $HARDWARE_TARGET"
+        cp -f /etc/nixos/hardware-configuration.nix "$HARDWARE_TARGET"
+      fi
     fi
 
     NEW_FILES=$(git -C "$NIXOS_CONFIG" ls-files --others --exclude-standard | wc -l)
     git -C "$NIXOS_CONFIG" add -N .
     echo "[sysconf-reload] Marked $NEW_FILES untracked files as intent-to-add so Nix can see them."
 
-    echo "[sysconf-reload] Rebuilding flake target: $TARGET_HOST"
-    sudo nixos-rebuild switch --flake "$NIXOS_CONFIG/hosts/$TARGET_HOST"
+    if [[ $REMOTE -eq 1 ]]; then
+      # The address is the host's own, declared beside it (modules/deploy-target.nix),
+      # so a deploy never depends on what was typed last time.
+      DEPLOY_TARGET=$(nix eval --raw \
+        "$NIXOS_CONFIG/hosts/$TARGET_HOST#nixosConfigurations.$TARGET_HOST.config.deploy.targetHost") || {
+        echo "[sysconf-reload] $TARGET_HOST declares no deploy.targetHost." >&2
+        echo "[sysconf-reload] Set it in hosts/$TARGET_HOST/machine.nix and try again." >&2
+        exit 1
+      }
 
-    echo "[sysconf-reload] System reloaded successfully for host: $TARGET_HOST"
+      # The flake attribute is named because nixos-rebuild otherwise picks the one
+      # matching the local hostname.
+      # The closure is built here and fetched there: --use-substitutes lets the target
+      # take what the binary cache already has instead of pulling it over this uplink.
+      echo "[sysconf-reload] Rebuilding flake target $TARGET_HOST on $DEPLOY_TARGET"
+      nixos-rebuild switch \
+        --flake "$NIXOS_CONFIG/hosts/$TARGET_HOST#$TARGET_HOST" \
+        --target-host "$DEPLOY_TARGET" \
+        --use-substitutes
+
+      echo "[sysconf-reload] System reloaded successfully on $DEPLOY_TARGET (host: $TARGET_HOST)"
+    else
+      echo "[sysconf-reload] Rebuilding flake target: $TARGET_HOST"
+      sudo nixos-rebuild switch --flake "$NIXOS_CONFIG/hosts/$TARGET_HOST"
+
+      echo "[sysconf-reload] System reloaded successfully for host: $TARGET_HOST"
+    fi
   '';
 in
 {

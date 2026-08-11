@@ -25,7 +25,7 @@ Use the custom `sysconf-*` commands instead of raw NixOS commands:
 
 | Command             | Use instead of                                  | What it does                                                |
 | ------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
-| `sysconf-reload`    | `sudo nixos-rebuild switch`                     | Copies hardware config and rebuilds the system              |
+| `sysconf-reload`    | `sudo nixos-rebuild switch`                     | Copies hardware config and rebuilds the system. `--remote` builds here and activates over ssh on another host |
 | `sysconf-update`    | `nix flake update && sudo nixos-rebuild switch` | Updates all flake inputs then rebuilds                      |
 | `sysconf-pull`      | `git pull && sudo nixos-rebuild switch`         | Pulls latest config from remote then rebuilds               |
 | `sysconf-help`      | (none)                                          | Shows help for all sysconf commands                         |
