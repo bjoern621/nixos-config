@@ -9,7 +9,6 @@
 {
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
-    ../../modules/deploy-target.nix
   ];
 
   networking.hostName = "netcup-g12";
@@ -65,8 +64,6 @@
 
   # KVM guest. The agent is how SCP shuts the machine down cleanly.
   services.qemuGuest.enable = true;
-
-  deploy.targetHost = "root@v2202608396017497611.powersrv.de";
 
   system.stateVersion = "26.11";
 }

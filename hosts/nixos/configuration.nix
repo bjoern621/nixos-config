@@ -40,6 +40,7 @@
     ../../modules/external-monitors.nix
     ../../modules/secureboot.nix
     ../../modules/tpm-luks.nix
+    ../../modules/usbguard.nix
     ../../modules/system-packages.nix
     ../../modules/tas2781-calibration/default.nix
     ../../modules/sops.nix
@@ -117,6 +118,8 @@
 
   # Configure console keymap
   console.keyMap = "de";
+
+  sysconf.user = "bjoern";
 
   # Define a user account. Don’t forget to set a password with ‘passwd’.
   users.users.bjoern = {

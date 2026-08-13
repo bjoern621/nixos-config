@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
   sysconf-update = pkgs.writeShellScriptBin "sysconf-update" ''
@@ -8,7 +8,7 @@ let
     # set -o pipefail: a pipeline fails if any command in it fails
     set -euo pipefail
 
-    NIXOS_CONFIG="/etc/nixos/config"
+    NIXOS_CONFIG="${config.sysconf.configPath}"
 
     if [[ ! -f /etc/hostname ]]; then
       echo "[sysconf-update] Failed to detect host: /etc/hostname is missing." >&2

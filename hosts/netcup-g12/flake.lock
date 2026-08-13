@@ -37,7 +37,8 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "screen-sharing": "screen-sharing"
+        "screen-sharing": "screen-sharing",
+        "sops-nix": "sops-nix"
       }
     },
     "screen-sharing": {
@@ -59,6 +60,26 @@
       "original": {
         "type": "git",
         "url": "https://github.com/bjoern621/screen-sharing.git"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786375908,
+        "narHash": "sha256-G7qDAT98nywA4EFmJCwIRO5wKvDlBBN3BWpsOnjAto8=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "d1337e05ba0a8e88a75d2c0e1595d82f3b3e2ac4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "type": "github"
       }
     },
     "systems": {

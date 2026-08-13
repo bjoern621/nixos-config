@@ -481,6 +481,10 @@ Singleton {
     function openEditor() {
         Quickshell.execDetached(["nm-connection-editor"]);
     }
+    // --create skips the connection list, --type=vpn lands on the plugin chooser.
+    function addVpn() {
+        Quickshell.execDetached(["nm-connection-editor", "--create", "--type=vpn"]);
+    }
     function setAutoconnect(uuid, enabled) {
         _runUtil(["modify", uuid, "connection.autoconnect", enabled ? "yes" : "no"]);
     }

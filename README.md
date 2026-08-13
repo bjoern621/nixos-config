@@ -30,22 +30,21 @@ Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and 
     ```bash
     export HOST=<host>
     ```
-7. Link the repository as the NixOS config directory:
-    ```bash
-    sudo ln -s ~/git/nixos-config /etc/nixos/config
-    ```
-8. Copy the hardware configuration into the selected host:
+7. Copy the hardware configuration into the selected host:
     ```bash
     sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
     ```
-9. Mark the hardware configuration as local-only so git ignores changes to it:
+8. Mark the hardware configuration as local-only so git ignores changes to it:
     ```bash
     git -C ~/git/nixos-config update-index --skip-worktree hosts/$HOST/hardware-configuration.nix
     ```
-10. Apply the flake configuration:
+9. Apply the flake configuration:
     ```bash
-    sudo nixos-rebuild switch --flake /etc/nixos/config/hosts/$HOST
+    sudo nixos-rebuild switch --flake ~/git/nixos-config/hosts/$HOST
     ```
+
+The checkout stays where step 4 put it. Every `sysconf-*` command reads `sysconf.configPath`,
+which each host derives from `sysconf.user` as that account's `~/git/nixos-config`.
 
 ## Raspberry Pi SD Card Hosts
 
@@ -87,10 +86,10 @@ zstdcat result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M status=progress co
 
 Insert the card and power on the Pi. The system boots directly into the NixOS configuration with no manual installation steps. Default credentials: user `ops`, password `1234` - change the password after first login.
 
-On first boot, a systemd service (`nixos-config-setup`) clones the repository to `/etc/nixos/config` automatically (requires internet access). Once it completes, `sysconf-pull` and `sysconf-reload` are ready to use. Check its status with:
+On first boot, a systemd service (`sysconf-checkout`) clones the repository automatically, to the path that host sets as `sysconf.configPath` (requires internet access). Once it completes, `sysconf-pull` and `sysconf-reload` are ready to use. Check its status with:
 
 ```bash
-systemctl status nixos-config-setup
+systemctl status sysconf-checkout
 ```
 
 ## Troubleshooting
@@ -148,11 +147,23 @@ sysconf-reload                # auto-detect host from /etc/hostname
 sysconf-reload homelab        # explicit host override
 ```
 
+A host is also installed onto another machine, which is how a bare NixOS server becomes one
+of these hosts. The closure is built here and activated there over ssh; the machine clones
+the repository itself on that first activation, so it can run `sysconf-reload` on its own
+afterwards.
+
+```bash
+sysconf-reload netcup-g12 --remote root@203.0.113.9   # any reachable NixOS machine
+```
+
+The address is required. One command that reads two different targets depending on what was
+typed is one whose target has to be worked out rather than read, and where a machine lives is
+ssh's to know: an alias in `~/.ssh/config` is the short form, so `--remote netcup-g12` works.
+
 ### Update Flake Inputs
 
 ```bash
 sysconf-update         # update flake inputs to latest revisions, then rebuild
-sysconf-stable-update  # update inputs to revisions at least 7 days old (ensure stability), then rebuild
 ```
 
 ## Project Structure

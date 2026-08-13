@@ -1,42 +1,61 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
   sysconf-reload = pkgs.writeShellScriptBin "sysconf-reload" ''
     set -euo pipefail
 
-    NIXOS_CONFIG="/etc/nixos/config"
+    NIXOS_CONFIG="${config.sysconf.configPath}"
     TARGET_HOST=""
     REMOTE=0
+    REMOTE_ADDRESS=""
 
     usage() {
-      echo "Usage: sysconf-reload [<host>] [--remote]" >&2
+      echo "Usage: sysconf-reload [<host>] [--remote <ssh-target>]" >&2
+      echo "  <host>        a directory under hosts/, whose configuration is built" >&2
+      echo "  <ssh-target>  where to activate it, e.g. root@203.0.113.9" >&2
     }
 
-    for arg in "$@"; do
-      case "$arg" in
+    if [[ ! -d "$NIXOS_CONFIG" ]]; then
+      echo "[sysconf-reload] Missing source repo: $NIXOS_CONFIG" >&2
+      echo "[sysconf-reload] Clone it there, or set sysconf.configPath to where it is." >&2
+      exit 1
+    fi
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
         --remote)
+          # Required, with no fallback to an address declared anywhere: one command reading two
+          # different targets depending on what was typed is one whose target has to be worked
+          # out rather than read.
+          if [[ $# -lt 2 || "$2" == -* ]]; then
+            echo "[sysconf-reload] --remote takes the address to activate on." >&2
+            usage
+            exit 1
+          fi
           REMOTE=1
+          REMOTE_ADDRESS="$2"
+          shift
+          ;;
+        -h|--help)
+          usage
+          exit 0
           ;;
         -*)
-          echo "[sysconf-reload] Unknown flag: $arg" >&2
+          echo "[sysconf-reload] Unknown flag: $1" >&2
           usage
           exit 1
           ;;
         *)
           if [[ -n "$TARGET_HOST" ]]; then
-            echo "[sysconf-reload] More than one host given: $TARGET_HOST and $arg" >&2
+            echo "[sysconf-reload] More than one host given: $TARGET_HOST and $1" >&2
             usage
             exit 1
           fi
-          TARGET_HOST="$arg"
+          TARGET_HOST="$1"
           ;;
       esac
+      shift
     done
-
-    if [[ ! -d "$NIXOS_CONFIG" ]]; then
-      echo "Missing source repo: $NIXOS_CONFIG" >&2
-      exit 1
-    fi
 
     # Each host lives at $NIXOS_CONFIG/hosts/<host>/flake.nix.
     if [[ ! -d "$NIXOS_CONFIG/hosts" ]]; then
@@ -106,9 +125,15 @@ let
         exit 1
       fi
       echo "[sysconf-reload] Remote deploy: keeping the committed hardware-configuration.nix."
+    elif [[ ! -f /etc/nixos/hardware-configuration.nix && -f "$HARDWARE_TARGET" ]]; then
+      # A host installed from a flake image never ran nixos-generate-config, so its hardware
+      # description is the committed one and there is nothing here to capture.
+      echo "[sysconf-reload] No /etc/nixos/hardware-configuration.nix: keeping the committed one."
     else
       if [[ ! -f /etc/nixos/hardware-configuration.nix ]]; then
-        echo "Missing /etc/nixos/hardware-configuration.nix" >&2
+        echo "Missing /etc/nixos/hardware-configuration.nix, and $HARDWARE_TARGET is not there either" >&2
+        echo "[sysconf-reload] Write one, or take the machine's own:" >&2
+        echo "[sysconf-reload]   nixos-generate-config --dir /tmp/hw" >&2
         exit 1
       fi
 
@@ -128,14 +153,8 @@ let
     echo "[sysconf-reload] Marked $NEW_FILES untracked files as intent-to-add so Nix can see them."
 
     if [[ $REMOTE -eq 1 ]]; then
-      # The address is the host's own, declared beside it (modules/deploy-target.nix),
-      # so a deploy never depends on what was typed last time.
-      DEPLOY_TARGET=$(nix eval --raw \
-        "$NIXOS_CONFIG/hosts/$TARGET_HOST#nixosConfigurations.$TARGET_HOST.config.deploy.targetHost") || {
-        echo "[sysconf-reload] $TARGET_HOST declares no deploy.targetHost." >&2
-        echo "[sysconf-reload] Set it in hosts/$TARGET_HOST/machine.nix and try again." >&2
-        exit 1
-      }
+      DEPLOY_TARGET="$REMOTE_ADDRESS"
+      echo "[sysconf-reload] Deploying to the address given: $DEPLOY_TARGET"
 
       # The flake attribute is named because nixos-rebuild otherwise picks the one
       # matching the local hostname.

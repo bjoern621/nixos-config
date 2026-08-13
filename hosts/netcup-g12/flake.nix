@@ -12,6 +12,14 @@
       url = "git+https://github.com/bjoern621/screen-sharing.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # The SRT passphrase is a secret, and the relay reads it as environment rather than out
+    # of a config file in the store. This host decrypts with its own ssh host key, so there
+    # is no key to place before the first deploy.
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
