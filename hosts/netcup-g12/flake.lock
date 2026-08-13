@@ -15,6 +15,7 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       }
     },
@@ -49,17 +50,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1786448924,
-        "narHash": "sha256-LDtEDwTgUsKu6jXtkKTsOJLE1hoXvsAp0hp6qDKaxJc=",
-        "ref": "refs/heads/main",
-        "rev": "3343af0fc84f620601481c351b8bfb2b267ea4a5",
-        "revCount": 75,
-        "type": "git",
-        "url": "https://github.com/bjoern621/screen-sharing.git"
+        "lastModified": 1786644095,
+        "narHash": "sha256-F4IxKhFsP5GByHPEAMW40A4sfLZ/3trJROGiQo9aNR4=",
+        "owner": "bjoern621",
+        "repo": "screen-sharing",
+        "rev": "87c56cb7bc123c8e6f1fdfe138e98ee819463408",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "https://github.com/bjoern621/screen-sharing.git"
+        "owner": "bjoern621",
+        "repo": "screen-sharing",
+        "type": "github"
       }
     },
     "sops-nix": {

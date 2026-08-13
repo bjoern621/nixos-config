@@ -4,12 +4,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    # The relay's config file and the MediaMTX version it is written against.
-    # That repository is private, so this is the one input that has to authenticate.
-    # https over the git credential helper, which is what the remotes use; ssh keys
-    # are not authorized against GitHub here.
+    # The relay's config file, the MediaMTX version it is written against, and the group
+    # service that runs beside it.
     screen-sharing = {
-      url = "git+https://github.com/bjoern621/screen-sharing.git";
+      url = "github:bjoern621/screen-sharing";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
