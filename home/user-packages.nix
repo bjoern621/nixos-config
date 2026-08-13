@@ -18,5 +18,6 @@
     usbutils # lsusb
     brightnessctl # backlight control (used by Hyprland brightness keys)
     tldr # tldr cmd (summary pages)
+    k9s
   ];
 }
