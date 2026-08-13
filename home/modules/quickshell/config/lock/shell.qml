@@ -31,6 +31,15 @@ ShellRoot {
 		// is instantiated, so there is nothing for the compositor to composite.
 		locked: false
 
+		// USB hotplug authorization follows the lock (home/modules/usbguard.nix).
+		// Locked drops the catch-all rule, leaving only the seeded allowlist, so a
+		// keyboard emulator plugged into the locked machine never binds.
+		// Fire-and-forget: the lock must not wait on the IPC round trip.
+		onLockedChanged: Quickshell.execDetached([
+			"usbguard-session-policy",
+			locked ? "locked" : "unlocked",
+		])
+
 		WlSessionLockSurface {
 			LockSurface {
 				anchors.fill: parent

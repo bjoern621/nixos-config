@@ -1,13 +1,25 @@
 # Recipients for secrets/. sops encrypts to every listed key on save.
-#   admin_bjoern  ~/.config/sops/age/keys.txt, edits secrets for all hosts
-#   host_nixos    /var/lib/sops-nix/key.txt, decrypts on that host only
+#   admin_bjoern    ~/.config/sops/age/keys.txt, edits secrets for all hosts
+#   host_nixos      /var/lib/sops-nix/key.txt, decrypts on that host only
+#   host_netcup_g12 derived from that host's ssh host key, which sops-nix reads directly
 # New or replaced host: add its public key, then `sops updatekeys secrets/*.yaml`.
+# An ssh-derived recipient comes from `ssh-keyscan -t ed25519 <host> | ssh-to-age`.
 
 keys:
   - &admin_bjoern age1eumu6mg0ah6yg4p0sv6vp098h6ym7hlclscfwz70cgwz3c7prflsuwa7ye
   - &host_nixos age12ap87879tsj4lgrd0pmwqnsvpdqdl82qawnwdvakh3pdlwdgpewq8w4rdf
+  - &host_netcup_g12 age1gs5ah3yvpysyqt5sjn3wt7at6gkqwuzr8v5ea5680rs9r7y2efwsntr8kx
 
 creation_rules:
+  # The relay's secrets, which only the relay decrypts. Listed before the rule below because
+  # sops takes the first path that matches, and a secret readable by every host is one this
+  # host has no reason to hold.
+  - path_regex: secrets/screenshare-relay\.yaml$
+    key_groups:
+      - age:
+          - *admin_bjoern
+          - *host_netcup_g12
+
   - path_regex: secrets/[^/]+\.yaml$
     key_groups:
       - age:

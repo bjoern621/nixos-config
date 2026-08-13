@@ -44,6 +44,8 @@
   console.keyMap = "de";
 
   services.admin-ssh-keys.users = [ "ops" ];
+
+  sysconf.user = "ops";
   services.sysconf-sudo.users = [ "ops" ];
   services.sysconf-auto-pull = {
     enable = true;

@@ -3,9 +3,9 @@
 
   # Per-host system configurations live under hosts/<name>/flake.nix so each
   # host's flake.lock tracks only the inputs that host references:
-  #   nixos-rebuild switch --flake /etc/nixos/config/hosts/nixos
-  #   nixos-rebuild switch --flake /etc/nixos/config/hosts/homelab
-  #   nixos-rebuild switch --flake /etc/nixos/config/hosts/vmk3s
+  #   nixos-rebuild switch --flake ~/git/nixos-config/hosts/nixos
+  #   nixos-rebuild switch --flake ~/git/nixos-config/hosts/homelab
+  #   nixos-rebuild switch --flake ~/git/nixos-config/hosts/vmk3s
   #
   # This flake exposes only the repo-level dev shell
 

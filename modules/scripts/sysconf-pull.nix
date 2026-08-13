@@ -8,7 +8,7 @@ let
     # set -o pipefail: a pipeline fails if any command in it fails
     set -euo pipefail
 
-    NIXOS_CONFIG="/etc/nixos/config"
+    NIXOS_CONFIG="${config.sysconf.configPath}"
     HARD=0
 
     while [[ $# -gt 0 ]]; do

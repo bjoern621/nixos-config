@@ -37,6 +37,7 @@
     ./modules/direnv.nix
     ./modules/scanning.nix
     ./modules/firewall-viewer.nix
+    ./modules/usbguard.nix
   ];
 
   home.username = "bjoern";

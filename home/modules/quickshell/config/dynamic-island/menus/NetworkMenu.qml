@@ -282,18 +282,55 @@ Item {
             }
 
             // ---- VPN ----
+            // Header carries the add button, so it stays put with no profiles;
+            // otherwise the one entry point for creating the first VPN is hidden
+            // exactly when it is needed.
             Rectangle {
-                visible: NetworkService.vpnConnections.length > 0
                 width: parent.width
                 height: 1
                 color: Colors.separatorColor
             }
-            Label {
-                visible: NetworkService.vpnConnections.length > 0
-                text: "VPN & WireGuard"
-                font.pixelSize: Typography.fontSize12
-                font.weight: Font.Normal
-                color: Colors.textColorMuted
+            Item {
+                width: parent.width
+                height: addVpn.height
+
+                Label {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "VPN"
+                    font.pixelSize: Typography.fontSize12
+                    font.weight: Font.Normal
+                    color: Colors.textColorMuted
+                }
+
+                MiniIconButton {
+                    id: addVpn
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    onClicked: NetworkService.addVpn()
+
+                    // Plus drawn from two bars: recolors with the theme, no SVG.
+                    Item {
+                        anchors.centerIn: parent
+                        width: Spacing.spacing12
+                        height: Spacing.spacing12
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width
+                            height: 2
+                            radius: height / 2
+                            color: Colors.textColorMuted
+                        }
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 2
+                            height: parent.height
+                            radius: width / 2
+                            color: Colors.textColorMuted
+                        }
+                    }
+                }
             }
             Column {
                 visible: NetworkService.vpnConnections.length > 0

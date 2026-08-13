@@ -16,7 +16,6 @@
     kernelParams = [
       "quiet"
       "splash"
-      "boot.shell_on_fail"
       "udev.log_priority=3"
     ];
 
