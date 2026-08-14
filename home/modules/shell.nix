@@ -1,18 +1,5 @@
-{ lib, pkgs, ... }:
+{ pkgs, ... }:
 
-let
-  fdCommand =
-    type:
-    lib.concatStringsSep " " [
-      (lib.getExe pkgs.fd)
-      "--type ${type}"
-      "--hidden"
-      "--one-file-system"
-      "--exclude .git"
-      # Anchored to the search root, so only the real mount is skipped.
-      "--exclude mnt/garage"
-    ];
-in
 {
   programs.zsh = {
     enable = true;
@@ -44,14 +31,6 @@ in
       "--height 40%"
       "--border"
     ];
-    # fzf's builtin walker follows symlinks and crosses mounts.
-    # From ~ that pulls /nix/store in through .nix-profile,
-    # and lists the whole S3 bucket behind ~/mnt/garage over the network.
-    # fd never follows symlinks, --one-file-system stops at any mount point.
-    # mnt/garage also excluded by name: a wedged rclone backend blocks even the
-    # stat that --one-file-system needs to spot the crossing.
-    fileWidget.command = fdCommand "f";
-    changeDirWidget.command = fdCommand "d";
     historyWidget.options = [
       "--sort"
       "--exact"

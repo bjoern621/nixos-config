@@ -32,7 +32,6 @@
     ./modules/image-viewer.nix
     ./modules/mpv.nix
     ./modules/tailscale-client.nix
-    ./modules/garage-mount.nix
     ./modules/eduvpn.nix
     ./modules/direnv.nix
     ./modules/scanning.nix
