@@ -40,6 +40,8 @@
     # 1 = restore the last session ("Continue where you left off")
     RestoreOnStartup = 1;
 
+    BookmarkBarEnabled = true;
+
     PromotionalTabsEnabled = false;
     PromotionsEnabled = false;
     WelcomePageOnOSUpgradeEnabled = false;
