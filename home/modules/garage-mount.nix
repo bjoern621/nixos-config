@@ -87,6 +87,15 @@ in
         # Objects changed elsewhere appear within this window, not served from a
         # stale listing.
         "--dir-cache-time 30s"
+        # Unreachable endpoint blocks the caller, it does not error.
+        # Each op retries --low-level-retries times, every attempt waits
+        # --contimeout for the connect.
+        # Defaults 10 x 60s stall a single stat for ~10 min, and every tool
+        # walking $HOME stalls with it.
+        "--contimeout 5s"
+        "--low-level-retries 3"
+        # Idle timeout, not total. Flowing transfer keeps resetting it.
+        "--timeout 30s"
       ];
 
       # rclone unmounts on SIGTERM.
