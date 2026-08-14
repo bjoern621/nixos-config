@@ -66,6 +66,10 @@
 
     serviceConfig = {
       Type = "oneshot";
+      # StateDirectory takes the unit's own user and group, and MediaMTX reads the pair
+      # through the group rather than as its owner. Without this the directory belongs to
+      # root alone and the DynamicUser cannot even traverse it.
+      Group = "screenshare-tls";
       StateDirectory = "screenshare-tls";
       StateDirectoryMode = "0750";
     };
@@ -98,7 +102,14 @@
       fi
 
       if [ "$changed" = 1 ]; then
-        systemctl try-restart mediamtx.service
+        # A MediaMTX that came up before the certificate did exits on it and gives up at the
+        # start limit, and try-restart passes over a unit in that state, which is the one
+        # state the copy has to lift it out of. Hence reset-failed and an unconditional
+        # restart.
+        # --no-block, because MediaMTX orders itself after this unit: a restart waited on
+        # here at boot would be a job waiting for the job that is waiting for it.
+        systemctl reset-failed mediamtx.service
+        systemctl --no-block restart mediamtx.service
       fi
     '';
   };
