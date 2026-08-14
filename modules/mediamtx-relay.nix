@@ -18,6 +18,7 @@
 {
   config,
   lib,
+  pkgs,
   inputs,
   ...
 }:
@@ -63,6 +64,11 @@
     after = [ "caddy.service" ];
     wants = [ "caddy.service" ];
     wantedBy = [ "multi-user.target" ];
+
+    # cmp is diffutils and a unit's PATH carries neither it nor anything else outside the
+    # small default set. Missing, it reads as a difference on every run, which turns the
+    # daily check into a daily restart of a relay that is carrying streams.
+    path = [ pkgs.diffutils ];
 
     serviceConfig = {
       Type = "oneshot";
