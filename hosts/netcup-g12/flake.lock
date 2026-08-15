@@ -50,11 +50,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1786802630,
-        "narHash": "sha256-eQ3Q2j0Ea7eH61phTDYSvukaFQkvdKl8x/tCpQiHyGA=",
+        "lastModified": 1786806918,
+        "narHash": "sha256-UHczs/KtV6jaVSeQ/7Av8fBHvOpuY1XQ4ZNFCqq6Y4w=",
         "owner": "bjoern621",
         "repo": "screen-sharing",
-        "rev": "d698a93e44d92533a7022e5a579e03aa7d0a4d62",
+        "rev": "2dbc7c668adda2b461d01f4fcb987f8e38b410f4",
         "type": "github"
       },
       "original": {
