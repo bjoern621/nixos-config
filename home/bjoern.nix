@@ -13,6 +13,7 @@
     ./modules/hyprland/default.nix
     ./modules/terminal.nix
     ./modules/vscode.nix
+    ./modules/claude-code.nix
     ./modules/bitwarden.nix
     ./modules/git.nix
     ./modules/mission-center.nix
