@@ -142,16 +142,33 @@
       "screenshare-relay-tls.service"
     ];
 
+    # The MoQ player page is served over TLS on a listener of its own, so it needs a certificate
+    # the way RTSPS and RTMPS do, and it takes the same one: a browser validates it against a CA
+    # like any other site and shows an interstitial for a self-signed pair.
+    #
+    # Overridden here rather than written into the app's config file, which is shared with every
+    # deployment built from that repository and names a relative pair MediaMTX draws for itself.
+    # MTX_<KEY> is the same override the SRT passphrase uses, and this half is no secret.
+    #
+    # It adds no failure mode: these are the paths the RTSPS and RTMPS listeners already read, so a
+    # MediaMTX that starts before the certificate arrives was already exiting on them, which is
+    # what screenshare-relay-tls lifts it out of.
+    #
+    # The certificate the WebTransport session carries is not this one and is not configurable:
+    # MediaMTX generates it in memory and rotates it, because the page pins it by SHA-256 and a
+    # pinned certificate may not be RSA and may not outlive a fortnight.
+    environment = {
+      MTX_MOQSERVERCERT = "/var/lib/screenshare-tls/cert.pem";
+      MTX_MOQSERVERKEY = "/var/lib/screenshare-tls/key.pem";
+    };
+
     serviceConfig = {
       # The TLS listeners read the certificate this group owns, and DynamicUser gives the unit
       # no account to grant it to otherwise.
       SupplementaryGroups = [ "screenshare-tls" ];
-      # `moqServerCert` and `moqServerKey` are relative names, and MediaMTX writes the
-      # self-signed pair on first start.
-      # The nixpkgs unit runs DynamicUser with / as its working directory, so without a
-      # writable one the MoQ listener never comes up.
-      # The state directory also keeps that certificate across restarts, which keeps the
-      # fingerprint the web grid pins from changing under it.
+      # The nixpkgs unit runs DynamicUser with / as its working directory, and the app's config
+      # names its MoQ pair relatively, so a deployment that stopped overriding the two paths above
+      # would draw that pair here rather than failing to bring the listener up.
       StateDirectory = "mediamtx";
       WorkingDirectory = "%S/mediamtx";
       EnvironmentFile = config.sops.templates."mediamtx-srt.env".path;
@@ -163,21 +180,27 @@
   # certificate on 443: RTSP and RTMP terminate TLS in MediaMTX, SRT is keyed by the
   # passphrase above, and WebRTC media is DTLS-SRTP by construction.
   #
+  # MoQ is the one leg that is HTTP and still not proxied: its session is a CONNECT over HTTP/3,
+  # which a proxy listening on TCP 443 never sees. Both sides of 8892 are the same listener, the
+  # page over TCP and the session over UDP, and a browser needs both to watch anything.
+  #
   # Not opened, and each for its own reason:
   #   9997  the relay's API. A group token grants publishing and reading and nothing else,
   #         so every caller from outside is refused at it anyway.
   #   8888/8889  HLS and WebRTC signalling. Both are HTTP and both are behind the proxy.
   #   8554/1935  the cleartext RTSP and RTMP listeners, which this relay does not bind at all:
   #         its configuration sets `strict` on both, so there is nothing there to reach.
-  #   8892/8893  MoQ. Its listeners carry a self-signed certificate the web grid pins by
-  #         fingerprint, which is the one thing here that is not the ACME certificate.
+  #   8893  MoQ for a native client, which no reader in the app is. The browser reaches the
+  #         same streams on 8892 and nothing here speaks the QUIC listener directly.
   networking.firewall.allowedTCPPorts = [
     8322 # RTSPS, which carries its RTP interleaved in the TLS connection
     1936 # RTMPS
+    8892 # the MoQ player page
   ];
 
   networking.firewall.allowedUDPPorts = [
     8890 # SRT, keyed by the passphrase above
     8189 # WebRTC media, which negotiates a direct path and never meets the proxy
+    8892 # the MoQ WebTransport session, HTTP/3 on the port the page came from
   ];
 }
