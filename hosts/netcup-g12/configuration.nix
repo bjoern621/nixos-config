@@ -20,9 +20,6 @@ in
     ../../modules/scripts
     ../../modules/sysconf-checkout.nix
     ../../modules/sysconf-auto-pull.nix
-    ../../modules/mediamtx-relay.nix
-    ../../modules/screenshare-groupd.nix
-    ../../modules/screenshare-proxy.nix
     ../../modules/k3s-tailnet.nix
     ../../modules/telemetry-agent.nix
   ];
@@ -36,10 +33,6 @@ in
   };
 
   time.timeZone = "Europe/Berlin";
-
-  # A CNAME onto this machine's own name, so one certificate covers the relay and the group
-  # service.
-  screenshare.domain = "streamrelay.bjoernblessin.de";
 
   # Second node of the hh cluster, joining the vmk3s server over the tailnet.
   # See docs/k3s-cluster.md for what schedules here and how a workload asks to.
@@ -89,4 +82,35 @@ in
     hostMetrics = false;
     otlpForward = "http://127.0.0.1:30318";
   };
+
+  # What this machine exposes for the workloads pinned to it. The relay pod runs on the host
+  # network, so its listeners are this host's ports and the numbers are the same ones the
+  # relay's own configuration binds (argocd/applications/screenshare in hh-cluster-infra).
+  #
+  # Every leg here is one no reverse proxy can carry, and each is encrypted by something of
+  # its own: RTSP and RTMP terminate TLS in MediaMTX, SRT is keyed by a passphrase, WebRTC
+  # media is DTLS-SRTP by construction, and MoQ's session is a CONNECT over HTTP/3 that a
+  # listener on TCP 443 never sees.
+  #
+  # Not opened, and each for its own reason:
+  #   9997        the relay's API, bound to loopback and shared with the group service.
+  #   8888/8889   HLS and WebRTC signalling, both loopback and both behind the pod's proxy.
+  #   8893        MoQ for a native client, which no reader in the app is.
+  networking.firewall.allowedTCPPorts = [
+    80 # Traefik's hostPort, which redirects
+    443 # Traefik's hostPort, the edge for every HTTP name pointed at this machine
+    8322 # RTSPS, which carries its RTP interleaved in the TLS connection
+    1936 # RTMPS
+    8892 # the MoQ player page
+  ];
+
+  networking.firewall.allowedUDPPorts = [
+    8890 # SRT
+    8189 # WebRTC media, which negotiates a direct path and never meets a proxy
+    8892 # the MoQ WebTransport session, HTTP/3 on the port the page came from
+  ];
+
+  # The relay pod's proxy container. Traefik on either node dials it at this node's address,
+  # so the tailnet is the only interface it answers on.
+  networking.firewall.interfaces."tailscale0".allowedTCPPorts = [ 8080 ];
 }

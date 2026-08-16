@@ -4,16 +4,9 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    # The relay's config file, the MediaMTX version it is written against, and the group
-    # service that runs beside it.
-    screen-sharing = {
-      url = "github:bjoern621/screen-sharing";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # The SRT passphrase is a secret, and the relay reads it as environment rather than out
-    # of a config file in the store. This host decrypts with its own ssh host key, so there
-    # is no key to place before the first deploy.
+    # The k3s join token is a secret, and the agent reads it out of a file rather than a
+    # flag in the store. This host decrypts with its own ssh host key, so there is no key to
+    # place before the first deploy.
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -67,6 +67,9 @@ A new node is therefore two rebuilds.
 
 The server takes the same two rebuilds for its own address, and runs single-node in between.
 
+Each host pins its own nixpkgs, so the two can hold different k3s versions.
+A kubelet must not be newer than the API server it registers with, so the server's lock is the one to bump first when they have drifted.
+
 ## Placement
 
 `netcup-g12` carries the taint `node.hh/site=netcup:NoSchedule` and the matching label.
