@@ -34,6 +34,17 @@
   environment.etc."mediamtx.yaml".source =
     lib.mkForce "${inputs.screen-sharing}/deploy/mediamtx-groups.yml";
 
+  # The read hook that config names. A starting read reports its path to the group service, which
+  # closes the connection where the member holding it is no longer on that group's roster: a token is
+  # checked at the handshake and not again, so a member who left opens one with what they still hold.
+  #
+  # The script comes from the app's repository like the config above, because what the relay does is
+  # that repository's decision. Where it sits on disk is this host's, and the config names this path.
+  environment.etc."mediamtx/reconcile-on-read.sh" = {
+    source = "${inputs.screen-sharing}/deploy/reconcile-on-read.sh";
+    mode = "0555";
+  };
+
   # SRT is the one leg no proxy can wrap: UDP, no TLS. What protects the packets is a
   # relay-wide passphrase, and it is a secret, so it reaches the process as environment
   # rather than through the config file in the store. MediaMTX overrides any config key from
@@ -161,6 +172,11 @@
       MTX_MOQSERVERCERT = "/var/lib/screenshare-tls/cert.pem";
       MTX_MOQSERVERKEY = "/var/lib/screenshare-tls/key.pem";
     };
+
+    # The read hook is a shell script that reaches the group service over loopback, and a unit's PATH
+    # carries neither curl nor anything else outside the small default set. Missing, every read runs
+    # a hook that exits before it reports anything, which leaves a member who left watching.
+    path = [ pkgs.curl ];
 
     serviceConfig = {
       # The TLS listeners read the certificate this group owns, and DynamicUser gives the unit
