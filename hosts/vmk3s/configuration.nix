@@ -136,11 +136,16 @@ in
     #   tls-san            the API server's serving certificate is presented to
     #                      an agent dialling this address, and a name not in it
     #                      is a handshake failure.
+    #   flannel-iface      which interface flannel sizes its MTU against. It
+    #                      picks the one holding the default route otherwise,
+    #                      whose 1500 leaves a pod MTU 220 bytes wider than the
+    #                      tunnel that carries it (modules/k3s-tailnet.nix).
     ++ lib.optionals (tailnet.vmk3s != null) [
       "--node-external-ip=${tailnet.vmk3s}"
       "--advertise-address=${tailnet.vmk3s}"
       "--tls-san=${tailnet.vmk3s}"
       "--flannel-external-ip"
+      "--flannel-iface=tailscale0"
     ];
   };
 

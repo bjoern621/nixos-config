@@ -42,6 +42,23 @@ in
     # every cluster lookup onto 100.100.100.100.
     services.tailscale-client.acceptDns = false;
 
+    # tailscale0 is 1280, and the vxlan header the pod network adds costs 50, so the pod MTU
+    # has to be 1230. Flannel derives it from the interface named in --flannel-iface, which
+    # the host configs point here for that reason.
+    #
+    # Named rather than detected: flannel takes the default-route interface otherwise, whose
+    # 1500 leaves a full-size pod packet arriving at the tunnel 220 bytes too wide. Small
+    # packets still pass, so the symptom is not a dead network but stalled TLS handshakes and
+    # truncated bodies.
+    #
+    # k3s reads the interface at start, which is why it waits for tailscaled here. Ordering is
+    # not a gate: the interface exists as soon as the daemon is up, an address arrives only at
+    # login, and a k3s that started too early restarts itself every 5s until it does.
+    systemd.services.k3s = {
+      after = [ "tailscaled.service" ];
+      wants = [ "tailscaled.service" ];
+    };
+
     # Direct node-to-node paths instead of a DERP relay. Closed, tailscale still connects and
     # every vxlan frame between the two nodes takes a detour through Tailscale's servers.
     services.tailscale.openFirewall = true;

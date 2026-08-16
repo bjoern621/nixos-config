@@ -60,6 +60,11 @@ in
       "--node-ip=${tailnet.netcup-g12}"
       "--node-external-ip=${tailnet.netcup-g12}"
 
+      # Which interface flannel sizes its MTU against. It picks the one holding the
+      # default route otherwise, and eth0's 1500 leaves a pod MTU 220 bytes wider than
+      # the tunnel that carries it (modules/k3s-tailnet.nix).
+      "--flannel-iface=tailscale0"
+
       # The taint is the whole placement policy: nothing runs here that did not ask to.
       # Storage is what makes it necessary. The cluster's only StorageClass is k3s'
       # local-path, whose volumes are directories on the node that first bound them, so a
