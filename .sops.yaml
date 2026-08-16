@@ -20,6 +20,14 @@ creation_rules:
           - *admin_bjoern
           - *host_netcup_g12
 
+  # The k3s join token, which only the agent presents. Listed before the rule below for the
+  # same reason: a token that admits a machine to the cluster is not one every host holds.
+  - path_regex: secrets/k3s-agent\.yaml$
+    key_groups:
+      - age:
+          - *admin_bjoern
+          - *host_netcup_g12
+
   - path_regex: secrets/[^/]+\.yaml$
     key_groups:
       - age:

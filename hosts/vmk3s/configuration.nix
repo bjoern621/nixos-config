@@ -1,5 +1,13 @@
-{ pkgs, modulesPath, ... }:
+{
+  lib,
+  pkgs,
+  modulesPath,
+  ...
+}:
 
+let
+  tailnet = import ../../lib/tailnet.nix;
+in
 {
   imports = [
     ./hardware-configuration.nix
@@ -10,6 +18,7 @@
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
     ../../modules/telemetry-agent.nix
+    ../../modules/k3s-tailnet.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
@@ -89,19 +98,49 @@
     443
   ];
 
+  # netcup-g12 joins as an agent over the tailnet. See docs/k3s-cluster.md.
+  services.k3s-tailnet = {
+    enable = true;
+    role = "server";
+  };
+
   services.k3s = {
     enable = true;
     role = "server";
-    # Pin the node to its stable LAN IPv4. Without --node-ip, k3s
-    # auto-detects node addresses and also picks up the global IPv6 that
-    # the router hands out via RA. The ISP rotates that prefix, so the
-    # address later vanishes from the interface and kubelet logs "failed to
-    # validate secondaryNodeIP" every status cycle. .80 is the same address
-    # the traefik LoadBalancer already depends on, so it is effectively
-    # static (DHCP reservation on the router).
     extraFlags = [
       "--disable=traefik"
+
+      # Pin the node to its stable LAN IPv4. Without --node-ip, k3s
+      # auto-detects node addresses and also picks up the global IPv6 that
+      # the router hands out via RA. The ISP rotates that prefix, so the
+      # address later vanishes from the interface and kubelet logs "failed to
+      # validate secondaryNodeIP" every status cycle. .80 is the same address
+      # the traefik LoadBalancer already depends on, so it is effectively
+      # static (DHCP reservation on the router).
       "--node-ip=192.168.178.80"
+    ]
+    # The tailnet address, for everything an off-LAN node has to reach. Absent
+    # until this host's first `tailscale up`, and the server runs single-node
+    # without it, so it is added rather than assumed.
+    #
+    # node-ip stays the LAN address above because the hostPort edge, the backup
+    # pull and the local kubectl all resolve this node there.
+    #
+    #   node-external-ip   what flannel builds its tunnel to, given
+    #                      --flannel-external-ip below.
+    #   advertise-address  what the `kubernetes` Service in every namespace
+    #                      points at. Left at its default it would be the LAN
+    #                      address, and a pod on netcup-g12 asking for the API
+    #                      would dial an address that exists in a house it is
+    #                      not in.
+    #   tls-san            the API server's serving certificate is presented to
+    #                      an agent dialling this address, and a name not in it
+    #                      is a handshake failure.
+    ++ lib.optionals (tailnet.vmk3s != null) [
+      "--node-external-ip=${tailnet.vmk3s}"
+      "--advertise-address=${tailnet.vmk3s}"
+      "--tls-san=${tailnet.vmk3s}"
+      "--flannel-external-ip"
     ];
   };
 
