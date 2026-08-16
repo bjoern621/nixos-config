@@ -13,6 +13,6 @@
 #   ssh <host> tailscale ip -4
 
 {
-  vmk3s = null;
-  netcup-g12 = null;
+  vmk3s = "100.79.197.78";
+  netcup-g12 = "100.69.84.4";
 }
