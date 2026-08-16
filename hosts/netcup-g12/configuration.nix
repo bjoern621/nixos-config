@@ -115,7 +115,9 @@ in
     8892 # the MoQ WebTransport session, HTTP/3 on the port the page came from
   ];
 
-  # The relay pod's proxy container. Traefik on either node dials it at this node's address,
-  # so the tailnet is the only interface it answers on.
-  networking.firewall.interfaces."tailscale0".allowedTCPPorts = [ 8080 ];
+  # The lists above document what the machine answers on. They do not gate it: a published
+  # container port arrives by DNAT into the pod network and is forwarded rather than
+  # delivered locally, and this firewall filters INPUT alone. Turning on
+  # networking.firewall.filterForward is what would make them load-bearing, and what would
+  # drop every leg here until each is named in a forward rule too.
 }
