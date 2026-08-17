@@ -3,9 +3,13 @@
 {
   environment.etc."opt/chrome/policies/managed/nixos.json".text = builtins.toJSON {
     DefaultSearchProviderEnabled = true;
-    DefaultSearchProviderName = "Startpage";
-    DefaultSearchProviderKeyword = "startpage.com";
-    DefaultSearchProviderSearchURL = "https://www.startpage.com/sp/search?query={searchTerms}";
+    DefaultSearchProviderName = "Google";
+    DefaultSearchProviderKeyword = "google.com";
+    DefaultSearchProviderSearchURL = "https://www.google.com/search?q={searchTerms}";
+
+    # DefaultSearchProviderName = "Startpage";
+    # DefaultSearchProviderKeyword = "startpage.com";
+    # DefaultSearchProviderSearchURL = "https://www.startpage.com/sp/search?query={searchTerms}";
 
     ExtensionSettings = {
       "*" = {
