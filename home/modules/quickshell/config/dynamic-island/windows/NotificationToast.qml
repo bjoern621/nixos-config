@@ -58,14 +58,18 @@ Scope {
 
                     readonly property var actions: controller.actionsFor(toastDelegate.uid)
 
-                    // 0 keeps the toast up until it is dismissed by hand: either the
-                    // client asked for no expiry, or the urgency is critical.
+                    // Explicit positive timeout wins, critical urgency included:
+                    // battery alerts ask for 10 s next to their modal.
+                    // 0 keeps the toast up until it is dismissed by hand: client
+                    // asked for no expiry, or urgency is critical with no explicit timeout.
                     // expireTimeout is already milliseconds, matching what the client
                     // passed over D-Bus; -1 leaves the timeout up to this shell.
                     readonly property int expiryMs: {
+                        if (toastDelegate.expireTimeout > 0)
+                            return Math.round(toastDelegate.expireTimeout);
                         if (toastDelegate.urgency === 2 || toastDelegate.expireTimeout === 0)
                             return 0;
-                        return toastDelegate.expireTimeout > 0 ? Math.round(toastDelegate.expireTimeout) : 5000;
+                        return 5000;
                     }
 
                     // Card body plus the neo shadow gutter below/right.

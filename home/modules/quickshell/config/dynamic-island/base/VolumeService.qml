@@ -19,6 +19,19 @@ Singleton {
     readonly property bool muted: root.audioNode?.muted ?? false
     readonly property url iconSource: root.iconFor(root.volume, root.muted)
 
+    // Token match between MPRIS player identity and Pipewire stream properties.
+    // VolumeMenuController maps stream to player, NowPlayingController player to stream.
+    function playerMatchesStream(player, streamNode) {
+        if (!player || !streamNode)
+            return false;
+        const props = streamNode.properties ?? {};
+        const norm = s => (s ?? "").toString().toLowerCase().replace(/[^a-z0-9]/g, "");
+        const streamTokens = [props["application.name"], props["node.name"], props["application.process.binary"], streamNode.name].map(norm).filter(t => t.length >= 3);
+        const dbusTail = (player.dbusName ?? "").toString().split(".").pop();
+        const playerTokens = [player.desktopEntry, player.identity, dbusTail].map(norm).filter(t => t.length >= 3);
+        return streamTokens.some(s => playerTokens.some(p => s === p || s.includes(p) || p.includes(s)));
+    }
+
     // Callers with their own volume (per-app streams) pass it in.
     // Qt.resolvedUrl anchors paths to this file,
     // so callers in any directory get an absolute url.

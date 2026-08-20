@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Services.Mpris
+import Quickshell.Services.Pipewire
 import ".."
 
 // Now-playing behavior: player passthrough, position polling, seek, queue state.
@@ -23,6 +24,70 @@ QtObject {
     readonly property bool canGoPrevious: hasPlayer && player.canGoPrevious
 
     property bool queueExpanded: false
+
+    // Shuffle + loop. Buttons hide when the player lacks the interface.
+    readonly property bool shuffleSupported: hasPlayer && player.shuffleSupported
+    readonly property bool shuffleOn: shuffleSupported && player.shuffle
+    readonly property bool loopSupported: hasPlayer && player.loopSupported
+    readonly property bool loopOn: loopSupported && player.loopState !== MprisLoopState.None
+    readonly property bool loopTrack: loopSupported && player.loopState === MprisLoopState.Track
+
+    function toggleShuffle() {
+        if (shuffleSupported)
+            player.shuffle = !player.shuffle;
+    }
+
+    // None -> Playlist -> Track -> None.
+    function cycleLoop() {
+        if (!loopSupported)
+            return;
+        if (!loopOn)
+            player.loopState = MprisLoopState.Playlist;
+        else if (!loopTrack)
+            player.loopState = MprisLoopState.Track;
+        else
+            player.loopState = MprisLoopState.None;
+    }
+
+    readonly property bool canRaise: hasPlayer && player.canRaise
+    function raise() {
+        if (canRaise)
+            player.raise();
+    }
+
+    // Playback stream of this player, token-matched. null when app plays no audio.
+    readonly property var streamNode: {
+        if (!hasPlayer)
+            return null;
+        const nodes = Pipewire.nodes.values;
+        if (!nodes)
+            return null;
+        for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            if (n.isStream && n.audio && VolumeService.playerMatchesStream(player, n))
+                return n;
+        }
+        return null;
+    }
+    readonly property var streamAudio: streamNode?.audio ?? null
+    readonly property bool hasVolume: streamAudio !== null
+    readonly property int volume: Math.round((streamAudio?.volume ?? 0) * 100)
+    readonly property bool volumeMuted: streamAudio?.muted ?? false
+    readonly property url volumeIconSource: VolumeService.iconFor(volume, volumeMuted)
+
+    // Stream write gives instant feedback, player write persists.
+    // Spotify re-asserts internal volume onto the stream every track,
+    // stream-only set is transient. Same 0-1 scale so no compounding.
+    function setVolume(v) {
+        if (streamAudio)
+            streamAudio.volume = v;
+        if (hasPlayer && player.volumeSupported)
+            player.volume = v;
+    }
+    // Keeps stream audio data current.
+    property PwObjectTracker _streamTracker: PwObjectTracker {
+        objects: root.streamNode ? [root.streamNode] : []
+    }
 
     // Position: two writers, one reader.
     // _syncPolledPosition writes polledPosition, seek handlers write seekPosition.

@@ -92,22 +92,12 @@ QtObject {
             p.volume = v;
     }
 
-    // Match stream to MPRIS player by normalized app/dbus identifiers.
+    // Match stream to MPRIS player. Token match lives in VolumeService.
     function mprisPlayerFor(streamNode) {
         const players = Mpris.players?.values ?? [];
-        if (!players.length || !streamNode)
-            return null;
-        const props = streamNode.properties ?? {};
-        const norm = s => (s ?? "").toString().toLowerCase().replace(/[^a-z0-9]/g, "");
-        const streamTokens = [props["application.name"], props["node.name"], props["application.process.binary"], streamNode.name].map(norm).filter(t => t.length >= 3);
         for (let i = 0; i < players.length; i++) {
             const p = players[i];
-            if (!p || !p.volumeSupported)
-                continue;
-            const dbusTail = (p.dbusName ?? "").toString().split(".").pop();
-            const playerTokens = [p.desktopEntry, p.identity, dbusTail].map(norm).filter(t => t.length >= 3);
-            const hit = streamTokens.some(s => playerTokens.some(pt => s === pt || s.includes(pt) || pt.includes(s)));
-            if (hit)
+            if (p && p.volumeSupported && VolumeService.playerMatchesStream(p, streamNode))
                 return p;
         }
         return null;

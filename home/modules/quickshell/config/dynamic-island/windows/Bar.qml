@@ -53,17 +53,17 @@ Variants {
         }
         readonly property bool hasMprisPlayer: mprisPlayer !== null
 
-        // Pill-only strip while out; grows to clear the shown popup while one is up.
-        // Battery iGPU is bandwidth-bound: each near-fullscreen layer blend costs
-        // double-digit fps, so the surface tracks the actual popup bottom rather than
-        // a fixed near-fullscreen ceiling. Small menus keep a small surface; a menu
-        // taller than the screen is clamped by the compositor, not this value.
-        // Latched, not popupBottom directly: the surface grows to fit but never shrinks
-        // while a popup stays open, so a popup that resizes its own content (calendar
-        // year nav: taller year -> shorter year) does not resize the layer surface under
-        // it, which Hyprland reflects as a visible shift. Reset on close keeps the win:
-        // the next popup starts from its own footprint.
-        implicitHeight: pillHidden ? 0 : anyPopupShown ? Math.max(56, Math.ceil(popupSurfaceBottom) + Spacing.spacing8) : 56
+        // Pill-only strip while out; grows to clear the tallest popup shown since the
+        // pill came out. Battery iGPU is bandwidth-bound: each near-fullscreen layer
+        // blend costs double-digit fps, so the surface tracks actual popup bottoms
+        // rather than a fixed tall ceiling. A menu taller than the screen is clamped
+        // by the compositor, not this value.
+        // Never shrinks while the pill is out: Hyprland scales the stale buffer into
+        // the shrunken box for one frame, squashing the pill to a sliver and exposing
+        // the desktop behind, so a popup close must not resize the surface. The only
+        // shrink is at pill hide, where the buffer is fully transparent and the
+        // artifact invisible. Growth costs one mild dip frame, so it stays dynamic.
+        implicitHeight: pillHidden ? 0 : Math.max(56, Math.ceil(popupSurfaceBottom) + Spacing.spacing8)
 
         // Bottom edge of the tallest shown popup, in root coords. Each popup is a
         // direct child of interactionZone (anchored to root top, y=0), so its bottom
@@ -82,12 +82,12 @@ Variants {
             return maxB;
         }
 
-        // popupBottom held at its high-water mark for the current open session.
-        // Grows with popupBottom, never shrinks until all popups close.
+        // popupBottom held at its high-water mark while the pill is out.
+        // Reset only at pill hide (onPillHiddenChanged), so popup close and popup
+        // content resize (calendar year nav) never shrink the surface.
         property real popupSurfaceBottom: 0
-        onPopupBottomChanged: if (anyPopupShown && popupBottom > popupSurfaceBottom)
+        onPopupBottomChanged: if (popupBottom > popupSurfaceBottom)
             popupSurfaceBottom = popupBottom;
-        onAnyPopupShownChanged: popupSurfaceBottom = anyPopupShown ? popupBottom : 0
 
         // Aggregate over popup-bearing children; each manages its own popup
         // (including any submenus nested inside that popup's outer Item).
@@ -95,12 +95,6 @@ Variants {
         readonly property bool anyPopupOpen: {
             for (const c of contentRow.children) if (c.popupOpen) return true;
             for (const c of statusGroup.children) if (c.popupOpen) return true;
-            return false;
-        }
-        // Visibility test, not popupOpen: surface must stay tall through popup fade-out.
-        readonly property bool anyPopupShown: {
-            for (const c of contentRow.children) if (c.popupItem && c.popupItem.visible) return true;
-            for (const c of statusGroup.children) if (c.popupItem && c.popupItem.visible) return true;
             return false;
         }
         // A Region follows its item's geometry but not its visibility, so a closed popup
@@ -150,7 +144,12 @@ Variants {
         // The tray row expands for as long as the pill is on screen and no
         // longer, so the pill always slides back in at its resting width. The
         // collapse runs while the pill is off screen, where it costs nothing.
-        onPillHiddenChanged: if (pillHidden) systemTray.expanded = false
+        // The surface shrink lands here too: buffer fully transparent, so the
+        // stale-buffer squash cannot show.
+        onPillHiddenChanged: if (pillHidden) {
+            systemTray.expanded = false;
+            popupSurfaceBottom = 0;
+        }
 
         // interactionZone is the trigger strip + pill hit area. Open popups are NOT
         // included in its bounds. They're added to the input mask as separate
@@ -372,6 +371,7 @@ Variants {
                 width: nowPlayingView.implicitWidth
                 anchors.top: nowPlayingAnchor.top
                 anchors.horizontalCenter: nowPlayingAnchor.horizontalCenter
+                contentInteracting: nowPlayingView.sliderActive
 
                 NowPlayingMenu {
                     id: nowPlayingView

@@ -40,12 +40,12 @@ Scope {
     // PopupHost.show below draws the on-screen alert.
     //
     // -t is milliseconds.
-    // 15ms expires the toast before it can be seen, leaving only the history entry, so no toast
-    // duplicates the modal.
-    // Critical urgency never expires (see NotificationToast.expiryMs),
-    // so -t applies only to the 25% warning.
-    function sendNotification(summary, body, urgency) {
-        Quickshell.execDetached(["notify-send", "-u", urgency, "-a", "Quickshell", "-t", "15", summary, body]);
+    // Warning passes 15: toast expires before it can be seen, leaving only the
+    // history entry, so no toast duplicates the modal.
+    // Criticals pass 10000: toast stays 10 s next to the modal, then expires
+    // (NotificationToast.expiryMs honors an explicit timeout even at critical urgency).
+    function sendNotification(summary, body, urgency, timeoutMs) {
+        Quickshell.execDetached(["notify-send", "-u", urgency, "-a", "Quickshell", "-t", String(timeoutMs), summary, body]);
     }
 
     function crossedBelow(threshold) {
@@ -66,13 +66,13 @@ Scope {
         const pctInt = Math.round(pct * 100);
 
         if (crossedBelow(shutdownThreshold)) {
-            sendNotification("Akku kritisch", "Nur noch " + pctInt + " % Akku übrig. Das System schaltet sich gleich ab!", "critical");
+            sendNotification("Akku kritisch", "Nur noch " + pctInt + " % Akku übrig. Das System schaltet sich gleich ab!", "critical", 10000);
             PopupHost.show("../icons/icons8-battery-25.svg", "System schaltet sich gleich ab!", "Nur noch " + pctInt + " % Akku übrig.\nLadegerät jetzt anschließen!", Colors.batteryCritical);
         } else if (crossedBelow(criticalThreshold)) {
-            sendNotification("Akku fast leer", "Nur noch " + pctInt + " % Akku übrig. Bitte sofort Ladegerät anschließen!", "critical");
+            sendNotification("Akku fast leer", "Nur noch " + pctInt + " % Akku übrig. Bitte sofort Ladegerät anschließen!", "critical", 10000);
             PopupHost.show("../icons/icons8-battery-25.svg", "Akku fast leer!", "Nur noch " + pctInt + " % Akku übrig.\nBitte sofort das Ladegerät anschließen!", Colors.batteryCritical);
         } else if (crossedBelow(warningThreshold)) {
-            sendNotification("Akku niedrig", "Nur noch " + pctInt + " % Akku übrig. Bitte bald das Ladegerät anschließen.", "normal");
+            sendNotification("Akku niedrig", "Nur noch " + pctInt + " % Akku übrig. Bitte bald das Ladegerät anschließen.", "normal", 15);
             PopupHost.show("../icons/icons8-battery-50.svg", "Akku niedrig", "Nur noch " + pctInt + " % Akku übrig.\nBitte bald das Ladegerät anschließen.", Colors.batteryWarning);
         }
 

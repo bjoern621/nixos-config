@@ -54,9 +54,36 @@ Singleton {
     property bool spotifyDataLoading: false
 
     readonly property var displayRecentlyPlayed: _mergeRecentlyPlayed(trackHistory, spotifyRecentlyPlayed)
-    readonly property var displayQueue: spotifyQueue.slice(0, 3)
-    readonly property int recentSkeletonCount: Math.max(0, 3 - displayRecentlyPlayed.length)
-    readonly property int queueSkeletonCount: Math.max(0, 3 - displayQueue.length)
+
+    // Rendered row counts from the last build. Skeletons size to these, not to
+    // the raw arrays: dedup can drop a row, and a raw count then shows rows and
+    // skeletons for the same slots together.
+    property int builtRecentCount: 0
+    property int builtQueueCount: 0
+    // Skeletons only while a fetch runs. A queue that is genuinely short
+    // (end of playlist) gets no placeholder.
+    readonly property int recentSkeletonCount: spotifyDataLoading ? Math.max(0, 3 - builtRecentCount) : 0
+    readonly property int queueSkeletonCount: spotifyDataLoading ? Math.max(0, 3 - builtQueueCount) : 0
+
+    // Identity key. title+artist, not uri: history entries carry no uri, and
+    // remaster/live variants of one track differ in uri.
+    function _key(t) {
+        return (t.title + "|" + t.artist).toLowerCase().trim();
+    }
+
+    // Uri for a track present in a Spotify payload; "" when unseen.
+    function _uriFor(title, artist) {
+        const key = _key({ title: title, artist: artist });
+        const pools = [spotifyQueue, spotifyRecentlyPlayed];
+        for (let p = 0; p < pools.length; p++) {
+            for (let i = 0; i < pools[p].length; i++) {
+                const t = pools[p][i];
+                if (_key(t) === key && t.uri)
+                    return t.uri;
+            }
+        }
+        return "";
+    }
 
     // Unified track list (recent + current + queue), shared by every screen's menu.
     ListModel {
@@ -75,21 +102,21 @@ Singleton {
         const spotifyLookup = {};
         for (let i = 0; i < spotify.length; i++) {
             const s = spotify[i];
-            spotifyLookup[(s.title + "|" + s.artist).toLowerCase().trim()] = s;
+            spotifyLookup[_key(s)] = s;
         }
 
         const seenKeys = new Set();
         const merged = [];
         for (let i = 0; i < local.length; i++) {
             const t = local[i];
-            const key = (t.title + "|" + t.artist).toLowerCase().trim();
+            const key = _key(t);
             seenKeys.add(key);
             const spot = spotifyLookup[key];
             merged.push({
                 title: t.title,
                 artist: t.artist,
                 artUrl: (spot && spot.artUrl) ? spot.artUrl : (t.artUrl || ""),
-                uri: spot ? (spot.uri || "") : ""
+                uri: (spot && spot.uri) ? spot.uri : (t.uri || "")
             });
         }
 
@@ -98,7 +125,7 @@ Singleton {
         const backfill = [];
         for (let i = spotify.length - 1; i >= 0; i--) {
             const s = spotify[i];
-            const key = (s.title + "|" + s.artist).toLowerCase().trim();
+            const key = _key(s);
             if (seenKeys.has(key))
                 continue;
             seenKeys.add(key);
@@ -127,7 +154,7 @@ Singleton {
     }
 
     onDisplayRecentlyPlayedChanged: _rebuildTrackList()
-    onDisplayQueueChanged: _rebuildTrackList()
+    onSpotifyQueueChanged: _rebuildTrackList()
     onTrackTitleChanged: _rebuildTrackList()
     onTrackArtUrlChanged: _rebuildTrackList()
 
@@ -140,7 +167,7 @@ Singleton {
     // Recent and queue are not cross-checked, so a repeated track shows in both.
     function _buildTrackList() {
         const result = [];
-        const currentKey = hasPlayer && trackTitle ? (trackTitle + "|" + trackArtist).toLowerCase() : "";
+        const currentKey = hasPlayer && trackTitle ? _key({ title: trackTitle, artist: trackArtist }) : "";
 
         for (let i = 0; i < displayRecentlyPlayed.length; i++) {
             const r = displayRecentlyPlayed[i];
@@ -160,11 +187,11 @@ Singleton {
                 uri: "",
                 type: "current"
             });
-        // Scans full buffer, not displayQueue: a stale entry can sit past index 3.
+        // Scans the full buffer: a stale entry can sit past index 3.
         let queueCount = 0;
         for (let i = 0; i < spotifyQueue.length && queueCount < 3; i++) {
             const q = spotifyQueue[i];
-            if ((q.title + "|" + q.artist).toLowerCase() === currentKey)
+            if (_key(q) === currentKey)
                 continue;
             result.push({
                 title: q.title || "",
@@ -175,6 +202,8 @@ Singleton {
             });
             queueCount++;
         }
+        builtRecentCount = displayRecentlyPlayed.length;
+        builtQueueCount = queueCount;
         _syncTrackListModel(_trackList, result);
     }
 
@@ -218,6 +247,12 @@ Singleton {
                 });
             }
         }
+
+        // Surplus copies of a duplicated key survive the remove phase (key still
+        // present) and are never matched by the placement loop, so they collect
+        // past the end with stale roles. Drop the tail.
+        while (model.count > newData.length)
+            model.remove(model.count - 1);
     }
 
     // spotify_api.py "all" emits {"recently_played": [...], "queue": [...]}.
@@ -262,9 +297,10 @@ Singleton {
 
     // Debounces API calls (e.g. spam-clicking next).
     // Requests arriving during cooldown or during an in-flight fetch defer via _pending.
+    // Bounds how long optimistic state can drift from Spotify before reconciliation.
     Timer {
         id: spotifyRefreshCooldown
-        interval: 15000
+        interval: 5000
         property bool _pending: false
         onTriggered: root._flushPendingRefresh()
     }
@@ -326,51 +362,62 @@ Singleton {
             if (!title)
                 return;
 
+            const key = root._key({ title: title, artist: artist });
             let h = root.trackHistory.slice();
 
             // Duplicate of current track (e.g. player restarted at 0:00) -> skip
-            if (h.length > 0) {
-                const last = h[h.length - 1];
-                if (last.title === title && last.artist === artist)
-                    return;
+            if (h.length > 0 && root._key(h[h.length - 1]) === key)
+                return;
+
+            // Rewind: new track anywhere in history, any number of steps back
+            // (previous spam, click on an older recent row). Nearest match wins,
+            // so a track played twice rewinds to its latest occurrence.
+            let idx = -1;
+            for (let i = h.length - 2; i >= 0; i--) {
+                if (root._key(h[i]) === key) {
+                    idx = i;
+                    break;
+                }
+            }
+            if (idx >= 0) {
+                // Everything after the target returns to the queue front in
+                // play order; old current lands deepest.
+                const returned = h.slice(idx + 1).map(t => ({
+                    title: t.title,
+                    artist: t.artist,
+                    artUrl: t.artUrl || "",
+                    uri: t.uri || root._uriFor(t.title, t.artist)
+                }));
+                root.trackHistory = h.slice(0, idx + 1);
+                root.spotifyQueue = returned.concat(root.spotifyQueue);
+                root.refreshSpotifyData();
+                return;
             }
 
-            // Rewind: new track matches the entry before current, so pop instead of append
-            if (h.length >= 2) {
-                const beforeCurrent = h[h.length - 2];
-                if (beforeCurrent.title === title && beforeCurrent.artist === artist) {
-                    // Capture old current before popping. It goes back into the queue.
-                    const oldCurrent = h[h.length - 1];
-                    h.pop();
-                    root.trackHistory = h;
-
-                    // Optimistic queue update: old current track goes back to front of queue
-                    let q = root.spotifyQueue.slice();
-                    q.unshift({
-                        title: oldCurrent.title,
-                        artist: oldCurrent.artist,
-                        artUrl: oldCurrent.artUrl || ""
-                    });
-                    root.spotifyQueue = q;
-
-                    root.refreshSpotifyData();
-                    return;
+            // Forward: drop the played entry and everything jumped past from the
+            // queue (click on the second-next row skips two, not one). Jumped-past
+            // tracks never played, so they do not enter history. A track absent
+            // from the queue (radio, other device) leaves it untouched; the
+            // refetch reconciles.
+            // Uri lookup precedes the slice: it drops the played entry from the pool.
+            const uri = root._uriFor(title, artist);
+            const q = root.spotifyQueue;
+            for (let i = 0; i < q.length; i++) {
+                if (root._key(q[i]) === key) {
+                    root.spotifyQueue = q.slice(i + 1);
+                    break;
                 }
             }
 
-            // Forward advance: append
             h.push({
                 title: title,
                 artist: artist,
-                artUrl: artUrl || ""
+                artUrl: artUrl || "",
+                uri: uri
             });
             if (h.length > root.maxHistory + 1)
                 h = h.slice(h.length - root.maxHistory - 1);
             root.trackHistory = h;
-
-            // Optimistic queue update: the first queue item just became the current track
-            if (root.spotifyQueue.length > 0)
-                root.spotifyQueue = root.spotifyQueue.slice(1);
 
             // Real fetch reconciles the optimistic updates.
             root.refreshSpotifyData();

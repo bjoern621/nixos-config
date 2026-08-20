@@ -419,7 +419,30 @@ def get_queue() -> list[dict[str, str]]:
 
 
 def play_track(uri: str) -> None:
-    """Play a specific track by Spotify URI.  Raises SpotifyError on failure."""
+    """Play a track by Spotify URI, keeping the active context.
+
+    {"uris": [uri]} replaces the playback context with a one-track list, which
+    kills the queue and autoplay.  Jumping inside the active context via
+    context_uri + offset keeps both.  Offset is only valid for album and
+    playlist contexts, and a track outside the context draws an API error;
+    both cases fall back to solo play.  Raises SpotifyError on failure.
+    """
+    # State fetch failure degrades to solo play instead of failing the click.
+    try:
+        context = api_request("/v1/me/player").get("context") or {}
+    except SpotifyError as exc:
+        print(f"player state fetch failed: {exc}", file=sys.stderr)
+        context = {}
+    if context.get("uri") and context.get("type") in ("album", "playlist"):
+        try:
+            api_request(
+                "/v1/me/player/play",
+                method="PUT",
+                data={"context_uri": context["uri"], "offset": {"uri": uri}},
+            )
+            return
+        except SpotifyError as exc:
+            print(f"context play failed, playing solo: {exc}", file=sys.stderr)
     api_request("/v1/me/player/play", method="PUT", data={"uris": [uri]})
 
 
