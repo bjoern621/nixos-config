@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Drive the running Quickshell shell to observe a QML change end-to-end (reload, notifications, screenshots, synthetic clicks).
+description: Drive the running Quickshell shell to observe a QML change end-to-end (reload, notifications, screenshots).
 ---
 
 # Verifying Quickshell changes
@@ -129,20 +129,14 @@ Clients only send actions to a server that advertises `actions`.
 
 ## Synthetic input
 
-`/dev/uinput` is root-only, so ydotool does not work. `wtype` is keyboard-only.
-For pointer clicks:
+The user's pointer is off limits.
+No `hl.dsp.cursor.move`, no `wlrctl pointer`, no warping, nudging, or restoring, ever.
+This is a live desktop: the pointer belongs to the user.
 
-```bash
-hyprctl dispatch 'hl.dsp.cursor.move({ x = <x>, y = <y> })'
-nix run nixpkgs#wlrctl -- pointer click left
-```
+A part that only appears under the pointer (bar hover menus) is not driven synthetically.
+Finish the change, confirm the reload is clean in the journal, and tell the user it is ready to check by hovering.
 
-Coordinates are global layout coordinates in logical px.
-The `hyprctl dispatch` argument is a Lua expression; the old `movecursor <x> <y>` word syntax is a parse error since the Lua migration.
-Warping the cursor onto a surface it already sits on produces no motion event,
-so no Wayland enter and no `HoverHandler.hovered`. Move away first, then onto the
-target, then nudge a pixel. Restore the pointer afterwards with
-`hyprctl cursorpos`, since this runs on a live desktop.
+`/dev/uinput` is root-only, so ydotool does not work. `wtype` covers keyboard input only.
 
 Stacked overlays shadow each other: a non-expiring toast keeps the top slot and
 absorbs clicks meant for a newer one. Reload, or close it, before measuring.

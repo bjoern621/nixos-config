@@ -38,9 +38,14 @@ Item {
             const addr = ip.length ? ip.split("/")[0] : "Verbunden";
             return addr + " · " + NetworkService.throughputText(NetworkService.wifiDevice);
         }
+        const parts = [];
         if (saved)
-            return network.secured ? "Gespeichert · " + network.securityLabel : "Gespeichert";
-        return network.securityLabel;
+            parts.push("Gespeichert");
+        if (network.secured || !saved)
+            parts.push(network.securityLabel);
+        if (network.bandLabel.length)
+            parts.push(network.bandLabel);
+        return parts.join(" · ");
     }
 
     // ---- main row ----
@@ -177,7 +182,7 @@ Item {
             DeviceFacts {
                 visible: root.active
                 width: parent.width - Spacing.spacing8 * 2
-                rows: root.active ? NetworkUtils.deviceDetailRows(root.wifiDetail) : []
+                rows: root.active ? NetworkUtils.wifiDetailRows(root.wifiDetail, root.network) : []
             }
 
             // Action chips.

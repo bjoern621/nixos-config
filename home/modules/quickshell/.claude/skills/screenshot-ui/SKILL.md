@@ -1,6 +1,6 @@
 ---
 name: screenshot-ui
-description: Summon a specific Quickshell UI part (overlay, menu, OSD, toast) and screenshot it to inspect how a QML change looks. Covers toggling parts into view via IPC/hover/gdbus, finding their layer geometry, cropping with grim, and moving a part that is clipped or off-screen. Use when the goal is to see a widget, not to verify its behavior.
+description: Summon a specific Quickshell UI part (overlay, menu, OSD, toast) and screenshot it to inspect how a QML change looks. Covers toggling parts into view via IPC/gdbus, finding their layer geometry, and cropping with grim. Use when the goal is to see a widget, not to verify its behavior.
 ---
 
 # Screenshotting a Quickshell UI part
@@ -34,7 +34,8 @@ The running shell registers:
 A `toggle` method also hides, so re-run it to dismiss.
 
 Bar menus (calendar, network, bluetooth, now-playing, power) have no IPC handler.
-They open on pointer hover over their Bar item, so summoning one means warping the cursor onto the item (see Move a part).
+They open on pointer hover over their Bar item, and the pointer belongs to the user: never move it (no `hl.dsp.cursor.move`, no `wlrctl pointer`).
+A bar menu gets no synthetic screenshot; finish the change, confirm a clean reload, and tell the user it is ready to check by hovering.
 
 The notification toast and center are driven by real notifications; send one with gdbus (see `verify`, Driving notifications).
 
@@ -123,21 +124,6 @@ Write shots into the session scratchpad and read them back to inspect.
 ## Move a part
 
 Layer surfaces are positioned by their own anchors, not by the compositor, so the `hl.dsp.window.move` dispatcher does not touch them.
-Two situations need a move.
-
-**Summon a hover menu.**
-A bar menu opens only while the pointer sits over its Bar item.
-Save the pointer, warp onto the item, nudge a pixel so a Wayland enter fires, screenshot, then restore:
-
-```bash
-read PX PY < <(hyprctl cursorpos | tr -d ',')
-hyprctl dispatch 'hl.dsp.cursor.move({ x = <bar_item_x>, y = <bar_item_y> })'
-# nudge one pixel, capture, then restore:
-hyprctl dispatch "hl.dsp.cursor.move({ x = $PX, y = $PY })"
-```
-
-Warping onto a surface the pointer already occupies emits no motion event, so no hover fires; move away first, then onto the target.
-Pointer-click mechanics live in `verify`, Synthetic input.
 
 **Relocate a clipped or overlapping part.**
 A part pinned off-screen or stacked under another surface has no runtime move.

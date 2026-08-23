@@ -40,20 +40,46 @@ function isSecured(security) {
     return s.length > 0 && s !== "--";
 }
 
-// Shorten NetworkManager's flag list to one label. "WPA1 WPA2" -> "WPA2".
+// Shorten NetworkManager's flag list to one label. "WPA2 WPA3" is transition
+// mode: AP offers both, each client picks, so the label keeps both.
 function securityLabel(security) {
     if (!isSecured(security))
         return "Offen";
     const s = security.toUpperCase();
-    if (s.indexOf("WPA3") >= 0 || s.indexOf("SAE") >= 0)
+    const wpa3 = s.indexOf("WPA3") >= 0 || s.indexOf("SAE") >= 0;
+    const wpa2 = s.indexOf("WPA2") >= 0;
+    if (wpa3 && wpa2)
+        return "WPA2/WPA3";
+    if (wpa3)
         return "WPA3";
-    if (s.indexOf("WPA2") >= 0)
+    if (wpa2)
         return "WPA2";
     if (s.indexOf("WPA") >= 0)
         return "WPA";
     if (s.indexOf("WEP") >= 0)
         return "WEP";
     return "Gesichert";
+}
+
+// FREQ "5180 MHz" -> band label. 6 GHz starts at 5925 MHz.
+function freqBand(freq) {
+    const mhz = parseInt(freq, 10) || 0;
+    if (mhz >= 5925)
+        return "6 GHz";
+    if (mhz >= 4900)
+        return "5 GHz";
+    if (mhz >= 2400)
+        return "2,4 GHz";
+    return "";
+}
+
+// Bands a SSID is visible on. ["2,4 GHz", "5 GHz"] -> "2,4/5 GHz".
+function bandsLabel(bands) {
+    const order = ["2,4 GHz", "5 GHz", "6 GHz"];
+    const present = order.filter(b => bands.indexOf(b) >= 0);
+    if (!present.length)
+        return "";
+    return present.map(b => b.replace(" GHz", "")).join("/") + " GHz";
 }
 
 // Signal 0-100 -> 0-3 arc level.
@@ -85,15 +111,15 @@ function normalizeType(type) {
     }
 }
 
-// Fields: IN-USE,SIGNAL,SECURITY,FREQ,SSID
+// Fields: IN-USE,SIGNAL,SECURITY,FREQ,CHAN,SSID
 function parseWifiScan(text) {
     const out = [];
     const lines = _lines(text);
     for (let i = 0; i < lines.length; i++) {
         const f = splitTerse(lines[i]);
-        if (f.length < 5)
+        if (f.length < 6)
             continue;
-        const ssid = f[4];
+        const ssid = f[5];
         if (!ssid.length)
             continue; // hidden / empty
         out.push({
@@ -101,7 +127,8 @@ function parseWifiScan(text) {
             inUse: f[0] === "*",
             signal: parseInt(f[1], 10) || 0,
             security: f[2],
-            freq: f[3]
+            freq: f[3],
+            chan: f[4]
         });
     }
     return out;
@@ -249,6 +276,20 @@ function deviceDetailRows(detail) {
     return rows.filter(r => r.value && r.value.length > 0);
 }
 
+// Wifi-link facts prepended to the shared device rows. Band names the one BSS
+// the link rides; the list dedupes per SSID, so this is where a dual-band AP
+// shows which side carried the association.
+function wifiDetailRows(detail, network) {
+    const rows = [{
+        label: "Band",
+        value: network.band.length ? network.band + (network.channel.length ? " · Kanal " + network.channel : "") : ""
+    }, {
+        label: "Sicherheit",
+        value: network.secured ? network.securityLabel : ""
+    }];
+    return rows.filter(r => r.value.length > 0).concat(deviceDetailRows(detail));
+}
+
 // /proc/net/dev: two header lines, then `iface: rx ... tx ...` per interface.
 // Column 0 is rx bytes, column 8 tx bytes. One read covers every interface, so
 // per-device rates cost no extra process.
@@ -284,10 +325,15 @@ function buildWifiModel(scan, connections) {
     const bytop = {};
     for (let i = 0; i < scan.length; i++) {
         const n = scan[i];
+        const band = freqBand(n.freq);
         const prev = bytop[n.ssid];
         if (prev) {
-            if (n.inUse)
+            if (band && prev.bands.indexOf(band) < 0)
+                prev.bands.push(band);
+            if (n.inUse) {
                 prev.inUse = true;
+                prev.activeBss = n;
+            }
             if (n.signal > prev.signal) {
                 prev.signal = n.signal;
                 prev.security = n.security;
@@ -298,7 +344,9 @@ function buildWifiModel(scan, connections) {
             ssid: n.ssid,
             inUse: n.inUse,
             signal: n.signal,
-            security: n.security
+            security: n.security,
+            bands: band ? [band] : [],
+            activeBss: n.inUse ? n : null
         };
     }
 
@@ -306,12 +354,18 @@ function buildWifiModel(scan, connections) {
     for (const ssid in bytop) {
         const n = bytop[ssid];
         const saved = savedByName[ssid];
+        // The * scan row is the BSS the link rides. Its freq/security beat the
+        // strongest-signal fields: a dual-band AP can offer WPA3 on one band only.
+        const bss = n.activeBss;
         rows.push({
             ssid: ssid,
             signal: n.signal,
             level: signalLevel(n.signal),
             secured: isSecured(n.security),
-            securityLabel: securityLabel(n.security),
+            securityLabel: securityLabel(bss ? bss.security : n.security),
+            band: bss ? freqBand(bss.freq) : "",
+            channel: bss ? bss.chan : "",
+            bandLabel: bandsLabel(n.bands),
             active: n.inUse,
             saved: saved !== undefined,
             savedUuid: saved ? saved.uuid : "",

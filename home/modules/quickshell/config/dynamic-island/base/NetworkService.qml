@@ -210,7 +210,7 @@ Singleton {
 
     Process {
         id: wifiProc
-        command: ["nmcli", "-t", "-f", "IN-USE,SIGNAL,SECURITY,FREQ,SSID", "device", "wifi", "list", "--rescan", "no"]
+        command: ["nmcli", "-t", "-f", "IN-USE,SIGNAL,SECURITY,FREQ,CHAN,SSID", "device", "wifi", "list", "--rescan", "no"]
         stdout: StdioCollector {
             id: wifiOut
             onStreamFinished: {
