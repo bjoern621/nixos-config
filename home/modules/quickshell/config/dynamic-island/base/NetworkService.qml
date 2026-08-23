@@ -69,9 +69,14 @@ Singleton {
     property bool tailscaleAvailable: false
     property bool tailscaleUp: false
 
-    // NM-managed VPN/WireGuard profiles plus Tailscale (a tun device NM cannot
-    // toggle). Tailscale carries the `tailscale` flag so the row routes its
-    // toggle through the CLI instead of `nmcli connection up/down`.
+    // WireGuard over wstunnel, a wg-quick unit NM cannot host. State from
+    // `systemctl show wg-quick-wg-wstunnel.service`, toggled by start/stop.
+    property bool wgWstunnelAvailable: false
+    property bool wgWstunnelUp: false
+
+    // NM-managed VPN/WireGuard profiles plus the two tun tunnels NM cannot toggle.
+    // Each synthetic row carries a flag so VpnRow routes its toggle through the
+    // matching CLI rather than `nmcli connection up/down`.
     readonly property var vpnConnections: {
         const list = _nmVpns.slice();
         if (tailscaleAvailable)
@@ -81,6 +86,14 @@ Singleton {
                 kind: "Tailscale",
                 active: tailscaleUp,
                 tailscale: true
+            });
+        if (wgWstunnelAvailable)
+            list.push({
+                name: "WireGuard (wstunnel)",
+                uuid: "wg-wstunnel",
+                kind: "WireGuard",
+                active: wgWstunnelUp,
+                wgWstunnel: true
             });
         return list;
     }
@@ -171,6 +184,7 @@ Singleton {
         connProc.running = true;
         deviceProc.running = true;
         tailscaleProc.running = true;
+        wgWstunnelProc.running = true;
     }
 
     function _rebuildWifi() {
@@ -242,6 +256,21 @@ Singleton {
                 const t = NetworkUtils.parseTailscale(tailscaleOut.text);
                 root.tailscaleAvailable = t.available;
                 root.tailscaleUp = t.up;
+            }
+        }
+    }
+
+    // The WireGuard-over-wstunnel unit. LoadState "loaded" means this host carries it,
+    // so a row shows; ActiveState "active" means it is up. Not-found -> no row.
+    Process {
+        id: wgWstunnelProc
+        command: ["systemctl", "show", "-p", "LoadState", "-p", "ActiveState", "--value", "wg-quick-wg-wstunnel.service"]
+        stdout: StdioCollector {
+            id: wgWstunnelOut
+            onStreamFinished: {
+                const s = NetworkUtils.parseWgWstunnel(wgWstunnelOut.text);
+                root.wgWstunnelAvailable = s.available;
+                root.wgWstunnelUp = s.up;
             }
         }
     }
@@ -356,6 +385,11 @@ Singleton {
     // matches the synthetic row's uuid.
     function setTailscale(on) {
         _startAction(["tailscale", on ? "up" : "down"], "vpn:tailscale");
+    }
+    // Toggles the wg-quick unit through systemctl start/stop, which pulls the wstunnel
+    // carrier. busyKey "vpn:wg-wstunnel" matches the synthetic row's uuid.
+    function setWgWstunnel(on) {
+        _startAction(["wg-wstunnel", on ? "up" : "down"], "vpn:wg-wstunnel");
     }
 
     function _statusForCode(code) {

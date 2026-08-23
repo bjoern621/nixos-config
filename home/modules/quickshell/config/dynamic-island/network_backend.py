@@ -147,6 +147,19 @@ def cmd_tailscale(argv: list[str]) -> int:
     return 0
 
 
+def cmd_wg_wstunnel(argv: list[str]) -> int:
+    # wg-wstunnel <up|down>
+    # wg-quick unit carried by wstunnel; NetworkManager cannot host either. A polkit
+    # rule (modules/wireguard-wstunnel.nix) lets the user start/stop it without sudo.
+    direction = argv[0]
+    action = "start" if direction == "up" else "stop"
+    _status("VPN_UP" if direction == "up" else "VPN_DOWN")
+    code, output = _run(["systemctl", action, "wg-quick-wg-wstunnel.service"])
+    _echo(output)
+    _connect_result(code, output)
+    return 0
+
+
 def cmd_radio(argv: list[str]) -> int:
     # radio wifi <on|off>
     code, output = _run(["nmcli", "radio", "wifi", argv[1]])
@@ -189,6 +202,7 @@ _COMMANDS = {
     "forget": cmd_forget,
     "vpn": cmd_vpn,
     "tailscale": cmd_tailscale,
+    "wg-wstunnel": cmd_wg_wstunnel,
     "radio": cmd_radio,
     "airplane": cmd_airplane,
     "modify": cmd_modify,

@@ -34,6 +34,7 @@
     ../../modules/fido2-auth.nix
     ../../modules/fonts.nix
     ../../modules/tailscale-client.nix
+    ../../modules/wireguard-wstunnel.nix
     # ../../modules/miracast.nix
     # ../../modules/sunshine.nix
     ../../modules/external-monitors.nix

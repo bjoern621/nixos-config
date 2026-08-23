@@ -369,6 +369,17 @@ function parseTailscale(text) {
     }
 }
 
+// `systemctl show -p LoadState -p ActiveState --value wg-quick-wg-wstunnel.service`,
+// two lines in that order. LoadState "loaded" means this host carries the unit, so a
+// row shows; "not-found" (other hosts) hides it. ActiveState "active" means up.
+function parseWgWstunnel(text) {
+    const lines = text.trim().split("\n");
+    return {
+        available: (lines[0] || "").trim() === "loaded",
+        up: (lines[1] || "").trim() === "active"
+    };
+}
+
 // Wired row state. `unavailable` on an ethernet device means no carrier;
 // `disconnected` means the cable is in but no profile is up, which is where
 // "Trennen" leaves the device (nmcli device disconnect also blocks autoconnect).
