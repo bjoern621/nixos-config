@@ -30,6 +30,9 @@ let
     dataDeps = [
       pkgs.inter # Text
     ];
+    qtDeps = [
+      pkgs.qt6.qtimageformats # webp decode for WallpaperChooser thumbnails
+    ];
   };
 
   # CLI helper for one-time user setup (setup/auth/clear).

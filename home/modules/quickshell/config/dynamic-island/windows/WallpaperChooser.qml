@@ -113,7 +113,7 @@ Scope {
 
     Process {
         id: listProc
-        command: ["bash", "-c", "ls -1 ~/.local/share/wallpapers/*.jpg ~/.local/share/wallpapers/*.png 2>/dev/null | sort"]
+        command: ["bash", "-c", "ls -1 ~/.local/share/wallpapers/*.jpg ~/.local/share/wallpapers/*.png ~/.local/share/wallpapers/*.webp 2>/dev/null | sort"]
         stdout: SplitParser {
             onRead: data => {
                 const line = data.trim();

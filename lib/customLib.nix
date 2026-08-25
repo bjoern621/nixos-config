@@ -50,6 +50,9 @@
   #   giDeps    Derivations prepended to GI_TYPELIB_PATH.
   #             Use for GObject Introspection typelibs (.typelib files).
   #
+  #   qtDeps    Derivations prepended to QT_PLUGIN_PATH.
+  #             Use for Qt plugins loaded at runtime (image formats, platform themes).
+  #
   #   env       Attribute set of arbitrary VAR = "value" pairs set via
   #             --set.  Use for any runtime variable not covered above.
   #
@@ -73,6 +76,7 @@
       libDeps ? [ ],
       gstDeps ? [ ],
       giDeps ? [ ],
+      qtDeps ? [ ],
       env ? { },
     }:
     let
@@ -95,6 +99,7 @@
             (optionalString (libDeps != [ ]) "--prefix LD_LIBRARY_PATH : ${makeLibraryPath libDeps}")
             (optionalString (gstDeps != [ ]) "--prefix GST_PLUGIN_PATH : ${makeSearchPath "lib/gstreamer-1.0" gstDeps}")
             (optionalString (giDeps != [ ]) "--prefix GI_TYPELIB_PATH : ${makeSearchPath "lib/girepository-1.0" giDeps}")
+            (optionalString (qtDeps != [ ]) "--prefix QT_PLUGIN_PATH  : ${makeSearchPath "lib/qt-6/plugins" qtDeps}")
           ]
           ++ mapAttrsToList (k: v: "--set ${k} ${escapeShellArg v}") env
         )
