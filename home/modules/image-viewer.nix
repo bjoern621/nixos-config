@@ -1,21 +1,40 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
+let
+  # imv handles all common raster formats plus SVG via librsvg.
+  imageMimeTypes = [
+    "image/png"
+    "image/jpeg"
+    "image/webp"
+    "image/svg+xml"
+    "image/gif"
+    "image/bmp"
+    "image/tiff"
+    "image/avif"
+    "image/heif"
+  ];
+in
 {
   home.packages = with pkgs; [
-    qimgv
+    imv
   ];
 
-  # Merge a single setting without replacing the full config (qimgv writes its own config at runtime)
-  home.activation.qimgvConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    config="$HOME/.config/qimgv/qimgv.conf"
-    if [ -f "$config" ]; then
-      if $DRY_RUN_CMD grep -q "^infoBarWindowed=" "$config"; then
-        $DRY_RUN_CMD ${pkgs.gnused}/bin/sed -i 's/^infoBarWindowed=.*/infoBarWindowed=true/' "$config"
-      else
-        $DRY_RUN_CMD ${pkgs.gnused}/bin/sed -i '/^\[General\]/a infoBarWindowed=true' "$config"
-      fi
-    fi
+  # Checkerboard behind transparency.
+  # Default black background hides dark line art (transparent SVGs).
+  xdg.configFile."imv/config".text = ''
+    [options]
+    background = checks
   '';
+
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = builtins.listToAttrs (
+      map (mime: {
+        name = mime;
+        value = "imv.desktop";
+      }) imageMimeTypes
+    );
+  };
 
   wayland.windowManager.hyprland.extraLuaFiles."rules.32-image-viewer".content = ./image-viewer.lua;
 }

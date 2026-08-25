@@ -1,1 +1,1 @@
-hl.window_rule({ match = { class = "qimgv" }, float = true })
+hl.window_rule({ match = { class = "imv" }, float = true })
