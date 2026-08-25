@@ -46,11 +46,18 @@ hl.config({
 })
 
 -- Drag binds (old bindm): move/resize windows by dragging.
-hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true, drag = true })
-hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true, drag = true })
-hl.bind("mouse:276", hl.dsp.window.drag(), { mouse = true, drag = true })
-hl.bind("mouse:275", hl.dsp.window.resize(), { mouse = true, drag = true })
+-- No drag = true: it forces fire-on-release, and the release latch
+-- swallows the first press after typing (hyprwm/Hyprland#15700).
+-- Fire-on-press suffices: drag ends on button release,
+-- and DragController holds the window until drag_threshold is crossed.
+-- mouse = true is unread by the Lua parser; kept as the wiki's bindm marker.
+hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
+hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
+hl.bind("mouse:276", hl.dsp.window.drag(), { mouse = true })
+hl.bind("mouse:275", hl.dsp.window.resize(), { mouse = true })
 
 -- Click binds (old bindc): press and release without crossing drag_threshold.
+-- click = true shares the #15700 release latch, so the first click after
+-- typing may also be swallowed; threshold gating needs the flag regardless.
 hl.bind("SUPER + mouse:272", hl.dsp.window.float({ action = "toggle" }), { mouse = true, click = true })
 hl.bind("mouse:276", hl.dsp.window.float({ action = "toggle" }), { mouse = true, click = true })
