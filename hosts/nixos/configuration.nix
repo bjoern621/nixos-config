@@ -25,6 +25,7 @@
     ../../modules/dns.nix
     ../../modules/networkmanager-openvpn.nix
     ../../modules/proxy-domains-only-via-vpn.nix
+    ../../modules/vpn-ipv6-leak-block.nix
     ../../modules/quickshell.nix
     ../../modules/quickshell-lock.nix
     ../../modules/hibernate.nix
