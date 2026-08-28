@@ -24,6 +24,7 @@
     ../../modules/eduvpn-escape.nix
     ../../modules/dns.nix
     ../../modules/networkmanager-openvpn.nix
+    ../../modules/proxy-domains-only-via-vpn.nix
     ../../modules/quickshell.nix
     ../../modules/quickshell-lock.nix
     ../../modules/hibernate.nix
