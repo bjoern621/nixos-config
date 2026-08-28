@@ -18,10 +18,18 @@ Item {
     // on one monitor never animates the (hidden) scenes on the others.
     property bool active: false
 
-    readonly property int sceneHeight: Math.max(150, Math.min(220, Math.round(width * 0.26)))
+    // Pure width->height so CalendarMenu can predict the widget's height for a
+    // candidate width without a binding loop through the live width.
+    function _sceneHeightFor(w) {
+        return Math.max(150, Math.min(220, Math.round(w * 0.26)));
+    }
+    function predictedHeight(w) {
+        return _sceneHeightFor(w) + Spacing.spacing8 + ribbonHeight + Spacing.spacing4 + axisHeight;
+    }
+    readonly property int sceneHeight: _sceneHeightFor(width)
     readonly property int ribbonHeight: 30
     readonly property int axisHeight: 14
-    implicitHeight: sceneHeight + Spacing.spacing8 + ribbonHeight + Spacing.spacing4 + axisHeight
+    implicitHeight: predictedHeight(width)
 
     // Live wall-clock hour, used to place "now" within the fixed window.
     readonly property real liveHour: {

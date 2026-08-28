@@ -469,6 +469,10 @@ Variants {
                     width: implicitWidth
                     height: implicitHeight
                     weatherActive: calendarHoverItem.popupOpen
+                    // Budget below pill: rest y 4 + pill 32 + menu gap 4 + 8 bottom margin.
+                    // Constant, not calendarAnchor.y: pill.y animates and a live read
+                    // would flip cell size mid-slide.
+                    maxHeight: root.screen.height - 48
                 }
             }
 
