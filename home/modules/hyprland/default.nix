@@ -33,6 +33,7 @@
     ./floating-size.nix
     ./wallpaper-chooser.nix
     ./theme-switcher.nix
+    ./hdr-toggle.nix
     ./hypridle.nix
   ];
 

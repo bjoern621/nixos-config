@@ -3,7 +3,9 @@
 -- display sits centered beneath them. eDP-1 is 1472 logical wide
 -- (2944 at scale 2) and the externals span 5120, so centering it puts
 -- its origin at 2560 - 736 = 1824.
-hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2 })
+-- bitdepth 10: panel is 10 bpc; XRGB2101010 is 32bpp like XRGB8888, so free.
+-- cm stays srgb; hdr-toggle flips it at runtime and partial hl.monitor specs latch.
+hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10 })
 -- 1440p144 works because services.amdgpuForceHbr3 forces HBR3
 -- link training on every DP hotplug event, bypassing the broken
 -- DPIA AUX cap probe through the CalDigit TS5 Plus dock.
@@ -34,6 +36,6 @@ hl.bind(
 )
 hl.bind(
     "switch:off:Lid Switch",
-    hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, disabled = false })']]),
+    hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10, disabled = false })']]),
     { locked = true }
 )

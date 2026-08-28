@@ -22,9 +22,9 @@ let
     # scale 2 -> 1 -> 2 toggle that forces the recompute.
     set -euo pipefail
 
-    hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1088x1440", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })' > /dev/null
+    hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1088x1440", scale = 1, bitdepth = 10 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })' > /dev/null
 
-    hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })' > /dev/null
+    hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 }); hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })' > /dev/null
 
     echo "Monitors re-applied. Cursor wall and bar offset should be cleared."
   '';
