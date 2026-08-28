@@ -89,7 +89,7 @@ Singleton {
             });
         if (wgWstunnelAvailable)
             list.push({
-                name: "WireGuard (wstunnel)",
+                name: "Hamburg (wstunnel TCP)",
                 uuid: "wg-wstunnel",
                 kind: "WireGuard",
                 active: wgWstunnelUp,
