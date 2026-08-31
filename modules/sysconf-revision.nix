@@ -51,6 +51,13 @@ in
       sysconf_installed_commit_time_seconds{revision="${rev}",dirty="${lib.boolToString dirty}"} ${toString (self.lastModified or 0)}
     '';
 
+    # Ties the unit to the metric text: every new revision lands as a unit
+    # change, so the switch restarts (or first starts) the exporter. A unit
+    # that is merely new in a generation can otherwise stay stopped.
+    systemd.services.prometheus-node-exporter.restartTriggers = [
+      config.environment.etc."sysconf-metrics/sysconf.prom".text
+    ];
+
     services.telemetry-agent.scrapeConfigs = [
       {
         job_name = "sysconf";
