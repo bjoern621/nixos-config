@@ -201,6 +201,14 @@ in
                 from = "body.MESSAGE";
                 to = "body";
               }
+              # dbus-broker-launch reports XDG service-file shadowing at err
+              # priority on every activation. The duplicates are the stock
+              # NixOS layout (system-path beside per-package dirs), so the
+              # noise is permanent and drowns the error-level view.
+              {
+                type = "filter";
+                expr = ''attributes["syslog_identifier"] == "dbus-broker-launch" and body matches "^Ignoring duplicate name"'';
+              }
             ];
           };
 
