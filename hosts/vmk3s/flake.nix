@@ -19,22 +19,32 @@
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
       customLib = import ../../lib/customLib.nix { inherit pkgs; };
+
+      baseModules = [
+        ./configuration.nix
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";
+          home-manager.users.ops = import ../../home/ops.nix;
+          home-manager.extraSpecialArgs = { inherit inputs customLib; };
+        }
+      ];
+
+      mkSystem =
+        modules:
+        nixpkgs.lib.nixosSystem {
+          modules = baseModules ++ modules;
+          specialArgs = { inherit inputs customLib; };
+        };
     in
     {
-      nixosConfigurations.vmk3s = nixpkgs.lib.nixosSystem {
-        modules = [
-          ./configuration.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
-            home-manager.users.ops = import ../../home/ops.nix;
-            home-manager.extraSpecialArgs = { inherit inputs customLib; };
-          }
-        ];
+      nixosConfigurations.vmk3s = mkSystem [ ];
 
-        specialArgs = { inherit inputs customLib; };
-      };
+      # What CI builds.
+      # The machine's hardware-configuration.nix reaches the repo only on the machine,
+      # so a runner needs the stub to get as far as the package set.
+      nixosConfigurations.vmk3s-ci = mkSystem [ ../../modules/ci-hardware-stub.nix ];
     };
 }

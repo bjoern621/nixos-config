@@ -1,9 +1,9 @@
 name: Update flake locks (stable)
 
 # Pins each host flake.lock to github input revisions at least DELAY_DAYS old,
-# opens a PR and merges it immediately.
-# The merge lands the new pins on main;
-# each host picks them up on its next sysconf-auto-pull.
+# opens a PR, and merges it once every host in the build matrix builds against the new pins.
+# A failed build leaves the PR open, and the next run updates the same branch and retries.
+# The merge lands the new pins on main, and each host picks them up on its next sysconf-auto-pull.
 # The hosts never compute their own revisions,
 # so this is the single place updates enter the system.
 
@@ -23,6 +23,10 @@ permissions:
 jobs:
   update-locks:
     runs-on: ubuntu-latest
+    outputs:
+      pr-number: ${{ steps.cpr.outputs.pull-request-number }}
+      pr-sha: ${{ steps.cpr.outputs.pull-request-head-sha }}
+      pr-operation: ${{ steps.cpr.outputs.pull-request-operation }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,10 +50,85 @@ jobs:
           commit-message: "chore: stable flake.lock update"
           body-path: ${{ runner.temp }}/pr-body.md
 
-      # Merges without waiting on checks,
-      # mirroring Renovate's ignoreTests automerge in hh-cluster-infra.
+  # Gates the merge on the same closure `sysconf-reload` builds,
+  # short of activation, which no runner can perform.
+  #
+  # homelab and vmk3s build their `-ci` attribute,
+  # which layers modules/ci-hardware-stub.nix over the placeholder hardware-configuration.nix
+  # those hosts commit.
+  #
+  # nixos builds `nixos-ci`, which drops howdy for the reason given in hosts/nixos/flake.nix.
+  # It is still the long leg,
+  # since quickshell, nixd and lanzaboote follow nixpkgs rather than a cache of their own.
+  build:
+    needs: update-locks
+    if: needs.update-locks.outputs.pr-operation == 'created' || needs.update-locks.outputs.pr-operation == 'updated'
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dir: netcup-g12
+            attr: netcup-g12
+            runner: ubuntu-latest
+          - dir: homelab
+            attr: homelab-ci
+            runner: ubuntu-latest
+          - dir: vmk3s
+            attr: vmk3s-ci
+            runner: ubuntu-latest
+          # Native aarch64 rather than emulation. Free on public repositories.
+          - dir: pi-4b-hh
+            attr: pi-4b-hh
+            runner: ubuntu-24.04-arm
+          - dir: nixos
+            attr: nixos-ci
+            runner: ubuntu-latest
+            # The screen-sharing input is a path: to a working tree no runner has.
+            override: --override-input screen-sharing path:$GITHUB_WORKSPACE/.github/ci/screen-sharing-stub
+            reclaim-disk: true
+    steps:
+      # Full history: nix resolves a workdir flake ref through git,
+      # and a shallow clone has no revision for it to read.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.update-locks.outputs.pr-sha }}
+          fetch-depth: 0
+
+      # The preinstalled toolchains outweigh what is left for the store,
+      # and only the nixos closure comes close to filling it.
+      - name: Reclaim runner disk
+        if: matrix.reclaim-disk
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /usr/lib/jvm /usr/local/.ghcup
+          df -h /
+
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          # Hyprland is built against its own nixpkgs pin, which no other substituter carries.
+          extra-conf: |
+            extra-substituters = https://hyprland.cachix.org
+            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+
+      # The host directories read ../../modules and ../../lib,
+      # so the ref resolves against the repo root with ?dir=hosts/<dir> rather than the host directory alone.
+      #
+      # --no-write-lock-file: an override would otherwise re-lock the committed file.
+      - name: Build ${{ matrix.attr }}
+        run: |
+          nix build --no-link --print-build-logs --no-write-lock-file ${{ matrix.override }} \
+            "./hosts/${{ matrix.dir }}#nixosConfigurations.${{ matrix.attr }}.config.system.build.toplevel"
+
+  merge:
+    needs: [update-locks, build]
+    runs-on: ubuntu-latest
+    steps:
+      # Merges without waiting on branch protection checks,
+      # which the build job above has already stood in for.
       - name: Merge pull request
-        if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh pr merge --merge "${{ steps.cpr.outputs.pull-request-number }}"
+        run: gh pr merge --merge -R "${{ github.repository }}" "${{ needs.update-locks.outputs.pr-number }}"
