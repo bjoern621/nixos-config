@@ -51,12 +51,22 @@ in
       sysconf_installed_commit_time_seconds{revision="${rev}",dirty="${lib.boolToString dirty}"} ${toString (self.lastModified or 0)}
     '';
 
-    # Ties the unit to the metric text: every new revision lands as a unit
-    # change, so the switch restarts (or first starts) the exporter. A unit
-    # that is merely new in a generation can otherwise stay stopped.
-    systemd.services.prometheus-node-exporter.restartTriggers = [
-      config.environment.etc."sysconf-metrics/sysconf.prom".text
-    ];
+    # switch-to-configuration only diffs units it sees as active, and starts
+    # new units by restarting active targets. On a host whose
+    # multi-user.target has gone inactive neither path runs, and the exporter
+    # stays dead after every switch. The activation list bypasses both:
+    # listed units start when inactive and restart when active.
+    system.activationScripts.sysconf-revision = {
+      supportsDryActivation = true;
+      text = ''
+        mkdir -p /run/nixos
+        if [ "$NIXOS_ACTION" = dry-activate ]; then
+          echo prometheus-node-exporter.service >> /run/nixos/dry-activation-restart-list
+        else
+          echo prometheus-node-exporter.service >> /run/nixos/activation-restart-list
+        fi
+      '';
+    };
 
     services.telemetry-agent.scrapeConfigs = [
       {
