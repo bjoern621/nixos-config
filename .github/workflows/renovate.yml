@@ -1,0 +1,55 @@
+name: Renovate
+
+# Runs a patched Renovate from source; see .github/renovate/README.md.
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # Daily 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      log_level:
+        description: "Renovate log level"
+        default: "info"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  RENOVATE_VERSION: 44.52.1
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check out Renovate and apply the aged-maintenance patch
+        run: |
+          git clone --depth 1 --branch "$RENOVATE_VERSION" https://github.com/renovatebot/renovate.git "$RUNNER_TEMP/renovate"
+          git -C "$RUNNER_TEMP/renovate" apply "$GITHUB_WORKSPACE/.github/renovate/nix-aged-lock-maintenance.patch"
+
+      - name: Install Renovate dependencies
+        working-directory: ${{ runner.temp }}/renovate
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Run Renovate
+        working-directory: ${{ runner.temp }}/renovate
+        env:
+          RENOVATE_TOKEN: ${{ github.token }}
+          GITHUB_COM_TOKEN: ${{ github.token }}
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_BINARY_SOURCE: global
+          RENOVATE_ONBOARDING: "false"
+          RENOVATE_USERNAME: "github-actions[bot]"
+          RENOVATE_GIT_AUTHOR: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          LOG_LEVEL: ${{ github.event.inputs.log_level || 'info' }}
+        run: node lib/renovate.ts

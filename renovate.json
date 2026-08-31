@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "timezone": "Europe/Berlin",
+  "enabledManagers": ["nix"],
+  "nix": {
+    "enabled": true,
+    "managerFilePatterns": ["/^hosts/[^/]+/flake\\.nix$/"]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "minimumReleaseAge": "7 days",
+    "schedule": ["at any time"],
+    "commitMessageAction": "Stable flake.lock update"
+  },
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0
+}
