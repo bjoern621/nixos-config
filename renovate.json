@@ -3,9 +3,9 @@
   "timezone": "Europe/Berlin",
   "enabledManagers": ["nix"],
   "nix": {
-    "enabled": true,
-    "managerFilePatterns": ["/^hosts/[^/]+/flake\\.nix$/"]
+    "enabled": true
   },
+  "ignorePaths": ["flake.nix", "home/**"],
   "lockFileMaintenance": {
     "enabled": true,
     "minimumReleaseAge": "7 days",
