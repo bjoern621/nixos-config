@@ -203,7 +203,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Node ready",
+      "title": "Nodes ready",
       "gridPos": { "h": 6, "w": 4, "x": 0, "y": 6 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -230,13 +230,13 @@
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "orientation": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto"
       },
       "targets": [
-        { "refId": "A", "expr": "min(max by (k8s_node_name) (k8s_node_condition_ready))", "legendFormat": "ready" }
+        { "refId": "A", "expr": "min by (k8s_node_name) (k8s_node_condition_ready)", "legendFormat": "{{k8s_node_name}}" }
       ]
     },
     {
@@ -565,22 +565,22 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "time() - max(timestamp(last_over_time(system_memory_usage_bytes{k8s_node_name=\"vmk3s\"}[6h])))",
+          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{k8s_node_name=\"vmk3s\"}[6h]))",
           "legendFormat": "vmk3s"
         },
         {
           "refId": "D",
-          "expr": "time() - max(timestamp(last_over_time(system_memory_usage_bytes{k8s_node_name=\"netcup-g12\"}[6h])))",
+          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{k8s_node_name=\"netcup-g12\"}[6h]))",
           "legendFormat": "netcup-g12"
         },
         {
           "refId": "B",
-          "expr": "time() - max(timestamp(last_over_time(system_memory_usage_bytes{host_name=\"homelab\"}[6h])))",
+          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{host_name=\"homelab\"}[6h]))",
           "legendFormat": "homelab"
         },
         {
           "refId": "C",
-          "expr": "time() - max(timestamp(last_over_time(system_memory_usage_bytes{host_name=\"pi-4b-hh\"}[6h])))",
+          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{host_name=\"pi-4b-hh\"}[6h]))",
           "legendFormat": "pi-4b-hh"
         }
       ]

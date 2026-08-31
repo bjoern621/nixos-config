@@ -34,6 +34,12 @@ in
 
   time.timeZone = "Europe/Berlin";
 
+  # No login getty on the serial console. The hypervisor exposes /dev/ttyS0
+  # without a connected backend, so agetty fails isatty ("/dev/ttyS0: not a
+  # tty") and Restart=always turns that into an error-log entry every 10s.
+  # console=ttyS0 (modules/server-base.nix) stays for early boot output.
+  systemd.services."serial-getty@ttyS0".enable = false;
+
   # Second node of the hh cluster, joining the vmk3s server over the tailnet.
   # See docs/k3s-cluster.md for what schedules here and how a workload asks to.
   services.k3s-tailnet = {
