@@ -1,0 +1,2212 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "The screen-sharing relay on the cluster. The top two rows read the kubelet and the node agent; the rows below read the relay's and the group service's own metrics listeners. A panel down there with no data names something that does not exist at the moment: no group, no stream, no kick. Whether the listeners answer at all is the Exporters panel.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "panels": [],
+      "title": "The pod, from the kubelet",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Available against desired. One replica by design: the media legs are host ports and two pods cannot hold the same ones, so a rollout recreates rather than overlaps.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "no reading",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "max(k8s_deployment_available{k8s_namespace_name=\"screenshare\"})",
+          "legendFormat": "available",
+          "refId": "A"
+        },
+        {
+          "expr": "max(k8s_deployment_desired{k8s_namespace_name=\"screenshare\"})",
+          "legendFormat": "desired",
+          "refId": "B"
+        }
+      ],
+      "title": "Replicas",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Summed over the three containers, each counted once whatever pod carried it. The relay restarting takes every stream with it.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 3,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(max by (k8s_container_name) (k8s_container_restarts{k8s_namespace_name=\"screenshare\"}))",
+          "legendFormat": "restarts",
+          "refId": "A"
+        }
+      ],
+      "title": "Restarts",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Into the pod's interface. Every media leg is a host port the node forwards here, so this carries the publishers and the proxy's traffic together.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "min": 0,
+          "noValue": "0",
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 6,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "8 * sum(rate(k8s_pod_network_io_bytes_total{k8s_namespace_name=\"screenshare\", direction=\"receive\"}[$__rate_interval]))",
+          "legendFormat": "in",
+          "refId": "A"
+        }
+      ],
+      "title": "Ingress",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Out of the pod's interface, which is the leg the VPS pays for.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "min": 0,
+          "noValue": "0",
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 10,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "8 * sum(rate(k8s_pod_network_io_bytes_total{k8s_namespace_name=\"screenshare\", direction=\"transmit\"}[$__rate_interval]))",
+          "legendFormat": "out",
+          "refId": "A"
+        }
+      ],
+      "title": "Egress",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Egress over ingress. One publisher watched by three reads 3, and the figure is what turns a publish bitrate into an uplink bill. An idle pod reads near 1 on housekeeping traffic alone.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "min": 0,
+          "noValue": "0",
+          "unit": "suffix:×"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 14,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(k8s_pod_network_io_bytes_total{k8s_namespace_name=\"screenshare\", direction=\"transmit\"}[$__rate_interval])) / clamp_min(sum(rate(k8s_pod_network_io_bytes_total{k8s_namespace_name=\"screenshare\", direction=\"receive\"}[$__rate_interval])), 1)",
+          "legendFormat": "fan-out",
+          "refId": "A"
+        }
+      ],
+      "title": "Fan-out",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Against the pod's limits together. The relay holds three of the node's four cores because what it costs is the streams on it, and nothing in the manifest decides how many that is.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "max": 1,
+          "min": 0,
+          "noValue": "no reading",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "orange",
+                "value": 0.75
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "max(k8s_pod_cpu_usage{k8s_namespace_name=\"screenshare\"}) / sum(max by (k8s_container_name) (k8s_container_cpu_limit{k8s_namespace_name=\"screenshare\"}))",
+          "legendFormat": "cpu",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Working set against the pod's limits together.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "max": 1,
+          "min": 0,
+          "noValue": "no reading",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "orange",
+                "value": 0.75
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "max(k8s_pod_memory_working_set_bytes{k8s_namespace_name=\"screenshare\"}) / sum(max by (k8s_container_name) (k8s_container_memory_limit_bytes{k8s_namespace_name=\"screenshare\"}))",
+          "legendFormat": "memory",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 101,
+      "panels": [],
+      "title": "Traffic and resources, from the kubelet and the node agent",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Both legs on one axis, so the gap between them is the fan-out. The kubelet counts bytes at the pod's interface and knows nothing about which stream or which member they belong to.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 1,
+          "min": 0,
+          "unit": "bps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "in"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "out"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "8 * sum(rate(k8s_pod_network_io_bytes_total{k8s_namespace_name=\"screenshare\", direction=\"receive\"}[$__rate_interval]))",
+          "legendFormat": "in",
+          "refId": "A"
+        },
+        {
+          "expr": "8 * sum(rate(k8s_pod_network_io_bytes_total{k8s_namespace_name=\"screenshare\", direction=\"transmit\"}[$__rate_interval]))",
+          "legendFormat": "out",
+          "refId": "B"
+        }
+      ],
+      "title": "Pod ingress and egress",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "The node's own counters, one series per interface and direction. eth0 is the public address clients reach; tailscale0 is the tunnel the node joined the cluster over, so cluster traffic and media traffic are separable here and nowhere else.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 1,
+          "min": 0,
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "8 * sum by (device) (rate(system_network_io_bytes_total{k8s_node_name=\"netcup-g12\", direction=\"receive\", device!~\"lo|veth.*|cni.*|flannel.*|docker.*\"}[$__rate_interval]))",
+          "legendFormat": "{{device}} in",
+          "refId": "A"
+        },
+        {
+          "expr": "8 * sum by (device) (rate(system_network_io_bytes_total{k8s_node_name=\"netcup-g12\", direction=\"transmit\", device!~\"lo|veth.*|cni.*|flannel.*|docker.*\"}[$__rate_interval]))",
+          "legendFormat": "{{device}} out",
+          "refId": "B"
+        }
+      ],
+      "title": "Node interfaces",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Usage is the pod's, the limit the three containers' together. The kubelet reports no per-container usage, so which of the three is spending it is not a question this reading answers.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 2,
+          "min": 0,
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "limit"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "max(k8s_pod_cpu_usage{k8s_namespace_name=\"screenshare\"})",
+          "legendFormat": "cores used",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(max by (k8s_container_name) (k8s_container_cpu_limit{k8s_namespace_name=\"screenshare\"}))",
+          "legendFormat": "limit",
+          "refId": "B"
+        }
+      ],
+      "title": "CPU against the pod's limits",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Working set is what the kubelet would evict on. RSS beside it is what the processes hold.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 1,
+          "min": 0,
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "limit"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "max(k8s_pod_memory_working_set_bytes{k8s_namespace_name=\"screenshare\"})",
+          "legendFormat": "working set",
+          "refId": "A"
+        },
+        {
+          "expr": "max(k8s_pod_memory_rss_bytes{k8s_namespace_name=\"screenshare\"})",
+          "legendFormat": "rss",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(max by (k8s_container_name) (k8s_container_memory_limit_bytes{k8s_namespace_name=\"screenshare\"}))",
+          "legendFormat": "limit",
+          "refId": "C"
+        }
+      ],
+      "title": "Memory against the pod's limits",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 102,
+      "panels": [],
+      "title": "Groups and members, from the group service's metrics listener",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "One bar per group holding a lease. A group is named by its prefix, the base32 a key derives, which is the one name the relay and the group service share.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "min": 0,
+          "noValue": "no group holds a lease",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "id": 30,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "valueMode": "text"
+      },
+      "targets": [
+        {
+          "expr": "groupd_members{group=~\"$group\"}",
+          "instant": true,
+          "legendFormat": "{{group}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Members per group",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "One row per member holding a live lease. The name is the one the app stated. The member id the relay logs a connection under is a keyed digest of it and never leaves the group.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "noValue": "no member holds a lease"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Publishing"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "no": {
+                        "color": "text",
+                        "index": 1,
+                        "text": "watching"
+                      },
+                      "yes": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "publishing"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 23
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Group"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "groupd_member_live{group=~\"$group\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Who is connected",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster": true,
+              "instance": true,
+              "job": true,
+              "otel_scope_name": true,
+              "otel_scope_version": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "group": "Group",
+              "member": "Member",
+              "publishing": "Publishing"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "The three counts on one axis. A member count climbing while the group count holds is a group filling up; both climbing is a second group starting.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "decimals": 0,
+          "min": 0,
+          "noValue": "not scraped",
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "groups"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "members"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "publishing"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(groupd_groups)",
+          "legendFormat": "groups",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(groupd_members{group=~\"$group\"}) or (sum(up{job=\"screenshare-groupd\"}) * 0)",
+          "legendFormat": "members",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(groupd_members_publishing{group=~\"$group\"}) or (sum(up{job=\"screenshare-groupd\"}) * 0)",
+          "legendFormat": "publishing",
+          "refId": "C"
+        }
+      ],
+      "title": "Groups, members and publishers",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 103,
+      "panels": [],
+      "title": "Streams and transports, from the relay's metrics listener",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Relay paths carrying a track. A path something connected to but has not established a track on is not ready and is not counted.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "not scraped",
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 39
+      },
+      "id": 40,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "count(paths{state=\"ready\"}) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "ready",
+          "refId": "A"
+        }
+      ],
+      "title": "Live streams",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Every connection the relay holds, publish and read alike, across all of its listeners.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "not scraped",
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 39
+      },
+      "id": 41,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum({__name__=~\"srt_conns|rtsps?_sessions|rtmps?_conns|webrtc_sessions|hls_muxers|moq_sessions\", job=\"screenshare-relay\"}) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "connections",
+          "refId": "A"
+        }
+      ],
+      "title": "Connections",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Summed over the relay's own path counters. Below the pod reading above it is the proxy and the housekeeping the relay does not see.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "min": 0,
+          "noValue": "not scraped",
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 39
+      },
+      "id": 42,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "8 * sum(rate(paths_inbound_bytes[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "in",
+          "refId": "A"
+        }
+      ],
+      "title": "Ingress, as the relay counts it",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Summed over the relay's own path counters, which attribute the bytes to a stream where the pod's interface cannot.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "min": 0,
+          "noValue": "not scraped",
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 39
+      },
+      "id": 43,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "8 * sum(rate(paths_outbound_bytes[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "out",
+          "refId": "A"
+        }
+      ],
+      "title": "Egress, as the relay counts it",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Which listener the bytes leave through. The TLS and cleartext listeners of one protocol are summed into the one transport name the app uses, the split readerKinds already carries.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "decimals": 1,
+          "min": 0,
+          "noValue": "not scraped",
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 43
+      },
+      "id": 44,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "8 * sum(rate(srt_conns_bytes_sent[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "srt",
+          "refId": "A"
+        },
+        {
+          "expr": "8 * sum(rate({__name__=~\"rtsps?_sessions_outbound_bytes\"}[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "rtsp",
+          "refId": "B"
+        },
+        {
+          "expr": "8 * sum(rate({__name__=~\"rtmps?_conns_outbound_bytes\"}[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "rtmp",
+          "refId": "C"
+        },
+        {
+          "expr": "8 * sum(rate(webrtc_sessions_outbound_bytes[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "webrtc",
+          "refId": "D"
+        },
+        {
+          "expr": "8 * sum(rate(hls_muxers_outbound_bytes[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "hls",
+          "refId": "E"
+        },
+        {
+          "expr": "8 * sum(rate(moq_sessions_outbound_bytes[$__rate_interval])) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "moq",
+          "refId": "F"
+        }
+      ],
+      "title": "Egress by transport",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "A viewer reconnecting on its own shows here as a step down and back up.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "decimals": 0,
+          "min": 0,
+          "noValue": "not scraped",
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 43
+      },
+      "id": 45,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(srt_conns) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "srt",
+          "refId": "A"
+        },
+        {
+          "expr": "sum({__name__=~\"rtsps?_sessions\"}) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "rtsp",
+          "refId": "B"
+        },
+        {
+          "expr": "sum({__name__=~\"rtmps?_conns\"}) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "rtmp",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(webrtc_sessions) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "webrtc",
+          "refId": "D"
+        },
+        {
+          "expr": "sum(hls_muxers) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "hls",
+          "refId": "E"
+        },
+        {
+          "expr": "sum(moq_sessions) or (sum(up{job=\"screenshare-relay\"}) * 0)",
+          "legendFormat": "moq",
+          "refId": "F"
+        }
+      ],
+      "title": "Connections by transport",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "One line per publisher, times the viewers reading it. A stream nobody watches costs nothing here however high its ingress.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 1,
+          "min": 0,
+          "noValue": "no streams",
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 51
+      },
+      "id": 46,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "8 * sum by (name) (rate(paths_outbound_bytes[$__rate_interval]))",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Egress per stream",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "SRT is the default publish transport and the one leg no proxy wraps, so a bad uplink reads here before a viewer reports a stutter.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 2,
+          "min": 0,
+          "noValue": "no SRT connections",
+          "unit": "pps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 51
+      },
+      "id": 47,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(srt_conns_packets_send_loss[$__rate_interval]))",
+          "legendFormat": "sent, lost",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(srt_conns_packets_received_loss[$__rate_interval]))",
+          "legendFormat": "received, lost",
+          "refId": "B"
+        }
+      ],
+      "title": "SRT packets lost",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "The relay configures one wildcard path, so a path listed here is one something connected to. Readers is the relay's own count of who is reading it, which is the closest thing to an audience that does not go through the group service. A path under public/ is outside membership: no key derives that prefix and anybody may read it.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "noValue": "no paths"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "notReady": {
+                        "color": "orange",
+                        "index": 1,
+                        "text": "starting"
+                      },
+                      "ready": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "ready"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Readers"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "In"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Out"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 59
+      },
+      "id": 48,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": [
+            "Readers",
+            "In",
+            "Out"
+          ],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Out"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "paths{name!=\"\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (name) (paths_readers)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "8 * sum by (name) (rate(paths_inbound_bytes[$__rate_interval]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "expr": "8 * sum by (name) (rate(paths_outbound_bytes[$__rate_interval]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "D"
+        }
+      ],
+      "title": "Paths the relay carries",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "name",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Value #A": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "cluster": true,
+              "cluster 1": true,
+              "cluster 2": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "otel_scope_name": true,
+              "otel_scope_version": true,
+              "state 2": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value #B": "Readers",
+              "Value #C": "In",
+              "Value #D": "Out",
+              "name": "Stream",
+              "state": "State",
+              "state 1": "State"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 104,
+      "panels": [],
+      "title": "Membership enforcement, from the group service's metrics listener",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Whether both metrics listeners answered their last scrape. The relay counts bytes and connections; only the group service knows which member holds one, so a dark half of this dashboard is one of these being down.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "a scrape failed"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "both answering"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "neither exporter is scraped",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 67
+      },
+      "id": 50,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "min(up{job=~\"screenshare-.*\"})",
+          "legendFormat": "up",
+          "refId": "A"
+        }
+      ],
+      "title": "Exporters",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "A close the relay would not carry out. Each is a member whose lease lapsed and who is possibly still watching, which is why it is not folded into the count of what was closed.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "not scraped",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 67
+      },
+      "id": 51,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(groupd_kicks_failed_total[1h])) or (sum(up{job=\"screenshare-groupd\"}) * 0)",
+          "legendFormat": "refused",
+          "refId": "A"
+        }
+      ],
+      "title": "Kicks refused (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "A per-protocol list a sweep could not read, so that sweep saw fewer connections than exist. Same consequence as a refused kick and counted apart from it.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "not scraped",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 67
+      },
+      "id": 52,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(groupd_relay_lists_unread_total[1h])) or (sum(up{job=\"screenshare-groupd\"}) * 0)",
+          "legendFormat": "unread",
+          "refId": "A"
+        }
+      ],
+      "title": "Lists unread (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "A run of refusals is somebody holding a key this deployment does not sign for.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "not scraped",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "orange",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 67
+      },
+      "id": 53,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(groupd_tokens_issued_total{result=\"refused\"}[1h]))",
+          "legendFormat": "refused",
+          "refId": "A"
+        }
+      ],
+      "title": "Tokens refused (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "What enforcement takes off the relay, by the list the kick went to. A sweep runs on every membership change and on every read, so a flat line with members leaving is a sweep that is not finding them.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "decimals": 2,
+          "min": 0,
+          "noValue": "not scraped",
+          "unit": "ops"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "refused.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 71
+      },
+      "id": 54,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (transport) (rate(groupd_kicks_total[$__rate_interval]))",
+          "legendFormat": "closed {{transport}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (transport) (rate(groupd_kicks_failed_total[$__rate_interval]))",
+          "legendFormat": "refused {{transport}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Connections closed",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "description": "Leases stated, released and lapsed. A release is an app that closed. A lapse is one that stopped refreshing, which a crash and a dead network look identical from here.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 2,
+          "min": 0,
+          "noValue": "not scraped",
+          "unit": "ops"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "lapsed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 71
+      },
+      "id": 55,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(groupd_leases_stated_total[$__rate_interval]))",
+          "legendFormat": "stated",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(groupd_leases_released_total[$__rate_interval]))",
+          "legendFormat": "released",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(groupd_leases_lapsed_total[$__rate_interval]))",
+          "legendFormat": "lapsed",
+          "refId": "C"
+        }
+      ],
+      "title": "Lease churn",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": [
+    "screenshare",
+    "relay",
+    "groups"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "definition": "label_values(groupd_members, group)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Group",
+        "multi": true,
+        "name": "group",
+        "options": [],
+        "query": "label_values(groupd_members, group)",
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Relay, groups and members",
+  "uid": "relay-groups",
+  "version": 1,
+  "weekStart": ""
+}
