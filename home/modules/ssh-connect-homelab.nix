@@ -19,22 +19,25 @@
         ServerAliveInterval = 0;
       };
 
+      # mDNS names, not bare hostnames: MagicDNS' search domain captures a
+      # bare name first and the tailnet ACL keeps 22 closed. Remote
+      # management goes through the wireguard tunnel.
       homelab = {
-        HostName = "homelab";
+        HostName = "homelab.local";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
       };
 
       vmk3s = {
-        HostName = "vmk3s";
+        HostName = "vmk3s.local";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
       };
 
       pi-4b-hh = {
-        HostName = "pi-4b-hh";
+        HostName = "pi-4b-hh.local";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
