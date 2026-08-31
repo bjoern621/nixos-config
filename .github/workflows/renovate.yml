@@ -14,6 +14,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  statuses: write
 
 env:
   RENOVATE_VERSION: 44.52.1
