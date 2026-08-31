@@ -11,17 +11,9 @@ keys:
   - &host_netcup_g12 age1gs5ah3yvpysyqt5sjn3wt7at6gkqwuzr8v5ea5680rs9r7y2efwsntr8kx
 
 creation_rules:
-  # The relay's secrets, which only the relay decrypts. Listed before the rule below because
-  # sops takes the first path that matches, and a secret readable by every host is one this
-  # host has no reason to hold.
-  - path_regex: secrets/screenshare-relay\.yaml$
-    key_groups:
-      - age:
-          - *admin_bjoern
-          - *host_netcup_g12
-
-  # The k3s join token, which only the agent presents. Listed before the rule below for the
-  # same reason: a token that admits a machine to the cluster is not one every host holds.
+  # The k3s join token, which only the agent presents. Listed before the catch-all because
+  # sops takes the first path that matches, and a token that admits a machine to the cluster
+  # is not one every host holds.
   - path_regex: secrets/k3s-agent\.yaml$
     key_groups:
       - age:
