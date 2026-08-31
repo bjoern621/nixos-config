@@ -44,6 +44,11 @@
     address = "fe80::1";
     interface = "eth0";
   };
+  # netcup RAs advertise the same fe80::1 gateway at the same metric as the
+  # static route, so every RA fails its route insert and logs a kernel error
+  # ("ndisc_router_discovery failed to add default route"). Everything the RA
+  # would provide is configured statically above.
+  boot.kernel.sysctl."net.ipv6.conf.eth0.accept_ra" = 0;
   networking.nameservers = [
     "46.38.252.230"
     "46.38.225.230"
