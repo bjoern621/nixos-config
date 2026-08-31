@@ -1,8 +1,13 @@
 [![Update flake locks (stable)](https://github.com/bjoern621/nixos-config/actions/workflows/update-flake-locks.yml/badge.svg)](https://github.com/bjoern621/nixos-config/actions/workflows/update-flake-locks.yml)
 
+![vmk3s](https://img.shields.io/endpoint?url=https%3A%2F%2Fstatus.bjoernblessin.de%2Fbadge%2Fvmk3s.json) ![netcup-g12](https://img.shields.io/endpoint?url=https%3A%2F%2Fstatus.bjoernblessin.de%2Fbadge%2Fnetcup-g12.json) ![pi-4b-hh](https://img.shields.io/endpoint?url=https%3A%2F%2Fstatus.bjoernblessin.de%2Fbadge%2Fpi-4b-hh.json) ![homelab](https://img.shields.io/endpoint?url=https%3A%2F%2Fstatus.bjoernblessin.de%2Fbadge%2Fhomelab.json) ![nixos](https://img.shields.io/endpoint?url=https%3A%2F%2Fstatus.bjoernblessin.de%2Fbadge%2Fnixos.json)
+
 # NixOS Configuration
 
 Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and Waybar.
+
+Each host chip above shows the installed revision, colored by how far the host lags `origin/main` measured against its own sync schedule.
+The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endpoint rendering the chips lives in `hh-cluster-infra` (status-proxy application).
 
 ## Installation
 

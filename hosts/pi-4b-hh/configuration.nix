@@ -7,6 +7,7 @@
     ../../modules/sysconf-checkout.nix
     ../../modules/sysconf-sudo.nix
     ../../modules/sysconf-auto-pull.nix
+    ../../modules/sysconf-revision.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/homelab/ssh-hardening.nix
     ../../modules/tailscale-client.nix
@@ -206,4 +207,5 @@
     user = "ops";
     schedule = "Mon 03:00";
   };
+  services.sysconf-revision.enable = true;
 }

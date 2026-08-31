@@ -14,6 +14,7 @@ in
     ../../modules/scripts/default.nix
     ../../modules/sysconf-sudo.nix
     ../../modules/sysconf-auto-pull.nix
+    ../../modules/sysconf-revision.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
@@ -61,6 +62,7 @@ in
     user = "ops";
     schedule = "daily";
   };
+  services.sysconf-revision.enable = true;
 
   users.users.ops = {
     isNormalUser = true;

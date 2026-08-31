@@ -20,6 +20,7 @@ in
     ../../modules/scripts
     ../../modules/sysconf-checkout.nix
     ../../modules/sysconf-auto-pull.nix
+    ../../modules/sysconf-revision.nix
     ../../modules/k3s-tailnet.nix
     ../../modules/telemetry-agent.nix
   ];
@@ -31,6 +32,7 @@ in
     user = "root";
     schedule = "daily";
   };
+  services.sysconf-revision.enable = true;
 
   time.timeZone = "Europe/Berlin";
 

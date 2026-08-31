@@ -9,6 +9,7 @@
     ../../modules/scripts/default.nix
     ../../modules/sysconf-sudo.nix
     ../../modules/sysconf-auto-pull.nix
+    ../../modules/sysconf-revision.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/homelab/vm/hypervisor
     ../../modules/homelab/samba.nix
@@ -41,6 +42,7 @@
     user = "ops";
     schedule = "daily";
   };
+  services.sysconf-revision.enable = true;
 
   users.users.ops = {
     isNormalUser = true;
