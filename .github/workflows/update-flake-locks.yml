@@ -1,10 +1,11 @@
 name: Update flake locks (stable)
 
-# Advances the committed host flake.lock files to github input revisions at
-# least DELAY_DAYS old, then opens a PR. Merging it lands the new pins on main;
-# each host picks them up on its next sysconf-auto-pull. The hosts never
-# compute their own revisions, so this is the single place updates enter the
-# system.
+# Pins each host flake.lock to github input revisions at least DELAY_DAYS old,
+# opens a PR and merges it immediately.
+# The merge lands the new pins on main;
+# each host picks them up on its next sysconf-auto-pull.
+# The hosts never compute their own revisions,
+# so this is the single place updates enter the system.
 
 on:
   schedule:
@@ -36,6 +37,7 @@ jobs:
         run: bash .github/scripts/update-stable-locks.sh hosts/homelab hosts/vmk3s hosts/nixos hosts/pi-4b-hh hosts/netcup-g12
 
       - name: Open pull request
+        id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
           branch: automated/flake-lock-update
@@ -43,3 +45,11 @@ jobs:
           title: "chore: stable flake.lock update"
           commit-message: "chore: stable flake.lock update"
           body-path: ${{ runner.temp }}/pr-body.md
+
+      # Merges without waiting on checks,
+      # mirroring Renovate's ignoreTests automerge in hh-cluster-infra.
+      - name: Merge pull request
+        if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge --merge "${{ steps.cpr.outputs.pull-request-number }}"
