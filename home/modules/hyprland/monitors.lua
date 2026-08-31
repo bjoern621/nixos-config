@@ -6,9 +6,9 @@
 -- bitdepth 10: panel is 10 bpc; XRGB2101010 is 32bpp like XRGB8888, so free.
 -- cm stays srgb; hdr-toggle flips it at runtime and partial hl.monitor specs latch.
 hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10 })
--- 1440p144 works because services.amdgpuForceHbr3 forces HBR3
--- link training on every DP hotplug event, bypassing the broken
--- DPIA AUX cap probe through the CalDigit TS5 Plus dock.
+-- 1440p144 needs HBR3.
+-- amdgpu-force-hbr3 (modules/external-monitors.nix) forces it on dock DPIA links,
+-- bypassing broken Phoenix1 AUX cap probe through CalDigit TS5 Plus.
 hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 })
 hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
