@@ -49,6 +49,15 @@ in
 
   networking.hostName = "vmk3s";
 
+  # CNI links churn with pods. dhcpcd chasing them logs an error burst on
+  # every pod delete (dhcp_readbpf/arp_read "Network is down") and its SLAAC
+  # attempts on cni0/flannel.1 fail with "ipv6_addaddr1: Invalid argument".
+  networking.dhcpcd.denyInterfaces = [
+    "veth*"
+    "cni*"
+    "flannel*"
+  ];
+
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "de_DE.UTF-8";
   console.keyMap = "de";
