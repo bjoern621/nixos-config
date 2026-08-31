@@ -8,7 +8,7 @@
       "id": 1,
       "type": "stat",
       "title": "vmk3s",
-      "description": "Host usage of the k3s server VM, reported by the otel-collector DaemonSet pod on the node. CPU is the non-idle share of all cores. Mem is used against total. Disk covers the root filesystem only.",
+      "description": "The k3s server VM. Disk is the root filesystem only.",
       "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -58,7 +58,7 @@
       "id": 20,
       "type": "stat",
       "title": "netcup-g12",
-      "description": "Host usage of the netcup VPS (k3s agent node), reported by the otel-collector DaemonSet pod on the node. CPU is the non-idle share of all cores. Mem is used against total. Disk covers the root filesystem only.",
+      "description": "The netcup VPS, k3s agent node. Disk is the root filesystem only.",
       "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -108,7 +108,7 @@
       "id": 2,
       "type": "stat",
       "title": "homelab",
-      "description": "Host usage of the standalone homelab server, pushed by its telemetry agent (nixos-config, telemetry-agent.nix). CPU is the non-idle share of all cores. Mem is used against total. Disk covers the root filesystem only, not attached data drives.",
+      "description": "Standalone server. Disk is the root filesystem only, data drives excluded.",
       "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -158,7 +158,7 @@
       "id": 3,
       "type": "stat",
       "title": "pi-4b-hh",
-      "description": "Host usage of the Raspberry Pi (backup target and observability replica), pushed by its telemetry agent. CPU is the non-idle share of all cores. Mem is used against total. Disk covers the root filesystem only; the external backup drive is not included.",
+      "description": "Backup target and observability replica. Disk is the root filesystem only, backup drive excluded.",
       "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -208,7 +208,7 @@
       "id": 4,
       "type": "stat",
       "title": "Nodes ready",
-      "description": "The Kubernetes Ready condition of each cluster node, read from the API server. NotReady means the kubelet stopped reporting; the node's pods are rescheduled only where taints and their storage allow. Covers cluster nodes only. Standalone machines have no Ready condition; their liveness is the Telemetry freshness panel.",
+      "description": "Kubernetes Ready per cluster node. Standalone machines have no Ready condition; their liveness is Telemetry freshness.",
       "gridPos": { "h": 6, "w": 4, "x": 0, "y": 6 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -248,7 +248,7 @@
       "id": 5,
       "type": "stat",
       "title": "Pods not running",
-      "description": "Pods in any phase other than Running: Pending, Succeeded, Failed, or Unknown, across all namespaces. A completed Job pod counts until it is cleaned up, so a short-lived nonzero after a Job is normal. A value that stays up without Jobs around usually means a pod stuck Pending on scheduling or storage.",
+      "description": "Any phase other than Running. Completed Job pods count until cleanup, so a brief nonzero after a Job is normal.",
       "gridPos": { "h": 6, "w": 4, "x": 4, "y": 6 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -280,7 +280,7 @@
       "id": 6,
       "type": "stat",
       "title": "Container restarts (1h)",
-      "description": "Container restarts across the cluster in the last hour. A restart means a container exited or was OOM-killed and the kubelet relaunched it in place. Rollouts create new pods and do not count. A steadily climbing value is a crash loop; the Recent error logs panel usually names the pod.",
+      "description": "Crashes and OOM kills relaunched in place; rollouts do not count. Climbing steadily is a crash loop.",
       "gridPos": { "h": 6, "w": 4, "x": 8, "y": 6 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -313,7 +313,7 @@
       "id": 7,
       "type": "timeseries",
       "title": "Top pods CPU (cores)",
-      "description": "The eight pods with the highest average CPU over the window, in cores, kubelet-reported, all namespaces. Pods below the top eight are not drawn, so the lines do not sum to node usage.",
+      "description": "Top eight only, so the lines do not sum to node usage.",
       "gridPos": { "h": 6, "w": 6, "x": 12, "y": 6 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -341,7 +341,7 @@
       "id": 8,
       "type": "timeseries",
       "title": "Top pods memory (working set)",
-      "description": "The eight pods with the highest working-set memory. Working set is the number the OOM killer weighs against the limit, so a line approaching its pod's memory limit predicts an OOM kill.",
+      "description": "Working set is what the OOM killer weighs against the limit.",
       "gridPos": { "h": 6, "w": 6, "x": 18, "y": 6 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -368,7 +368,7 @@
       "id": 9,
       "type": "timeseries",
       "title": "Edge requests by status class",
-      "description": "HTTP requests per second through the Traefik edge proxies, both nodes and all hostnames combined, grouped by status class. A 4xx surge is usually scanners or a broken client; 5xx belongs to the 5xx rate panel.",
+      "description": "Both edges, all hostnames. A 4xx surge is usually scanners.",
       "gridPos": { "h": 6, "w": 10, "x": 0, "y": 12 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -400,7 +400,7 @@
       "id": 10,
       "type": "timeseries",
       "title": "Edge latency",
-      "description": "Request duration through the Traefik edges, p50 and p95 over all services combined. A request that arrives at one edge for a backend on the other node crosses the tailnet and pays that round trip (docs/edges.md). Long-polling and streaming endpoints inflate the p95 without anything being wrong.",
+      "description": "All services combined. A backend on the other node adds a tailnet round trip; long-polling endpoints inflate the p95.",
       "gridPos": { "h": 6, "w": 8, "x": 10, "y": 12 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -432,7 +432,7 @@
       "id": 11,
       "type": "stat",
       "title": "5xx rate",
-      "description": "Server-error responses per second across both edges. Sustained nonzero means a backend is failing or unreachable; the Recent error logs panel usually names it. Client mistakes land in 4xx, not here.",
+      "description": "Sustained nonzero means a backend is failing; Recent error logs usually names it.",
       "gridPos": { "h": 6, "w": 3, "x": 18, "y": 12 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -469,7 +469,7 @@
       "id": 12,
       "type": "stat",
       "title": "TLS cert expiry",
-      "description": "Days until the soonest-expiring certificate loaded by the edge proxies. cert-manager renews about 30 days before expiry, so this normally never drops below three weeks. Orange or red means renewals are failing: check the certificate resources and the ACME solver path (docs/edges.md).",
+      "description": "Soonest-expiring edge certificate. Renewal runs about 30 days out, so below three weeks means renewals are failing.",
       "gridPos": { "h": 6, "w": 3, "x": 21, "y": 12 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -507,7 +507,7 @@
       "id": 13,
       "type": "timeseries",
       "title": "Error logs",
-      "description": "Log records of severity ERROR or above per interval, from every source the collectors ship: pod logs, host journals of all machines, and Kubernetes events. A flat elevated band is one component erroring steadily; the Recent error logs panel shows which.",
+      "description": "ERROR and above from all sources: pod logs, host journals, Kubernetes events.",
       "gridPos": { "h": 7, "w": 8, "x": 0, "y": 18 },
       "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
       "fieldConfig": {
@@ -531,7 +531,7 @@
       "id": 14,
       "type": "logs",
       "title": "Recent error logs",
-      "description": "The newest log records of severity ERROR or above, all sources. Expanding a line shows its fields; k8s.pod.name or unit plus host.name locate the emitter. Severity comes from the source's own labeling, so a chatty component can rank a harmless condition as an error.",
+      "description": "Expanding a line shows its fields; k8s.pod.name or unit plus host.name locate the emitter.",
       "gridPos": { "h": 7, "w": 16, "x": 8, "y": 18 },
       "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
       "options": {
@@ -552,7 +552,7 @@
       "id": 15,
       "type": "stat",
       "title": "Telemetry freshness",
-      "description": "Seconds since each machine's newest host-metric sample reached the metrics store: the monitoring system's own heartbeat. Green means every other panel on this dashboard shows live data for that machine. A climbing value means the machine, its collector, or the push path to the store is down, and the machine's other panels are frozen at the last data that got through, not showing the present. Normal is under a minute (one collection interval).",
+      "description": "Age of each machine's newest sample; normal is under a minute. Climbing means the machine or its push path is down and its other panels are stale, not current.",
       "gridPos": { "h": 6, "w": 6, "x": 0, "y": 25 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -605,7 +605,7 @@
       "id": 16,
       "type": "timeseries",
       "title": "Collector export failures",
-      "description": "Metric points, log records, and spans a collector tried to deliver and gave up on after retries. Anything above zero is telemetry lost for good: gaps in these panels, not a display problem. Usual causes are a store out of disk or an unreachable push target; the collector's own logs name the exporter.",
+      "description": "Telemetry dropped after retries: real gaps in the stores, not a display problem.",
       "gridPos": { "h": 6, "w": 6, "x": 6, "y": 25 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -642,7 +642,7 @@
       "id": 17,
       "type": "stat",
       "title": "Scrape targets down",
-      "description": "Prometheus scrape targets not answering, across every scrape job the collectors and the pi stack run (cluster services, stores, self-scrapes). Querying up == 0 in Explore names the dead target via its job label.",
+      "description": "up == 0 in Explore names the dead target via its job label.",
       "gridPos": { "h": 6, "w": 4, "x": 12, "y": 25 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -674,7 +674,7 @@
       "id": 18,
       "type": "stat",
       "title": "SMART status",
-      "description": "Worst SMART overall-health verdict across each machine's physical disks. FAIL is the disk itself predicting failure: verify backups and replace it. Only machines with physical disks appear; the VMs see virtual disks and expose no SMART data.",
+      "description": "Physical disks only; the VMs see virtual disks and report nothing. FAIL means replace the disk.",
       "gridPos": { "h": 6, "w": 4, "x": 16, "y": 25 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
@@ -723,7 +723,7 @@
       "id": 19,
       "type": "bargauge",
       "title": "Store free disk",
-      "description": "Free space on the volumes backing the metrics, logs, and traces stores, taking the minimum across each store's replicas (cluster and pi). A store that fills its volume stops accepting writes, which then shows up as collector export failures. Logs are additionally bounded by retention and a disk-usage cap.",
+      "description": "Minimum across each store's replicas, cluster and pi. A full store stops accepting writes.",
       "gridPos": { "h": 6, "w": 4, "x": 20, "y": 25 },
       "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
       "fieldConfig": {
