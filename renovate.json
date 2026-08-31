@@ -5,7 +5,7 @@
   "nix": {
     "enabled": true
   },
-  "ignorePaths": ["flake.nix", "home/**"],
+  "includePaths": ["hosts/**"],
   "lockFileMaintenance": {
     "enabled": true,
     "minimumReleaseAge": "7 days",
