@@ -52,7 +52,7 @@ in
 
   xdg.desktopEntries."firewall-view" = {
     name = "Firewall";
-    exec = "alacritty --title Firewall -e firewall-view";
+    exec = "kitty --title Firewall firewall-view";
     icon = "security-high";
     type = "Application";
     categories = [

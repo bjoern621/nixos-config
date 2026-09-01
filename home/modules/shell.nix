@@ -17,7 +17,7 @@
       bindkey '^[[1;5D' backward-word
       bindkey '^[[1;5C' forward-word
       # Word deletion.
-      # Alacritty sends ^H for Ctrl+Backspace, CSI 3;5~ for Ctrl+Del.
+      # kitty sends ^H for Ctrl+Backspace, CSI 3;5~ for Ctrl+Del.
       bindkey '^H' backward-kill-word
       bindkey '^[[3;5~' kill-word
     '';

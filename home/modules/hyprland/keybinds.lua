@@ -1,6 +1,6 @@
 -- https://wiki.hypr.land/Configuring/Basics/Binds/
 local mainMod = "SUPER"
-local terminal = "alacritty"
+local terminal = "kitty"
 
 -- Application shortcuts
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
