@@ -168,14 +168,37 @@ Singleton {
         return true;
     }
 
+    // Window-class candidates for the app that sent uid.
+    function _windowNames(uid) {
+        const idx = _rowIndex(uid);
+        if (idx < 0)
+            return [];
+        const row = _history.get(idx);
+        const names = [row.desktopEntry, row.appName];
+        const entry = _entryFor(uid);
+        if (entry) {
+            names.push(entry.startupClass);
+            names.push(entry.id.replace(/\.desktop$/, ""));
+            names.push(entry.name);
+        }
+        return names;
+    }
+
     // Clients without a default action still expect a click to raise them.
     // Desktop entry is launched instead.
+    //
+    // Invoking the action makes the client open the right conversation,
+    // but it cannot focus itself on Wayland,
+    // so the window is pulled forward here.
+    // A launch of an app that is not running maps its window too late,
+    // so the dispatch matches nothing and stays silent.
     function invokeDefault(uid) {
         const n = _liveFor(uid);
         if (n) {
             for (let i = 0; i < n.actions.length; i++) {
                 if (n.actions[i].identifier === "default") {
                     n.actions[i].invoke();
+                    WindowFocus.focusApp(0, _windowNames(uid));
                     return true;
                 }
             }
@@ -184,6 +207,7 @@ Singleton {
         if (!entry)
             return false;
         entry.execute();
+        WindowFocus.focusApp(0, _windowNames(uid));
         return true;
     }
 

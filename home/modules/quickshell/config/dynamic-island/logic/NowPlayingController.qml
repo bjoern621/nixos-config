@@ -19,9 +19,69 @@ QtObject {
     readonly property string trackArtist: hasPlayer ? player.trackArtist : ""
     readonly property string trackAlbum: hasPlayer ? player.trackAlbum : ""
     readonly property string trackArtUrl: hasPlayer ? player.trackArtUrl : ""
-    readonly property real trackLength: hasPlayer ? player.length : 0
     readonly property bool canGoNext: hasPlayer && player.canGoNext
     readonly property bool canGoPrevious: hasPlayer && player.canGoPrevious
+
+    // Seconds. 0 while no source reports a length.
+    //
+    // Spotify publishes mpris:length 0 for a track carrying a Canvas video,
+    // and quickshell reads 0 as a supported length,
+    // so the scrubber freezes at the left edge,
+    // and the total reads 0:00 while the elapsed time keeps counting.
+    // The zero arrives with the track's first metadata signal and no later one
+    // corrects it, so the latch below cannot fill on such a track.
+    //
+    // Spotify's embedded chromium session sometimes carries the real number,
+    // and the API always does.
+    readonly property real trackLength: {
+        if (!hasPlayer)
+            return 0;
+        if (player.lengthSupported && player.length > 0)
+            return player.length;
+        if (siblingLength > 0)
+            return siblingLength;
+        if (NowPlayingModel.spotifyCurrentLength > 0)
+            return NowPlayingModel.spotifyCurrentLength;
+        return lastGoodLength;
+    }
+
+    // Length another player reports for what looks like the same track.
+    // Sessions shape the title differently ("RESCUER" against "RESCUER - Alex Warren"),
+    // so containment decides rather than equality.
+    // Two artists that both exist and disagree veto the match,
+    // which keeps a browser tab playing a same-named video out of it.
+    // The embedded chromium session leaves xesam:artist empty,
+    // so a missing artist cannot veto.
+    readonly property real siblingLength: {
+        if (!hasPlayer || trackTitle === "")
+            return 0;
+        const mine = trackTitle.toLowerCase();
+        const myArtist = trackArtist.toLowerCase();
+        const players = Mpris.players.values;
+        for (let i = 0; i < players.length; i++) {
+            const other = players[i];
+            if (other === player || !other.lengthSupported || other.length <= 0)
+                continue;
+            const title = (other.trackTitle ?? "").toLowerCase();
+            if (title === "" || (title.indexOf(mine) < 0 && mine.indexOf(title) < 0))
+                continue;
+            const artist = (other.trackArtist ?? "").toLowerCase();
+            if (myArtist !== "" && artist !== "" && artist !== myArtist)
+                continue;
+            return other.length;
+        }
+        return 0;
+    }
+
+    // Latched so a player dropping mpris:length mid-track keeps the scrubber alive.
+    // Writing it back is loop-free:
+    // a positive trackLength re-evaluates to the same value.
+    property real lastGoodLength: 0
+    onTrackLengthChanged: {
+        if (trackLength > 0)
+            lastGoodLength = trackLength;
+    }
+    onTrackTitleChanged: lastGoodLength = 0
 
     property bool queueExpanded: false
 
@@ -49,10 +109,35 @@ QtObject {
             player.loopState = MprisLoopState.None;
     }
 
-    readonly property bool canRaise: hasPlayer && player.canRaise
+    // Window can be brought forward:
+    // player answers Raise, or its process owns a Hyprland window.
+    readonly property bool canRaise: hasPlayer && (player.canRaise || playerPid > 0)
+
+    // Pid of the app behind this player, read off its audio stream.
+    // 0 while the app plays nothing.
+    readonly property int playerPid: {
+        const props = streamNode?.properties ?? null;
+        if (!props)
+            return 0;
+        const pid = Number(props["application.process.id"]);
+        return isFinite(pid) && pid > 0 ? pid : 0;
+    }
+
+    // Window-class candidates.
+    // dbus tail is "spotify" in "org.mpris.MediaPlayer2.spotify".
+    readonly property var playerWindowNames: {
+        if (!hasPlayer)
+            return [];
+        return [player.desktopEntry, player.identity, (player.dbusName ?? "").toString().split(".").pop()];
+    }
+
+    // Raise alone loses on Wayland: the client asks the compositor to activate
+    // it and Hyprland drops the tokenless request.
+    // It still un-minimizes a player sitting in the tray, so both run.
     function raise() {
-        if (canRaise)
+        if (hasPlayer && player.canRaise)
             player.raise();
+        WindowFocus.focusApp(playerPid, playerWindowNames);
     }
 
     // Playback stream of this player, token-matched. null when app plays no audio.

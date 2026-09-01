@@ -9,6 +9,7 @@ singleton Clock 1.0 Clock.qml
 singleton ShellStartup 1.0 ShellStartup.qml
 singleton GracefulShutdown 1.0 GracefulShutdown.qml
 singleton LoadingHost 1.0 LoadingHost.qml
+singleton WindowFocus 1.0 WindowFocus.qml
 singleton NotificationListener 1.0 NotificationListener.qml
 singleton PopupHost 1.0 PopupHost.qml
 singleton WallpaperPersist 1.0 WallpaperPersist.qml

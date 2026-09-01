@@ -49,6 +49,23 @@ Singleton {
 
     property var spotifyRecentlyPlayed: []
     property var spotifyQueue: []
+    // Playing track as the API reports it. null before the first fetch lands.
+    property var spotifyCurrent: null
+
+    // Track duration in seconds from the API. 0 unless it names the track MPRIS
+    // sits on, since a fetch can lag a skip.
+    //
+    // Spotify's own mpris:length reads 0 for a track carrying a Canvas video,
+    // and the API is the only source that always carries the number.
+    readonly property real spotifyCurrentLength: {
+        const current = spotifyCurrent;
+        if (!current || !current.title || !hasPlayer || trackTitle === "")
+            return 0;
+        if (_key(current) !== _key({ title: trackTitle, artist: trackArtist }))
+            return 0;
+        const ms = Number(current.durationMs);
+        return isFinite(ms) && ms > 0 ? ms / 1000 : 0;
+    }
     // In-flight guard.
     // Every start reaches an exit, SIGTERM at worst, and every exit clears this.
     property bool spotifyDataLoading: false
@@ -267,6 +284,10 @@ Singleton {
                         root.spotifyRecentlyPlayed = result.recently_played;
                     if (result.queue)
                         root.spotifyQueue = result.queue;
+                    // Assigned even when null: a payload without a playing track
+                    // has to clear the previous one.
+                    if (result.current !== undefined)
+                        root.spotifyCurrent = result.current;
                 } catch (e) {
                     // Non-JSON line. Next fetch reconciles.
                 }

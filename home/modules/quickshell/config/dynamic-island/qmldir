@@ -9,6 +9,7 @@ singleton Spacing 1.0 base/Spacing.qml
 singleton ShellStartup 1.0 base/ShellStartup.qml
 singleton LoadingHost 1.0 base/LoadingHost.qml
 singleton GracefulShutdown 1.0 base/GracefulShutdown.qml
+singleton WindowFocus 1.0 base/WindowFocus.qml
 singleton NotificationListener 1.0 base/NotificationListener.qml
 singleton PopupHost 1.0 base/PopupHost.qml
 singleton WallpaperPersist 1.0 base/WallpaperPersist.qml

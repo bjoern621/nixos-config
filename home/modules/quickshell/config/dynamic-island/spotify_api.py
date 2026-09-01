@@ -391,31 +391,45 @@ def api_request(
 # track data helpers
 
 
-def _track_entry(track: dict[str, Any]) -> dict[str, str]:
-    """Shape one API track object for the QML model."""
+def _track_entry(track: dict[str, Any]) -> dict[str, Any]:
+    """Shape one API track object for the QML model.
+
+    durationMs backs the scrubber: Spotify's MPRIS reports mpris:length 0
+    for a track carrying a Canvas video.
+    """
     images = track.get("album", {}).get("images", [])
     return {
         "title": track.get("name", ""),
         "artist": ", ".join(a.get("name", "") for a in track.get("artists", [])),
         "artUrl": images[0].get("url", "") if images else "",
         "uri": track.get("uri", ""),
+        "durationMs": track.get("duration_ms", 0),
     }
 
 
-def get_recently_played(limit: int = 3) -> list[dict[str, str]]:
-    """Return recently played tracks (title, artist, artUrl, uri)."""
+def get_recently_played(limit: int = 3) -> list[dict[str, Any]]:
+    """Return recently played tracks."""
     result = api_request(f"/v1/me/player/recently-played?limit={limit}")
     if "items" not in result:
         return []
     return [_track_entry(item.get("track", {})) for item in result["items"]]
 
 
-def get_queue() -> list[dict[str, str]]:
-    """Return the user's playback queue (title, artist, artUrl, uri)."""
+def get_playback_queue() -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Return (currently playing, queue) from one request.
+
+    The queue endpoint carries currently_playing, so a separate
+    /v1/me/player call would only spend a second request on it.
+    """
     result = api_request("/v1/me/player/queue")
-    if "queue" not in result:
-        return []
-    return [_track_entry(track) for track in result["queue"]]
+    current = result.get("currently_playing")
+    entry = _track_entry(current) if isinstance(current, dict) else None
+    return entry, [_track_entry(track) for track in result.get("queue", [])]
+
+
+def get_queue() -> list[dict[str, Any]]:
+    """Return the user's playback queue."""
+    return get_playback_queue()[1]
 
 
 def play_track(uri: str) -> None:
@@ -677,10 +691,12 @@ def main() -> None:
             sys.exit(1)
     elif command == "all":
         # Keys stay present on failure so QML keeps working if it ignores "error".
-        payload: dict[str, Any] = {"recently_played": [], "queue": []}
+        payload: dict[str, Any] = {"recently_played": [], "queue": [], "current": None}
         try:
             payload["recently_played"] = get_recently_played(10)
-            payload["queue"] = get_queue()[:10]
+            current, queue = get_playback_queue()
+            payload["current"] = current
+            payload["queue"] = queue[:10]
         except SpotifyError as exc:
             # Empty lists alone cannot be told apart from an empty queue,
             # and QML discards stderr.
