@@ -15,6 +15,7 @@
     ./modules/vscode.nix
     ./modules/claude-code.nix
     ./modules/bitwarden.nix
+    ./modules/calendar.nix
     ./modules/git.nix
     ./modules/mission-center.nix
     ./modules/google-chrome.nix

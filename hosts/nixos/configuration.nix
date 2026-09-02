@@ -8,6 +8,7 @@
     ../../modules/pipewire.nix
     ../../modules/scripts/default.nix
     ../../modules/keyring.nix
+    ../../modules/evolution-data-server.nix
     ../../modules/rmv-nixosmanual.nix
     ../../modules/rmv-xterm.nix
     ../../modules/task-manager.nix
