@@ -18,6 +18,7 @@ singleton BluetoothConnector 1.0 base/BluetoothConnector.qml
 singleton BluetoothService 1.0 base/BluetoothService.qml
 singleton NetworkService 1.0 base/NetworkService.qml
 singleton WeatherService 1.0 base/WeatherService.qml
+singleton CalendarService 1.0 base/CalendarService.qml
 singleton NowPlayingModel 1.0 base/NowPlayingModel.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
@@ -60,6 +61,9 @@ StaticButton 1.0 widgets/StaticButton.qml
 
 VolumeSliderMenu 1.0 menus/VolumeSliderMenu.qml
 CalendarMenu 1.0 menus/CalendarMenu.qml
+CalendarDayCell 1.0 menus/CalendarDayCell.qml
+DayEventsPanel 1.0 menus/DayEventsPanel.qml
+DayEventRow 1.0 menus/DayEventRow.qml
 WeatherWidget 1.0 menus/WeatherWidget.qml
 SkyScene 1.0 menus/SkyScene.qml
 BatteryMenu 1.0 menus/BatteryMenu.qml

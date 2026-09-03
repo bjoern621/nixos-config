@@ -18,6 +18,15 @@ QtObject {
     // Steps before then accumulate onto the in-flight target, else clicks drop years.
     property bool _transitioning: false
 
+    // Day the events panel shows, "YYYY-MM-DD" as CalendarService keys its days.
+    // Empty is the resting state, and hides the panel.
+    property string selectedKey: ""
+
+    // Clicking the selected day clears it.
+    function toggleDay(key) {
+        root.selectedKey = root.selectedKey === key ? "" : key;
+    }
+
     readonly property var today: Clock.date
     readonly property int todayYear: today.getFullYear()
     readonly property int todayMonth: today.getMonth()
@@ -26,6 +35,8 @@ QtObject {
 
     // Accumulate the year step. View drives the slide with the sign of direction.
     function beginNavigate(direction) {
+        // Selection names a day on the grid. Leaving the year drops it.
+        root.selectedKey = "";
         _targetYear = (_transitioning ? _targetYear : displayYear) + direction;
         _transitioning = true;
     }

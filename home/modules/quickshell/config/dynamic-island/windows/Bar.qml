@@ -281,8 +281,12 @@ Variants {
                         pressedScale: 0.96
                         menuOnClick: true
                         menu: calendarMenu
-                        // Calendar open/close gates the weather fetch + scene animation.
-                        onPopupOpenChanged: WeatherService.setMenuOpen(popupOpen)
+                        // Calendar open/close gates the weather fetch + scene animation,
+                        // and the event read behind the day markers.
+                        onPopupOpenChanged: {
+                            WeatherService.setMenuOpen(popupOpen);
+                            CalendarService.setMenuOpen(popupOpen);
+                        }
                         DateTime {}
                     }
 
@@ -472,17 +476,33 @@ Variants {
                 width: calendarView.implicitWidth
                 anchors.top: calendarAnchor.top
                 anchors.horizontalCenter: calendarAnchor.horizontalCenter
+                // Pointer leaving the menu for the day panel would close both.
+                contentInteracting: dayPanel.hovered
 
                 CalendarMenu {
                     id: calendarView
                     width: implicitWidth
                     height: implicitHeight
-                    weatherActive: calendarHoverItem.popupOpen
+                    popupOpen: calendarHoverItem.popupOpen
                     // Budget below pill: rest y 4 + pill 32 + menu gap 4 + 8 bottom margin.
                     // Constant, not calendarAnchor.y: pill.y animates and a live read
                     // would flip cell size mid-slide.
                     maxHeight: root.screen.height - 48
                 }
+            }
+
+            // Day panel is a sibling, so calendarMenu's width and anchors stay untouched
+            // and the grid holds its position whether the panel is up or not.
+            DayEventsPanel {
+                id: dayPanel
+
+                dateKey: calendarView.selectedKey
+                maxContentHeight: calendarView.gridHeight
+                x: calendarMenu.x + calendarMenu.width + Spacing.spacing8
+                // gapHeight read from the host, since HoverMenu insets its content by it.
+                y: calendarMenu.y + calendarMenu.gapHeight + calendarView.gridCenterY - height / 2
+                width: implicitWidth
+                height: implicitHeight
             }
 
             Item {

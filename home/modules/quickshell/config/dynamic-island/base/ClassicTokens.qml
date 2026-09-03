@@ -18,6 +18,10 @@ QtObject {
     readonly property color selectedBackground: hoverItemPressed
     readonly property color selectedPressed: hoverItemPressed
     readonly property color calendarToday: "#d5071b"
+    // Selected day, reversed against today so neither reads as the other.
+    readonly property color calendarSelected: "#ffffff"
+    readonly property color calendarSelectedText: "#111111"
+    readonly property color calendarSelectedHovered: "#e4e4e4"
     readonly property color accentColor: Globals.accentColor
     readonly property color progressBackground: Qt.rgba(1, 1, 1, 0.12)
     readonly property color progressMuted: "#666666"

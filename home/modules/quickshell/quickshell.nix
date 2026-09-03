@@ -9,9 +9,11 @@
 let
   qs = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
-  # Python with added keyring and secretstorage packages for Spotify API integration.
+  # keyring + secretstorage: Spotify API.
+  # pygobject3: calendar_events.py, against the typelibs in giDeps below.
   qsPython = pkgs.python3.withPackages (ps: [
     ps.keyring
+    ps.pygobject3
     ps.secretstorage
   ]);
 
@@ -29,6 +31,17 @@ let
     ];
     dataDeps = [
       pkgs.inter # Text
+    ];
+    # calendar_events.py imports ECal and EDataServer, which pull the rest in.
+    # glib and gobject-introspection default to non-out outputs, so name .out;
+    # gobject-introspection carries the libxml2 typelib.
+    giDeps = [
+      pkgs.evolution-data-server
+      pkgs.glib.out
+      pkgs.gobject-introspection.out
+      pkgs.json-glib
+      pkgs.libical
+      pkgs.libsoup_3
     ];
     qtDeps = [
       pkgs.qt6.qtimageformats # webp decode for WallpaperChooser thumbnails

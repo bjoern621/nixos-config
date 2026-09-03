@@ -7,12 +7,29 @@ import "../base"
 Item {
     id: root
 
-    // True while this screen's calendar popup is open; gates the weather scene animation.
-    property bool weatherActive: false
+    // True while this screen's calendar popup is open.
+    // Gates the weather scene animation, and drives the event read.
+    property bool popupOpen: false
+    onPopupOpenChanged: {
+        if (root.popupOpen)
+            CalendarService.requestedYear = controller.displayYear;
+        else
+            controller.selectedKey = "";
+    }
 
     CalendarController {
         id: controller
     }
+
+    // Day the events panel shows, for the host window. Empty hides the panel.
+    readonly property string selectedKey: controller.selectedKey
+    // Vertical centre of the months block, in this item's coordinates.
+    // Panel beside the menu centres on it, so the weather band's height stays out of it.
+    readonly property real gridCenterY: layout.y + gridSlide.y + gridSlide.height / 2
+    // Height budget for that panel: it stays inside the block it centres on.
+    readonly property real gridHeight: gridSlide.height
+    // Dots per day cell. A fourth would not fit beside a two-digit number at 20px.
+    readonly property int maxDayDots: 3
 
     // Height budget from host window. 0 = unbounded.
     property int maxHeight: 0
@@ -67,7 +84,7 @@ Item {
             WeatherWidget {
                 id: weather
                 width: root.gridWidth
-                active: root.weatherActive
+                active: root.popupOpen
             }
 
             Row {
@@ -114,6 +131,7 @@ Item {
 
                 onReadyToSwap: direction => {
                     controller.commitNavigate();
+                    CalendarService.requestedYear = controller.displayYear;
                     gridSlide.completeTransition();
                 }
 
@@ -214,43 +232,20 @@ Item {
                                     Repeater {
                                         model: 7
 
-                                        delegate: Item {
+                                        delegate: CalendarDayCell {
                                             id: dayCell
 
                                             required property int index
-                                            property int dayNumber: wRow.firstDay + index
-                                            property bool isValidDay: dayNumber >= 1 && dayNumber <= mCol.daysInMonth
-                                            property bool isToday: isValidDay && controller.displayYear === controller.todayYear && mCol.monthIndex === controller.todayMonth && dayNumber === controller.todayDay
+                                            readonly property string dayKey: isValidDay ? CalendarService.dateKey(controller.displayYear, mCol.monthIndex, dayNumber) : ""
 
-                                            width: root.dayCellSize
-                                            height: root.dayCellSize
+                                            cellSize: root.dayCellSize
+                                            dayNumber: wRow.firstDay + index
+                                            isValidDay: dayNumber >= 1 && dayNumber <= mCol.daysInMonth
+                                            isToday: isValidDay && controller.displayYear === controller.todayYear && mCol.monthIndex === controller.todayMonth && dayNumber === controller.todayDay
+                                            isSelected: isValidDay && controller.selectedKey === dayKey
+                                            eventCalendars: isValidDay ? CalendarService.calendarsOn(dayKey, root.maxDayDots) : []
 
-                                            property bool hovered: dayCellMouse.containsMouse && dayCell.isValidDay
-
-                                            // Neo: today = launcher selected row (accent + ink border).
-                                            // Classic: today = round, vibrant red; hover round too.
-                                            LauncherDelegateBg {
-                                                active: parent.isToday
-                                                hovered: parent.hovered
-                                                cornerRadius: Shape.usesBlur ? height / 2 : NeoTokens.pillRadius
-                                                activeColor: Shape.usesBlur ? Colors.calendarToday : Colors.selectedBackground
-                                            }
-
-                                            Label {
-                                                anchors.fill: parent
-                                                text: dayCell.isValidDay ? dayCell.dayNumber : ""
-                                                horizontalAlignment: Text.AlignHCenter
-                                                verticalAlignment: Text.AlignVCenter
-                                            }
-
-                                            // Days carry no action.
-                                            // Hover highlight only, no pointing-hand cursor, no squish.
-                                            MouseArea {
-                                                id: dayCellMouse
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                acceptedButtons: Qt.NoButton
-                                            }
+                                            onActivated: controller.toggleDay(dayKey)
                                         }
                                     }
                                 }

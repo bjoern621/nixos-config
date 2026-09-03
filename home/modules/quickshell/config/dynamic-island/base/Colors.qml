@@ -23,6 +23,9 @@ QtObject {
 
     // Accent / progress colors
     readonly property color calendarToday: _t.calendarToday
+    readonly property color calendarSelected: _t.calendarSelected
+    readonly property color calendarSelectedText: _t.calendarSelectedText
+    readonly property color calendarSelectedHovered: _t.calendarSelectedHovered
     readonly property color accentColor: _t.accentColor
     readonly property color progressBackground: _t.progressBackground
     readonly property color progressMuted: _t.progressMuted

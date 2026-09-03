@@ -24,6 +24,10 @@ QtObject {
     readonly property color selectedBackground: accentColor
     readonly property color selectedPressed: accentPressed
     readonly property color calendarToday: accentColor
+    // Selected day, reversed against today so neither reads as the other.
+    readonly property color calendarSelected: ink
+    readonly property color calendarSelectedText: paper
+    readonly property color calendarSelectedHovered: "#2f2f2f"
     readonly property color accentColor: Globals.accentColor
     readonly property color progressBackground: "#e2e0cd"
     readonly property color progressMuted: "#7a7768"
