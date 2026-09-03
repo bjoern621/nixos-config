@@ -1,7 +1,14 @@
 import QtQuick
 
+// Reveal wrapper.
+// The children ride the pop-in, and this Item's own geometry stands still.
+// A scale and a slide are transforms, and a transform emits no geometry change,
+// so a consumer that samples this rect once (a Wayland input region)
+// keeps whatever it read mid-reveal.
 Item {
     id: root
+
+    default property alias content: stage.data
 
     property real slideOffset: Spacing.spacing8
     property int showDuration: 80
@@ -32,21 +39,28 @@ Item {
     signal shown
     signal hidden
 
-    opacity: 0
-    visible: opacity > 0
-    scale: 0.96
+    visible: stage.opacity > 0
     transformOrigin: root.transformOriginValue
 
-    transform: Translate {
-        id: slideTransform
-        x: root._startX
-        y: root._startY
+    Item {
+        id: stage
+        anchors.fill: parent
+        opacity: 0
+        scale: 0.96
+        // Follows root.transformOrigin, which a consumer may override.
+        transformOrigin: root.transformOrigin
+
+        transform: Translate {
+            id: slideTransform
+            x: root._startX
+            y: root._startY
+        }
     }
 
     ParallelAnimation {
         id: showAnim
         NumberAnimation {
-            target: root
+            target: stage
             property: "opacity"
             to: 1
             duration: root.showDuration
@@ -67,7 +81,7 @@ Item {
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
-            target: root
+            target: stage
             property: "scale"
             to: 1.0
             duration: root.showDuration + 50
@@ -79,7 +93,7 @@ Item {
     ParallelAnimation {
         id: hideAnim
         NumberAnimation {
-            target: root
+            target: stage
             property: "opacity"
             to: 0
             duration: root.hideDuration
@@ -100,7 +114,7 @@ Item {
             easing.type: Easing.InCubic
         }
         NumberAnimation {
-            target: root
+            target: stage
             property: "scale"
             to: 0.96
             duration: root.hideDuration

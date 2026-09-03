@@ -315,8 +315,12 @@ Item {
             return px;
         }
         y: trayRoot.menuTopY
-        width: trayMenuContent.implicitWidth
-        height: trayMenuContent.implicitHeight
+
+        // Bar sizes its surface off a popup's implicit size, so a popup carries one.
+        implicitWidth: trayMenuContent.implicitWidth
+        implicitHeight: trayMenuContent.implicitHeight
+        width: implicitWidth
+        height: implicitHeight
 
         onHidden: {
             internal.activeItem = null;

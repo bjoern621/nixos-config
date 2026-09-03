@@ -65,16 +65,25 @@ Variants {
         // artifact invisible. Growth costs one mild dip frame, so it stays dynamic.
         implicitHeight: pillHidden ? 0 : Math.max(56, Math.ceil(popupSurfaceBottom) + Spacing.spacing8)
 
-        // Bottom edge of the tallest shown popup, in root coords. Each popup is a
-        // direct child of interactionZone (anchored to root top, y=0), so its bottom
-        // is popupItem.y + popupItem.height. statusGroup wraps its own HoverItems.
+        // Bottom edge of the tallest shown popup, in root coords.
+        // Each popup is a direct child of interactionZone (anchored to root top, y=0),
+        // so its bottom is popupItem.y + popupItem.implicitHeight.
+        // statusGroup wraps its own HoverItems.
+        // implicitHeight, since a wrapper's height follows its layout and can answer a pass late,
+        // and the value below latches what it reads.
+        // The bottom is computed before the visibility test:
+        // a short-circuit registers no dependency on the size of a popup it skipped,
+        // leaving a resize that happened while closed unseen.
         readonly property real popupBottom: {
             let maxB = 0;
             const scan = list => {
                 for (const c of list) {
                     const p = c.popupItem;
-                    if (p && p.visible && p.y + p.height > maxB)
-                        maxB = p.y + p.height;
+                    if (!p)
+                        continue;
+                    const bottom = p.y + p.implicitHeight;
+                    if (p.visible && bottom > maxB)
+                        maxB = bottom;
                 }
             };
             scan(contentRow.children);

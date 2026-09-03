@@ -13,8 +13,13 @@ Item {
     signal readyToSwap(int direction)
 
     clip: true
-    implicitWidth: contentArea.childrenRect.width
-    implicitHeight: contentArea.childrenRect.height
+
+    // The one item a slide carries.
+    // Size from its declared implicit size:
+    // childrenRect answers a layout pass late.
+    readonly property Item view: contentArea.children.length > 0 ? contentArea.children[0] : null
+    implicitWidth: root.view ? root.view.implicitWidth : 0
+    implicitHeight: root.view ? root.view.implicitHeight : 0
 
     property int _direction: 0
 

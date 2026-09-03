@@ -17,11 +17,11 @@ Item {
     // Height budget from host window. 0 = unbounded.
     property int maxHeight: 0
 
-    // Menu height at day cell size `cell`. Mirrors the layout below from
-    // constants + font metrics, not layout.height, so compact causes no
-    // binding loop. Assumes 6 week rows per month: upper bound, never
-    // underestimates. 4 * contentPadding = 2 layout gaps + top/bottom padding.
-    function _predictedHeight(cell) {
+    // Menu height at day cell size `cell`, from constants and font metrics.
+    // Six week rows per month, the most any month takes, so one year of the grid stands
+    // as tall as the next and a reader of this size waits for no layout pass.
+    // 4 * contentPadding = 2 layout gaps + top/bottom padding.
+    function _heightFor(cell) {
         const gridW = 4 * 8 * cell + 3 * monthHorizontalGap;
         const monthCol = Math.ceil(monthLabelMetrics.height) + 7 * cell + 7 * Spacing.spacing2;
         const grid = 3 * monthCol + 2 * monthVerticalGap;
@@ -31,9 +31,9 @@ Item {
 
     // Compact when the normal layout would overflow the budget: smaller day
     // cells shrink the grid and, via width, the weather scene.
-    readonly property bool compact: maxHeight > 0 && _predictedHeight(24) > maxHeight
+    readonly property bool compact: maxHeight > 0 && _heightFor(24) > maxHeight
 
-    // Month label line height for _predictedHeight; Label defaults.
+    // Month label line height for _heightFor; Label defaults.
     FontMetrics {
         id: monthLabelMetrics
         font { family: Typography.fontFamily; pixelSize: Typography.fontSize14; weight: Font.Bold }
@@ -52,9 +52,8 @@ Item {
     // Card paper holds the content; shadowOffset is extra gutter for the neo shadow
     // (classic shadowOffset=0). implicitSize carries it so Bar sizes the menu to fit.
     readonly property int contentWidth: gridWidth + 2 * contentPadding
-    readonly property int contentHeight: layout.height + 2 * contentPadding
     implicitWidth: contentWidth + Shape.shadowOffset
-    implicitHeight: contentHeight + Shape.shadowOffset
+    implicitHeight: _heightFor(dayCellSize)
 
     Card {
         anchors.fill: parent
