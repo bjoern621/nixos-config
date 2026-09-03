@@ -28,8 +28,11 @@ Item {
     // Selected on any day but today, where the fill flips and the number goes with it.
     readonly property bool reversed: root.isSelected && !root.isToday
     readonly property int cornerRadius: Shape.usesBlur ? height / 2 : NeoTokens.pillRadius
+    // Neo outlines every mark in ink; classic leaves the dot flat.
+    readonly property int dotBorder: Shape.usesBlur ? 0 : 1
     // Cell holds a two-digit number, so a dot stays a marker rather than a shape.
-    readonly property int dotSize: Math.max(3, Math.round(cellSize / 7))
+    // Border eats a pixel per side, so the dot grows by it and keeps its colour core.
+    readonly property int dotSize: Math.max(3, Math.round(cellSize / 7)) + 2 * root.dotBorder
 
     // Neo: today = launcher selected row (accent + ink border).
     // Classic: today = round, vibrant red; hover round too.
@@ -94,6 +97,8 @@ Item {
                     radius: height / 2
                     // A calendar naming no colour still marks its day.
                     color: CalendarService.calendarColor(modelData) || Colors.accentColor
+                    border.width: root.dotBorder
+                    border.color: Colors.pillBorder
                 }
             }
         }
