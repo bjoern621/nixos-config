@@ -49,6 +49,7 @@
     ../../modules/tas2781-calibration/default.nix
     ../../modules/sops.nix
     ../../modules/attic-push.nix
+    ../../modules/attic-pull-screen-sharing.nix
   ];
 
   services.tailscale-client.operator = "bjoern";
