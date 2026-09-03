@@ -131,6 +131,7 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       }
     },
@@ -737,8 +738,8 @@
         ]
       },
       "locked": {
-        "lastModified": 1785923618,
-        "narHash": "sha256-hyupR6hZhfKZuqi16+HlYBmKb7Q2k8kMNuuMCtrn7nE=",
+        "lastModified": 1788396170,
+        "narHash": "sha256-HZ4ktB2O2HwYSPbLKcCnzSxun1xa1g/H+NNyM/QU3Pc=",
         "path": "/home/bjoern/git/screen-sharing",
         "type": "path"
       },
