@@ -8,12 +8,15 @@
     # overriding cursor_shape.
     shellIntegration.mode = "no-rc no-cursor";
 
-    # Hyprland remaps ALT+up/down to Page_Up/Page_Down, so these also drive scrollback.
-    # Scroll actions pass the key through while the alternate screen is active,
-    # leaving Page_Up in nvim, less and htop alone.
     keybindings = {
+      # Hyprland remaps ALT+up/down to Page_Up/Page_Down, so these also drive scrollback.
+      # Scroll actions pass the key through while the alternate screen is active,
+      # leaving Page_Up in nvim, less and htop alone.
       "page_up" = "scroll_page_up";
       "page_down" = "scroll_page_down";
+
+      # Kitty's default new_os_window starts in the directory kitty itself was launched from.
+      "ctrl+shift+n" = "new_os_window_with_cwd";
     };
 
     settings = {
@@ -32,6 +35,9 @@
       momentum_scroll = 0.0;
       # Whole lines per event instead of sub-line pixel steps.
       pixel_scroll = false;
+
+      # 0: pointer stays on screen while idle. Negative hides it on keypress.
+      mouse_hide_wait = 0;
 
       # Monokai Pro, set inline because kitty-themes carries no Monokai Pro.
       background = "#2d2a2e";
