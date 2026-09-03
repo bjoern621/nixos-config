@@ -44,11 +44,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Local screen-sharing repo. Provides the kmsgrab CAP_SYS_ADMIN wrapper module.
-    # path: tracks the working tree, so uncommitted edits apply on rebuild; swap for a
-    # github: URL once the repo is pushed.
+    # Provides the kmsgrab CAP_SYS_ADMIN wrapper module.
     screen-sharing = {
-      url = "path:/home/bjoern/git/screen-sharing";
+      url = "github:bjoern621/screen-sharing/v0.5.1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
