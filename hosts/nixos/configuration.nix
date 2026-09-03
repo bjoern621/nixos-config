@@ -18,7 +18,6 @@
     ../../modules/printing.nix
     ../../modules/scanning.nix
     ../../modules/cleanup.nix
-    # ../../modules/autologin.nix
     ../../modules/nix-search-tv.nix
     ../../modules/display-manager.nix
     ../../modules/wireguard.nix
@@ -40,7 +39,6 @@
     ../../modules/tailscale-client.nix
     ../../modules/wireguard-wstunnel.nix
     ../../modules/miracast.nix
-    # ../../modules/sunshine.nix
     ../../modules/external-monitors.nix
     ../../modules/secureboot.nix
     ../../modules/tpm-luks.nix
@@ -58,9 +56,10 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Latest Linux kernel
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  # boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_6;
+  # Linux 7.2 hangs systemd-shutdown after journald stops.
+  # Reboot and poweroff stall 2-4 min before finishing; 7.1 finalizes in ~5s.
+  # Recheck linuxPackages_latest on the next major bump.
+  boot.kernelPackages = pkgs.linuxPackages_7_1;
 
   boot.kernelModules = [
     "thunderbolt"

@@ -44,9 +44,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Provides the kmsgrab CAP_SYS_ADMIN wrapper module.
+    # The app package plus the kmsgrab CAP_SYS_ADMIN wrapper module.
     screen-sharing = {
-      url = "github:bjoern621/screen-sharing/v0.5.1";
+      url = "github:bjoern621/screen-sharing";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

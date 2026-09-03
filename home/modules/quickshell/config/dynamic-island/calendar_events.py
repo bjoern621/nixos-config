@@ -23,8 +23,12 @@ gi.require_version("ECal", "2.0")
 
 from gi.repository import ECal, EDataServer  # noqa: E402
 
-# Seconds the client waits for a backend that has to come up first.
-CONNECT_TIMEOUT = 30
+# (guint32) -1 skips connect_sync's wait for the backend to report connected.
+# CalDAV sources here stay disconnected,
+# so a finite wait burns its full length per calendar,
+# and 0 arms no timeout and blocks forever.
+# generate_instances_sync reads the backend's local cache either way.
+SKIP_CONNECTED_WAIT = 0xFFFFFFFF
 
 
 def warn(message):
@@ -93,7 +97,7 @@ def read_source(source, year, days):
     """Append one calendar's instances to days. Returns False on an unusable calendar."""
     try:
         client = ECal.Client.connect_sync(
-            source, ECal.ClientSourceType.EVENTS, CONNECT_TIMEOUT, None
+            source, ECal.ClientSourceType.EVENTS, SKIP_CONNECTED_WAIT, None
         )
     except Exception as error:
         warn("calendar %r did not open: %s" % (source.get_display_name(), error))

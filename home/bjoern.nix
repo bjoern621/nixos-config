@@ -38,6 +38,7 @@
     ./modules/direnv.nix
     ./modules/scanning.nix
     ./modules/firewall-viewer.nix
+    ./modules/screen-sharing.nix
     ./modules/usbguard.nix
   ];
 
