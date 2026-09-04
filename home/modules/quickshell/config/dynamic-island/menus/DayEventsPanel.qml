@@ -30,9 +30,20 @@ PopReveal {
     // Day the content shows. Holds through the hide, so fading out keeps the list
     // it was showing instead of flashing the empty state.
     property string _shownKey: ""
+    // Whether a day was up before this change.
+    // A day landing on a hidden panel rides the reveal, so its content takes the card
+    // straight and only a day-to-day change swaps.
+    property bool _wasShowing: false
     onDateKeyChanged: {
-        if (root.dateKey !== "")
-            root._shownKey = root.dateKey;
+        const opening = !root._wasShowing;
+        root._wasShowing = root.dateKey !== "";
+
+        if (root.dateKey === "" || root.dateKey === root._shownKey)
+            return;
+
+        if (opening)
+            swap.skipNextSwap();
+        root._shownKey = root.dateKey;
     }
 
     readonly property var germanLocale: Qt.locale("de_DE")

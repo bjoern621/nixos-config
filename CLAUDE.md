@@ -254,6 +254,9 @@ ContentReplace {
 
 `ContentReplace` properties: `duration` (default 150ms, the total split across fade-out and fade-in), `contentKey` (watched value that triggers the transition), `displayValue` (seeded from the first `contentKey`, then re-assigned at the animation midpoint so the swap lands mid-transition).
 
+`skipNextSwap()` makes the next `contentKey` land without the transition, for content arriving under a reveal of its own.
+`DayEventsPanel` calls it before the key changes, so opening the panel on a day plays the reveal alone.
+
 **Important**: content inside must bind to `displayValue`, not directly to the source property. Direct binding bypasses the deferred swap and the old content won't be visible during scale-down.
 
 **Give it an explicit size.** `implicitWidth` / `implicitHeight` track `childrenRect`, which forms a binding loop when the content anchors back to the container (`centerIn`, `fill`).
