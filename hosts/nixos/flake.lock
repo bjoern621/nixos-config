@@ -738,11 +738,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788457751,
-        "narHash": "sha256-vaCaM6jypsUPeAt/MG2ZJ18sbYAj2hnw6SpRebHJw5k=",
+        "lastModified": 1788483389,
+        "narHash": "sha256-Uglb5FM0+uXV4sE367X13Nu1jfFnQdDFnDXOLnZ1ucY=",
         "owner": "bjoern621",
         "repo": "screen-sharing",
-        "rev": "da588c7d5550b60ed55b558c034a8e95213e2c21",
+        "rev": "5c23345243988bf6bd872a28565f5dc195618b01",
         "type": "github"
       },
       "original": {

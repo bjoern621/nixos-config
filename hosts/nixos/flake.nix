@@ -64,14 +64,6 @@
       baseModules = [
         ./configuration.nix
 
-        inputs.screen-sharing.nixosModules.screenShare
-        {
-          programs.screenShare = {
-            enable = true;
-            user = "bjoern";
-          };
-        }
-
         {
           # https://wiki.hypr.land/Nix/Cachix/
           nix.settings = {

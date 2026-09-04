@@ -48,6 +48,7 @@
     ../../modules/sops.nix
     ../../modules/attic-push.nix
     ../../modules/attic-pull-screen-sharing.nix
+    ../../modules/screen-sharing.nix
   ];
 
   services.tailscale-client.operator = "bjoern";
