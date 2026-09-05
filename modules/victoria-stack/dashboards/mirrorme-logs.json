@@ -1,0 +1,288 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Every log line the screenshare pod writes, organized for debugging: one panel per container, the warnings and errors pulled out, report intake and the pod's Kubernetes events beside them. The Filter box narrows every stream panel with a LogsQL word, phrase or field filter. Metrics live on MirrorMe Insights.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "MirrorMe Insights",
+      "tooltip": "Metrics: streams, groups, members, traffic",
+      "type": "link",
+      "url": "/d/relay-groups"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "Volume and health",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "Lines per interval, one series per container. A container falling silent is as telling as one getting loud.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 60, "showPoints": "never", "stacking": { "mode": "normal", "group": "A" } }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"relay\"}", "queryType": "hits", "legendFormat": "relay" },
+        { "refId": "B", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"groupd\"}", "queryType": "hits", "legendFormat": "groupd" },
+        { "refId": "C", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"discordd\"}", "queryType": "hits", "legendFormat": "discordd" },
+        { "refId": "D", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"proxy\"}", "queryType": "hits", "legendFormat": "proxy" }
+      ],
+      "title": "Log volume by container",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "Warnings and errors across all four containers: [WARN] and [ERROR] from groupd and discordd, WAR and ERR from the relay, level warn and error from the proxy, plus any Go traceback.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 60, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "id": 2,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\"} (\"[ERROR]\" or \"[WARN]\" or \"panic:\" or \"fatal error:\" or \"ERR\" or \"WAR\" or \"\\\"level\\\":\\\"error\\\"\" or \"\\\"level\\\":\\\"warn\\\"\")", "queryType": "hits" }
+      ],
+      "title": "Warnings and errors",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 101,
+      "panels": [],
+      "title": "Everything",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "The whole pod, newest first, narrowed by the Filter box. The labels name the container each line came from.",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 10 },
+      "id": 10,
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\"} $search", "queryType": "instant", "maxLines": 300 }
+      ],
+      "title": "All containers",
+      "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 102,
+      "panels": [],
+      "title": "Per container",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "MediaMTX: every connection, path, publisher and kick. Levels read INF, WAR and ERR.",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 23 },
+      "id": 20,
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"relay\"} $search", "queryType": "instant", "maxLines": 200 }
+      ],
+      "title": "Relay (MediaMTX)",
+      "type": "logs"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "Group keys, tokens, membership sweeps, SRT keying and stored reports. Levels read [INFO] and [WARN].",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 23 },
+      "id": 21,
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"groupd\"} $search", "queryType": "instant", "maxLines": 200 }
+      ],
+      "title": "groupd",
+      "type": "logs"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "Discord voice-channel manager: gateway session, presence passes, brokered tokens and the link flow.",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 33 },
+      "id": 22,
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"discordd\"} $search", "queryType": "instant", "maxLines": 200 }
+      ],
+      "title": "discordd",
+      "type": "logs"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "Caddy in front of the HTTP legs: TLS, routing and upstream failures as JSON lines with a level field.",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 33 },
+      "id": 23,
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"proxy\"} $search", "queryType": "instant", "maxLines": 200 }
+      ],
+      "title": "Proxy (Caddy)",
+      "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 43 },
+      "id": 103,
+      "panels": [],
+      "title": "Signals",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "The lines behind the red bars above, all four containers together, newest first.",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 44 },
+      "id": 30,
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\"} (\"[ERROR]\" or \"[WARN]\" or \"panic:\" or \"fatal error:\" or \"ERR\" or \"WAR\" or \"\\\"level\\\":\\\"error\\\"\" or \"\\\"level\\\":\\\"warn\\\"\")", "queryType": "instant", "maxLines": 200 }
+      ],
+      "title": "Warnings and errors",
+      "type": "logs"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "Report bundles members sent in, one line per stored bundle naming its id. The files live on the groupd volume under the -reports directory.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 54 },
+      "id": 31,
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "{k8s.namespace.name=\"screenshare\", k8s.container.name=\"groupd\"} \"stored report\"", "queryType": "instant", "maxLines": 100 }
+      ],
+      "title": "Reports received",
+      "type": "logs"
+    },
+    {
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "description": "Kubernetes events about the screenshare objects: scheduling, probe failures, image pulls, OOM kills.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 54 },
+      "id": 32,
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "event.reason:* k8s.object.name:screenshare*", "queryType": "instant", "maxLines": 100 }
+      ],
+      "title": "Kubernetes events",
+      "type": "logs"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": ["screenshare", "mirrorme", "logs"],
+  "templating": {
+    "list": [
+      {
+        "current": { "text": "*", "value": "*" },
+        "description": "LogsQL appended to every stream panel: a word, a \"quoted phrase\" or a field filter. * matches everything.",
+        "hide": 0,
+        "label": "Filter",
+        "name": "search",
+        "options": [{ "selected": true, "text": "*", "value": "*" }],
+        "query": "*",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "MirrorMe Logs",
+  "uid": "mirrorme-logs",
+  "version": 1
+}

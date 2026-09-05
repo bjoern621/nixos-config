@@ -15,11 +15,24 @@
       }
     ]
   },
-  "description": "The screen-sharing relay on the cluster. The top two rows read the kubelet and the node agent; the rows below read the relay's and the group service's own metrics listeners. A panel down there with no data names something that does not exist at the moment: no group, no stream, no kick. Whether the listeners answer at all is the Exporters panel.",
+  "description": "MirrorMe on the cluster: the relay, the group service and the Discord manager. The top rows read the kubelet and the node agent; the rows below read the relay's and the group service's own metrics listeners. A panel with no data names something that does not exist at the moment: no group, no stream, no kick. The Logs row carries warnings and errors; the whole stream, organized per container, is the MirrorMe Logs dashboard.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "doc",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "MirrorMe Logs",
+      "tooltip": "Every log line the pod writes",
+      "type": "link",
+      "url": "/d/mirrorme-logs"
+    }
+  ],
   "panels": [
     {
       "collapsed": false,
@@ -101,7 +114,7 @@
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
-      "description": "Summed over the three containers, each counted once whatever pod carried it. The relay restarting takes every stream with it.",
+      "description": "Summed over the four containers, each counted once whatever pod carried it. The relay restarting takes every stream with it.",
       "fieldConfig": {
         "defaults": {
           "decimals": 0,
@@ -2164,12 +2177,108 @@
       ],
       "title": "Lease churn",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 79
+      },
+      "id": 105,
+      "panels": [],
+      "title": "Logs",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "description": "Warnings and errors from all four containers: [WARN] and [ERROR] from groupd and discordd, WAR and ERR from the relay, level warn and error from the proxy, plus any Go traceback.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 80
+      },
+      "id": 60,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{k8s.namespace.name=\"screenshare\"} (\"[ERROR]\" or \"[WARN]\" or \"panic:\" or \"fatal error:\" or \"ERR\" or \"WAR\" or \"\\\"level\\\":\\\"error\\\"\" or \"\\\"level\\\":\\\"warn\\\"\")",
+          "queryType": "hits"
+        }
+      ],
+      "title": "Warnings and errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "description": "The lines behind the bars, newest first. The MirrorMe Logs dashboard carries the whole stream.",
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 80
+      },
+      "id": 61,
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{k8s.namespace.name=\"screenshare\"} (\"[ERROR]\" or \"[WARN]\" or \"panic:\" or \"fatal error:\" or \"ERR\" or \"WAR\" or \"\\\"level\\\":\\\"error\\\"\" or \"\\\"level\\\":\\\"warn\\\"\")",
+          "queryType": "instant",
+          "maxLines": 100
+        }
+      ],
+      "title": "Recent warnings and errors",
+      "type": "logs"
     }
   ],
   "refresh": "30s",
   "schemaVersion": 42,
   "tags": [
     "screenshare",
+    "mirrorme",
     "relay",
     "groups"
   ],
@@ -2205,7 +2314,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Relay, groups and members",
+  "title": "MirrorMe Insights",
   "uid": "relay-groups",
   "version": 1,
   "weekStart": ""
