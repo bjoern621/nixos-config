@@ -86,6 +86,9 @@ jobs:
           - dir: nixos
             attr: nixos-ci
             runner: ubuntu-latest
+            # The stub stands in for the real screen-sharing flake,
+            # whose app package rebuilds an overlayed gst/gtk world on every pin change.
+            override: --override-input screen-sharing path:$GITHUB_WORKSPACE/.github/ci/screen-sharing-stub
             reclaim-disk: true
     steps:
       # Full history: nix resolves a workdir flake ref through git,
@@ -107,19 +110,17 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           # Hyprland is built against its own nixpkgs pin, which no other substituter carries.
-          # The screen-sharing cache carries the app for release revisions;
-          # other pins build the app on the runner.
           extra-conf: |
-            extra-substituters = https://hyprland.cachix.org https://nix-cache.bjoernblessin.de/screen-sharing
-            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= screen-sharing:0wAX2u4GPUvsZmRMsjut6HjhdYfBErcjQCHTXiJ0yPM=
+            extra-substituters = https://hyprland.cachix.org
+            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
 
       # The host directories read ../../modules and ../../lib,
       # so the ref resolves against the repo root with ?dir=hosts/<dir> rather than the host directory alone.
       #
-      # --no-write-lock-file: the build gates the committed lock as it stands.
+      # --no-write-lock-file: an override would otherwise re-lock the committed file.
       - name: Build ${{ matrix.attr }}
         run: |
-          nix build --no-link --print-build-logs --no-write-lock-file \
+          nix build --no-link --print-build-logs --no-write-lock-file ${{ matrix.override }} \
             "./hosts/${{ matrix.dir }}#nixosConfigurations.${{ matrix.attr }}.config.system.build.toplevel"
 
   merge:
