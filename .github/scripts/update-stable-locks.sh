@@ -26,8 +26,10 @@ gh_curl() {
 THRESHOLD_DATE=$(date -u -d "$DELAY_DAYS days ago" +%Y-%m-%dT00:00:00Z)
 echo "Pinning inputs to the newest revision before $THRESHOLD_DATE"
 
+# No-op without PR_BODY_FILE. The bare && form returns 1 then, which set -e turns fatal.
 summary() {
-  [[ -n "$PR_BODY_FILE" ]] && printf '%s\n' "$1" >>"$PR_BODY_FILE"
+  [[ -n "$PR_BODY_FILE" ]] || return 0
+  printf '%s\n' "$1" >>"$PR_BODY_FILE"
 }
 
 if [[ -n "$PR_BODY_FILE" ]]; then
@@ -55,9 +57,11 @@ commit_iso() {
 }
 
 # Currently locked revision of a root input from the lock file.
+# Resolved through root.inputs: the node key can differ from the input name
+# ("nixpkgs" can map to "nixpkgs_2" when another input locks its own nixpkgs).
 current_sha() {
   local flake_dir="$1" name="$2"
-  jq -r --arg n "$name" '.nodes[$n].locked.rev // empty' "$flake_dir/flake.lock"
+  jq -r --arg n "$name" '.nodes[.nodes.root.inputs[$n]].locked.rev // empty' "$flake_dir/flake.lock"
 }
 
 update_flake() {
@@ -103,7 +107,7 @@ update_flake() {
 
     # A lock pinned by hand past the threshold stays until the baking window
     # reaches it. Pinning it to the stable candidate would downgrade.
-    locked_epoch=$(jq -r --arg n "$name" '.nodes[$n].locked.lastModified // 0' "$flake_dir/flake.lock")
+    locked_epoch=$(jq -r --arg n "$name" '.nodes[.nodes.root.inputs[$n]].locked.lastModified // 0' "$flake_dir/flake.lock")
     if [[ -n "$new_iso" ]] && ((locked_epoch >= $(date -d "$new_iso" +%s))); then
       echo "  $name ($owner_repo@$branch) locked ${old_sha:0:7} newer than stable ${new_sha:0:7}, keeping"
       continue

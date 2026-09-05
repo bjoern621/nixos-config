@@ -116,7 +116,7 @@ jobs:
       # The host directories read ../../modules and ../../lib,
       # so the ref resolves against the repo root with ?dir=hosts/<dir> rather than the host directory alone.
       #
-      # --no-write-lock-file: the build gates the committed lock and never edits it.
+      # --no-write-lock-file: the build gates the committed lock as it stands.
       - name: Build ${{ matrix.attr }}
         run: |
           nix build --no-link --print-build-logs --no-write-lock-file \
