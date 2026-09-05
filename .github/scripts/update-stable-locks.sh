@@ -46,12 +46,12 @@ stable_sha() {
     | jq -r '.[0].sha // empty'
 }
 
-# Committer date (YYYY-MM-DD) of a revision, or empty on failure.
-commit_date() {
+# Committer date (ISO 8601) of a revision, or empty on failure.
+commit_iso() {
   local owner_repo="$1" sha="$2"
   [[ -z "$sha" ]] && return 0
   gh_curl "https://api.github.com/repos/$owner_repo/commits/$sha" \
-    | jq -r '.commit.committer.date // empty' | cut -c1-10
+    | jq -r '.commit.committer.date // empty'
 }
 
 # Currently locked revision of a root input from the lock file.
@@ -82,7 +82,7 @@ update_flake() {
   local override_args=()
   local update_names=()
   local rows=()
-  local line name owner_repo branch new_sha old_sha new_date old_date
+  local line name owner_repo branch new_sha old_sha new_iso new_date old_date locked_epoch
   for line in "${lines[@]}"; do
     IFS=$'\t' read -r name owner_repo branch <<<"$line"
     if ! new_sha=$(stable_sha "$owner_repo" "$branch"); then
@@ -98,8 +98,19 @@ update_flake() {
       echo "  $name ($owner_repo@$branch) already at ${new_sha:0:7}"
       continue
     fi
-    new_date=$(commit_date "$owner_repo" "$new_sha")
-    old_date=$(commit_date "$owner_repo" "$old_sha")
+    new_iso=$(commit_iso "$owner_repo" "$new_sha")
+    new_date=${new_iso:0:10}
+
+    # A lock pinned by hand past the threshold stays until the baking window
+    # reaches it. Pinning it to the stable candidate would downgrade.
+    locked_epoch=$(jq -r --arg n "$name" '.nodes[$n].locked.lastModified // 0' "$flake_dir/flake.lock")
+    if [[ -n "$new_iso" ]] && ((locked_epoch >= $(date -d "$new_iso" +%s))); then
+      echo "  $name ($owner_repo@$branch) locked ${old_sha:0:7} newer than stable ${new_sha:0:7}, keeping"
+      continue
+    fi
+
+    old_date=$(commit_iso "$owner_repo" "$old_sha")
+    old_date=${old_date:0:10}
     echo "  $name ($owner_repo@$branch) ${old_sha:0:7} (${old_date:-unknown}) -> ${new_sha:0:7} (${new_date:-unknown})"
     override_args+=(--override-input "$name" "github:$owner_repo/$new_sha")
     update_names+=("$name")

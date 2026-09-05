@@ -86,7 +86,8 @@ jobs:
           - dir: nixos
             attr: nixos-ci
             runner: ubuntu-latest
-            # The screen-sharing input is a path: to a working tree no runner has.
+            # The stub stands in for the real screen-sharing flake,
+            # whose app package would otherwise compile on every pin change.
             override: --override-input screen-sharing path:$GITHUB_WORKSPACE/.github/ci/screen-sharing-stub
             reclaim-disk: true
     steps:
