@@ -110,9 +110,12 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           # Hyprland is built against its own nixpkgs pin, which no other substituter carries.
+          # The system cache holds what the hosts built themselves (attic watch-store),
+          # the patched kernel included, so a pin the nixos host already runs substitutes
+          # instead of rebuilding for hours.
           extra-conf: |
-            extra-substituters = https://hyprland.cachix.org
-            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+            extra-substituters = https://hyprland.cachix.org https://nix-cache.bjoernblessin.de/system
+            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= system:CVw1EsxUyFB1VSHALF4GzqhjuRXjwyeyQzFOfXML+ss=
 
       # The host directories read ../../modules and ../../lib,
       # so the ref resolves against the repo root with ?dir=hosts/<dir> rather than the host directory alone.
