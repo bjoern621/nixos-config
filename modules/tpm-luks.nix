@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 
 # TPM2-based automatic LUKS unlock, bound to Secure Boot state (PCR 7).
 # The TPM only releases the key when Secure Boot is active with enrolled keys.
@@ -13,6 +13,10 @@
   boot.initrd.systemd.enable = true;
 
   boot.initrd.luks.devices."luks-d3e9b59e-a5a9-4a07-b5b2-405fca67f400" = {
+    # The machine's generated hardware-configuration.nix sets the same path at normal priority,
+    # so it wins. mkDefault keeps the eval alive where the committed placeholder stands in.
+    device = lib.mkDefault "/dev/disk/by-uuid/d3e9b59e-a5a9-4a07-b5b2-405fca67f400";
+
     crypttabExtraOpts = [
       "tpm2-device=auto"
       "tpm2-pcrs=7"

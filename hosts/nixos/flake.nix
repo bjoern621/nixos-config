@@ -108,6 +108,9 @@
       #
       # The workarounds in modules/howdy.nix therefore go unchecked here.
       nixosConfigurations.nixos-ci = mkSystem [
+        # The machine's hardware-configuration.nix reaches the repo only on the machine
+        # (the committed file is a placeholder), so a runner needs the stub.
+        ../../modules/ci-hardware-stub.nix
         (
           { lib, pkgs, ... }:
           {
