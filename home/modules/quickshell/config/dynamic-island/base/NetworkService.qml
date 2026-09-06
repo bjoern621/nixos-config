@@ -154,6 +154,12 @@ Singleton {
     property int _openMenus: 0
     property var _scan: []
     property var _connections: []
+    // uuid -> protocol label ("OpenVPN", "L2TP", ...). vpn.service-type is not a
+    // `connection show` list field, so it needs a second call.
+    property var _vpnServiceTypes: ({})
+    // Joined uuid list the labels were read for. Re-query only on change: a
+    // profile's plugin changes only when the profile is edited.
+    property string _vpnServiceTypeKey: ""
 
     // True while a menu is open and wifi can scan. rescanTimer keeps NetworkManager
     // scanning on a fixed interval; exposes that loop as one state for the spinner.
@@ -189,6 +195,32 @@ Singleton {
 
     function _rebuildWifi() {
         root.wifiNetworks = NetworkUtils.buildWifiModel(root._scan, root._connections);
+    }
+
+    function _rebuildVpns() {
+        root._nmVpns = NetworkUtils.buildVpnModel(root._connections, root._vpnServiceTypes);
+    }
+
+    // One nmcli call covers every uuid; `connection show` takes a list.
+    function _refreshVpnServiceTypes() {
+        const uuids = [];
+        for (let i = 0; i < root._connections.length; i++)
+            if (root._connections[i].type === "vpn")
+                uuids.push(root._connections[i].uuid);
+        const key = uuids.join(",");
+        if (key === root._vpnServiceTypeKey)
+            return;
+        root._vpnServiceTypeKey = key;
+        if (uuids.length === 0) {
+            root._vpnServiceTypes = ({});
+            root._rebuildVpns();
+            return;
+        }
+        // A changed command takes effect on the next start, not on the running
+        // process, so an in-flight read is dropped rather than joined.
+        vpnTypeProc.running = false;
+        vpnTypeProc.command = ["nmcli", "-t", "-f", "connection.uuid,vpn.service-type", "connection", "show"].concat(uuids);
+        vpnTypeProc.running = true;
     }
 
     // ---- reads ----
@@ -228,7 +260,21 @@ Singleton {
             onStreamFinished: {
                 root._connections = NetworkUtils.parseConnections(connOut.text);
                 root._rebuildWifi();
-                root._nmVpns = NetworkUtils.buildVpnModel(root._connections);
+                root._rebuildVpns();
+                root._refreshVpnServiceTypes();
+            }
+        }
+    }
+
+    // Protocol label per VPN profile. Command is built in
+    // _refreshVpnServiceTypes; empty until the first uuid set arrives.
+    Process {
+        id: vpnTypeProc
+        stdout: StdioCollector {
+            id: vpnTypeOut
+            onStreamFinished: {
+                root._vpnServiceTypes = NetworkUtils.parseVpnServiceTypes(vpnTypeOut.text);
+                root._rebuildVpns();
             }
         }
     }

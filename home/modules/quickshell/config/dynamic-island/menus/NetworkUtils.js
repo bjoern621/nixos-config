@@ -383,7 +383,55 @@ function buildWifiModel(scan, connections) {
     return rows;
 }
 
-function buildVpnModel(connections) {
+// nmcli TYPE is "vpn" for every plugin, so the protocol comes from
+// vpn.service-type. Last segment of org.freedesktop.NetworkManager.<plugin>.
+// Unknown plugin -> "VPN", the one label that is never wrong.
+const VPN_SERVICE_LABELS = {
+    "openvpn": "OpenVPN",
+    "openconnect": "OpenConnect",
+    "vpnc": "VPNC",
+    "l2tp": "L2TP",
+    "pptp": "PPTP",
+    "strongswan": "strongSwan",
+    "libreswan": "Libreswan",
+    "fortisslvpn": "Fortinet SSL VPN",
+    "sstp": "SSTP",
+    "iodine": "Iodine",
+    "ssh": "SSH",
+    "wireguard": "WireGuard"
+};
+
+function vpnServiceLabel(serviceType) {
+    const s = (serviceType || "").trim();
+    if (s.length === 0)
+        return "VPN";
+    const plugin = s.substring(s.lastIndexOf(".") + 1).toLowerCase();
+    return VPN_SERVICE_LABELS[plugin] || "VPN";
+}
+
+// Fields: connection.uuid,vpn.service-type, one blank-separated block per
+// connection. _lines drops the blanks, so uuid latches until its type line
+// lands; field order in the -f argument guarantees uuid comes first.
+function parseVpnServiceTypes(text) {
+    const map = {};
+    const lines = _lines(text);
+    let uuid = "";
+    for (let i = 0; i < lines.length; i++) {
+        const f = splitTerse(lines[i]);
+        if (f.length < 2)
+            continue;
+        if (f[0] === "connection.uuid")
+            uuid = f[1];
+        else if (f[0] === "vpn.service-type" && uuid.length > 0)
+            map[uuid] = vpnServiceLabel(f[1]);
+    }
+    return map;
+}
+
+// serviceTypes: uuid -> protocol label, from parseVpnServiceTypes. Missing entry
+// (lookup not yet returned) -> "VPN".
+function buildVpnModel(connections, serviceTypes) {
+    const types = serviceTypes || {};
     const out = [];
     for (let i = 0; i < connections.length; i++) {
         const c = connections[i];
@@ -391,7 +439,7 @@ function buildVpnModel(connections) {
             out.push({
                 name: c.name,
                 uuid: c.uuid,
-                kind: c.type === "wireguard" ? "WireGuard" : "VPN",
+                kind: c.type === "wireguard" ? "WireGuard" : (types[c.uuid] || "VPN"),
                 active: c.active
             });
         }
