@@ -205,15 +205,18 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: Spacing.spacing12
 
+                // Shuffle and repeat: hidden when the player has no such control,
+                // greyed when the playing context forbids it (Spotify: radio, a lone track).
                 StaticButton {
                     visible: controller.shuffleSupported
+                    enabled: controller.shuffleAvailable
                     width: 32 + Shape.buttonShadowOffset
                     height: 32 + Shape.buttonShadowOffset
                     anchors.verticalCenter: parent.verticalCenter
                     centered: true
                     accent: controller.shuffleOn
                     iconSize: Typography.fontSize16
-                    iconSource: "../icons/shuffle.svg"
+                    iconSource: controller.shuffleSmart ? "../icons/shuffle-smart.svg" : "../icons/shuffle.svg"
                     onClicked: controller.toggleShuffle()
                 }
 
@@ -248,6 +251,7 @@ Item {
 
                 StaticButton {
                     visible: controller.loopSupported
+                    enabled: controller.loopAvailable
                     width: 32 + Shape.buttonShadowOffset
                     height: 32 + Shape.buttonShadowOffset
                     anchors.verticalCenter: parent.verticalCenter

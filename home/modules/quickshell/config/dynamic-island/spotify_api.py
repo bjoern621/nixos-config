@@ -432,6 +432,29 @@ def get_queue() -> list[dict[str, Any]]:
     return get_playback_queue()[1]
 
 
+def get_playback_state() -> dict[str, Any] | None:
+    """Return shuffle and repeat state plus their availability on the active device.
+
+    None while no device is active (204).  MPRIS carries a bare Shuffle bool and a
+    LoopStatus, so smart shuffle and the per-context disallow flags come from here
+    alone.  `smart_shuffle` is undocumented in the endpoint reference but present in
+    the payload.  `disallows` lists only the forbidden actions, so an absent key
+    means allowed.
+    """
+    result = api_request("/v1/me/player")
+    if not result:
+        return None
+    disallows = (result.get("actions") or {}).get("disallows") or {}
+    return {
+        "shuffle": bool(result.get("shuffle_state")),
+        "smartShuffle": bool(result.get("smart_shuffle")),
+        "repeat": result.get("repeat_state") or "off",
+        "canToggleShuffle": not disallows.get("toggling_shuffle", False),
+        "canRepeatContext": not disallows.get("toggling_repeat_context", False),
+        "canRepeatTrack": not disallows.get("toggling_repeat_track", False),
+    }
+
+
 def play_track(uri: str) -> None:
     """Play a track by Spotify URI, keeping the active context.
 
@@ -660,6 +683,10 @@ def main() -> None:
         )
         print("  queue [n]     - Get n tracks from queue (default 3)", file=sys.stderr)
         print("  all           - Get all data as JSON", file=sys.stderr)
+        print(
+            "  playback      - Get shuffle/repeat state and availability",
+            file=sys.stderr,
+        )
         print("  play <uri>    - Play a track by Spotify URI", file=sys.stderr)
         sys.exit(1)
 
@@ -691,18 +718,32 @@ def main() -> None:
             sys.exit(1)
     elif command == "all":
         # Keys stay present on failure so QML keeps working if it ignores "error".
-        payload: dict[str, Any] = {"recently_played": [], "queue": [], "current": None}
+        payload: dict[str, Any] = {
+            "recently_played": [],
+            "queue": [],
+            "current": None,
+            "playback": None,
+        }
         try:
             payload["recently_played"] = get_recently_played(10)
             current, queue = get_playback_queue()
             payload["current"] = current
             payload["queue"] = queue[:10]
+            payload["playback"] = get_playback_state()
         except SpotifyError as exc:
             # Empty lists alone cannot be told apart from an empty queue,
             # and QML discards stderr.
             payload["error"] = exc.reason
             print(f"'all' failed: {exc}", file=sys.stderr)
         print(json.dumps(payload))
+    elif command == "playback":
+        # null on failure: QML reads null as unknown and leaves every control enabled.
+        try:
+            print(json.dumps({"playback": get_playback_state()}))
+        except SpotifyError as exc:
+            print(f"'playback' failed: {exc}", file=sys.stderr)
+            print(json.dumps({"playback": None, "error": exc.reason}))
+            sys.exit(1)
     elif command == "play":
         if len(sys.argv) < 3:
             print(json.dumps({"success": False, "error": "Missing URI"}))

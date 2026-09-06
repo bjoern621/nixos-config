@@ -259,6 +259,12 @@ Variants {
                             if (root.mprisPlayer)
                                 root.mprisPlayer.togglePlaying();
                         }
+                        // Smart shuffle and the context's disallows change with no MPRIS signal,
+                        // so every open refetches them.
+                        onPopupOpenChanged: {
+                            if (popupOpen)
+                                NowPlayingModel.refreshPlaybackState();
+                        }
                         NowPlaying {
                             id: nowPlaying
                             player: root.mprisPlayer

@@ -4,7 +4,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 
-// Brings an app's window forward, switching workspace when it sits on another.
+// Reaches an app's window from the shell: focus, or a key chord.
+// Focus switches workspace when the window sits on another.
 // Wayland grants no self-raise.
 // MPRIS Raise and a notification's default action reach the client,
 // but the activation it then asks for carries no token and Hyprland drops it,
@@ -39,27 +40,42 @@ Singleton {
     // Hyprland's config language is Lua, so a dispatch carries a Lua expression.
     // Word syntax ("focuswindow class:x") is a parse error.
     //
-    // Candidates resolve inside Hyprland rather than one dispatch each:
+    // One dispatch resolves every candidate inside Hyprland:
     // a dispatch matching nothing is silent,
     // so a chain of them cannot stop at the first hit.
-    // no_op covers all-miss, since focus without a window logs an error.
+    // no_op covers all-miss, since a dispatcher without a window logs an error.
     //
     // Long brackets carry the selector.
     // The class regex holds backslashes,
     // and a quoted Lua string would eat them as escapes.
-    function _dispatchFirst(selectors) {
+    //
+    // body: Lua returning a dispatcher, with w bound to the first hit.
+    function _dispatchWithWindow(selectors, body) {
         if (selectors.length === 0)
             return false;
         const chain = selectors.map(root._lookup).join(" or ");
-        Hyprland.dispatch("(function() local w = " + chain + "; if w then return hl.dsp.focus({ window = w }) end return hl.dsp.no_op() end)()");
+        Hyprland.dispatch("(function() local w = " + chain + "; if w then return " + body + " end return hl.dsp.no_op() end)()");
         return true;
     }
 
-    // pid, then class.
+    function focusApp(pid, names) {
+        return root._dispatchWithWindow(root._selectors(pid, names), "hl.dsp.focus({ window = w })");
+    }
+
+    // Key chord delivered to the app's window. Keyboard focus stays where it is.
+    // mods: bind syntax ("CTRL", "CTRL SHIFT"). key: xkb keysym name ("s", "Down").
+    // Both are shell constants, so nothing user-typed reaches the Lua.
+    // Needs a mapped window: an app closed to its tray keeps no toplevel,
+    // and the chord then goes nowhere.
+    function sendShortcut(pid, names, mods, key) {
+        return root._dispatchWithWindow(root._selectors(pid, names), "hl.dsp.send_shortcut({ mods = [[" + mods + "]], key = [[" + key + "]], window = w })");
+    }
+
+    // Selectors for one app: pid, then class.
     // pid names one process,
     // while a class regex can land on an unrelated app's window.
     // names: any window-class candidate (desktop entry id, StartupWMClass, app name).
-    function focusApp(pid, names) {
+    function _selectors(pid, names) {
         const selectors = [];
 
         const numeric = Number(pid);
@@ -82,6 +98,6 @@ Singleton {
             selectors.push("initialclass:" + alternation);
         }
 
-        return root._dispatchFirst(selectors);
+        return selectors;
     }
 }

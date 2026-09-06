@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
+import Quickshell.Wayland
 import ".."
 
 // Now-playing behavior: player passthrough, position polling, seek, queue state.
@@ -85,25 +86,69 @@ QtObject {
 
     property bool queueExpanded: false
 
-    // Shuffle + loop. Buttons hide when the player lacks the interface.
-    readonly property bool shuffleSupported: hasPlayer && player.shuffleSupported
-    readonly property bool shuffleOn: shuffleSupported && player.shuffle
-    readonly property bool loopSupported: hasPlayer && player.loopSupported
-    readonly property bool loopOn: loopSupported && player.loopState !== MprisLoopState.None
-    readonly property bool loopTrack: loopSupported && player.loopState === MprisLoopState.Track
+    // Spotify's Web API carries what MPRIS lacks:
+    // smart shuffle, and whether the playing context allows shuffle and repeat.
+    // null for other players and until the first fetch lands; null reads as unknown.
+    readonly property bool isSpotify: hasPlayer && (player.dbusName ?? "").toString() === "org.mpris.MediaPlayer2.spotify"
+    readonly property var playback: isSpotify ? NowPlayingModel.spotifyPlayback : null
 
+    // Shuffle. Supported hides the button (player lacks the interface),
+    // available greys it (context forbids it: radio, a lone track, a podcast).
+    readonly property bool shuffleSupported: hasPlayer && player.shuffleSupported
+    readonly property bool shuffleAvailable: shuffleSupported && (!playback || playback.canToggleShuffle)
+    // Smart flag counts only while the API snapshot agrees with MPRIS on the plain bit.
+    // MPRIS flips at once when shuffle moves in the client;
+    // the snapshot lags until the next fetch,
+    // and a stale smart flag would show Smart for a moment after it went off.
+    readonly property bool shuffleSmart: shuffleAvailable && !!playback && playback.smartShuffle && playback.shuffle === player.shuffle
+    readonly property bool shuffleOn: shuffleAvailable && (player.shuffle || shuffleSmart)
+
+    // Off -> On -> Smart -> Off, the cycle of Spotify's own button.
+    // MPRIS Shuffle is a bool and the API's shuffle endpoint takes a bool,
+    // so Smart is reachable only through the client's control:
+    // Ctrl+S delivered to its window cycles like a click on the button.
+    // A context without smart shuffle cycles On -> Off on that press, as in Spotify.
+    // Off -> On stays on MPRIS: instant, and it needs no window.
     function toggleShuffle() {
-        if (shuffleSupported)
-            player.shuffle = !player.shuffle;
+        if (!shuffleAvailable)
+            return;
+        if (shuffleOn && spotifyWindowReachable) {
+            WindowFocus.sendShortcut(playerPid, playerWindowNames, "CTRL", "s");
+            NowPlayingModel.schedulePlaybackRefresh();
+            return;
+        }
+        player.shuffle = !player.shuffle;
     }
 
-    // None -> Playlist -> Track -> None.
+    // Spotify has a mapped window the chord can reach.
+    // Closed to its tray the client keeps playing with no toplevel.
+    readonly property bool spotifyWindowReachable: {
+        if (!isSpotify)
+            return false;
+        const names = playerWindowNames.map(n => (n ?? "").toString().toLowerCase());
+        const toplevels = ToplevelManager.toplevels.values;
+        for (let i = 0; i < toplevels.length; i++) {
+            if (names.indexOf((toplevels[i].appId ?? "").toLowerCase()) >= 0)
+                return true;
+        }
+        return false;
+    }
+
+    // Repeat. Same split as shuffle, one availability flag per repeat state.
+    readonly property bool loopSupported: hasPlayer && player.loopSupported
+    readonly property bool loopContextAvailable: loopSupported && (!playback || playback.canRepeatContext)
+    readonly property bool loopTrackAvailable: loopSupported && (!playback || playback.canRepeatTrack)
+    readonly property bool loopAvailable: loopContextAvailable || loopTrackAvailable
+    readonly property bool loopOn: loopAvailable && player.loopState !== MprisLoopState.None
+    readonly property bool loopTrack: loopAvailable && player.loopState === MprisLoopState.Track
+
+    // None -> Playlist -> Track -> None, skipping a state the context forbids.
     function cycleLoop() {
-        if (!loopSupported)
+        if (!loopAvailable)
             return;
         if (!loopOn)
-            player.loopState = MprisLoopState.Playlist;
-        else if (!loopTrack)
+            player.loopState = loopContextAvailable ? MprisLoopState.Playlist : MprisLoopState.Track;
+        else if (!loopTrack && loopTrackAvailable)
             player.loopState = MprisLoopState.Track;
         else
             player.loopState = MprisLoopState.None;

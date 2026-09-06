@@ -15,12 +15,16 @@ Pressable {
     property bool accent: false          // primary/highlighted variant (solid accent fill)
     property bool centered: false        // center icon+label instead of left-aligning
     property int iconSize: Typography.fontSize20
-    property color iconColor: Colors.textColor
+    // progressMuted, a true grey in both themes.
+    // textColorMuted sits a shade off ink in neo, so that icon looks enabled.
+    property color iconColor: enabled ? Colors.textColor : Colors.progressMuted
     property real iconRotation: 0
     property int fontPixelSize: Typography.fontSize12
     property real cornerRadius: neo ? NeoTokens.pillRadius : Spacing.spacing8
 
     readonly property bool neo: !Shape.usesBlur
+    // Disabled face, border and icon fade together.
+    readonly property real disabledOpacity: 0.6
     // Lighter than the containing card's shadow; 0 in classic.
     readonly property int shadowOffset: Shape.buttonShadowOffset
     readonly property real faceWidth: width - shadowOffset
@@ -58,12 +62,14 @@ Pressable {
         width: root.faceWidth
         height: root.faceHeight
 
-        active: root.accent
-        // A disabled button reads flat: no hover tint, no press.
+        // A disabled button reads flat and grey: no accent, no hover tint, no press,
+        // grey fill under the outline in neo, everything faded.
+        active: root.accent && root.enabled
         hovered: root.hovered && root.enabled
         pressed: root.pressed && root.enabled
+        opacity: root.enabled ? 1 : root.disabledOpacity
         cornerRadius: root.cornerRadius
-        restColor: root.neo ? NeoTokens.paper : "transparent"
+        restColor: !root.neo ? "transparent" : root.enabled ? NeoTokens.paper : Colors.progressBackground
         borderAlways: root.neo
 
         Row {
@@ -85,7 +91,7 @@ Pressable {
                 id: txt
                 visible: text !== ""
                 anchors.verticalCenter: parent.verticalCenter
-                color: Colors.textColor
+                color: root.enabled ? Colors.textColor : Colors.progressMuted
                 font.family: Typography.fontFamily
                 font.pixelSize: root.fontPixelSize
                 font.weight: Typography.weightBold

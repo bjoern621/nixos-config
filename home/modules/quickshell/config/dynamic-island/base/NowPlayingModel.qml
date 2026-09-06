@@ -51,6 +51,11 @@ Singleton {
     property var spotifyQueue: []
     // Playing track as the API reports it. null before the first fetch lands.
     property var spotifyCurrent: null
+    // Shuffle, repeat and their availability on the active device:
+    // {shuffle, smartShuffle, repeat, canToggleShuffle, canRepeatContext, canRepeatTrack}.
+    // null before the first fetch, after a failed one and while no device is active.
+    // Consumers read null as unknown and leave every control enabled.
+    property var spotifyPlayback: null
 
     // Track duration in seconds from the API. 0 unless it names the track MPRIS
     // sits on, since a fetch can lag a skip.
@@ -66,9 +71,7 @@ Singleton {
         const ms = Number(current.durationMs);
         return isFinite(ms) && ms > 0 ? ms / 1000 : 0;
     }
-    // In-flight guard.
-    // Every start reaches an exit, SIGTERM at worst, and every exit clears this.
-    property bool spotifyDataLoading: false
+    readonly property bool spotifyDataLoading: allFetch.loading
 
     readonly property var displayRecentlyPlayed: _mergeRecentlyPlayed(trackHistory, spotifyRecentlyPlayed)
 
@@ -272,91 +275,57 @@ Singleton {
             model.remove(model.count - 1);
     }
 
-    // spotify_api.py "all" emits {"recently_played": [...], "queue": [...]}.
-    Process {
-        id: spotifyProcess
-
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    const result = JSON.parse(data);
-                    if (result.recently_played)
-                        root.spotifyRecentlyPlayed = result.recently_played;
-                    if (result.queue)
-                        root.spotifyQueue = result.queue;
-                    // Assigned even when null: a payload without a playing track
-                    // has to clear the previous one.
-                    if (result.current !== undefined)
-                        root.spotifyCurrent = result.current;
-                } catch (e) {
-                    // Non-JSON line. Next fetch reconciles.
-                }
-            }
-        }
-
-        // Swallows keyring and API errors. Without a parser they reach the shell log.
-        stderr: SplitParser {
-            onRead: data => {}
-        }
-
-        onExited: {
-            spotifyWatchdog.stop();
-            // Unconditional: exit 0 without parseable output would latch the flag
-            // and kill every later fetch for the session.
-            root.spotifyDataLoading = false;
-            refreshFlush.restart();
-        }
+    // spotify_api.py "all" emits {"recently_played", "queue", "current", "playback"}.
+    SpotifyFetch {
+        id: allFetch
+        subcommand: "all"
+        scriptPath: root.spotifyScriptPath
+        cooldown: 5000
+        onPayload: result => root._applyPayload(result)
     }
 
-    // keyring calls in spotify_api.py have no timeout; a locked keyring blocks forever.
-    // SIGTERM lands in onExited, which does the bookkeeping.
-    Timer {
-        id: spotifyWatchdog
-        interval: 30000
-        onTriggered: spotifyProcess.signal(15)
+    // "playback" alone emits {"playback": {...}|null}.
+    // The "all" cooldown is too slow for a menu that just opened
+    // or a shuffle press whose smart flag only the API reports.
+    SpotifyFetch {
+        id: playbackFetch
+        subcommand: "playback"
+        scriptPath: root.spotifyScriptPath
+        cooldown: 1500
+        onPayload: result => root._applyPayload(result)
     }
 
-    // Debounces API calls (e.g. spam-clicking next).
-    // Requests arriving during cooldown or during an in-flight fetch defer via _pending.
-    // Bounds how long optimistic state can drift from Spotify before reconciliation.
-    Timer {
-        id: spotifyRefreshCooldown
-        interval: 5000
-        property bool _pending: false
-        onTriggered: root._flushPendingRefresh()
-    }
-
-    // Starting a fetch straight from onExited would hit a Process that has not
-    // cleared running yet, and assigning command/running on a running Process is a no-op.
-    Timer {
-        id: refreshFlush
-        interval: 0
-        onTriggered: root._flushPendingRefresh()
+    function _applyPayload(result) {
+        if (result.recently_played)
+            root.spotifyRecentlyPlayed = result.recently_played;
+        if (result.queue)
+            root.spotifyQueue = result.queue;
+        // Assigned even when null: a payload without a playing track
+        // has to clear the previous one.
+        if (result.current !== undefined)
+            root.spotifyCurrent = result.current;
+        if (result.playback !== undefined)
+            root.spotifyPlayback = result.playback;
     }
 
     function refreshSpotifyData() {
-        if (spotifyRefreshCooldown.running || root.spotifyDataLoading) {
-            spotifyRefreshCooldown._pending = true;
-            return;
-        }
-        _startSpotifyFetch();
+        allFetch.request();
     }
 
-    // Deferred refresh runs once cooldown and fetch are both idle. Cooldown expiry and
-    // process exit both land here, so whichever comes last starts it.
-    function _flushPendingRefresh() {
-        if (!spotifyRefreshCooldown._pending || spotifyRefreshCooldown.running || root.spotifyDataLoading)
-            return;
-        spotifyRefreshCooldown._pending = false;
-        _startSpotifyFetch();
+    function refreshPlaybackState() {
+        playbackFetch.request();
     }
 
-    function _startSpotifyFetch() {
-        root.spotifyDataLoading = true;
-        spotifyProcess.command = ["python3", root.spotifyScriptPath, "all"];
-        spotifyProcess.running = true;
-        spotifyWatchdog.restart();
-        spotifyRefreshCooldown.restart();
+    // Playback refresh once the client has reported a change to Spotify's backend.
+    // Follows a shuffle or repeat press, and the MPRIS signal for one.
+    function schedulePlaybackRefresh() {
+        playbackSettle.restart();
+    }
+
+    Timer {
+        id: playbackSettle
+        interval: 700
+        onTriggered: playbackFetch.request()
     }
 
     // execDetached, not a Process: assigning command/running on a running Process is a
@@ -372,6 +341,15 @@ Singleton {
     Connections {
         target: root.player
         enabled: root.hasPlayer
+
+        // Shuffle or repeat moved in the client.
+        // The API snapshot behind the smart flag and the disallows lags the MPRIS signal.
+        function onShuffleChanged() {
+            root.schedulePlaybackRefresh();
+        }
+        function onLoopStateChanged() {
+            root.schedulePlaybackRefresh();
+        }
 
         function onPostTrackChanged() {
             if (!root.hasPlayer)
