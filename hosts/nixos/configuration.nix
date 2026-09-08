@@ -49,6 +49,7 @@
     ../../modules/attic-push.nix
     ../../modules/attic-pull-screen-sharing.nix
     ../../modules/screen-sharing.nix
+    ../../modules/eduroam.nix
   ];
 
   services.tailscale-client.operator = "bjoern";
