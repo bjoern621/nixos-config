@@ -27,6 +27,7 @@
     ./modules/quickshell/quickshell.nix
     ./modules/paintdotnet.nix
     ./modules/shell.nix
+    ./modules/yazi.nix
     ./modules/nix-index.nix
     ./modules/ssh-connect-homelab.nix
     ./modules/file-manager.nix
