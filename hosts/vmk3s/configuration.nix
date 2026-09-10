@@ -16,6 +16,7 @@ in
     ../../modules/sysconf-auto-pull.nix
     ../../modules/sysconf-revision.nix
     ../../modules/admin-ssh-keys.nix
+    ../../modules/kitty-terminfo.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
     ../../modules/telemetry-agent.nix

@@ -11,6 +11,7 @@
     ../../modules/sysconf-auto-pull.nix
     ../../modules/sysconf-revision.nix
     ../../modules/admin-ssh-keys.nix
+    ../../modules/kitty-terminfo.nix
     ../../modules/homelab/vm/hypervisor
     ../../modules/homelab/samba.nix
     ../../modules/homelab/mounts.nix

@@ -16,6 +16,7 @@ in
     ./machine.nix
     ./hardware-configuration.nix
     ../../modules/server-base.nix
+    ../../modules/kitty-terminfo.nix
     ../../modules/sops.nix
     ../../modules/scripts
     ../../modules/sysconf-checkout.nix

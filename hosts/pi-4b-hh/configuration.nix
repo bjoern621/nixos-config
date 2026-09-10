@@ -9,6 +9,7 @@
     ../../modules/sysconf-auto-pull.nix
     ../../modules/sysconf-revision.nix
     ../../modules/admin-ssh-keys.nix
+    ../../modules/kitty-terminfo.nix
     ../../modules/homelab/ssh-hardening.nix
     ../../modules/tailscale-client.nix
     ../../modules/smokeping.nix

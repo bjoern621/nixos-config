@@ -12,6 +12,12 @@
     settings = {
       "*" = {
         AddKeysToAgent = "no";
+        # `SetEnv` delivers TERM without the server accepting it, unlike every
+        # other variable.
+        # A host outside this repo carries no `xterm-kitty` terminfo and takes
+        # this fallback, which every ncurses build ships.
+        # Repo hosts import `modules/kitty-terminfo.nix` and override per host.
+        SetEnv.TERM = "xterm-256color";
         Compression = false;
         ForwardAgent = false;
         HashKnownHosts = true;
@@ -23,6 +29,7 @@
       # bare name first and the tailnet ACL keeps 22 closed. Remote
       # management goes through the wireguard tunnel.
       homelab = {
+        SetEnv.TERM = "xterm-kitty";
         HostName = "homelab.local";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
@@ -30,6 +37,7 @@
       };
 
       vmk3s = {
+        SetEnv.TERM = "xterm-kitty";
         HostName = "vmk3s.local";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
@@ -37,6 +45,7 @@
       };
 
       pi-4b-hh = {
+        SetEnv.TERM = "xterm-kitty";
         HostName = "pi-4b-hh.local";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
@@ -55,6 +64,7 @@
       # root, because `nixos-rebuild --target-host` activates as root and the host
       # declares no other account.
       netcup-g12 = {
+        SetEnv.TERM = "xterm-kitty";
         HostName = "v2202608396017497611.powersrv.de";
         User = "root";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
