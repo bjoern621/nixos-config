@@ -39,6 +39,10 @@
       # 0: pointer stays on screen while idle. Negative hides it on keypress.
       mouse_hide_wait = 0;
 
+      # Nerd Font icon ranges, from the font's own charset (fc-scan --format '%{charset}').
+      # Font ships system-wide from modules/fonts.nix.
+      symbol_map = "U+23FB-U+23FE,U+2630,U+2665,U+26A1,U+276C-U+2771,U+2B58,U+E000-U+E00A,U+E0A0-U+E0A3,U+E0B0-U+E0C8,U+E0CA,U+E0CC-U+E0D2,U+E0D4,U+E0D6-U+E0D7,U+E200-U+E2A9,U+E300-U+E3E3,U+E5FA-U+E6BB,U+E700-U+E8EF,U+EA60-U+EA88,U+EA8A-U+EA8C,U+EA8F-U+EAC7,U+EAC9,U+EACC-U+EB09,U+EB0B-U+EB4E,U+EB50-U+EC5E,U+EC60-U+EC84,U+ED00-U+EFCF,U+F000-U+F385,U+F400-U+F533,U+F0001-U+F1AF0 Symbols Nerd Font Mono";
+
       # Monokai Pro, set inline because kitty-themes carries no Monokai Pro.
       background = "#2d2a2e";
       foreground = "#fff1f3";

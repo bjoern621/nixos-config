@@ -8,6 +8,8 @@
       inter
       noto-fonts
       jetbrains-mono
+      # Icon glyphs in the private use area. Kitty maps the ranges in home/modules/terminal.nix.
+      nerd-fonts.symbols-only
     ];
 
     fontconfig = {
