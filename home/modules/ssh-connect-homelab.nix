@@ -25,12 +25,13 @@
         ServerAliveInterval = 0;
       };
 
-      # mDNS names, not bare hostnames: MagicDNS' search domain captures a
-      # bare name first and the tailnet ACL keeps 22 closed. Remote
-      # management goes through the wireguard tunnel.
+      # FritzBox DNS names.
+      # Bare name: resolved orders search domains per link,
+      # and MagicDNS answer lands on tailnet IP where ACL keeps 22 closed.
+      # mDNS name: multicast stops at LAN, so wireguard tunnel resolves nothing.
       homelab = {
         SetEnv.TERM = "xterm-kitty";
-        HostName = "homelab.local";
+        HostName = "homelab.fritz.box";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
@@ -38,7 +39,7 @@
 
       vmk3s = {
         SetEnv.TERM = "xterm-kitty";
-        HostName = "vmk3s.local";
+        HostName = "vmk3s.fritz.box";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
@@ -46,7 +47,7 @@
 
       pi-4b-hh = {
         SetEnv.TERM = "xterm-kitty";
-        HostName = "pi-4b-hh.local";
+        HostName = "pi-4b-hh.fritz.box";
         User = "ops";
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
