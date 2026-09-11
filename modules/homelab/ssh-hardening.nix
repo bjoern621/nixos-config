@@ -29,7 +29,7 @@
     ];
   };
 
-  services.journald.extraConfig = ''
+  services.journald.settings.Journal = ''
     SystemMaxUse=1G
     RuntimeMaxUse=256M
     MaxFileSec=1month

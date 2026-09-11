@@ -38,7 +38,7 @@
   ];
 
   # Journal on a server outlives the session that caused the question.
-  services.journald.extraConfig = "SystemMaxUse=500M";
+  services.journald.settings.Journal = "SystemMaxUse=500M";
 
   # Both consoles, because a boot that fails before sshd is only visible on one of
   # them and which one depends on the hypervisor.
