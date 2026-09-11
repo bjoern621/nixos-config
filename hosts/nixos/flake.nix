@@ -29,6 +29,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    ttydnd = {
+      url = "github:bjoern621/ttydnd";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nixd = {
       url = "github:nix-community/nixd";
       inputs.nixpkgs.follows = "nixpkgs";

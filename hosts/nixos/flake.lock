@@ -177,6 +177,27 @@
         "type": "github"
       }
     },
+    "home-manager_2": {
+      "inputs": {
+        "nixpkgs": [
+          "ttydnd",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789071706,
+        "narHash": "sha256-S+oyh2YSP9V5bSjWbbK0N7GxdxxMwgBfUOtUdVcAWc4=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "150f9ce4ddd41544ea42eb9d6043a75bd615fa24",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
     "hyprcursor": {
       "inputs": {
         "hyprlang": [
@@ -706,7 +727,8 @@
         "nixpkgs": "nixpkgs_2",
         "quickshell": "quickshell",
         "screen-sharing": "screen-sharing",
-        "sops-nix": "sops-nix"
+        "sops-nix": "sops-nix",
+        "ttydnd": "ttydnd"
       }
     },
     "rust-overlay": {
@@ -834,6 +856,27 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "ttydnd": {
+      "inputs": {
+        "home-manager": "home-manager_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789129205,
+        "narHash": "sha256-n/LzL9H0hsHOxjE/klZD/1VTQR5ax5azX5EddzHbRfg=",
+        "owner": "bjoern621",
+        "repo": "ttydnd",
+        "rev": "bec502ff41dbb6c52c177b1163145983371ce465",
+        "type": "github"
+      },
+      "original": {
+        "owner": "bjoern621",
+        "repo": "ttydnd",
         "type": "github"
       }
     },

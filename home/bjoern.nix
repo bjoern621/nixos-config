@@ -12,6 +12,7 @@
     ./modules/networkmanager.nix
     ./modules/hyprland/default.nix
     ./modules/terminal.nix
+    ./modules/terminal-drop.nix
     ./modules/vscode.nix
     ./modules/claude-code.nix
     ./modules/bitwarden.nix
