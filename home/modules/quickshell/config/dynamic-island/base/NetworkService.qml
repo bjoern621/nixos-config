@@ -136,6 +136,45 @@ Singleton {
         return 0;
     }
 
+    // ---- captive portal ----
+    // `portal`: NetworkManager's probe (modules/captive-portal.nix) was redirected.
+    // Probe URL matches that config; the browser fallback opens it so the portal
+    // serves the same login page it redirected the probe to.
+    readonly property bool portalPending: connectivity === "portal"
+    readonly property string portalProbeUrl: "http://connectivity-check.ubuntu.com/"
+    // Link behind the portal. Wired hotel networks run portals too.
+    readonly property string portalLinkName: activeSsid.length ? activeSsid : primaryWiredName
+    // Link the toast was raised for. Cleared on `full` or on disconnect,
+    // so a probe flapping portal/limited raises no second toast.
+    property string _portalToastKey: ""
+
+    onPortalPendingChanged: root._reviewPortalToast()
+    onPortalLinkNameChanged: {
+        if (!root.portalLinkName.length)
+            root._portalToastKey = "";
+        root._reviewPortalToast();
+    }
+    onConnectivityChanged: if (root.connectivity === "full") root._portalToastKey = ""
+
+    function _reviewPortalToast() {
+        if (!root.portalPending || !root.portalLinkName.length || root.portalLinkName === root._portalToastKey)
+            return;
+        root._portalToastKey = root.portalLinkName;
+        // A toast for an earlier link is stale; its notify-send dies with the restart.
+        portalToastProc.running = false;
+        portalToastProc.linkName = root.portalLinkName;
+        portalToastProc.running = true;
+    }
+
+    // Resolves the redirect target, then hands it to the browser.
+    // A portal answering inline (200 with the login form) yields no Location,
+    // so the probe URL itself opens and the portal serves its page there.
+    function openPortal() {
+        if (portalUrlProc.running)
+            return;
+        portalUrlProc.running = true;
+    }
+
     // ---- transient action feedback ----
     // busyKey identifies the spinning element: "wifi:<ssid>", "eth:<device>" or
     // "vpn:<uuid>".
@@ -317,6 +356,64 @@ Singleton {
                 const s = NetworkUtils.parseWgWstunnel(wgWstunnelOut.text);
                 root.wgWstunnelAvailable = s.available;
                 root.wgWstunnelUp = s.up;
+            }
+        }
+    }
+
+    // Toast with a login button.
+    // `-A` makes notify-send wait and print the key of the invoked action;
+    // "default" fires on a body click, so both paths print.
+    // Stays alive while the notification sits in the center.
+    // A closed toast prints nothing.
+    Process {
+        id: portalToastProc
+        running: false
+        property string linkName: ""
+        command: ["notify-send", "-a", "Netzwerk", "-A", "default=Anmeldeseite öffnen", "-A", "portal=Anmeldeseite öffnen", "Anmeldung erforderlich", "„" + linkName + "“ gibt das Internet erst nach einer Anmeldung frei."]
+        stdout: StdioCollector {
+            id: portalToastOut
+            onStreamFinished: {
+                if (portalToastOut.text.trim().length)
+                    root.openPortal();
+            }
+        }
+    }
+
+    // -w prints the first response's Location without following it.
+    // Empty on no redirect, timeout, or a missing curl.
+    Process {
+        id: portalUrlProc
+        running: false
+        command: ["curl", "-s", "-m", "5", "-o", "/dev/null", "-w", "%{redirect_url}", root.portalProbeUrl]
+        stdout: StdioCollector {
+            id: portalUrlOut
+            onStreamFinished: {
+                const target = portalUrlOut.text.trim();
+                Quickshell.execDetached(["xdg-open", target.indexOf("http") === 0 ? target : root.portalProbeUrl]);
+            }
+        }
+    }
+
+    // NetworkManager re-probes every 300 s,
+    // so a finished login would read as pending for minutes.
+    // Forces a probe while the state is portal.
+    // The monitor picks up the change; the parse here lands it sooner.
+    Timer {
+        interval: 15000
+        repeat: true
+        running: root.portalPending
+        onTriggered: connectivityCheckProc.running = true
+    }
+    Process {
+        id: connectivityCheckProc
+        running: false
+        command: ["nmcli", "-t", "networking", "connectivity", "check"]
+        stdout: StdioCollector {
+            id: connectivityCheckOut
+            onStreamFinished: {
+                const state = connectivityCheckOut.text.trim();
+                if (state.length)
+                    root.connectivity = state;
             }
         }
     }

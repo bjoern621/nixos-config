@@ -88,6 +88,8 @@ Item {
                         text: {
                             if (NetworkService.airplaneMode)
                                 return "Flugmodus";
+                            if (NetworkService.portalPending && NetworkService.portalLinkName.length)
+                                return "Anmeldung erforderlich · " + NetworkService.portalLinkName;
                             if (NetworkService.wiredConnectedCount > 1)
                                 return "Kabel · " + NetworkService.wiredConnectedCount + " Verbindungen";
                             if (NetworkService.primaryWiredName.length)
@@ -118,6 +120,30 @@ Item {
                 font.weight: Font.Normal
                 color: Colors.accentColor
                 elide: Text.ElideRight
+            }
+
+            // ---- captive portal ----
+            Row {
+                visible: NetworkService.portalPending
+                width: parent.width
+                spacing: Spacing.spacing6
+
+                Label {
+                    width: parent.width - portalChip.width - parent.spacing
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Internet erst nach Anmeldung"
+                    font.pixelSize: Typography.fontSize12
+                    font.weight: Font.Normal
+                    color: Colors.textColorMuted
+                    elide: Text.ElideRight
+                }
+                NetChip {
+                    id: portalChip
+                    text: "Anmeldeseite öffnen"
+                    active: true
+                    anchors.verticalCenter: parent.verticalCenter
+                    onClicked: NetworkService.openPortal()
+                }
             }
 
             // ---- password entry ----

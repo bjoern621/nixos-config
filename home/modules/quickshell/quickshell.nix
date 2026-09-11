@@ -23,6 +23,7 @@ let
     bin = "quickshell";
     binDeps = [
       pkgs.imagemagick # WallpaperAccent color extraction
+      pkgs.curl # NetworkService: captive portal redirect target
       pkgs.libnotify # notify-send for desktop notifications
       pkgs.networkmanager # nmcli: NetworkService reads + monitor + network_backend.py
       pkgs.qrencode # network menu wifi QR code
