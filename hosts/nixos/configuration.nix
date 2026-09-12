@@ -30,6 +30,7 @@
     ../../modules/quickshell.nix
     ../../modules/quickshell-lock.nix
     ../../modules/hibernate.nix
+    ../../modules/kernel-crash-reboot.nix
     ../../modules/nix-ld.nix
     ../../modules/sysconf-sudo.nix
     ../../modules/sysconf-auto-pull.nix
@@ -59,10 +60,11 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Linux 7.2 hangs systemd-shutdown after journald stops.
-  # Reboot and poweroff stall 2-4 min before finishing; 7.1 finalizes in ~5s.
-  # Recheck linuxPackages_latest on the next major bump.
-  boot.kernelPackages = pkgs.linuxPackages_7_1;
+  # Check after every kernel bump: reboot finishes in about 15 s,
+  # journal clean of amdgpu ttm oopses after a hibernate resume.
+  # 7.2.0 stalled reboots 100 to 260 s after journald stopped;
+  # 7.1.5 to 7.1.13 oopsed in ttm_lru_bulk_move_tail and hung hibernation.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernelModules = [
     "thunderbolt"
