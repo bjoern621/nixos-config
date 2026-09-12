@@ -867,11 +867,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1789150160,
-        "narHash": "sha256-hlcGSk6ZZ0OVc1BVhLDX8qQ/Y+5bp8WxQm9KPUUZx/I=",
+        "lastModified": 1789221239,
+        "narHash": "sha256-i/M1qsx5UeR4x6O0oGEeTOcY9DrY9T323VEmQlkz/T0=",
         "owner": "bjoern621",
         "repo": "ttydnd",
-        "rev": "909a7cb7a2ab2c0421ca93ccdcdec764a7b098c4",
+        "rev": "1e6fa65e31368776558fde0df97d3d043c8df04a",
         "type": "github"
       },
       "original": {
