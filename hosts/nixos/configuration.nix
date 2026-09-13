@@ -48,6 +48,7 @@
     ../../modules/system-packages.nix
     ../../modules/tas2781-calibration/default.nix
     ../../modules/sops.nix
+    ../../modules/nix-substituter-fallback.nix
     ../../modules/attic-push.nix
     ../../modules/attic-pull-screen-sharing.nix
     ../../modules/screen-sharing.nix

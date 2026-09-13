@@ -17,14 +17,21 @@
 # Seed existing store once: attic push hh:system $(nix path-info --all)
 
 let
-  cacheUrl = "https://nix-cache.bjoernblessin.de/system";
+  cacheHost = "https://nix-cache.bjoernblessin.de/system";
+  # priority=30 pins this ahead of cache.nixos.org (40) whatever the server's
+  # nix-cache-info reports. Fallback order: modules/nix-substituter-fallback.nix.
+  cacheUrl = "${cacheHost}?priority=30";
   # From `attic cache info system`, set after the cache is created. name:base64.
   publicKey = "system:CVw1EsxUyFB1VSHALF4GzqhjuRXjwyeyQzFOfXML+ss=";
 in
 {
   nix.settings = {
     extra-substituters = [ cacheUrl ];
-    extra-trusted-substituters = [ cacheUrl ];
+    # Both spellings: the daemon matches a URL an untrusted client passes verbatim.
+    extra-trusted-substituters = [
+      cacheUrl
+      cacheHost
+    ];
     extra-trusted-public-keys = [ publicKey ];
   };
 
