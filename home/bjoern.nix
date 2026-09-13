@@ -42,6 +42,7 @@
     ./modules/firewall-viewer.nix
     ./modules/screen-sharing.nix
     ./modules/usbguard.nix
+    ./modules/handy.nix
   ];
 
   home.username = "bjoern";
