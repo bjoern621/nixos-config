@@ -6,8 +6,8 @@ import "../base"
 // Card and tokens follow CalendarMenu; only the content differs.
 //
 // Height computed from the model.
-// ContentReplace loops on a child anchoring back to it,
-// and the swap changes height at its midpoint anyway.
+// Content sized off this panel loops a measured height,
+// and the swap changes it at the slide midpoint anyway.
 PopReveal {
     id: root
 
@@ -27,31 +27,43 @@ PopReveal {
         id: panelHover
     }
 
-    // Day the content shows. Holds through the hide, so fading out keeps the list
-    // it was showing instead of flashing the empty state.
+    // Day the content shows. Trails dateKey while a slide runs, and holds through the
+    // hide, so fading out keeps the list it was showing instead of flashing the empty state.
     property string _shownKey: ""
+    // Day the running slide swaps in. Empty while no slide runs.
+    property string _pendingKey: ""
+    // Day the panel is heading to.
+    // Direction compares against it, since _shownKey trails an in-flight slide.
+    readonly property string _targetKey: root._pendingKey !== "" ? root._pendingKey : root._shownKey
     // Whether a day was up before this change.
     // A day landing on a hidden panel rides the reveal, so its content takes the card
-    // straight and only a day-to-day change swaps.
+    // straight and only a day-to-day change slides.
     property bool _wasShowing: false
     onDateKeyChanged: {
         const opening = !root._wasShowing;
         root._wasShowing = root.dateKey !== "";
 
-        if (root.dateKey === "" || root.dateKey === root._shownKey)
+        if (root.dateKey === "" || root.dateKey === root._targetKey)
             return;
 
-        if (opening)
-            swap.skipNextSwap();
-        root._shownKey = root.dateKey;
+        if (opening) {
+            slide.reset();
+            root._pendingKey = "";
+            root._shownKey = root.dateKey;
+            return;
+        }
+
+        // "YYYY-MM-DD" orders lexically. Later day enters from the right.
+        const direction = root.dateKey > root._targetKey ? 1 : -1;
+        root._pendingKey = root.dateKey;
+        slide.transition(direction);
     }
 
     readonly property var germanLocale: Qt.locale("de_DE")
     readonly property int contentPadding: Spacing.spacing12
     readonly property int panelWidth: 280
 
-    // Trails dateKey by half the swap, since ContentReplace defers displayValue.
-    readonly property var entries: CalendarService.eventsOn(swap.displayValue || "")
+    readonly property var entries: CalendarService.eventsOn(root._shownKey)
 
     FontMetrics {
         id: rowMetrics
@@ -84,10 +96,15 @@ PopReveal {
     Card {
         anchors.fill: parent
 
-        ContentReplace {
-            id: swap
+        ContentSlide {
+            id: slide
 
-            contentKey: root._shownKey
+            onReadyToSwap: {
+                root._shownKey = root._pendingKey;
+                root._pendingKey = "";
+                slide.completeTransition();
+            }
+
             x: root.contentPadding
             y: root.contentPadding
             width: root.contentWidth
@@ -100,7 +117,7 @@ PopReveal {
                 Label {
                     width: parent.width
                     height: root.headerHeight
-                    text: root._headerText(swap.displayValue)
+                    text: root._headerText(root._shownKey)
                     verticalAlignment: Text.AlignVCenter
                 }
 

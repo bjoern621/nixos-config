@@ -78,4 +78,15 @@ Item {
         contentArea.x = root._direction * root.slideOffset;
         slideInAnim.start();
     }
+
+    // Drops an in-flight transition and puts the content back at rest.
+    // For a consumer whose content is replaced outright,
+    // under a reveal of its own.
+    function reset() {
+        slideInAnim.stop();
+        fadeOutAnim.stop();
+        root._direction = 0;
+        contentArea.x = 0;
+        contentArea.opacity = 1;
+    }
 }
