@@ -155,23 +155,49 @@ Item {
             styleColor: "#111111"
         }
 
-        // Detected region. IP geolocation resolves the place the forecast and the
-        // scene's daylight describe; naming it makes a wrong sunset traceable to a
-        // wrong location rather than a scene bug.
-        Text {
+        // Detected region, clickable to re-resolve it. IP geolocation resolves the
+        // place the forecast and the scene's daylight describe; naming it makes a
+        // wrong sunset traceable to a wrong location.
+        // Margins take the label back to the temperature's inset: the ghost's own
+        // padding sits outside it and shows only while lit.
+        Pressable {
+            id: cityButton
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.rightMargin: Spacing.spacing12
-            anchors.topMargin: Spacing.spacing8
-            width: Math.min(implicitWidth, parent.width * 0.55)
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-            visible: root.svc.city.length > 0
-            text: root.svc.city
-            font { family: Typography.fontFamily; pixelSize: Typography.fontSize14; weight: Typography.weightBold }
-            color: "white"
-            style: Text.Outline
-            styleColor: "#111111"
+            anchors.rightMargin: Spacing.spacing4
+            anchors.topMargin: Spacing.spacing4
+            implicitWidth: cityLabel.width + 2 * Spacing.spacing8
+            implicitHeight: cityLabel.implicitHeight + 2 * Spacing.spacing4
+            visible: cityLabel.text.length > 0
+            pressedScale: 0.9
+            onClicked: root.svc.relocate()
+
+            LauncherDelegateBg {
+                id: cityBg
+                active: root.svc.relocating
+                hovered: cityButton.hovered
+                pressed: cityButton.pressed
+                cornerRadius: Shape.pill(height)
+            }
+
+            Text {
+                id: cityLabel
+                anchors.centerIn: parent
+                // Capped against sceneFrame, not the parent: the parent sizes from
+                // this label, so reading its width here loops.
+                width: Math.min(implicitWidth, Math.round(sceneFrame.width * 0.55) - 2 * Spacing.spacing8)
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignRight
+                text: root.svc.relocating ? "Suche …" : root.svc.city
+                font { family: Typography.fontFamily; pixelSize: Typography.fontSize14; weight: Typography.weightBold }
+                // Neo's lit face is opaque cream, so the label inks up under it.
+                // Unlit, the sky shows through and the label takes the scene's white
+                // ink and outline, like the temperature and the sunrise readout.
+                readonly property bool onPaper: !Shape.usesBlur && cityBg.lit
+                color: onPaper ? Colors.textColor : "white"
+                style: onPaper ? Text.Normal : Text.Outline
+                styleColor: NeoTokens.ink
+            }
         }
 
         // Sunrise/sunset the forecast reports for that place. The scene's sun arc is

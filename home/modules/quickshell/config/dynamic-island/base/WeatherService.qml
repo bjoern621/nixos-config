@@ -13,13 +13,15 @@ import "../menus/WeatherUtils.js" as WeatherUtils
 //   get.geojs.io        geolocation, fallback. same contract
 //   api.open-meteo.com  forecast.              lat/lon -> current + 24h hourly
 // The public IP reaches only the geolocation host; Open-Meteo receives coordinates,
-// never the IP. Location is cached on disk and re-resolved at most every _locFreshMs,
-// so a rate-limit or outage falls back to the stale cache. QML parses the JSON.
+// never the IP. Location is cached on disk and re-resolved once the cache passes
+// _locFreshMs, so a rate-limit or outage falls back to the stale cache. relocate()
+// re-resolves on demand at any time. QML parses the JSON.
 Singleton {
     id: root
 
     // ---- published state ----
     property bool located: false
+    property bool relocating: false   // forced re-geolocation in flight
     property real latitude: 0
     property real longitude: 0
     property string city: ""
@@ -67,6 +69,38 @@ Singleton {
         root._fetchForecast();
     }
 
+    // On-demand re-geolocation, for a machine that moved since the location was
+    // resolved. Skips the cache and the located latch; providers answer or the
+    // current location stands.
+    function relocate() {
+        if (root.relocating || locateProc.running)
+            return;
+        root.relocating = true;
+        root._locateDone = false;
+        busyFloor.restart();
+        root._geolocate(0);
+    }
+
+    // Busy state ends once the providers have answered and the floor has elapsed,
+    // whichever lands second.
+    function _finishRelocate() {
+        root._locateDone = true;
+        if (!busyFloor.running)
+            root.relocating = false;
+    }
+
+    // Floor under the visible busy state. A provider answering in a few ms would
+    // otherwise flash the label and read as a dead click.
+    // 500 ms: label swap needs a reading fixation. Stays under the 1 s flow limit.
+    readonly property int _minBusyMs: 500
+    property bool _locateDone: false
+    Timer {
+        id: busyFloor
+        interval: root._minBusyMs
+        onTriggered: if (root._locateDone)
+            root.relocating = false;
+    }
+
     function _resolveLocation() {
         if (!root._cacheTried) {
             if (!cacheReadProc.running)
@@ -81,15 +115,17 @@ Singleton {
         root.city = city;
         root.located = true;
         root.failed = false;
+        root._finishRelocate();
         root._fetchForecast();
     }
     function _geolocate(idx) {
         root._geoIdx = idx;
         if (idx >= root._geoUrls.length) {
+            root._finishRelocate();
             if (root._staleLoc)
                 root._useLocation(root._staleLoc.lat, root._staleLoc.lon, root._staleLoc.city);
-            else
-                root.failed = true;
+            else if (!root.located)
+                root.failed = true;   // a relocate that fails leaves the shown location alone
             return;
         }
         if (locateProc.running)
@@ -150,6 +186,7 @@ Singleton {
             onStreamFinished: {
                 const r = WeatherUtils.parseLocation(locateOut.text);
                 if (r.ok) {
+                    root._staleLoc = { lat: r.lat, lon: r.lon, city: r.city };   // fallback tracks the newest fix
                     root._writeCache(r.lat, r.lon, r.city);
                     root._useLocation(r.lat, r.lon, r.city);
                 } else {
