@@ -21,6 +21,7 @@ in
     ../../modules/vmk3s/bitwarden-dump.nix
     ../../modules/telemetry-agent.nix
     ../../modules/k3s-tailnet.nix
+    ../../modules/k3s-gitlab-registry.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 

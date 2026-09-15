@@ -23,6 +23,7 @@ in
     ../../modules/sysconf-auto-pull.nix
     ../../modules/sysconf-revision.nix
     ../../modules/k3s-tailnet.nix
+    ../../modules/k3s-gitlab-registry.nix
     ../../modules/telemetry-agent.nix
   ];
 
