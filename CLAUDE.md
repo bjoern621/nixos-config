@@ -222,7 +222,7 @@ PopReveal {
 
 #### Directional content swap: fade out → swap → slide in
 
-For a directional swap inside a visible container (the calendar's year navigation), use **`ContentSlide`**. It is fade + slide with no scale pop, which is what "When NOT to use scale pop" calls for.
+For a directional swap inside a visible container (the calendar's year navigation, the day events panel), use **`ContentSlide`**. It is fade + slide with no scale pop, which is what "When NOT to use scale pop" calls for.
 
 ```qml
 ContentSlide {
@@ -238,6 +238,9 @@ ContentSlide {
 `ContentSlide` properties: `slideOffset` (default 40), `fadeOutDuration` (default 120ms), `slideInDuration` (default 200ms), `fadeInDuration` (default 200ms). `transition(direction)` starts it. It emits `readyToSwap(direction)` once the old content has faded out, and the handler swaps the content and calls `completeTransition()`.
 
 The content only changes when `readyToSwap` fires, so a caller stepping through values must accumulate onto the in-flight target rather than the displayed one. Reading the displayed value during a transition drops steps under rapid input.
+
+`reset()` drops an in-flight transition and puts the content back at rest, for content arriving under a reveal of its own.
+`DayEventsPanel` calls it when the panel opens on a day, so the reveal plays alone and only a day-to-day change slides.
 
 #### Content replace: scale down → swap → scale up
 
@@ -255,7 +258,6 @@ ContentReplace {
 `ContentReplace` properties: `duration` (default 150ms, the total split across fade-out and fade-in), `contentKey` (watched value that triggers the transition), `displayValue` (seeded from the first `contentKey`, then re-assigned at the animation midpoint so the swap lands mid-transition).
 
 `skipNextSwap()` makes the next `contentKey` land without the transition, for content arriving under a reveal of its own.
-`DayEventsPanel` calls it before the key changes, so opening the panel on a day plays the reveal alone.
 
 **Important**: content inside must bind to `displayValue`, not directly to the source property. Direct binding bypasses the deferred swap and the old content won't be visible during scale-down.
 
