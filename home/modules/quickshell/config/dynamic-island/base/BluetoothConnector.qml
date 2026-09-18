@@ -17,6 +17,8 @@ Singleton {
 
     // Paired audio devices.
     // Listed in output menu while disconnected, so connecting needs no Bluetooth settings app.
+    // Names mirror the PipeWire sink description.
+    // Label stays put once the sink entry replaces the placeholder.
     // Spare Anker: F4:2B:7D:54:EF:8A
     readonly property var targets: [
         {
@@ -28,7 +30,7 @@ Singleton {
             mac: "F8:4E:17:CB:22:59"
         },
         {
-            name: "Fractal Scape",
+            name: "LE-Fractal Scape",
             mac: "98:FD:B4:6F:2E:B3"
         }
     ]
