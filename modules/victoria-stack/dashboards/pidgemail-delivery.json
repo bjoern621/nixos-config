@@ -400,7 +400,7 @@
     },
     {
       "type": "row",
-      "title": "Services",
+      "title": "Running",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -412,36 +412,36 @@
     },
     {
       "type": "table",
-      "title": "Pidgemail services",
-      "description": "What each service runs now: the version tag, the digest behind it, replicas answering, and how long ago the rollout happened.",
+      "title": "Running in production",
+      "description": "What each workload runs, the replicas answering, and how long ago the rollout happened.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
       "gridPos": {
-        "h": 8,
-        "w": 14,
+        "h": 10,
+        "w": 15,
         "x": 0,
         "y": 28
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[20s]))",
+          "expr": "last_over_time(pidgemail_deployed_ready[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_ready[20s]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "B",
-          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[20s])))",
+          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_desired[20s])))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "C",
-          "expr": "max by (id) (last_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[20s])))",
+          "expr": "max by (id) (last_over_time(pidgemail_deployed_age_seconds[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_age_seconds[20s])))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -467,22 +467,17 @@
               "k8s_node_name": true,
               "otel_scope_name": true,
               "service_name": true,
-              "service_namespace": true,
-              "namespace": true,
-              "origin": true,
-              "url": true,
-              "id": true,
-              "project_url": true,
-              "argocd_url": true
+              "service_namespace": true
             },
             "indexByName": {
-              "app": 0,
-              "workload": 1,
-              "version": 2,
-              "digest": 3,
-              "Value #A": 4,
-              "Value #B": 5,
-              "Value #C": 6
+              "origin": 0,
+              "app": 1,
+              "workload": 2,
+              "version": 3,
+              "digest": 4,
+              "Value #A": 5,
+              "Value #B": 6,
+              "Value #C": 7
             },
             "renameByName": {
               "Value #A": "ready",
@@ -501,6 +496,17 @@
               }
             ]
           }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "origin"
+              }
+            ]
+          }
         }
       ],
       "fieldConfig": {
@@ -514,6 +520,78 @@
           {
             "matcher": {
               "id": "byName",
+              "options": "id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "project_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "registry_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "argocd_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
               "options": "app"
             },
             "properties": [
@@ -523,16 +601,6 @@
                   {
                     "title": "Open the service",
                     "url": "${__data.fields.url}",
-                    "targetBlank": true
-                  },
-                  {
-                    "title": "Argo CD",
-                    "url": "${__data.fields.argocd_url}",
-                    "targetBlank": true
-                  },
-                  {
-                    "title": "GitLab",
-                    "url": "${__data.fields.project_url}",
                     "targetBlank": true
                   }
                 ]
@@ -568,10 +636,34 @@
                 "value": [
                   {
                     "title": "Container registry",
-                    "url": "${__data.fields.project_url}/container_registry",
+                    "url": "${__data.fields.registry_url}",
                     "targetBlank": true
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "origin"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "digest"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
               }
             ]
           },
@@ -594,12 +686,24 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "digest"
+              "options": "ready"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 130
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "desired"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
               }
             ]
           }
@@ -619,9 +723,9 @@
         "uid": "victoriametrics"
       },
       "gridPos": {
-        "h": 8,
-        "w": 10,
-        "x": 14,
+        "h": 10,
+        "w": 9,
+        "x": 15,
         "y": 28
       },
       "targets": [
@@ -671,6 +775,18 @@
           {
             "matcher": {
               "id": "byName",
+              "options": "url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
               "options": "mr"
             },
             "properties": [
@@ -693,181 +809,6 @@
       }
     },
     {
-      "type": "row",
-      "title": "Platform",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 36
-      },
-      "collapsed": false,
-      "panels": []
-    },
-    {
-      "type": "table",
-      "title": "Third-party images",
-      "description": "Everything else running in the pidgemail namespaces, Renovate's to move.",
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 37
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"third-party\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_ready{origin=\"third-party\"}[20s]))",
-          "instant": true,
-          "range": false,
-          "format": "table"
-        },
-        {
-          "refId": "B",
-          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[20s])))",
-          "instant": true,
-          "range": false,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "joinByField",
-          "options": {
-            "byField": "id",
-            "mode": "outer"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "job": true,
-              "instance": true,
-              "cluster": true,
-              "k8s_node_name": true,
-              "otel_scope_name": true,
-              "service_name": true,
-              "service_namespace": true,
-              "namespace": true,
-              "origin": true,
-              "url": true,
-              "id": true,
-              "project_url": true,
-              "argocd_url": true,
-              "digest": true
-            },
-            "indexByName": {
-              "app": 0,
-              "workload": 1,
-              "version": 2,
-              "Value #A": 3,
-              "Value #B": 4
-            },
-            "renameByName": {
-              "Value #A": "ready",
-              "Value #B": "desired"
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
-              {
-                "field": "app"
-              }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "filterable": false,
-            "align": "auto"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "app"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Open the service",
-                    "url": "${__data.fields.url}",
-                    "targetBlank": true
-                  },
-                  {
-                    "title": "Argo CD",
-                    "url": "${__data.fields.argocd_url}",
-                    "targetBlank": true
-                  },
-                  {
-                    "title": "GitLab",
-                    "url": "${__data.fields.project_url}",
-                    "targetBlank": true
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "workload"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Argo CD",
-                    "url": "${__data.fields.argocd_url}",
-                    "targetBlank": true
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "version"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Container registry",
-                    "url": "${__data.fields.project_url}/container_registry",
-                    "targetBlank": true
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm"
-      }
-    },
-    {
       "type": "logs",
       "title": "Events",
       "description": "Every transition the tracker recorded, newest first.",
@@ -876,10 +817,10 @@
         "uid": "victorialogs"
       },
       "gridPos": {
-        "h": 16,
-        "w": 12,
-        "x": 12,
-        "y": 37
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 38
       },
       "targets": [
         {
