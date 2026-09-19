@@ -85,7 +85,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 20,
+        "w": 16,
         "x": 4,
         "y": 1
       },
@@ -189,6 +189,55 @@
       }
     },
     {
+      "type": "stat",
+      "title": "Workloads short of replicas",
+      "description": "Deployments answering with fewer replicas than asked for.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(last_over_time(pidgemail_deployed_ready[2m]) < last_over_time(pidgemail_deployed_desired[2m])) or vector(0)",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
       "type": "row",
       "title": "Environments",
       "gridPos": {
@@ -202,8 +251,8 @@
     },
     {
       "type": "table",
-      "title": "Production",
-      "description": "Version each application runs, as last reported by Argo CD.",
+      "title": "Fleet",
+      "description": "Every workload in the pidgemail namespaces, the version it runs, and how many replicas answer.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -217,7 +266,14 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(pidgemail_deployed_version[24h])",
+          "expr": "last_over_time(pidgemail_deployed_ready[2m])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "B",
+          "expr": "last_over_time(pidgemail_deployed_desired[2m])",
           "instant": true,
           "range": false,
           "format": "table"
@@ -225,33 +281,72 @@
       ],
       "transformations": [
         {
+          "id": "merge",
+          "options": {}
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true,
               "__name__": true,
-              "job": true,
-              "instance": true,
-              "Value": true,
               "cluster": true,
+              "instance": true,
+              "job": true,
               "k8s_node_name": true,
               "otel_scope_name": true,
               "service_name": true,
-              "service_namespace": true
+              "service_namespace": true,
+              "image": true,
+              "url": true
             },
             "indexByName": {
-              "app": 0,
-              "version": 1,
-              "author": 2,
-              "sha": 3
+              "namespace": 0,
+              "workload": 1,
+              "version": 2,
+              "Value #A": 3,
+              "Value #B": 4
             },
-            "renameByName": {}
+            "renameByName": {
+              "Value #A": "ready",
+              "Value #B": "desired"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "namespace"
+              }
+            ]
           }
         }
       ],
       "fieldConfig": {
         "defaults": {},
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "workload"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open",
+                    "url": "${__data.fields.url}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     {
