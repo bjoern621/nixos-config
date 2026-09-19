@@ -109,7 +109,12 @@
               "instance": true,
               "project": true,
               "mr_url": true,
-              "pipeline_url": true
+              "pipeline_url": true,
+              "cluster": true,
+              "k8s_node_name": true,
+              "otel_scope_name": true,
+              "service_name": true,
+              "service_namespace": true
             },
             "indexByName": {
               "app": 0,
@@ -227,7 +232,12 @@
               "__name__": true,
               "job": true,
               "instance": true,
-              "Value": true
+              "Value": true,
+              "cluster": true,
+              "k8s_node_name": true,
+              "otel_scope_name": true,
+              "service_name": true,
+              "service_namespace": true
             },
             "indexByName": {
               "app": 0,
@@ -276,7 +286,12 @@
               "__name__": true,
               "job": true,
               "instance": true,
-              "Value": true
+              "Value": true,
+              "cluster": true,
+              "k8s_node_name": true,
+              "otel_scope_name": true,
+              "service_name": true,
+              "service_namespace": true
             },
             "indexByName": {
               "mr": 0,
