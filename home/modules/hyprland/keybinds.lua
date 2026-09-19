@@ -56,11 +56,3 @@ hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 hl.bind("mouse:276", hl.dsp.window.drag(), { mouse = true })
 hl.bind("mouse:275", hl.dsp.window.resize(), { mouse = true })
-
--- Click binds (old bindc): press and release without crossing drag_threshold.
--- click = true shares the #15700 release latch, so the first click after
--- typing may also be swallowed; threshold gating needs the flag regardless.
--- No mouse = true: click implies release,
--- and hl.bind rejects mouse together with release.
-hl.bind("SUPER + mouse:272", hl.dsp.window.float({ action = "toggle" }), { click = true })
-hl.bind("mouse:276", hl.dsp.window.float({ action = "toggle" }), { click = true })
