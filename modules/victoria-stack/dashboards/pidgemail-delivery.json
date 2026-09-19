@@ -13,6 +13,43 @@
     "from": "now-6h",
     "to": "now"
   },
+  "timepicker": {
+    "hidden": true
+  },
+  "links": [
+    {
+      "type": "link",
+      "title": "GitLab",
+      "url": "https://gitlab.bjoernblessin.de/pidgemail",
+      "icon": "external link",
+      "targetBlank": true,
+      "tags": []
+    },
+    {
+      "type": "link",
+      "title": "Running pipelines",
+      "url": "https://gitlab.bjoernblessin.de/dashboard/pipelines",
+      "icon": "external link",
+      "targetBlank": true,
+      "tags": []
+    },
+    {
+      "type": "link",
+      "title": "Merge requests",
+      "url": "https://gitlab.bjoernblessin.de/dashboard/merge_requests?scope=all&state=opened",
+      "icon": "external link",
+      "targetBlank": true,
+      "tags": []
+    },
+    {
+      "type": "link",
+      "title": "Argo CD",
+      "url": "https://argocd-argocd-server.tail115f30.ts.net/applications",
+      "icon": "external link",
+      "targetBlank": true,
+      "tags": []
+    }
+  ],
   "panels": [
     {
       "type": "row",
@@ -27,6 +64,79 @@
       "panels": []
     },
     {
+      "type": "marcusolsson-dynamictext-panel",
+      "title": "Delivery pipelines",
+      "description": "Every commit on its way to the cluster, and the step it sits on. Each chip opens the tool that runs it.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 18,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(pidgemail_delivery_stage[20s])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "B",
+          "expr": "last_over_time(pidgemail_delivery_stage_seconds[20s])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "C",
+          "expr": "last_over_time(pidgemail_delivery_total_seconds[20s])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "D",
+          "expr": "last_over_time(pidgemail_stage_duration_seconds[6h])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "E",
+          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[20s]))",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "options": {
+        "renderMode": "data",
+        "content": "<div class=\"pdx-mount\"></div>",
+        "defaultContent": "<div class=\"pdx-mount\"></div>",
+        "editors": [
+          "helpers",
+          "afterRender",
+          "styles"
+        ],
+        "editor": {
+          "format": "auto",
+          "language": "html"
+        },
+        "helpers": "",
+        "afterRender": "/**\n * Draws one card per commit on its way to the cluster.\n * A card carries the phases of the run, a chip per step, and a clock that keeps\n * counting between refreshes so the card moves with the event feed.\n */\nconst element = context.element;\nconst theme = context.grafana.theme;\n\n/** Order decides which steps a delivery has already passed. */\nconst STAGES = [\n  'started',\n  'waiting_for_build',\n  'building_image',\n  'waiting_for_renovate',\n  'renovate_running',\n  'waiting_for_merge',\n  'waiting_for_argocd',\n  'argocd_syncing',\n  'rolling_out',\n  'finished',\n];\nconst FAILED = ['build_failed', 'renovate_failed', 'sync_failed', 'degraded'];\n\n/** Phases the cluster moves a commit through, drawn left to right. */\nconst PHASES = [\n  {\n    name: 'build',\n    chips: [\n      { label: 'queued', stages: ['started', 'waiting_for_build'], link: 'pipeline_url' },\n      { label: 'image', stages: ['building_image'], link: 'pipeline_url' },\n    ],\n  },\n  {\n    name: 'renovate',\n    chips: [\n      { label: 'queued', stages: ['waiting_for_renovate'], link: 'renovate_url' },\n      { label: 'bump', stages: ['renovate_running'], link: 'renovate_url' },\n    ],\n  },\n  {\n    name: 'merge',\n    chips: [{ label: 'request', stages: ['waiting_for_merge'], link: 'mr_url' }],\n  },\n  {\n    name: 'deploy',\n    chips: [\n      { label: 'queued', stages: ['waiting_for_argocd'], link: 'argocd_url' },\n      { label: 'sync', stages: ['argocd_syncing'], link: 'argocd_url' },\n      { label: 'rollout', stages: ['rolling_out'], link: 'argocd_url' },\n    ],\n  },\n  {\n    name: 'live',\n    chips: [{ label: 'healthy', stages: ['finished'], link: 'app_url' }],\n  },\n];\n\nconst MARKS = { done: '\u2713', failed: '\u2715', pending: '', running: '' };\n\n/** Colors follow the dashboard theme, so the card reads in light and dark. */\nconst palette = {\n  '--pdx-text': theme.colors.text.primary,\n  '--pdx-dim': theme.colors.text.secondary,\n  '--pdx-link': theme.colors.text.link,\n  '--pdx-border': theme.colors.border.weak,\n  '--pdx-panel': theme.colors.background.primary,\n  '--pdx-phase': theme.colors.background.secondary,\n  '--pdx-chip': theme.colors.background.primary,\n  '--pdx-ok': theme.colors.success.text,\n  '--pdx-bad': theme.colors.error.text,\n  '--pdx-run': theme.colors.primary.text,\n  '--pdx-accent': theme.colors.border.strong,\n  '--pdx-mono': theme.typography.fontFamilyMonospace,\n};\nObject.keys(palette).forEach((key) => element.style.setProperty(key, palette[key]));\n\n/** Frames arrive one per query. Reading them by refId keeps order out of it. */\nconst frames = {};\n((context.panelData && context.panelData.series) || []).forEach((frame) => {\n  frames[frame.refId] = frame;\n});\n\n/** Rows of a frame as plain objects, the sample value under `value`. */\nconst readRows = (refId) => {\n  const frame = frames[refId];\n  if (!frame || !frame.fields || !frame.length) {\n    return [];\n  }\n  const valueField = frame.fields.find((field) => field.type === 'number');\n  const out = [];\n  for (let i = 0; i < frame.length; i++) {\n    const row = { value: 0 };\n    frame.fields.forEach((field) => {\n      const value = field.values.get ? field.values.get(i) : field.values[i];\n      if (field === valueField) {\n        row.value = value;\n      } else {\n        row[field.name] = value;\n      }\n    });\n    out.push(row);\n  }\n  return out;\n};\n\n/**\n * One row per commit. A stage change writes a new label set and the set it\n * replaced answers for another few seconds, so the highest transition count wins.\n */\nconst deliveries = new Map();\nreadRows('A').forEach((row) => {\n  const held = deliveries.get(row.sha);\n  if (!held || row.value > held.value) {\n    deliveries.set(row.sha, row);\n  }\n});\n\n/** Seconds keyed by commit and stage, matching a row to its own label set. */\nconst keyed = (refId) => {\n  const out = {};\n  readRows(refId).forEach((row) => {\n    out[row.sha + '|' + row.stage] = row.value;\n  });\n  return out;\n};\nconst elapsed = keyed('B');\nconst total = keyed('C');\nconst spent = keyed('D');\n\n/** Address each service answers on, for the chip that closes a delivery. */\nconst liveUrl = {};\nreadRows('E').forEach((row) => {\n  if (row.url) {\n    liveUrl[row.app] = row.url;\n  }\n});\n\nconst clocks = [];\nconst started = Date.now();\n\nconst format = (seconds) => {\n  if (seconds === undefined || seconds === null || isNaN(seconds)) {\n    return '';\n  }\n  if (seconds < 60) {\n    return (seconds < 10 ? seconds.toFixed(1) : Math.round(seconds)) + 's';\n  }\n  const minutes = Math.floor(seconds / 60);\n  if (minutes < 60) {\n    return minutes + 'm ' + Math.round(seconds % 60) + 's';\n  }\n  return Math.floor(minutes / 60) + 'h ' + (minutes % 60) + 'm';\n};\n\nconst add = (parent, tag, className, text) => {\n  const node = document.createElement(tag);\n  if (className) {\n    node.className = className;\n  }\n  if (text !== undefined) {\n    node.textContent = text;\n  }\n  parent.appendChild(node);\n  return node;\n};\n\n/** A link where the tracker knows the address, plain text where it does not. */\nconst link = (parent, className, text, href) => {\n  const node = add(parent, href ? 'a' : 'span', className, text);\n  if (href) {\n    node.href = href;\n    node.target = '_blank';\n    node.rel = 'noreferrer';\n  }\n  return node;\n};\n\n/** Seconds a clock shows now, counting on from the sample it was drawn with. */\nconst tick = () => {\n  const drifted = (Date.now() - started) / 1000;\n  clocks.forEach((clock) => {\n    clock.node.textContent = format(clock.base + drifted);\n  });\n};\n\nconst root = document.createElement('div');\nroot.className = 'pdx';\n\nconst settled = (row) => (row.stage === 'finished' || FAILED.indexOf(row.stage) !== -1 ? 1 : 0);\nconst age = (row) => total[row.sha + '|' + row.stage] || 0;\n\nconst rows = Array.from(deliveries.values()).sort((left, right) => {\n  return settled(left) - settled(right) || age(left) - age(right);\n});\n\nif (!rows.length) {\n  add(root, 'div', 'pdx-empty', 'Nothing has been delivered in the last ten minutes.');\n}\n\nrows.forEach((delivery) => {\n  const failed = FAILED.indexOf(delivery.stage) !== -1;\n  const done = delivery.stage === 'finished';\n  const at = STAGES.indexOf(delivery.step || delivery.stage);\n  const live = elapsed[delivery.sha + '|' + delivery.stage];\n  const app = delivery.app || '';\n\n  const card = add(root, 'div', 'pdx-card');\n  card.style.borderLeftColor = failed\n    ? palette['--pdx-bad']\n    : done\n      ? palette['--pdx-ok']\n      : palette['--pdx-run'];\n\n  const head = add(card, 'div', 'pdx-head');\n  link(head, 'pdx-app', app, delivery.project_url);\n  link(head, 'pdx-version', delivery.version || delivery.sha, delivery.commit_url);\n  link(head, 'pdx-meta', delivery.ref, delivery.ref_url);\n  link(head, 'pdx-meta', delivery.author, delivery.author_url);\n  add(head, 'span', 'pdx-spacer');\n\n  const clock = add(head, 'span', 'pdx-total');\n  const elapsedTotal = total[delivery.sha + '|' + delivery.stage];\n  clock.textContent = format(elapsedTotal);\n  if (!done && !failed && elapsedTotal !== undefined) {\n    clocks.push({ node: clock, base: elapsedTotal });\n  }\n\n  const links = add(head, 'nav', 'pdx-links');\n  [\n    ['Pipeline', delivery.pipeline_url],\n    ['Merge request', delivery.mr_url],\n    ['Argo CD', delivery.argocd_url],\n    ['Live', liveUrl[app]],\n  ].forEach((pair) => {\n    if (pair[1]) {\n      link(links, '', pair[0], pair[1]);\n    }\n  });\n\n  const flow = add(card, 'div', 'pdx-flow');\n  PHASES.forEach((phase, index) => {\n    if (index) {\n      add(flow, 'div', 'pdx-join');\n    }\n    const box = add(flow, 'div', 'pdx-phase');\n    add(box, 'div', 'pdx-phase-name', phase.name);\n    const chips = add(box, 'div', 'pdx-chips');\n\n    phase.chips.forEach((chip) => {\n      const indexes = chip.stages.map((stage) => STAGES.indexOf(stage));\n      const first = Math.min.apply(null, indexes);\n      const last = Math.max.apply(null, indexes);\n\n      let state = 'pending';\n      if (done || at > last) {\n        state = 'done';\n      } else if (at >= first && at <= last) {\n        state = failed ? 'failed' : 'running';\n      }\n\n      const node = link(chips, 'pdx-chip pdx-' + state, undefined, delivery[chip.link]);\n      add(node, 'span', 'pdx-mark', MARKS[state]);\n      add(node, 'span', 'pdx-chip-label', chip.label);\n\n      let seconds = 0;\n      let counting = false;\n      chip.stages.forEach((stage) => {\n        if (spent[delivery.sha + '|' + stage] !== undefined) {\n          seconds += spent[delivery.sha + '|' + stage];\n        } else if (stage === delivery.stage && live !== undefined) {\n          seconds += live;\n          counting = true;\n        }\n      });\n\n      if (state !== 'pending' && seconds > 0) {\n        const time = add(node, 'span', 'pdx-chip-time', format(seconds));\n        if (counting && state === 'running') {\n          clocks.push({ node: time, base: seconds });\n        }\n      }\n    });\n  });\n});\n\nelement.replaceChildren(root);\n\nconst timer = setInterval(tick, 250);\nreturn () => clearInterval(timer);",
+        "styles": ".pdx {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  padding: 2px;\n  font-size: 12px;\n}\n\n.pdx-empty {\n  color: var(--pdx-dim);\n  padding: 16px 4px;\n}\n\n.pdx-card {\n  border: 1px solid var(--pdx-border);\n  border-left: 3px solid var(--pdx-accent);\n  border-radius: 4px;\n  background: var(--pdx-panel);\n  padding: 7px 9px 8px;\n}\n\n.pdx-head {\n  display: flex;\n  align-items: baseline;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-bottom: 6px;\n}\n\n.pdx-app {\n  font-size: 14px;\n  font-weight: 600;\n}\n\n.pdx-version {\n  font-family: var(--pdx-mono);\n  color: var(--pdx-dim);\n}\n\n.pdx-meta {\n  color: var(--pdx-dim);\n}\n\n.pdx-spacer {\n  flex: 1;\n}\n\n.pdx-total {\n  font-variant-numeric: tabular-nums;\n  color: var(--pdx-text);\n}\n\n.pdx-links {\n  display: flex;\n  gap: 6px;\n}\n\n.pdx-links a {\n  border: 1px solid var(--pdx-border);\n  border-radius: 3px;\n  padding: 1px 7px;\n  color: var(--pdx-dim);\n  white-space: nowrap;\n}\n\n.pdx-links a:hover {\n  color: var(--pdx-link);\n  border-color: var(--pdx-link);\n}\n\n.pdx-flow {\n  display: flex;\n  align-items: stretch;\n  overflow-x: auto;\n  padding-bottom: 2px;\n}\n\n.pdx-phase {\n  border: 1px solid var(--pdx-border);\n  border-radius: 4px;\n  background: var(--pdx-phase);\n  padding: 5px;\n  min-width: 118px;\n}\n\n.pdx-phase-name {\n  font-weight: 600;\n  color: var(--pdx-dim);\n  text-transform: lowercase;\n  margin: 0 2px 6px;\n}\n\n.pdx-chips {\n  display: flex;\n  flex-direction: column;\n  gap: 5px;\n}\n\n.pdx-chip {\n  display: flex;\n  align-items: center;\n  gap: 7px;\n  border: 1px solid var(--pdx-border);\n  border-radius: 14px;\n  background: var(--pdx-chip);\n  padding: 2px 9px 2px 5px;\n  color: var(--pdx-text);\n}\n\n.pdx-chip:hover {\n  border-color: var(--pdx-link);\n}\n\n.pdx-chip-label {\n  flex: 1;\n  white-space: nowrap;\n}\n\n.pdx-chip-time {\n  font-variant-numeric: tabular-nums;\n  color: var(--pdx-dim);\n  font-size: 11px;\n}\n\n.pdx-pending {\n  opacity: 0.45;\n}\n\n.pdx-mark {\n  width: 14px;\n  height: 14px;\n  flex: 0 0 14px;\n  border-radius: 50%;\n  border: 1.5px solid currentColor;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 9px;\n  line-height: 1;\n}\n\n.pdx-done .pdx-mark {\n  color: var(--pdx-ok);\n}\n\n.pdx-failed .pdx-mark {\n  color: var(--pdx-bad);\n}\n\n.pdx-pending .pdx-mark {\n  color: var(--pdx-dim);\n}\n\n.pdx-running .pdx-mark {\n  color: var(--pdx-run);\n  border-style: solid;\n  border-top-color: transparent;\n  animation: pdx-turn 0.9s linear infinite;\n}\n\n.pdx-running .pdx-chip-label {\n  color: var(--pdx-run);\n}\n\n.pdx-join {\n  width: 16px;\n  height: 2px;\n  flex: 0 0 16px;\n  align-self: center;\n  background: var(--pdx-accent);\n}\n\n@keyframes pdx-turn {\n  to {\n    transform: rotate(360deg);\n  }\n}",
+        "externalStyles": [],
+        "contentPartials": [],
+        "status": "",
+        "wrap": false
+      }
+    },
+    {
       "type": "stat",
       "title": "In flight",
       "description": "Deliveries between a pipeline and the cluster.",
@@ -35,15 +145,15 @@
         "uid": "victoriametrics"
       },
       "gridPos": {
-        "h": 8,
-        "w": 4,
-        "x": 0,
+        "h": 6,
+        "w": 6,
+        "x": 18,
         "y": 1
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "count(last_over_time(pidgemail_delivery_stage[30s])) or vector(0)",
+          "expr": "count(last_over_time(pidgemail_delivery_in_flight[20s])) or vector(0)",
           "instant": true,
           "range": false
         }
@@ -54,7 +164,8 @@
             "lastNotNull"
           ]
         },
-        "colorMode": "value"
+        "colorMode": "value",
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -73,123 +184,14 @@
           }
         },
         "overrides": []
-      }
-    },
-    {
-      "type": "table",
-      "title": "Deliveries in flight",
-      "description": "One row per commit on its way to the cluster. The value counts seconds spent in the stage shown.",
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
       },
-      "gridPos": {
-        "h": 8,
-        "w": 16,
-        "x": 4,
-        "y": 1
-      },
-      "targets": [
+      "links": [
         {
-          "refId": "A",
-          "expr": "last_over_time(pidgemail_delivery_stage_seconds[30s])",
-          "instant": true,
-          "range": false,
-          "format": "table"
+          "title": "Running pipelines",
+          "url": "https://gitlab.bjoernblessin.de/dashboard/pipelines",
+          "targetBlank": true
         }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "job": true,
-              "instance": true,
-              "project": true,
-              "mr_url": true,
-              "pipeline_url": true,
-              "cluster": true,
-              "k8s_node_name": true,
-              "otel_scope_name": true,
-              "service_name": true,
-              "service_namespace": true
-            },
-            "indexByName": {
-              "app": 0,
-              "version": 1,
-              "stage": 2,
-              "Value": 3,
-              "ref": 4,
-              "author": 5,
-              "sha": 6
-            },
-            "renameByName": {
-              "Value": "seconds in stage"
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
-              {
-                "field": "app"
-              }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "filterable": false
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "app"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Pipeline",
-                    "url": "${__data.fields.pipeline_url}",
-                    "targetBlank": true
-                  },
-                  {
-                    "title": "Merge request",
-                    "url": "${__data.fields.mr_url}",
-                    "targetBlank": true
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "seconds in stage"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "s"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true
-      }
+      ]
     },
     {
       "type": "stat",
@@ -200,15 +202,15 @@
         "uid": "victoriametrics"
       },
       "gridPos": {
-        "h": 8,
-        "w": 4,
-        "x": 20,
-        "y": 1
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 7
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "count(last_over_time(pidgemail_deployed_ready[2m]) < last_over_time(pidgemail_deployed_desired[2m])) or vector(0)",
+          "expr": "count((last_over_time(pidgemail_deployed_ready[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_ready[20s]))) < on (id) group_left () (sum by (id) (last_over_time(pidgemail_deployed_desired[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_desired[20s]))))) or vector(0)",
           "instant": true,
           "range": false
         }
@@ -219,7 +221,8 @@
             "lastNotNull"
           ]
         },
-        "colorMode": "value"
+        "colorMode": "value",
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -238,6 +241,161 @@
           }
         },
         "overrides": []
+      },
+      "links": [
+        {
+          "title": "Argo CD",
+          "url": "https://argocd-argocd-server.tail115f30.ts.net/applications",
+          "targetBlank": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Since the last rollout",
+      "description": "Time since a workload last changed image.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "min(last_over_time(pidgemail_deployed_age_seconds[20s]))",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "row",
+      "title": "Timing",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "barchart",
+      "title": "Where the time went",
+      "description": "Seconds each step took, stacked per delivery.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(pidgemail_stage_duration_seconds[6h])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "cluster": true,
+              "k8s_node_name": true,
+              "otel_scope_name": true,
+              "service_name": true,
+              "service_namespace": true,
+              "app": true,
+              "sha": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "stage",
+            "rowField": "delivery",
+            "valueField": "Value",
+            "emptyValue": "zero"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "gradientMode": "none",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisLabel": ""
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "stacking": "normal",
+        "showValue": "never",
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
       }
     },
     {
@@ -247,7 +405,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 27
       },
       "collapsed": false,
       "panels": []
@@ -255,7 +413,7 @@
     {
       "type": "table",
       "title": "Pidgemail services",
-      "description": "What each service runs right now: the version tag, the digest behind it, replicas answering, and how long ago the rollout happened.",
+      "description": "What each service runs now: the version tag, the digest behind it, replicas answering, and how long ago the rollout happened.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -264,26 +422,26 @@
         "h": 8,
         "w": 14,
         "x": 0,
-        "y": 10
+        "y": 28
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[45s])",
+          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[20s]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "B",
-          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[45s]))",
+          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[20s])))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "C",
-          "expr": "max by (id) (last_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[45s]))",
+          "expr": "max by (id) (last_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[20s])))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -303,9 +461,9 @@
             "excludeByName": {
               "Time": true,
               "__name__": true,
-              "cluster": true,
-              "instance": true,
               "job": true,
+              "instance": true,
+              "cluster": true,
               "k8s_node_name": true,
               "otel_scope_name": true,
               "service_name": true,
@@ -313,7 +471,9 @@
               "namespace": true,
               "origin": true,
               "url": true,
-              "id": true
+              "id": true,
+              "project_url": true,
+              "argocd_url": true
             },
             "indexByName": {
               "app": 0,
@@ -361,8 +521,54 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Open",
+                    "title": "Open the service",
                     "url": "${__data.fields.url}",
+                    "targetBlank": true
+                  },
+                  {
+                    "title": "Argo CD",
+                    "url": "${__data.fields.argocd_url}",
+                    "targetBlank": true
+                  },
+                  {
+                    "title": "GitLab",
+                    "url": "${__data.fields.project_url}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "workload"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Argo CD",
+                    "url": "${__data.fields.argocd_url}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "version"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Container registry",
+                    "url": "${__data.fields.project_url}/container_registry",
                     "targetBlank": true
                   }
                 ]
@@ -378,6 +584,10 @@
               {
                 "id": "unit",
                 "value": "s"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
               }
             ]
           },
@@ -396,13 +606,14 @@
         ]
       },
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "cellHeight": "sm"
       }
     },
     {
       "type": "table",
       "title": "Review environments",
-      "description": "One row per open merge request with a preview. Destroying a preview from here waits on the pull request generator.",
+      "description": "One row per open merge request with a preview.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -411,7 +622,7 @@
         "h": 8,
         "w": 10,
         "x": 14,
-        "y": 10
+        "y": 28
       },
       "targets": [
         {
@@ -431,12 +642,12 @@
               "__name__": true,
               "job": true,
               "instance": true,
-              "Value": true,
               "cluster": true,
               "k8s_node_name": true,
               "otel_scope_name": true,
               "service_name": true,
-              "service_namespace": true
+              "service_namespace": true,
+              "Value": true
             },
             "indexByName": {
               "mr": 0,
@@ -467,7 +678,7 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Open preview",
+                    "title": "Open the preview",
                     "url": "${__data.fields.url}",
                     "targetBlank": true
                   }
@@ -488,7 +699,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 36
       },
       "collapsed": false,
       "panels": []
@@ -505,19 +716,19 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 19
+        "y": 37
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"third-party\"}[45s])",
+          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"third-party\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_ready{origin=\"third-party\"}[20s]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "B",
-          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[45s]))",
+          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[20s]) + 0 * topk by (id) (1, tlast_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[20s])))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -537,9 +748,9 @@
             "excludeByName": {
               "Time": true,
               "__name__": true,
-              "cluster": true,
-              "instance": true,
               "job": true,
+              "instance": true,
+              "cluster": true,
               "k8s_node_name": true,
               "otel_scope_name": true,
               "service_name": true,
@@ -548,6 +759,8 @@
               "origin": true,
               "url": true,
               "id": true,
+              "project_url": true,
+              "argocd_url": true,
               "digest": true
             },
             "indexByName": {
@@ -582,10 +795,76 @@
             "align": "auto"
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "app"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open the service",
+                    "url": "${__data.fields.url}",
+                    "targetBlank": true
+                  },
+                  {
+                    "title": "Argo CD",
+                    "url": "${__data.fields.argocd_url}",
+                    "targetBlank": true
+                  },
+                  {
+                    "title": "GitLab",
+                    "url": "${__data.fields.project_url}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "workload"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Argo CD",
+                    "url": "${__data.fields.argocd_url}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "version"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Container registry",
+                    "url": "${__data.fields.project_url}/container_registry",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "cellHeight": "sm"
       }
     },
     {
@@ -600,7 +879,7 @@
         "h": 16,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 37
       },
       "targets": [
         {
@@ -614,48 +893,6 @@
         "showTime": true,
         "sortOrder": "Descending",
         "wrapLogMessage": true
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Stage durations",
-      "description": "Seconds each stage took, per delivery.",
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 27
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "pidgemail_stage_duration_seconds",
-          "legendFormat": "{{app}} {{stage}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 60,
-            "lineWidth": 1
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "max"
-          ]
-        }
       }
     }
   ]
