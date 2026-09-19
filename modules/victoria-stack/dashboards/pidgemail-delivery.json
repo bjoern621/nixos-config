@@ -273,14 +273,14 @@
         },
         {
           "refId": "B",
-          "expr": "last_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[45s])",
+          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[45s]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "C",
-          "expr": "last_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[45s])",
+          "expr": "max by (id) (last_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[45s]))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -288,8 +288,11 @@
       ],
       "transformations": [
         {
-          "id": "merge",
-          "options": {}
+          "id": "joinByField",
+          "options": {
+            "byField": "id",
+            "mode": "outer"
+          }
         },
         {
           "id": "organize",
@@ -306,7 +309,8 @@
               "service_namespace": true,
               "namespace": true,
               "origin": true,
-              "url": true
+              "url": true,
+              "id": true
             },
             "indexByName": {
               "app": 0,
@@ -479,7 +483,7 @@
         "uid": "victoriametrics"
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
         "x": 0,
         "y": 19
@@ -494,7 +498,7 @@
         },
         {
           "refId": "B",
-          "expr": "last_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[45s])",
+          "expr": "sum by (id) (last_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[45s]))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -502,8 +506,11 @@
       ],
       "transformations": [
         {
-          "id": "merge",
-          "options": {}
+          "id": "joinByField",
+          "options": {
+            "byField": "id",
+            "mode": "outer"
+          }
         },
         {
           "id": "organize",
@@ -521,6 +528,7 @@
               "namespace": true,
               "origin": true,
               "url": true,
+              "id": true,
               "digest": true
             },
             "indexByName": {
@@ -562,7 +570,7 @@
         "uid": "victorialogs"
       },
       "gridPos": {
-        "h": 6,
+        "h": 16,
         "w": 12,
         "x": 12,
         "y": 19
@@ -582,18 +590,6 @@
       }
     },
     {
-      "type": "row",
-      "title": "History",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 25
-      },
-      "collapsed": false,
-      "panels": []
-    },
-    {
       "type": "timeseries",
       "title": "Stage durations",
       "description": "Seconds each stage took, per delivery.",
@@ -603,9 +599,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
-        "y": 26
+        "y": 27
       },
       "targets": [
         {
