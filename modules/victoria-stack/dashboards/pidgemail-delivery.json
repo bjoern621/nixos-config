@@ -239,7 +239,7 @@
     },
     {
       "type": "row",
-      "title": "Environments",
+      "title": "Services",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -251,29 +251,36 @@
     },
     {
       "type": "table",
-      "title": "Fleet",
-      "description": "Every workload in the pidgemail namespaces, the version it runs, and how many replicas answer.",
+      "title": "Pidgemail services",
+      "description": "What each service runs right now: the version tag, the digest behind it, replicas answering, and how long ago the rollout happened.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
+        "h": 8,
+        "w": 14,
         "x": 0,
         "y": 10
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(pidgemail_deployed_ready[2m])",
+          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"pidgemail\"}[45s])",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "B",
-          "expr": "last_over_time(pidgemail_deployed_desired[2m])",
+          "expr": "last_over_time(pidgemail_deployed_desired{origin=\"pidgemail\"}[45s])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "C",
+          "expr": "last_over_time(pidgemail_deployed_age_seconds{origin=\"pidgemail\"}[45s])",
           "instant": true,
           "range": false,
           "format": "table"
@@ -297,19 +304,23 @@
               "otel_scope_name": true,
               "service_name": true,
               "service_namespace": true,
-              "image": true,
+              "namespace": true,
+              "origin": true,
               "url": true
             },
             "indexByName": {
-              "namespace": 0,
+              "app": 0,
               "workload": 1,
               "version": 2,
-              "Value #A": 3,
-              "Value #B": 4
+              "digest": 3,
+              "Value #A": 4,
+              "Value #B": 5,
+              "Value #C": 6
             },
             "renameByName": {
               "Value #A": "ready",
-              "Value #B": "desired"
+              "Value #B": "desired",
+              "Value #C": "running for"
             }
           }
         },
@@ -319,7 +330,7 @@
             "fields": {},
             "sort": [
               {
-                "field": "namespace"
+                "field": "app"
               }
             ]
           }
@@ -331,7 +342,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "workload"
+              "options": "app"
             },
             "properties": [
               {
@@ -343,6 +354,30 @@
                     "targetBlank": true
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "running for"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "digest"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
               }
             ]
           }
@@ -358,9 +393,9 @@
         "uid": "victoriametrics"
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
+        "h": 8,
+        "w": 10,
+        "x": 14,
         "y": 10
       },
       "targets": [
@@ -425,12 +460,135 @@
     },
     {
       "type": "row",
+      "title": "Platform",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Third-party images",
+      "description": "Everything else running in the pidgemail namespaces, Renovate's to move.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(pidgemail_deployed_ready{origin=\"third-party\"}[45s])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "refId": "B",
+          "expr": "last_over_time(pidgemail_deployed_desired{origin=\"third-party\"}[45s])",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "instance": true,
+              "job": true,
+              "k8s_node_name": true,
+              "otel_scope_name": true,
+              "service_name": true,
+              "service_namespace": true,
+              "namespace": true,
+              "origin": true,
+              "url": true,
+              "digest": true
+            },
+            "indexByName": {
+              "app": 0,
+              "workload": 1,
+              "version": 2,
+              "Value #A": 3,
+              "Value #B": 4
+            },
+            "renameByName": {
+              "Value #A": "ready",
+              "Value #B": "desired"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "app"
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Events",
+      "description": "Every transition the tracker recorded, newest first.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{k8s.namespace.name=\"pidgemail-delivery\"}",
+          "queryType": "instant",
+          "maxLines": 200
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      }
+    },
+    {
+      "type": "row",
       "title": "History",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 25
       },
       "collapsed": false,
       "panels": []
@@ -445,9 +603,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 18
+        "y": 26
       },
       "targets": [
         {
@@ -475,34 +633,6 @@
             "max"
           ]
         }
-      }
-    },
-    {
-      "type": "logs",
-      "title": "Events",
-      "description": "Every transition the tracker recorded, newest first.",
-      "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 18
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "{k8s.namespace.name=\"pidgemail-delivery\"}",
-          "queryType": "instant",
-          "maxLines": 200
-        }
-      ],
-      "options": {
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
       }
     }
   ]
