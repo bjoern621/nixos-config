@@ -102,6 +102,9 @@ in
               access = "proxy";
               url = "http://127.0.0.1:8428";
               isDefault = true;
+              # VictoriaMetrics answers as of 30 s ago by default, which puts a
+              # panel reading the present behind the log panel beside it.
+              jsonData.customQueryParameters = "latency_offset=1s";
             }
             {
               name = "VictoriaLogs";
