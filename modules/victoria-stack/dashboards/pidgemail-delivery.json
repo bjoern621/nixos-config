@@ -186,6 +186,9 @@
             ]
           }
         ]
+      },
+      "options": {
+        "showHeader": true
       }
     },
     {
@@ -341,7 +344,12 @@
         }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": {
+            "filterable": false,
+            "align": "auto"
+          }
+        },
         "overrides": [
           {
             "matcher": {
@@ -386,6 +394,9 @@
             ]
           }
         ]
+      },
+      "options": {
+        "showHeader": true
       }
     },
     {
@@ -439,7 +450,12 @@
         }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": {
+            "filterable": false,
+            "align": "auto"
+          }
+        },
         "overrides": [
           {
             "matcher": {
@@ -460,6 +476,9 @@
             ]
           }
         ]
+      },
+      "options": {
+        "showHeader": true
       }
     },
     {
@@ -557,8 +576,16 @@
         }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": {
+            "filterable": false,
+            "align": "auto"
+          }
+        },
         "overrides": []
+      },
+      "options": {
+        "showHeader": true
       }
     },
     {
