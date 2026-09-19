@@ -9,5 +9,8 @@
       bin = "claude";
       binDeps = [ pkgs.nodejs ];
     })
+
+    # MCP server for Grafana. Claude spawns it by bare command name, so it sits on PATH.
+    pkgs.mcp-grafana
   ];
 }
