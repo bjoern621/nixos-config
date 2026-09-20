@@ -41,6 +41,21 @@ in
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  # Compressed swap inside the guest. A swapfile would land in the qcow2 on the
+  # hypervisor SSD, where a paged-out etcd write costs milliseconds and misses
+  # raft heartbeats.
+  # Kubelet defaults to NoSwap and zeroes memory.swap.max on every pod cgroup,
+  # so the device serves the k3s server process and the system units beside it.
+  # 25% follows guest RAM as the domain grows.
+  zramSwap = {
+    enable = true;
+    memoryPercent = 25;
+  };
+
+  # zram serves one page per fault. The default of 3 decompresses 8 pages to
+  # deliver one.
+  boot.kernel.sysctl."vm.page-cluster" = 0;
+
   # Headless guest. Hypervisor QXL display serves only as recovery console.
   # Its framebuffer console exhausts device VRAM after hours of uptime.
   # Every console write then fails an eviction and logs "[TTM] Buffer eviction failed".
