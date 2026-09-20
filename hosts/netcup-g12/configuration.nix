@@ -63,6 +63,25 @@ in
   # working set that a CI job is about to read again.
   boot.kernel.sysctl."vm.swappiness" = 20;
 
+
+  # The kubelet takes swap away from every container unless it is told otherwise: NodeSwap
+  # is GA and on, but the default behaviour is NoSwap, which pins memory.swap.max at 0 and
+  # leaves the swapfile untouched however short of memory the node runs.
+  #
+  # LimitedSwap lends a burstable pod swap in proportion to the memory it requested, so
+  # GitLab's idle workers can leave RAM and a CI job's spike lands on disk rather than on
+  # the kernel's killer. Guaranteed and best-effort pods still get none, which is what
+  # keeps a latency-sensitive workload out of the swapfile.
+  #
+  # swapBehavior has no kubelet flag, so it arrives as a configuration file the agent reads.
+  environment.etc."rancher/k3s/kubelet.yaml".text = ''
+    apiVersion: kubelet.config.k8s.io/v1beta1
+    kind: KubeletConfiguration
+    failSwapOn: false
+    memorySwap:
+      swapBehavior: LimitedSwap
+  '';
+
   # Second node of the hh cluster, joining the vmk3s server over the tailnet.
   # See docs/k3s-cluster.md for what schedules here and how a workload asks to.
   services.k3s-tailnet = {
@@ -100,6 +119,7 @@ in
       # swap in proportion to the memory it requested, so an idle page leaves RAM instead of
       # the pod holding it being killed.
       "--kubelet-arg=fail-swap-on=false"
+      "--kubelet-arg=config=/etc/rancher/k3s/kubelet.yaml"
 
       # The taint is the whole placement policy: nothing runs here that did not ask to.
       # Storage is what makes it necessary. The cluster's only StorageClass is k3s'
