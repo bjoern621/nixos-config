@@ -44,8 +44,9 @@ in
   # Compressed swap inside the guest. A swapfile would land in the qcow2 on the
   # hypervisor SSD, where a paged-out etcd write costs milliseconds and misses
   # raft heartbeats.
-  # Kubelet defaults to NoSwap and zeroes memory.swap.max on every pod cgroup,
-  # so the device serves the k3s server process and the system units beside it.
+  # Kubelet zeroes memory.swap.max on every container carrying a memory limit,
+  # so the device backs the k3s server process, the system units beside it and
+  # any container that runs without a limit.
   # 25% follows guest RAM as the domain grows.
   zramSwap = {
     enable = true;
