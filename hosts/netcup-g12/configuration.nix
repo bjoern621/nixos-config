@@ -44,6 +44,25 @@ in
   # console=ttyS0 (modules/server-base.nix) stays for early boot output.
   systemd.services."serial-getty@ttyS0".enable = false;
 
+
+  # GitLab Omnibus runs beside the cluster on this host, and its four Ruby workers hold
+  # about 5 GiB of the 8 GiB. A job pod asking for a gigabyte found none and died without
+  # a line in its log, so the kernel gets somewhere to put what nothing is reading.
+  #
+  # 16 GiB against 8 GiB of RAM covers what a quiet Omnibus sits on, and stops short of a
+  # size that lets a runaway thrash the disk for an hour before it fails. The root
+  # filesystem carries 190 GiB free.
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 16 * 1024;
+    }
+  ];
+
+  # Idle pages go out, pages a build is working on stay in. The default of 60 swaps a
+  # working set that a CI job is about to read again.
+  boot.kernel.sysctl."vm.swappiness" = 20;
+
   # Second node of the hh cluster, joining the vmk3s server over the tailnet.
   # See docs/k3s-cluster.md for what schedules here and how a workload asks to.
   services.k3s-tailnet = {
@@ -74,6 +93,13 @@ in
       # default route otherwise, and eth0's 1500 leaves a pod MTU 220 bytes wider than
       # the tunnel that carries it (modules/k3s-tailnet.nix).
       "--flannel-iface=tailscale0"
+
+      # Swap on the host stops the kubelet from starting unless it is told to expect it, so
+      # this flag and swapDevices above land in one activation or the node drops out.
+      # GitLab and a job pod both run burstable here, and the kubelet lends a burstable pod
+      # swap in proportion to the memory it requested, so an idle page leaves RAM instead of
+      # the pod holding it being killed.
+      "--kubelet-arg=fail-swap-on=false"
 
       # The taint is the whole placement policy: nothing runs here that did not ask to.
       # Storage is what makes it necessary. The cluster's only StorageClass is k3s'
