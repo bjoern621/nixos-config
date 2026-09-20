@@ -80,28 +80,28 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(pidgemail_deployment_stage[7d]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_deployment_stage[7d]))",
+          "expr": "last_over_time(pidgemail_deployment_stage{key!=\"\"}[7d]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_deployment_stage{key!=\"\"}[7d]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "B",
-          "expr": "last_over_time(pidgemail_deployment_stage_seconds[20s])",
+          "expr": "last_over_time(pidgemail_deployment_stage_seconds{key!=\"\"}[20s])",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "C",
-          "expr": "last_over_time(pidgemail_deployment_total_seconds[7d]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_deployment_total_seconds[7d]))",
+          "expr": "last_over_time(pidgemail_deployment_total_seconds{key!=\"\"}[7d]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_deployment_total_seconds{key!=\"\"}[7d]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "D",
-          "expr": "last_over_time(pidgemail_stage_duration_seconds[7d])",
+          "expr": "last_over_time(pidgemail_stage_duration_seconds{key!=\"\"}[7d]) + 0 * topk by (key, stage) (1, tlast_over_time(pidgemail_stage_duration_seconds{key!=\"\"}[7d]))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -115,7 +115,7 @@
         },
         {
           "refId": "F",
-          "expr": "max by (key) (tlast_over_time(pidgemail_deployment_stage[7d]))",
+          "expr": "max by (key) (tlast_over_time(pidgemail_deployment_stage{key!=\"\"}[7d]))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -354,7 +354,7 @@
         },
         {
           "refId": "D",
-          "expr": "last_over_time(pidgemail_review_environment[2m]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_review_environment[2m]))",
+          "expr": "last_over_time(pidgemail_review_environment{key!=\"\"}[2m]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_review_environment{key!=\"\"}[2m]))",
           "instant": true,
           "range": false,
           "format": "table"
@@ -411,21 +411,21 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(pidgemail_stage_duration_seconds[7d])",
+          "expr": "last_over_time(pidgemail_stage_duration_seconds{key!=\"\"}[7d]) + 0 * topk by (key, stage) (1, tlast_over_time(pidgemail_stage_duration_seconds{key!=\"\"}[7d]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "B",
-          "expr": "last_over_time(pidgemail_deployment_stage[7d]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_deployment_stage[7d]))",
+          "expr": "last_over_time(pidgemail_deployment_stage{key!=\"\"}[7d]) + 0 * topk by (key) (1, tlast_over_time(pidgemail_deployment_stage{key!=\"\"}[7d]))",
           "instant": true,
           "range": false,
           "format": "table"
         },
         {
           "refId": "C",
-          "expr": "max by (key) (tlast_over_time(pidgemail_deployment_stage[7d]))",
+          "expr": "max by (key) (tlast_over_time(pidgemail_deployment_stage{key!=\"\"}[7d]))",
           "instant": true,
           "range": false,
           "format": "table"
