@@ -2,7 +2,7 @@
 # Update host flake.lock files to github input revisions that are at least
 # DELAY_DAYS old, giving updates a baking period before they reach the hosts.
 # Writes only the lock files; it does not build or switch. Intended for CI,
-# but runnable locally (needs nix, jq, curl).
+# but runnable locally (needs nix, jq, curl, git).
 #
 # When PR_BODY_FILE is set, a markdown summary of every input change (old/new
 # revision, commit dates, links to GitHub) is written there for use as a pull
@@ -13,6 +13,10 @@ set -euo pipefail
 
 DELAY_DAYS="${DELAY_DAYS:-7}"
 PR_BODY_FILE="${PR_BODY_FILE:-}"
+
+# Bare commit-only clones, one per repository and ref, reused across the flake dirs.
+CLONE_CACHE=$(mktemp -d)
+trap 'rm -rf "$CLONE_CACHE"' EXIT
 
 # A GitHub token (CI provides GITHUB_TOKEN) raises the API rate limit.
 gh_curl() {
@@ -41,11 +45,35 @@ if [[ -n "$PR_BODY_FILE" ]]; then
   summary "\`sysconf-auto-pull\`."
 fi
 
-# Newest commit on $branch of $owner_repo that predates the threshold.
+# Newest commit on the first-parent chain of $branch of $owner_repo that predates the
+# threshold.
+#
+# The commits API answers with every commit reachable from the branch,
+# the side branches of merged pull requests included,
+# ordered by committer date.
+# Its newest entry before the threshold is regularly one of those:
+# a tree the branch never held,
+# missing whatever landed while the pull request was open.
+# Pinning one walks nixpkgs backwards past options the previous pin carried,
+# and every host defining one of them stops evaluating.
+# The first-parent chain holds the states the branch passed through.
+#
+# --filter=tree:0 fetches the commit graph alone.
 stable_sha() {
   local owner_repo="$1" branch="$2"
-  gh_curl "https://api.github.com/repos/$owner_repo/commits?sha=$branch&until=$THRESHOLD_DATE&per_page=1" \
-    | jq -r '.[0].sha // empty'
+  local dir="$CLONE_CACHE/${owner_repo//\//%}%$branch"
+  if [[ ! -d "$dir" ]]; then
+    local branch_args=()
+    if [[ "$branch" != "HEAD" ]]; then
+      branch_args=(--branch "$branch")
+    fi
+    if ! git clone --quiet --bare --filter=tree:0 --single-branch "${branch_args[@]}" \
+      "https://github.com/$owner_repo" "$dir"; then
+      rm -rf "$dir"
+      return 1
+    fi
+  fi
+  git -C "$dir" log --first-parent --until="$THRESHOLD_DATE" -n 1 --format=%H HEAD
 }
 
 # Committer date (ISO 8601) of a revision, or empty on failure.
@@ -90,7 +118,7 @@ update_flake() {
   for line in "${lines[@]}"; do
     IFS=$'\t' read -r name owner_repo branch <<<"$line"
     if ! new_sha=$(stable_sha "$owner_repo" "$branch"); then
-      echo "  $name: GitHub API fetch failed, skipping"
+      echo "  $name: clone of $owner_repo failed, skipping"
       continue
     fi
     if [[ -z "$new_sha" ]]; then
