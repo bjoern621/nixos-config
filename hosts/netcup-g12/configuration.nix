@@ -130,6 +130,11 @@ in
       # with nodeSelector on the label.
       "--node-label=node.hh/site=netcup"
       "--node-taint=node.hh/site=netcup:NoSchedule"
+
+      # NodePorts bind loopback alone. DNAT in PREROUTING puts a NodePort on the FORWARD
+      # path, past the INPUT-only firewall below, and eth0 faces the internet.
+      # The host journald agent dials 127.0.0.1.
+      "--kube-proxy-arg=nodeport-addresses=127.0.0.0/8"
     ];
   };
 

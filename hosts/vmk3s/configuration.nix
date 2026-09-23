@@ -147,6 +147,13 @@ in
       # the traefik LoadBalancer already depends on, so it is effectively
       # static (DHCP reservation on the router).
       "--node-ip=192.168.178.80"
+
+      # NodePorts bind loopback alone. kube-proxy DNATs a NodePort in PREROUTING,
+      # so the packet takes FORWARD and the INPUT-only firewall never sees it;
+      # bound to every address, a NodePort answers on netcup-g12's public one.
+      # Everything using one dials 127.0.0.1: the host journald agent and the
+      # net collector push OTLP to the agent on their own node.
+      "--kube-proxy-arg=nodeport-addresses=127.0.0.0/8"
     ]
     # The tailnet address, for everything an off-LAN node has to reach. Absent
     # until this host's first `tailscale up`, and the server runs single-node
