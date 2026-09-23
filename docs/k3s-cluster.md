@@ -82,6 +82,39 @@ A pod holding such a PVC that moved to the other node would come up on an empty 
 A workload opts in with the toleration, and picks the node in particular with a `nodeSelector` on the label.
 Both are written in `hh-cluster-infra`, per workload.
 
+## Secrets encryption
+
+The API server encrypts Secrets before they reach the datastore, under an AES-CBC key at `/var/lib/rancher/k3s/server/cred/encryption-config.json`.
+That file stays on the server and reaches no backup, so a datastore restored without it decrypts nothing.
+
+`--secrets-encryption` in the server's `extraFlags` covers a cluster's first start.
+A cluster that already ran without it comes back from that restart still disabled, with the identity provider in front of the key.
+Moving such a cluster across takes a fixed order.
+
+1. Write the encryption config while the server still runs without the flag.
+
+    ```sh
+    ssh -t vmk3s sudo k3s secrets-encrypt enable
+    ```
+
+2. Land the flag and restart k3s on it.
+
+    ```sh
+    ssh vmk3s sysconf-pull
+    ```
+
+3. Rotate onto the key and rewrite every Secret already in the datastore. k3s reencrypts around five Secrets per second.
+
+    ```sh
+    ssh -t vmk3s sudo k3s secrets-encrypt rotate-keys
+    ssh -t vmk3s sudo systemctl restart k3s
+    ```
+
+`k3s secrets-encrypt status` reports the stage between steps and reads `Enabled` with an active AES-CBC key once the last one lands.
+Rotating the key later takes step 3 on its own.
+
+Each `secrets-encrypt` call needs root, and `ops` carries passwordless sudo for `nixos-rebuild` alone, so these three are typed by hand.
+
 ## Verify
 
 ```sh

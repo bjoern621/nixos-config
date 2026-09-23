@@ -154,6 +154,12 @@ in
       # Everything using one dials 127.0.0.1: the host journald agent and the
       # net collector push OTLP to the agent on their own node.
       "--kube-proxy-arg=nodeport-addresses=127.0.0.0/8"
+
+      # This flag alone encrypts nothing on a cluster that started without it.
+      # k3s keeps the identity provider first
+      # until `k3s secrets-encrypt rotate-keys` runs.
+      # Procedure in docs/k3s-cluster.md.
+      "--secrets-encryption"
     ]
     # The tailnet address, for everything an off-LAN node has to reach. Absent
     # until this host's first `tailscale up`, and the server runs single-node
