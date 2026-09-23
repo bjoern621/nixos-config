@@ -57,7 +57,8 @@ jobs:
   # which layers modules/ci-hardware-stub.nix over the placeholder hardware-configuration.nix
   # those hosts commit.
   #
-  # nixos-ci also drops howdy for the reason given in hosts/nixos/flake.nix.
+  # nixos-ci also drops howdy and the TAS2781 kernel patch,
+  # for the reasons given in hosts/nixos/flake.nix.
   # It is still the long leg,
   # since quickshell, nixd and lanzaboote follow nixpkgs rather than a cache of their own.
   build:

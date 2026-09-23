@@ -122,6 +122,13 @@
             services.howdy.enable = lib.mkForce false;
             services.howdy.package = lib.mkForce pkgs.emptyDirectory;
             services.linux-enable-ir-emitter.enable = lib.mkForce false;
+
+            # modules/tas2781-calibration carries a kernel patch,
+            # and compiling the patched tree takes over two hours on a runner.
+            # Emptied, boot.kernelPackages resolves to the stock linuxPackages_latest
+            # at the version the host runs, which cache.nixos.org carries.
+            # The patch itself therefore goes unchecked here.
+            boot.kernelPatches = lib.mkForce [ ];
           }
         )
       ];
