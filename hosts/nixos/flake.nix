@@ -50,10 +50,14 @@
     };
 
     # The app package plus the kmsgrab CAP_SYS_ADMIN wrapper module.
-    screen-sharing = {
-      url = "github:bjoern621/screen-sharing";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    #
+    # No nixpkgs.follows: the release workflow builds mirrorme against the revision
+    # the flake pins itself, and the screen-sharing Attic cache serves that build
+    # (modules/attic-pull-screen-sharing.nix).
+    # Following this host's nixpkgs reaches a derivation nobody has built,
+    # and the gst_all_1 overlay the package carries then rebuilds
+    # the GStreamer world on every pin change.
+    screen-sharing.url = "github:bjoern621/screen-sharing";
   };
 
   outputs =
