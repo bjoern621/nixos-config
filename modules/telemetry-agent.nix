@@ -140,6 +140,9 @@ in
       enable = true;
       # journald and hostmetrics receivers live in contrib only.
       package = pkgs.opentelemetry-collector-contrib;
+      # Build-time `otelcol validate` runs in Nix sandbox without /var/lib.
+      # Override skips file_storage directory check; deployed config unchanged.
+      validateConfigOverrides = [ "extensions::file_storage::create_directory=true" ];
 
       settings = {
         extensions = {
