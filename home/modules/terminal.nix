@@ -22,6 +22,9 @@
     settings = {
       window_padding_width = 8;
       hide_window_decorations = true;
+      # kitty 0.49 remembers maximized state too.
+      # Hyprland honors it, so every new window opens maximized.
+      remember_window_size = false;
       confirm_os_window_close = 0;
       enable_audio_bell = false;
       scrollback_lines = 10000;
