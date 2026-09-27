@@ -1,34 +1,8 @@
 [Plymouth Theme]
 Name=ccpenguin
-Description=Ccpenguin photo above a thin progress bar on black.
-ModuleName=two-step
+Description=Ccpenguin photo above a rounded progress bar on black.
+ModuleName=script
 
-[two-step]
+[script]
 ImageDir=@themeDir@
-BackgroundStartColor=0x000000
-BackgroundEndColor=0x000000
-WatermarkHorizontalAlignment=.5
-WatermarkVerticalAlignment=.42
-ProgressBarHorizontalAlignment=.5
-ProgressBarVerticalAlignment=.64
-ProgressBarWidth=200
-ProgressBarHeight=6
-ProgressBarBackgroundColor=0x252525
-ProgressBarForegroundColor=0xffffff
-DialogHorizontalAlignment=.5
-DialogVerticalAlignment=.82
-HorizontalAlignment=.5
-VerticalAlignment=.82
-MessageBelowAnimation=true
-Transition=none
-TransitionDuration=0.0
-
-[boot-up]
-UseProgressBar=true
-UseEndAnimation=false
-
-[shutdown]
-UseEndAnimation=false
-
-[reboot]
-UseEndAnimation=false
+ScriptFile=@themeDir@/ccpenguin.script
