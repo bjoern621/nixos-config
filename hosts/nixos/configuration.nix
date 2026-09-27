@@ -57,8 +57,6 @@
 
   services.tailscale-client.operator = "bjoern";
 
-  # Bootloader.
-  boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Check after every kernel bump: reboot finishes in about 15 s,
