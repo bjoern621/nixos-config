@@ -4,9 +4,9 @@
   boot = {
     plymouth = {
       enable = true;
-      theme = "darwin";
+      theme = "ccpenguin";
       themePackages = [
-        (pkgs.callPackage ./darwin-theme.nix { })
+        (pkgs.callPackage ./ccpenguin-theme.nix { })
       ];
     };
 

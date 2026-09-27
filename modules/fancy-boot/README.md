@@ -1,21 +1,27 @@
-# Fancy Boot - Darwin Plymouth Theme
+# Fancy Boot
 
-This module configures a macOS-inspired Plymouth boot splash screen.
+Silent boot behind a Plymouth splash showing ccpenguin, the ancestor of Tux, above a thin progress bar.
 
-## Logo Asset
+The `ccpenguin` theme runs on Plymouth's built-in `two-step` plugin and carries no script.
+Plymouth draws the picture and the bar on every connected monitor and scales both on HiDPI panels.
+The bar shows during boot.
+Shutdown and reboot show the picture alone.
 
-The Darwin theme uses a custom logo image (`logo.png`) that has a non-free license. Due to licensing restrictions, this file is not included in the repository and is excluded via `.gitignore`.
+## Picture
 
-### How to Obtain the Logo
+`ccpenguin/watermark.png` comes from [File:Ccpenguin, the ancestor of Tux.jpg](https://en.wikipedia.org/wiki/File:Ccpenguin,_the_ancestor_of_Tux.jpg) on the English Wikipedia, which hosts it as a non-free file under fair use.
+The file measures 288 px tall.
+Plymouth doubles that on a scale-2 panel.
 
-The logo is available from Wikipedia under the non-free fair use policy:
+A replacement picture of a different height needs `WatermarkVerticalAlignment` and `ProgressBarVerticalAlignment` in `ccpenguin/ccpenguin.plymouth` moved to match.
 
-1. Visit: [Wikipedia - Tux (mascot)](https://en.wikipedia.org/wiki/File:Tux.png)
-2. Download the Tux mascot PNG image
-3. Make the background transparent and increase the canvas size to fit the existing logo dimensions (so it doesn't obstruct the splash screen)
-4. Rename the downloaded file to `logo.png`
-5. Place it in: `modules/fancy-boot/darwin/logo.png`
+## Preview
 
-## Alternative
+From a text console (Ctrl+Alt+F3), since Plymouth needs the display the compositor holds:
 
-To skip the non-free logo, leave the existing one in place. No changes are required.
+```
+sudo plymouthd
+sudo plymouth show-splash
+sleep 5
+sudo plymouth quit
+```
