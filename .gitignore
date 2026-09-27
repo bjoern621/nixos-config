@@ -14,6 +14,5 @@ __pycache__/
 .luarc.json
 
 # Non-free assets
-#modules/fancy-boot/darwin/logo.png
 #home/modules/quickshell/config/dynamic-island/icons/
 #sddm icons
