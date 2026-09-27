@@ -24,6 +24,12 @@
     options rtw89_pci disable_aspm_l1=1 disable_aspm_l1ss=1
   '';
 
+  # NVMe APST off.
+  # Samsung PM9A1 (MZVL21T0HCLR, fw CL1QGXA7) enters PS4 after 100 ms idle and at times never comes back:
+  # "nvme nvme0: controller is down; will reset: CSTS=0x3".
+  # A failed reset takes / with it, so the machine freezes to a black screen and the journal keeps nothing.
+  boot.kernelParams = [ "nvme_core.default_ps_max_latency_us=0" ];
+
   # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
   # Its DSP firmware state is not restored properly, causing tinny audio.
   #
