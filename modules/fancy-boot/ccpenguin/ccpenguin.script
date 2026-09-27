@@ -1,12 +1,12 @@
-# Sizes in fractions of display height.
-# Same picture on every display, whatever its resolution.
+# Picture top, fraction of display height.
 LOGO_TOP = 0.288;
-LOGO_HEIGHT = 0.28;
-BAR_GAP = 0.108;
-BAR_WIDTH = 0.194;
-BAR_HEIGHT = 0.0056;
-TEXT_GAP = 0.03;
-FONT_SIZE = 0.015;
+# Sizes in px, same on every display.
+LOGO_HEIGHT = 403;
+BAR_GAP = 156;
+BAR_WIDTH = 280;
+BAR_HEIGHT = 8;
+TEXT_GAP = 43;
+FONT_SIZE = 22;
 
 # Variables assigned inside a function stay local.
 # State outliving a call goes through global.
@@ -19,6 +19,7 @@ Window.SetBackgroundTopColor(0, 0, 0);
 Window.SetBackgroundBottomColor(0, 0, 0);
 
 logo_image = Image("watermark.png");
+logo = logo_image.Scale(Math.Int(LOGO_HEIGHT * logo_image.GetWidth() / logo_image.GetHeight()), LOGO_HEIGHT);
 track_image = Image("track.png");
 fill_image = Image("fill.png");
 
@@ -95,15 +96,13 @@ fun layout ()
     Window.SetX(i, view.x);
     Window.SetY(i, 0);
 
-    logo_height = Math.Int(height * LOGO_HEIGHT);
-    logo_width = Math.Int(logo_height * logo_image.GetWidth() / logo_image.GetHeight());
     logo_y = Math.Int(height * LOGO_TOP);
-    place_centered(view, view.logo, logo_image.Scale(logo_width, logo_height), logo_y);
+    place_centered(view, view.logo, logo, logo_y);
 
-    view.bar_width = Math.Int(height * BAR_WIDTH);
-    view.bar_height = Math.Int(height * BAR_HEIGHT);
+    view.bar_width = BAR_WIDTH;
+    view.bar_height = BAR_HEIGHT;
     view.bar_x = view.x + Math.Int((view.width - view.bar_width) / 2);
-    view.bar_y = logo_y + logo_height + Math.Int(height * BAR_GAP);
+    view.bar_y = logo_y + LOGO_HEIGHT + BAR_GAP;
     view.fill_image = fill_image.Scale(view.bar_width, view.bar_height);
     view.track.SetImage(track_image.Scale(view.bar_width, view.bar_height));
     view.track.SetPosition(view.bar_x, view.bar_y, 1);
@@ -114,8 +113,8 @@ fun layout ()
     view.fill.SetPosition(view.bar_x, view.bar_y, 2);
     view.cap.SetPosition(view.bar_x, view.bar_y, 2);
 
-    view.text_gap = Math.Int(height * TEXT_GAP);
-    view.font_size = Math.Int(height * FONT_SIZE);
+    view.text_gap = TEXT_GAP;
+    view.font_size = FONT_SIZE;
 
     draw_fill(view);
     draw_text(view);
