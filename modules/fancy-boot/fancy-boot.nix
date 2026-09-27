@@ -17,6 +17,9 @@
       "quiet"
       "splash"
       "udev.log_priority=3"
+      # Theme sizes itself per display height.
+      # Scale 2 on eDP-1 would upscale its images after that.
+      "plymouth.force-scale=1"
     ];
 
     # Hide the OS choice for bootloaders.

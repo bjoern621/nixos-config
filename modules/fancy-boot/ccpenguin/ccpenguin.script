@@ -1,0 +1,168 @@
+# Sizes in fractions of display height.
+# Same picture on every display, whatever its resolution.
+LOGO_TOP = 0.288;
+LOGO_HEIGHT = 0.28;
+BAR_GAP = 0.108;
+BAR_WIDTH = 0.194;
+BAR_HEIGHT = 0.0056;
+TEXT_GAP = 0.03;
+FONT_SIZE = 0.015;
+
+# Variables assigned inside a function stay local.
+# State outliving a call goes through global.
+
+# Displays sit this far apart in sprite space.
+# Each display then shows its own sprites alone.
+DISPLAY_SPACING = 100000;
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+logo_image = Image("watermark.png");
+track_image = Image("track.png");
+fill_image = Image("fill.png");
+
+show_bar = Plymouth.GetMode() == "boot";
+progress = 0;
+prompt_text = "";
+entry_text = "";
+
+fun text_image (view, text)
+{
+  return Image.Text(text, 1, 1, 1, 1, "Sans " + view.font_size);
+}
+
+fun place_centered (view, sprite, image, y)
+{
+  sprite.SetImage(image);
+  sprite.SetPosition(view.x + Math.Int((view.width - image.GetWidth()) / 2), y, 1);
+}
+
+fun draw_fill (view)
+{
+  width = Math.Int(view.bar_width * progress);
+  if (!show_bar || width <= 0)
+  {
+    view.fill.SetOpacity(0);
+    view.cap.SetOpacity(0);
+    return;
+  }
+  # Shortest fill: one round dot.
+  if (width < view.bar_height)
+    width = view.bar_height;
+  radius = Math.Int(view.bar_height / 2);
+  # Body carries left rounded end, cap sprite right one.
+  view.fill.SetImage(view.fill_image.Crop(0, 0, width - radius, view.bar_height));
+  view.cap.SetImage(view.fill_image.Crop(view.bar_width - radius, 0, radius, view.bar_height));
+  view.cap.SetX(view.bar_x + width - radius);
+  view.fill.SetOpacity(1);
+  view.cap.SetOpacity(1);
+}
+
+fun draw_text (view)
+{
+  if (prompt_text == "" && entry_text == "")
+  {
+    view.prompt.SetOpacity(0);
+    view.entry.SetOpacity(0);
+    return;
+  }
+  line_y = view.bar_y + view.bar_height + view.text_gap;
+  prompt_image = text_image(view, prompt_text);
+  place_centered(view, view.prompt, prompt_image, line_y);
+  place_centered(view, view.entry, text_image(view, entry_text), line_y + prompt_image.GetHeight() * 1.5);
+  view.prompt.SetOpacity(1);
+  view.entry.SetOpacity(1);
+}
+
+fun layout ()
+{
+  for (i = 0; Window.GetWidth(i); i++)
+  {
+    if (!global.views[i])
+    {
+      global.views[i].logo = Sprite();
+      global.views[i].track = Sprite();
+      global.views[i].fill = Sprite();
+      global.views[i].cap = Sprite();
+      global.views[i].prompt = Sprite();
+      global.views[i].entry = Sprite();
+    }
+    view = global.views[i];
+    view.x = i * DISPLAY_SPACING;
+    view.width = Window.GetWidth(i);
+    height = Window.GetHeight(i);
+    Window.SetX(i, view.x);
+    Window.SetY(i, 0);
+
+    logo_height = Math.Int(height * LOGO_HEIGHT);
+    logo_width = Math.Int(logo_height * logo_image.GetWidth() / logo_image.GetHeight());
+    logo_y = Math.Int(height * LOGO_TOP);
+    place_centered(view, view.logo, logo_image.Scale(logo_width, logo_height), logo_y);
+
+    view.bar_width = Math.Int(height * BAR_WIDTH);
+    view.bar_height = Math.Int(height * BAR_HEIGHT);
+    view.bar_x = view.x + Math.Int((view.width - view.bar_width) / 2);
+    view.bar_y = logo_y + logo_height + Math.Int(height * BAR_GAP);
+    view.fill_image = fill_image.Scale(view.bar_width, view.bar_height);
+    view.track.SetImage(track_image.Scale(view.bar_width, view.bar_height));
+    view.track.SetPosition(view.bar_x, view.bar_y, 1);
+    if (show_bar)
+      view.track.SetOpacity(1);
+    else
+      view.track.SetOpacity(0);
+    view.fill.SetPosition(view.bar_x, view.bar_y, 2);
+    view.cap.SetPosition(view.bar_x, view.bar_y, 2);
+
+    view.text_gap = Math.Int(height * TEXT_GAP);
+    view.font_size = Math.Int(height * FONT_SIZE);
+
+    draw_fill(view);
+    draw_text(view);
+  }
+}
+
+fun redraw_text ()
+{
+  for (i = 0; views[i]; i++)
+    draw_text(views[i]);
+}
+
+fun on_progress (duration, value)
+{
+  global.progress = value;
+  for (i = 0; views[i]; i++)
+    draw_fill(views[i]);
+}
+
+fun on_password (prompt, bullets)
+{
+  stars = "";
+  for (i = 0; i < bullets; i++)
+    stars += "*";
+  global.prompt_text = prompt;
+  global.entry_text = stars;
+  redraw_text();
+}
+
+fun on_question (prompt, entry)
+{
+  global.prompt_text = prompt;
+  global.entry_text = entry;
+  redraw_text();
+}
+
+fun on_normal ()
+{
+  global.prompt_text = "";
+  global.entry_text = "";
+  redraw_text();
+}
+
+layout();
+
+Plymouth.SetDisplayHotplugFunction(layout);
+Plymouth.SetBootProgressFunction(on_progress);
+Plymouth.SetDisplayPasswordFunction(on_password);
+Plymouth.SetDisplayQuestionFunction(on_question);
+Plymouth.SetDisplayNormalFunction(on_normal);
