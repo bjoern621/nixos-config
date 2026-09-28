@@ -7,16 +7,19 @@ import Quickshell.Io
 // Events of one year, read from evolution-data-server through calendar_events.py.
 // Singleton: the calendars are machine-global, the calendar menu is per screen.
 //
-// One shot per read, holding only the year on screen. A menu open or a year step
-// re-runs the helper, so the registry stays the only owner of what exists and no
-// copy here can go stale.
+// Helper starts at the first menu open and runs for the shell's lifetime.
+// Its open clients keep the calendar backends alive, so a server pull runs to the end
+// and the backends' own refresh timers keep firing between opens.
+// Every menu open asks for a pull on top.
+// Helper writes a fresh payload per change, from the local cache first, then again
+// once the pull lands, so the registry stays the only owner of what exists.
 //
 // One year at a time. Menus are hover-driven and one pointer opens one of them,
 // so two screens asking for different years at once does not arise.
 //
-// A failed read leaves the year empty and puts nothing on screen. Helper warnings
-// reach the shell log unparsed, which is the whole report: a calendar that goes
-// blank while the user knows tomorrow holds an appointment reports itself.
+// A calendar that fails to read drops out of the payload and puts nothing on screen.
+// Helper warnings reach the shell log unparsed, which is the whole report: a calendar
+// that goes blank while the user knows tomorrow holds an appointment reports itself.
 Singleton {
     id: root
 
@@ -28,16 +31,16 @@ Singleton {
     // Year `days` holds. 0 before the first successful read.
     property int year: 0
 
-    // Year the menu shows. Written by the menu; a change refetches.
+    // Year the menu shows. Written by the menu; a change asks the helper for that year.
     property int requestedYear: 0
     onRequestedYearChanged: {
         // Clear first, else a failed read leaves another year's events on the grid.
         if (root.requestedYear !== root.year)
             root.days = ({});
-        root.refresh();
+        root._sendYear();
     }
 
-    // True while a calendar menu is open. Drives the fetch. Set from the Bar.
+    // True while a calendar menu is open. Set from the Bar.
     property bool menuOpen: false
     function setMenuOpen(open) {
         root.menuOpen = open;
@@ -74,30 +77,52 @@ Singleton {
         return (root.calendars[uid] || {}).color || "";
     }
 
-    // Re-reads the requested year. Repeat calls while a read is in flight do nothing,
-    // and a read of an unchanged year writes back the same values.
+    // Pulls every calendar from its server, starting the helper on first use.
+    // Changes arrive as further payloads.
     function refresh() {
-        if (fetchProc.running || root.requestedYear === 0)
+        if (!helper.running) {
+            // onStarted sends the year and the pull.
+            helper.running = true;
             return;
-        fetchProc.command = ["python3", root._script, String(root.requestedYear)];
-        fetchProc.running = true;
+        }
+        helper.write("refresh\n");
     }
 
-    Process {
-        id: fetchProc
+    function _sendYear() {
+        if (helper.running && root.requestedYear !== 0)
+            helper.write(root.requestedYear + "\n");
+    }
 
-        stdout: StdioCollector {
-            id: fetchOut
-            onStreamFinished: {
-                try {
-                    const payload = JSON.parse(fetchOut.text);
-                    root.calendars = payload.calendars || ({});
-                    root.days = payload.days || ({});
-                    root.year = payload.year || 0;
-                } catch (e) {
-                    // Helper printed nothing usable. Grid keeps whatever it holds.
-                }
-            }
+    function _apply(line) {
+        let payload;
+        try {
+            payload = JSON.parse(line);
+        } catch (e) {
+            // Helper printed nothing usable. Grid keeps whatever it holds.
+            return;
+        }
+        // Payload of a year the menu has since left.
+        if (payload.year !== root.requestedYear)
+            return;
+        root.calendars = payload.calendars || ({});
+        root.days = payload.days || ({});
+        root.year = payload.year;
+    }
+
+    // Exit stops the event updates until the next menu open restarts it.
+    Process {
+        id: helper
+        command: ["python3", root._script]
+        stdinEnabled: true
+
+        onStarted: {
+            root._sendYear();
+            helper.write("refresh\n");
+        }
+
+        // One JSON payload per line.
+        stdout: SplitParser {
+            onRead: line => root._apply(line)
         }
         // stderr carries no parser on purpose, so helper warnings land in the shell log.
     }
