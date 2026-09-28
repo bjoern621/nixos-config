@@ -103,7 +103,8 @@ def read_source(source, year, days):
         warn("calendar %r did not open: %s" % (source.get_display_name(), error))
         return False
 
-    client.set_default_timezone(ECal.util_get_system_timezone())
+    zone = ECal.util_get_system_timezone()
+    client.set_default_timezone(zone)
 
     uid = source.get_uid()
     first_of_year = date(year, 1, 1)
@@ -114,6 +115,11 @@ def read_source(source, year, days):
 
     def on_instance(icomp, start, end, *_rest):
         all_day = start.is_date()
+        # Instances arrive in the event's own zone, UTC for a "Z" time.
+        # Floating times keep their wall clock.
+        if not all_day:
+            start = start.convert_to_zone(zone)
+            end = end.convert_to_zone(zone)
         event = {
             "summary": icomp.get_summary() or "",
             "allDay": all_day,
