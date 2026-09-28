@@ -51,22 +51,12 @@ in
       sysconf_installed_commit_time_seconds{revision="${rev}",dirty="${lib.boolToString dirty}"} ${toString (self.lastModified or 0)}
     '';
 
-    # switch-to-configuration only diffs units it sees as active, and starts
-    # new units by restarting active targets. On a host whose
-    # multi-user.target has gone inactive neither path runs, and the exporter
-    # stays dead after every switch. The activation list bypasses both:
-    # listed units start when inactive and restart when active.
-    system.activationScripts.sysconf-revision = {
-      supportsDryActivation = true;
-      text = ''
-        mkdir -p /run/nixos
-        if [ "$NIXOS_ACTION" = dry-activate ]; then
-          echo prometheus-node-exporter.service >> /run/nixos/dry-activation-restart-list
-        else
-          echo prometheus-node-exporter.service >> /run/nixos/activation-restart-list
-        fi
-      '';
-    };
+    # switch-to-configuration diffs active units only,
+    # and starts new units by restarting active targets.
+    # Host with inactive multi-user.target runs neither path, exporter stays dead.
+    # Every switch restarts sysinit-reactivation.target, which starts exporter when dead.
+    # Textfile collector reads /etc live, so running exporter needs no restart.
+    systemd.services.prometheus-node-exporter.wantedBy = [ "sysinit-reactivation.target" ];
 
     services.telemetry-agent.scrapeConfigs = [
       {
