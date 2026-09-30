@@ -24,10 +24,12 @@
     options rtw89_pci disable_aspm_l1=1 disable_aspm_l1ss=1
   '';
 
-  # NVMe APST off.
-  # Samsung PM9A1 (MZVL21T0HCLR, fw CL1QGXA7) enters PS4 after 100 ms idle and at times never comes back:
+  # Samsung PM9A1 (MZVL21T0HCLR, fw CL1QGXA7) at times goes controller-fatal:
   # "nvme nvme0: controller is down; will reset: CSTS=0x3".
-  # A failed reset takes / with it, so the machine freezes to a black screen and the journal keeps nothing.
+  # Failed reset takes / with it: black screen, nothing in journal, no pstore dump.
+  # APST off alone did not stop it; 2026-09-30 fault hit on battery with PCIe link in ASPM L1.2.
+  # Fix: APST off plus ASPM L1.1/L1.2 off on its link (udev rule below).
+  # Clearing link/*_aspm sets aspm_disable, which TLP's policy writes on AC/battery switch keep.
   boot.kernelParams = [ "nvme_core.default_ps_max_latency_us=0" ];
 
   # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
@@ -47,6 +49,7 @@
     ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-TIAS2781:00", ATTR{power/control}="on"
     ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="PNP0C0A:00", ATTR{power/wakeup}="disabled"
     ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-SYNA2BA6:00", ATTR{power/wakeup}="disabled"
+    ACTION=="add|change", SUBSYSTEM=="pci", ATTR{vendor}=="0x144d", ATTR{device}=="0xa80a", ATTR{link/l1_2_aspm}="0", ATTR{link/l1_1_aspm}="0"
   '';
 
   services.tlp = {
