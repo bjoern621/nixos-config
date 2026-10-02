@@ -31,6 +31,7 @@
     ../../modules/quickshell-lock.nix
     ../../modules/hibernate.nix
     ../../modules/kernel-crash-reboot.nix
+    ../../modules/nvme-watch.nix
     ../../modules/nix-ld.nix
     ../../modules/sysconf-sudo.nix
     ../../modules/sysconf-auto-pull.nix
