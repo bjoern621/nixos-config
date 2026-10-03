@@ -19,7 +19,6 @@
     enable = true;
     wireplumber.enable = true;
     alsa.enable = true;
-    alsa.support32Bit = false;
     pulse.enable = true; # ! Definitely required by hyprland / waybar (https://github.com/Alexays/Waybar/issues/3431#issuecomment-2223092688) !
     jack.enable = false;
 
