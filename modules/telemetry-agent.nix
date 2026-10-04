@@ -126,6 +126,26 @@ in
     };
 
     dockerStats = lib.mkEnableOption "per-container metrics via the docker_stats receiver";
+
+    logProcessors = lib.mkOption {
+      type = lib.types.listOf (
+        lib.types.submodule {
+          options = {
+            name = lib.mkOption {
+              type = lib.types.str;
+              example = "transform/conn-log";
+              description = "Processor id in the collector config.";
+            };
+            settings = lib.mkOption {
+              type = lib.types.attrs;
+              description = "Processor config.";
+            };
+          };
+        }
+      );
+      default = [ ];
+      description = "Extra processors for the logs pipeline, run in list order after host stamping and before batching.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -283,7 +303,8 @@ in
             }
           ];
           batch.timeout = "5s";
-        };
+        }
+        // lib.listToAttrs (map (p: lib.nameValuePair p.name p.settings) cfg.logProcessors);
 
         exporters = metricsExporters // logsExporters // tracesExporters // forwardExporter;
 
@@ -326,8 +347,9 @@ in
               processors = [
                 "memory_limiter"
                 "resource/host"
-                "batch"
-              ];
+              ]
+              ++ map (p: p.name) cfg.logProcessors
+              ++ [ "batch" ];
               exporters = lib.attrNames (logsExporters // forwardExporter);
             };
           }
