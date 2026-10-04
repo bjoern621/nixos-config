@@ -944,7 +944,7 @@
     {
       "type": "stat",
       "title": "Latency p95",
-      "description": "95th percentile of request duration across all services. Traefik buckets stop at 5 s.",
+      "description": "95th percentile of request duration across all services. Traefik buckets stop at 300 s.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
