@@ -1007,7 +1007,6 @@
               }
             ]
           },
-          "noValue": "No cache request in range",
           "color": {
             "mode": "thresholds"
           }
@@ -1161,7 +1160,15 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "ClientHost": 0,
+              "client.network": 1,
+              "geo.country_name": 2,
+              "RequestHost": 3,
+              "requests": 4,
+              "bytes": 5,
+              "errors": 6
+            },
             "renameByName": {}
           }
         }
@@ -1257,7 +1264,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "k8s.namespace.name:=atticd k8s.container.name:=atticd",
+          "expr": "k8s.namespace.name:=atticd k8s.container.name:=atticd | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 500
@@ -1296,7 +1303,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "k8s.namespace.name:=garage k8s.container.name:=garage severity_number:>=13",
+          "expr": "k8s.namespace.name:=garage k8s.container.name:=garage severity_number:>=13 | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 500

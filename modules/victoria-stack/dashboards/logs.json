@@ -676,7 +676,11 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "_msg": 0,
+              "lines": 1,
+              "sources": 2
+            },
             "renameByName": {}
           }
         }
@@ -801,7 +805,10 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "_stream": 0,
+              "lines": 1
+            },
             "renameByName": {}
           }
         }
@@ -841,7 +848,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "k8s.namespace.name:$namespace k8s.pod.name:$pod severity_number:$level _msg:~\"$search\"",
+          "expr": "k8s.namespace.name:$namespace k8s.pod.name:$pod severity_number:$level _msg:~\"$search\" | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 1000
@@ -880,7 +887,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "host.name:$host unit:$unit severity_number:$level _msg:~\"$search\"",
+          "expr": "host.name:$host unit:$unit severity_number:$level _msg:~\"$search\" | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 1000

@@ -594,7 +594,6 @@
               }
             ]
           },
-          "noValue": "No connection logged for this selection",
           "color": {
             "mode": "thresholds"
           }
@@ -782,7 +781,18 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "source.address": 0,
+              "source.network": 1,
+              "geo.country_name": 2,
+              "geo.city_name": 3,
+              "host.name": 4,
+              "destination.address": 5,
+              "destination.port": 6,
+              "destination.service": 7,
+              "network.transport": 8,
+              "connections": 9
+            },
             "renameByName": {}
           }
         }
@@ -998,7 +1008,13 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "geo.location.lat": 0,
+              "geo.location.lon": 1,
+              "geo.city_name": 2,
+              "geo.country_name": 3,
+              "connections": 4
+            },
             "renameByName": {}
           }
         },
@@ -1203,7 +1219,10 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "geo.country_name": 0,
+              "connections": 1
+            },
             "renameByName": {}
           }
         }
@@ -1266,7 +1285,6 @@
               }
             ]
           },
-          "noValue": "Nothing refused",
           "color": {
             "mode": "thresholds"
           }
@@ -1388,7 +1406,13 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "source.address": 0,
+              "geo.country_name": 1,
+              "host.name": 2,
+              "attempts": 3,
+              "ports": 4
+            },
             "renameByName": {}
           }
         }
@@ -1476,7 +1500,10 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "destination.service": 0,
+              "attempts": 1
+            },
             "renameByName": {}
           }
         }
@@ -1539,7 +1566,6 @@
               }
             ]
           },
-          "noValue": "No request for this selection",
           "color": {
             "mode": "thresholds"
           }
@@ -1745,7 +1771,17 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "ClientHost": 0,
+              "client.network": 1,
+              "geo.country_name": 2,
+              "RequestHost": 3,
+              "edge.service": 4,
+              "ServiceAddr": 5,
+              "k8s.node.name": 6,
+              "requests": 7,
+              "errors": 8
+            },
             "renameByName": {}
           }
         }
@@ -1785,7 +1821,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "conn.event:* host.name:$host source.network:$network source.address:~\"$ip\"",
+          "expr": "conn.event:* host.name:$host source.network:$network source.address:~\"$ip\" | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 1000
@@ -1824,7 +1860,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\"",
+          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\" | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 1000

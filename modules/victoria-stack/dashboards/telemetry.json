@@ -742,7 +742,10 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "host.name": 0,
+              "lines": 1
+            },
             "renameByName": {}
           }
         }
@@ -1736,7 +1739,10 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "_stream": 0,
+              "lines": 1
+            },
             "renameByName": {}
           }
         }

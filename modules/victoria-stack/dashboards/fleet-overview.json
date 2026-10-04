@@ -1467,6 +1467,10 @@
             },
             "properties": [
               {
+                "id": "custom.width",
+                "value": 220
+              },
+              {
                 "id": "links",
                 "value": [
                   {
@@ -2185,7 +2189,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "severity_number:>=17",
+          "expr": "severity_number:>=17 | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 200

@@ -1954,7 +1954,6 @@
               }
             ]
           },
-          "noValue": "No connection logged",
           "color": {
             "mode": "thresholds"
           }
@@ -2096,7 +2095,15 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "source.address": 0,
+              "source.network": 1,
+              "geo.country_name": 2,
+              "destination.port": 3,
+              "destination.service": 4,
+              "network.transport": 5,
+              "connections": 6
+            },
             "renameByName": {}
           }
         }
@@ -2327,7 +2334,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "host.name:=\"$host\" _msg:~\"$search\"",
+          "expr": "host.name:=\"$host\" _msg:~\"$search\" | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 1000
