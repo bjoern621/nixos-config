@@ -1,8 +1,8 @@
-# Substituter chain: own Attic cache, then cache.nixos.org, then a local build.
+# Substituter chain: cache.nixos.org, then own Attic cache, then a local build.
 #
 # Nix orders substituters by ascending Priority from their nix-cache-info.
-# Attic serves 30 and cache.nixos.org 40;
-# modules/attic-push.nix pins 30 into the URL so a server-side change cannot reorder them.
+# cache.nixos.org serves 40;
+# modules/attic-push.nix pins 41 into the Attic URL so a server-side change cannot reorder them.
 #
 # Falling through to a local build needs `fallback`.
 # A substituter that answers the narinfo query and then fails the NAR download is a failed

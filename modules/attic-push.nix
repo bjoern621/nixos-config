@@ -18,9 +18,12 @@
 
 let
   cacheHost = "https://nix-cache.bjoernblessin.de/system";
-  # priority=30 pins this ahead of cache.nixos.org (40) whatever the server's
-  # nix-cache-info reports. Fallback order: modules/nix-substituter-fallback.nix.
-  cacheUrl = "${cacheHost}?priority=30";
+  # priority=41 pins this behind cache.nixos.org (40) whatever the server's
+  # nix-cache-info reports.
+  # attic push skips paths cache.nixos.org signs.
+  # Asking Attic first would cost one 404 per nixpkgs path.
+  # Fallback order: modules/nix-substituter-fallback.nix.
+  cacheUrl = "${cacheHost}?priority=41";
   # From `attic cache info system`, set after the cache is created. name:base64.
   publicKey = "system:CVw1EsxUyFB1VSHALF4GzqhjuRXjwyeyQzFOfXML+ss=";
 in
