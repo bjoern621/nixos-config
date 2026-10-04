@@ -634,7 +634,7 @@
       "gridPos": {
         "x": 0,
         "y": 5,
-        "w": 4,
+        "w": 6,
         "h": 8
       },
       "id": 8
@@ -751,9 +751,9 @@
         }
       ],
       "gridPos": {
-        "x": 4,
+        "x": 6,
         "y": 5,
-        "w": 4,
+        "w": 6,
         "h": 8
       },
       "id": 9
@@ -772,8 +772,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (host_name, exporter) (label_copy(rate(otelcol_exporter_send_failed_metric_points_total[$__rate_interval]), \"k8s_pod_name\", \"host_name\")) > 0",
-          "legendFormat": "{{host_name}} {{exporter}} metrics",
+          "expr": "sum by (host_name, job, exporter) (label_copy(rate(otelcol_exporter_send_failed_metric_points_total[$__rate_interval]), \"k8s_node_name\", \"host_name\")) > 0",
+          "legendFormat": "{{host_name}} {{job}} {{exporter}} metrics",
           "refId": "A"
         },
         {
@@ -781,8 +781,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (host_name, exporter) (label_copy(rate(otelcol_exporter_send_failed_log_records_total[$__rate_interval]), \"k8s_pod_name\", \"host_name\")) > 0",
-          "legendFormat": "{{host_name}} {{exporter}} logs",
+          "expr": "sum by (host_name, job, exporter) (label_copy(rate(otelcol_exporter_send_failed_log_records_total[$__rate_interval]), \"k8s_node_name\", \"host_name\")) > 0",
+          "legendFormat": "{{host_name}} {{job}} {{exporter}} logs",
           "refId": "B"
         },
         {
@@ -790,8 +790,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (host_name, exporter) (label_copy(rate(otelcol_exporter_send_failed_spans_total[$__rate_interval]), \"k8s_pod_name\", \"host_name\")) > 0",
-          "legendFormat": "{{host_name}} {{exporter}} spans",
+          "expr": "sum by (host_name, job, exporter) (label_copy(rate(otelcol_exporter_send_failed_spans_total[$__rate_interval]), \"k8s_node_name\", \"host_name\")) > 0",
+          "legendFormat": "{{host_name}} {{job}} {{exporter}} spans",
           "refId": "C"
         }
       ],
@@ -838,9 +838,9 @@
         }
       },
       "gridPos": {
-        "x": 8,
+        "x": 12,
         "y": 5,
-        "w": 16,
+        "w": 12,
         "h": 8
       },
       "id": 10
@@ -872,8 +872,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (host_name, exporter) (label_copy(rate(otelcol_exporter_sent_metric_points_total[$__rate_interval]), \"k8s_pod_name\", \"host_name\"))",
-          "legendFormat": "{{host_name}} {{exporter}}",
+          "expr": "sum by (host_name, job, exporter) (label_copy(rate(otelcol_exporter_sent_metric_points_total[$__rate_interval]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "{{host_name}} {{job}} {{exporter}}",
           "refId": "A"
         }
       ],
@@ -940,8 +940,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (host_name, exporter) (label_copy(rate(otelcol_exporter_sent_log_records_total[$__rate_interval]), \"k8s_pod_name\", \"host_name\"))",
-          "legendFormat": "{{host_name}} {{exporter}}",
+          "expr": "sum by (host_name, job, exporter) (label_copy(rate(otelcol_exporter_sent_log_records_total[$__rate_interval]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "{{host_name}} {{job}} {{exporter}}",
           "refId": "A"
         }
       ],
@@ -1008,8 +1008,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "max by (host_name, exporter) (label_copy(otelcol_exporter_queue_size / otelcol_exporter_queue_capacity, \"k8s_pod_name\", \"host_name\"))",
-          "legendFormat": "{{host_name}} {{exporter}}",
+          "expr": "max by (host_name, job, exporter) (label_copy(otelcol_exporter_queue_size / otelcol_exporter_queue_capacity, \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "{{host_name}} {{job}} {{exporter}}",
           "refId": "A"
         }
       ],

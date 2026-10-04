@@ -301,7 +301,7 @@
     },
     {
       "type": "stat",
-      "title": "Memory used",
+      "title": "Memory",
       "description": "Memory held by processes, page cache excluded.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -509,7 +509,7 @@
     },
     {
       "type": "stat",
-      "title": "Last data",
+      "title": "Age",
       "description": "Seconds since the newest metric from this host. Above 2 minutes means its collector stopped reporting.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1770,7 +1770,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (device, direction) (rate(system_network_errors_total{device=~\"$iface\", host_name=\"$host\" or device=~\"$iface\", k8s_node_name=\"$host\"}[$__rate_interval]))",
+          "expr": "sum by (device, direction) (rate(system_network_errors_total{device=~\"$iface\", host_name=\"$host\" or device=~\"$iface\", k8s_node_name=\"$host\"}[$__rate_interval])) > 0",
           "legendFormat": "{{device}} errors {{direction}}",
           "refId": "A"
         },
@@ -1779,7 +1779,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (device, direction) (rate(system_network_dropped_total{device=~\"$iface\", host_name=\"$host\" or device=~\"$iface\", k8s_node_name=\"$host\"}[$__rate_interval]))",
+          "expr": "sum by (device, direction) (rate(system_network_dropped_total{device=~\"$iface\", host_name=\"$host\" or device=~\"$iface\", k8s_node_name=\"$host\"}[$__rate_interval])) > 0",
           "legendFormat": "{{device}} drops {{direction}}",
           "refId": "B"
         }
@@ -1809,7 +1809,7 @@
               }
             ]
           },
-          "noValue": "0",
+          "noValue": "No errors or drops",
           "color": {
             "mode": "palette-classic"
           }
