@@ -35,21 +35,41 @@ The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endp
     ```bash
     export HOST=<host>
     ```
-7. Copy the hardware configuration into the selected host:
+7. Copy the hardware configuration into the selected host and show it to the flake for this one build (see [Hardware configuration](#hardware-configuration)):
     ```bash
-    sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
+    cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
+    git -C ~/git/nixos-config add --intent-to-add --force hosts/$HOST/hardware-configuration.nix
     ```
-8. Mark the hardware configuration as local-only so git ignores changes to it:
-    ```bash
-    git -C ~/git/nixos-config update-index --skip-worktree hosts/$HOST/hardware-configuration.nix
-    ```
-9. Apply the flake configuration:
+8. Apply the flake configuration:
     ```bash
     sudo nixos-rebuild switch --flake ~/git/nixos-config/hosts/$HOST
+    ```
+9. Drop the hardware configuration from the index again, which leaves the file on disk:
+    ```bash
+    git -C ~/git/nixos-config rm --cached hosts/$HOST/hardware-configuration.nix
     ```
 
 The checkout stays where step 4 put it. Every `sysconf-*` command reads `sysconf.configPath`,
 which each host derives from `sysconf.user` as that account's `~/git/nixos-config`.
+From then on `sysconf-reload` runs steps 7 to 9 itself.
+
+## Hardware configuration
+
+> [!CAUTION]
+> `hardware-configuration.nix` never goes into git, for any host.
+> Every build takes it from `/etc/nixos` on the machine it activates on.
+
+`sysconf-reload` copies `/etc/nixos/hardware-configuration.nix` into `hosts/<host>/` before each build: from the local machine, or from the `--remote` target over ssh.
+The path is gitignored.
+The script shows the copy to Nix through an intent-to-add entry and removes the entry when it exits, so no commit picks the file up.
+
+A machine without the file, such as one installed from an image, gets it once, as root:
+
+```bash
+nixos-generate-config --show-hardware-config > /etc/nixos/hardware-configuration.nix
+```
+
+CI builds each host's `-ci` attribute, which takes `modules/ci-hardware-stub.nix` in place of the machine's file.
 
 ## Raspberry Pi SD Card Hosts
 
@@ -91,7 +111,7 @@ zstdcat result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M status=progress co
 
 Insert the card and power on the Pi. The system boots directly into the NixOS configuration with no manual installation steps. Default credentials: user `ops`, password `1234` - change the password after first login.
 
-On first boot, a systemd service (`sysconf-checkout`) clones the repository automatically, to the path that host sets as `sysconf.configPath` (requires internet access). Once it completes, `sysconf-pull` and `sysconf-reload` are ready to use. Check its status with:
+On first boot, a systemd service (`sysconf-checkout`) clones the repository automatically, to the path that host sets as `sysconf.configPath` (requires internet access). Once it completes and the machine holds `/etc/nixos/hardware-configuration.nix` (see [Hardware configuration](#hardware-configuration)), `sysconf-pull` and `sysconf-reload` are ready to use. Check its status with:
 
 ```bash
 systemctl status sysconf-checkout
@@ -161,6 +181,8 @@ afterwards.
 sysconf-reload netcup-g12 --remote root@203.0.113.9   # any reachable NixOS machine
 ```
 
+The target needs `/etc/nixos/hardware-configuration.nix`, which the script copies from there before the build.
+
 The address is required. One command that reads two different targets depending on what was
 typed is one whose target has to be worked out rather than read, and where a machine lives is
 ssh's to know: an alias in `~/.ssh/config` is the short form, so `--remote netcup-g12` works.
@@ -185,23 +207,19 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │   ├── nixos/                      # Daily driver, full input set
 │   │   ├── flake.nix
 │   │   ├── flake.lock
-│   │   ├── configuration.nix
-│   │   └── hardware-configuration.nix
+│   │   └── configuration.nix
 │   ├── homelab/                    # Server, nixpkgs + home-manager only
 │   │   ├── flake.nix
 │   │   ├── flake.lock
-│   │   ├── configuration.nix
-│   │   └── hardware-configuration.nix
+│   │   └── configuration.nix
 │   ├── vmk3s/                      # Server, nixpkgs + home-manager only
 │   │   ├── flake.nix
 │   │   ├── flake.lock
-│   │   ├── configuration.nix
-│   │   └── hardware-configuration.nix
+│   │   └── configuration.nix
 │   └── pi-4b-hh/                   # Raspberry Pi 4, SD card image
 │       ├── flake.nix               # exposes packages.<system>.sdImage
 │       ├── flake.lock
-│       ├── configuration.nix
-│       └── hardware-configuration.nix
+│       └── configuration.nix
 ├── modules/                        # Shared system-level modules
 ├── home/                           # Shared Home Manager configs
 │   ├── bjoern.nix                  # User config for the `nixos` host

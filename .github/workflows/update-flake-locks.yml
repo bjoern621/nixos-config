@@ -53,9 +53,9 @@ jobs:
   # Gates the merge on the same closure `sysconf-reload` builds,
   # short of activation, which no runner can perform.
   #
-  # homelab, vmk3s and nixos build their `-ci` attribute,
-  # which layers modules/ci-hardware-stub.nix over the placeholder hardware-configuration.nix
-  # those hosts commit.
+  # Each host builds its `-ci` attribute,
+  # which takes modules/ci-hardware-stub.nix in place of the hardware-configuration.nix
+  # git never carries.
   #
   # nixos-ci also drops howdy and the TAS2781 kernel patch,
   # for the reasons given in hosts/nixos/flake.nix.
@@ -72,7 +72,7 @@ jobs:
       matrix:
         include:
           - dir: netcup-g12
-            attr: netcup-g12
+            attr: netcup-g12-ci
             runner: ubuntu-latest
           - dir: homelab
             attr: homelab-ci
@@ -82,7 +82,7 @@ jobs:
             runner: ubuntu-latest
           # Native aarch64 rather than emulation. Free on public repositories.
           - dir: pi-4b-hh
-            attr: pi-4b-hh
+            attr: pi-4b-hh-ci
             runner: ubuntu-24.04-arm
           - dir: nixos
             attr: nixos-ci
