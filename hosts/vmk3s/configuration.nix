@@ -116,7 +116,14 @@ in
 
   programs.zsh.enable = true;
 
-  services.openssh.enable = true;
+  # ops keeps its password for sudo and the console.
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+    };
+  };
 
   # Kubernetes API server for remote kubectl and GitOps controllers.
   # Argo CD UI is exposed as NodePort on 32443.
