@@ -632,7 +632,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -1386,7 +1386,7 @@
           },
           "noValue": "No access log in range",
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -1937,7 +1937,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -2106,7 +2106,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -2243,7 +2243,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -2482,7 +2482,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [

@@ -582,7 +582,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -747,7 +747,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [

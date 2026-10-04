@@ -1009,7 +1009,7 @@
           },
           "noValue": "No cache request in range",
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [

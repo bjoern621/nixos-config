@@ -596,7 +596,7 @@
           },
           "noValue": "No connection logged for this selection",
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -1300,7 +1300,7 @@
           },
           "noValue": "Nothing refused",
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -1589,7 +1589,7 @@
           },
           "noValue": "No request for this selection",
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [

@@ -243,7 +243,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum(last_over_time(system_cpu_load_average_5m{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m])) / count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\", host_name=\"$host\" or state=\"idle\", k8s_node_name=\"$host\"}[5m])))",
+          "expr": "sum(last_over_time(system_cpu_load_average_5m{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m])) / max(last_over_time(system_cpu_logical_count{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m]) or count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\",host_name=\"$host\" or state=\"idle\",k8s_node_name=\"$host\"}[5m]))))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -459,7 +459,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\", host_name=\"$host\" or state=\"idle\", k8s_node_name=\"$host\"}[5m])))",
+          "expr": "max(last_over_time(system_cpu_logical_count{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m]) or count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\",host_name=\"$host\" or state=\"idle\",k8s_node_name=\"$host\"}[5m]))))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -810,7 +810,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "count(count by (cpu) (system_cpu_time_seconds_total{state=\"idle\", host_name=\"$host\" or state=\"idle\", k8s_node_name=\"$host\"}))",
+          "expr": "max(last_over_time(system_cpu_logical_count{host_name=\"$host\" or k8s_node_name=\"$host\"}[$__interval]) or count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\",host_name=\"$host\" or state=\"idle\",k8s_node_name=\"$host\"}[$__interval]))))",
           "legendFormat": "cores",
           "refId": "D"
         }
@@ -1395,7 +1395,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -1956,7 +1956,7 @@
           },
           "noValue": "No connection logged",
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [

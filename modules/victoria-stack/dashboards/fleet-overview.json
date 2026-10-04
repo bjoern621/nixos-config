@@ -129,7 +129,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (host_name) (label_copy(last_over_time(system_cpu_load_average_5m[5m]), \"k8s_node_name\", \"host_name\")) / count by (host_name) (label_copy(count by (k8s_node_name, host_name, cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\"}[5m])), \"k8s_node_name\", \"host_name\"))",
+          "expr": "sum by (host_name) (label_copy(last_over_time(system_cpu_load_average_5m[5m]), \"k8s_node_name\", \"host_name\")) / max by (host_name) (label_copy(last_over_time(system_cpu_logical_count[5m]), \"k8s_node_name\", \"host_name\") or label_copy(count by (k8s_node_name, host_name) (count by (k8s_node_name, host_name, cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\"}[5m]))), \"k8s_node_name\", \"host_name\"))",
           "legendFormat": "",
           "refId": "D",
           "instant": true,
@@ -192,7 +192,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
@@ -1456,7 +1456,7 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
         "overrides": [
