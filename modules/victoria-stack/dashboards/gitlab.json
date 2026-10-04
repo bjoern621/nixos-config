@@ -3,8 +3,9 @@
   "title": "GitLab",
   "description": "Omnibus GitLab: request path, background jobs, git access and the bundled datastores. Metrics come from the Omnibus exporters, scraped by the cluster otel-collector.",
   "tags": [
+    "git",
     "gitlab",
-    "git"
+    "hh"
   ],
   "schemaVersion": 41,
   "editable": true,
@@ -1364,5 +1365,34 @@
         }
       ]
     }
-  ]
+  ],
+  "links": [
+    {
+      "title": "Fleet overview",
+      "type": "link",
+      "url": "/d/fleet-overview",
+      "icon": "dashboard",
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "targetBlank": false,
+      "tags": [],
+      "tooltip": "Start page: every host, service and signal at a glance"
+    },
+    {
+      "title": "Dashboards",
+      "type": "dashboards",
+      "tags": [
+        "hh"
+      ],
+      "asDropdown": true,
+      "keepTime": true,
+      "includeVars": false,
+      "targetBlank": false,
+      "icon": "external link",
+      "tooltip": "",
+      "url": ""
+    }
+  ],
+  "graphTooltip": 1
 }

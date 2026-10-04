@@ -21,6 +21,32 @@
   "graphTooltip": 1,
   "links": [
     {
+      "title": "Fleet overview",
+      "type": "link",
+      "url": "/d/fleet-overview",
+      "icon": "dashboard",
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "targetBlank": false,
+      "tags": [],
+      "tooltip": "Start page: every host, service and signal at a glance"
+    },
+    {
+      "title": "Dashboards",
+      "type": "dashboards",
+      "tags": [
+        "hh"
+      ],
+      "asDropdown": true,
+      "keepTime": true,
+      "includeVars": false,
+      "targetBlank": false,
+      "icon": "external link",
+      "tooltip": "",
+      "url": ""
+    },
+    {
       "asDropdown": false,
       "icon": "doc",
       "includeVars": false,
@@ -2277,10 +2303,11 @@
   "refresh": "30s",
   "schemaVersion": 42,
   "tags": [
-    "screenshare",
+    "groups",
+    "hh",
     "mirrorme",
     "relay",
-    "groups"
+    "screenshare"
   ],
   "templating": {
     "list": [

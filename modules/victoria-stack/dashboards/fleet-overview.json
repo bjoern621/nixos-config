@@ -1,539 +1,2196 @@
 {
-  "annotations": { "list": [] },
-  "editable": true,
+  "uid": "fleet-overview",
+  "title": "Fleet overview",
+  "description": "Start page. Symptoms first: hosts, services, the cluster, then logs and telemetry. Every table row and panel title links to the dashboard that explains it.",
+  "tags": [
+    "hh",
+    "fleet",
+    "overview"
+  ],
+  "editable": false,
   "graphTooltip": 1,
-  "links": [],
+  "schemaVersion": 41,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "refresh": "1m",
+  "fiscalYearStartMonth": 0,
+  "liveNow": false,
+  "links": [
+    {
+      "title": "Fleet overview",
+      "type": "link",
+      "url": "/d/fleet-overview",
+      "icon": "dashboard",
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "targetBlank": false,
+      "tags": [],
+      "tooltip": "Start page: every host, service and signal at a glance"
+    },
+    {
+      "title": "Dashboards",
+      "type": "dashboards",
+      "tags": [
+        "hh"
+      ],
+      "asDropdown": true,
+      "keepTime": true,
+      "includeVars": false,
+      "targetBlank": false,
+      "icon": "external link",
+      "tooltip": "",
+      "url": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": []
+  },
   "panels": [
     {
-      "id": 1,
-      "type": "stat",
-      "title": "vmk3s",
-      "description": "The k3s server VM. Disk is the root filesystem only.",
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "decimals": 0,
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 75 },
-              { "color": "red", "value": 90 }
-            ]
-          }
-        },
-        "overrides": []
+      "type": "row",
+      "title": "Hosts",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
       },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
+      "id": 1
+    },
+    {
+      "type": "table",
+      "title": "Hosts",
+      "description": "One row per machine, current values. CPU, memory and disk turn orange at 75 % and red at 90 %. Load per core above 1 means work is queueing for the CPU. Select a host to open its detail page.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
       },
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * (1 - sum by (host_name) (label_copy(rate(system_cpu_time_seconds_total{state=\"idle\"}[5m]), \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(rate(system_cpu_time_seconds_total[5m]), \"k8s_node_name\", \"host_name\")))",
+          "legendFormat": "",
           "refId": "A",
-          "expr": "100 * (1 - sum(rate(system_cpu_time_seconds_total{k8s_node_name=\"vmk3s\",state=\"idle\"}[$__rate_interval])) / sum(rate(system_cpu_time_seconds_total{k8s_node_name=\"vmk3s\"}[$__rate_interval])))",
-          "legendFormat": "cpu"
+          "instant": true,
+          "range": false,
+          "format": "table"
         },
         {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * sum by (host_name) (label_copy(last_over_time(system_memory_usage_bytes{state=\"used\"}[5m]), \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(last_over_time(system_memory_usage_bytes{state=~\"used|free|buffered|cached\"}[5m]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "",
           "refId": "B",
-          "expr": "100 * sum(system_memory_usage_bytes{k8s_node_name=\"vmk3s\",state=\"used\"}) / sum(system_memory_usage_bytes{k8s_node_name=\"vmk3s\"})",
-          "legendFormat": "mem"
+          "instant": true,
+          "range": false,
+          "format": "table"
         },
         {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * sum by (host_name) (label_copy(last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=\"used\"}[5m]), \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=~\"used|free\"}[5m]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "",
           "refId": "C",
-          "expr": "100 * sum(system_filesystem_usage_bytes{k8s_node_name=\"vmk3s\",mountpoint=\"/\",state=\"used\"}) / sum(system_filesystem_usage_bytes{k8s_node_name=\"vmk3s\",mountpoint=\"/\"})",
-          "legendFormat": "disk /"
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (host_name) (label_copy(last_over_time(system_cpu_load_average_5m[5m]), \"k8s_node_name\", \"host_name\")) / count by (host_name) (label_copy(count by (k8s_node_name, host_name, cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\"}[5m])), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "",
+          "refId": "D",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (host_name) (label_copy(rate(system_network_io_bytes_total{direction=\"receive\",device!~\"lo|veth.*|cni0|flannel.*|docker.*|br-.*|virbr.*|vnet.*|tailscale.*|cali.*|kube.*\"}[5m]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "",
+          "refId": "E",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (host_name) (label_copy(rate(system_network_io_bytes_total{direction=\"transmit\",device!~\"lo|veth.*|cni0|flannel.*|docker.*|br-.*|virbr.*|vnet.*|tailscale.*|cali.*|kube.*\"}[5m]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "",
+          "refId": "F",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "time() - max by (host_name) (label_copy(tlast_over_time(system_memory_usage_bytes[1h]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "",
+          "refId": "G",
+          "instant": true,
+          "range": false,
+          "format": "table"
         }
-      ]
-    },
-    {
-      "id": 20,
-      "type": "stat",
-      "title": "netcup-g12",
-      "description": "The netcup VPS, k3s agent node. Disk is the root filesystem only.",
-      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "decimals": 0,
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 75 },
-              { "color": "red", "value": 90 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "100 * (1 - sum(rate(system_cpu_time_seconds_total{k8s_node_name=\"netcup-g12\",state=\"idle\"}[$__rate_interval])) / sum(rate(system_cpu_time_seconds_total{k8s_node_name=\"netcup-g12\"}[$__rate_interval])))",
-          "legendFormat": "cpu"
-        },
-        {
-          "refId": "B",
-          "expr": "100 * sum(system_memory_usage_bytes{k8s_node_name=\"netcup-g12\",state=\"used\"}) / sum(system_memory_usage_bytes{k8s_node_name=\"netcup-g12\"})",
-          "legendFormat": "mem"
-        },
-        {
-          "refId": "C",
-          "expr": "100 * sum(system_filesystem_usage_bytes{k8s_node_name=\"netcup-g12\",mountpoint=\"/\",state=\"used\"}) / sum(system_filesystem_usage_bytes{k8s_node_name=\"netcup-g12\",mountpoint=\"/\"})",
-          "legendFormat": "disk /"
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "type": "stat",
-      "title": "homelab",
-      "description": "Standalone server. Disk is the root filesystem only, data drives excluded.",
-      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "decimals": 0,
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 75 },
-              { "color": "red", "value": 90 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "100 * (1 - sum(rate(system_cpu_time_seconds_total{host_name=\"homelab\",state=\"idle\"}[$__rate_interval])) / sum(rate(system_cpu_time_seconds_total{host_name=\"homelab\"}[$__rate_interval])))",
-          "legendFormat": "cpu"
-        },
-        {
-          "refId": "B",
-          "expr": "100 * sum(system_memory_usage_bytes{host_name=\"homelab\",state=\"used\"}) / sum(system_memory_usage_bytes{host_name=\"homelab\"})",
-          "legendFormat": "mem"
-        },
-        {
-          "refId": "C",
-          "expr": "100 * sum(system_filesystem_usage_bytes{host_name=\"homelab\",mountpoint=\"/\",state=\"used\"}) / sum(system_filesystem_usage_bytes{host_name=\"homelab\",mountpoint=\"/\"})",
-          "legendFormat": "disk /"
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "type": "stat",
-      "title": "pi-4b-hh",
-      "description": "Backup target and observability replica. Disk is the root filesystem only, backup drive excluded.",
-      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "decimals": 0,
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 75 },
-              { "color": "red", "value": 90 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "100 * (1 - sum(rate(system_cpu_time_seconds_total{host_name=\"pi-4b-hh\",state=\"idle\"}[$__rate_interval])) / sum(rate(system_cpu_time_seconds_total{host_name=\"pi-4b-hh\"}[$__rate_interval])))",
-          "legendFormat": "cpu"
-        },
-        {
-          "refId": "B",
-          "expr": "100 * sum(system_memory_usage_bytes{host_name=\"pi-4b-hh\",state=\"used\"}) / sum(system_memory_usage_bytes{host_name=\"pi-4b-hh\"})",
-          "legendFormat": "mem"
-        },
-        {
-          "refId": "C",
-          "expr": "100 * sum(system_filesystem_usage_bytes{host_name=\"pi-4b-hh\",mountpoint=\"/\",state=\"used\"}) / sum(system_filesystem_usage_bytes{host_name=\"pi-4b-hh\",mountpoint=\"/\"})",
-          "legendFormat": "disk /"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "type": "stat",
-      "title": "Nodes ready",
-      "description": "Kubernetes Ready per cluster node. Standalone machines have no Ready condition; their liveness is Telemetry freshness.",
-      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 6 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": { "text": "NotReady", "color": "red" },
-                "1": { "text": "Ready", "color": "green" }
-              }
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
             }
-          ],
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
+          },
+          "color": {
+            "mode": "palette-classic"
           }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "min by (k8s_node_name) (k8s_node_condition_ready)", "legendFormat": "{{k8s_node_name}}" }
-      ]
-    },
-    {
-      "id": 5,
-      "type": "stat",
-      "title": "Pods not running",
-      "description": "Any phase other than Running. Completed Job pods count until cleanup, so a brief nonzero after a Job is normal.",
-      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 6 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "sum(k8s_pod_phase != bool 2)", "legendFormat": "not running" }
-      ]
-    },
-    {
-      "id": 6,
-      "type": "stat",
-      "title": "Container restarts (1h)",
-      "description": "Crashes and OOM kills relaunched in place; rollouts do not count. Climbing steadily is a crash loop.",
-      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 6 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 1 },
-              { "color": "red", "value": 5 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "sum(increase(k8s_container_restarts[1h]))", "legendFormat": "restarts" }
-      ]
-    },
-    {
-      "id": 7,
-      "type": "timeseries",
-      "title": "Top pods CPU (cores)",
-      "description": "Top eight only, so the lines do not sum to node usage.",
-      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 6 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 2,
-          "min": 0,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "topk_avg(8, sum by (k8s_namespace_name, k8s_pod_name) (k8s_pod_cpu_usage))",
-          "legendFormat": "{{k8s_namespace_name}}/{{k8s_pod_name}}"
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "type": "timeseries",
-      "title": "Top pods memory (working set)",
-      "description": "Working set is what the OOM killer weighs against the limit.",
-      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 6 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "min": 0,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "topk_avg(8, max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_memory_working_set_bytes))",
-          "legendFormat": "{{k8s_namespace_name}}/{{k8s_pod_name}}"
-        }
-      ]
-    },
-    {
-      "id": 9,
-      "type": "timeseries",
-      "title": "Edge requests by status class",
-      "description": "Both edges, all hostnames. A 4xx surge is usually scanners.",
-      "gridPos": { "h": 6, "w": 10, "x": 0, "y": 12 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "min": 0,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 15, "showPoints": "never" }
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "2xx" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
-          { "matcher": { "id": "byName", "options": "3xx" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }] },
-          { "matcher": { "id": "byName", "options": "4xx" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
-          { "matcher": { "id": "byName", "options": "5xx" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Host detail for ${__data.fields.host_name}",
+                    "url": "/d/host?var-host=${__data.fields.host_name}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Disk /"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Load per core"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0.8
+                    },
+                    {
+                      "color": "red",
+                      "value": 1.5
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Network in"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Network out"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last data"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 120
+                    },
+                    {
+                      "color": "red",
+                      "value": 600
+                    }
+                  ]
+                }
+              }
+            ]
+          }
         ]
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Host",
+            "desc": false
+          }
+        ]
       },
-      "targets": [
+      "transformations": [
         {
-          "refId": "A",
-          "expr": "sum by (class) (label_replace(rate(traefik_service_requests_total{code=~\"[0-9]{3}\"}[$__rate_interval]), \"class\", \"${1}xx\", \"code\", \"([0-9])..\"))",
-          "legendFormat": "{{class}}"
+          "id": "joinByField",
+          "options": {
+            "byField": "host_name",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "host_name": "Host",
+              "Value #A": "CPU",
+              "Value #B": "Memory",
+              "Value #C": "Disk /",
+              "Value #D": "Load per core",
+              "Value #E": "Network in",
+              "Value #F": "Network out",
+              "Value #G": "Last data"
+            }
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Host|CPU|Memory|Disk /|Load per core|Network in|Network out|Last data)$"
+            }
+          }
         }
-      ]
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 24,
+        "h": 7
+      },
+      "id": 2
     },
     {
-      "id": 10,
       "type": "timeseries",
-      "title": "Edge latency",
-      "description": "All services combined. A backend on the other node adds a tailnet round trip; long-polling endpoints inflate the p95.",
-      "gridPos": { "h": 6, "w": 8, "x": 10, "y": 12 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "min": 0,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+      "title": "CPU busy by host",
+      "description": "Share of all cores doing work, including iowait and steal. A flat line near 100 % means the host is saturated.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
       },
       "targets": [
         {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(traefik_service_request_duration_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "p95"
-        },
-        {
-          "refId": "B",
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(traefik_service_request_duration_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "p50"
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * (1 - sum by (host_name) (label_copy(rate(system_cpu_time_seconds_total{state=\"idle\"}[$__rate_interval]), \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(rate(system_cpu_time_seconds_total[$__rate_interval]), \"k8s_node_name\", \"host_name\")))",
+          "legendFormat": "{{host_name}}",
+          "refId": "A"
         }
-      ]
-    },
-    {
-      "id": 11,
-      "type": "stat",
-      "title": "5xx rate",
-      "description": "Sustained nonzero means a backend is failing; Recent error logs usually names it.",
-      "gridPos": { "h": 6, "w": 3, "x": 18, "y": 12 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "unit": "percent",
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 0.05 },
-              { "color": "red", "value": 0.5 }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
+          },
+          "links": [
+            {
+              "title": "Host detail for ${__field.labels.host_name}",
+              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "min": 0,
+          "max": 100,
+          "color": {
+            "mode": "palette-classic"
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 8,
+        "h": 7
+      },
+      "id": 3
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory used by host",
+      "description": "Memory held by processes, without page cache. Cache gives memory back on demand, so only this share counts as pressure.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
       },
       "targets": [
         {
-          "refId": "A",
-          "expr": "sum(rate(traefik_service_requests_total{code=~\"5..\"}[$__rate_interval]))",
-          "legendFormat": "5xx"
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * sum by (host_name) (label_copy(system_memory_usage_bytes{state=\"used\"}, \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(system_memory_usage_bytes{state=~\"used|free|buffered|cached\"}, \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "{{host_name}}",
+          "refId": "A"
         }
-      ]
-    },
-    {
-      "id": 12,
-      "type": "stat",
-      "title": "TLS cert expiry",
-      "description": "Soonest-expiring edge certificate. Renewal runs about 30 days out, so below three weeks means renewals are failing.",
-      "gridPos": { "h": 6, "w": 3, "x": 21, "y": 12 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
+      ],
       "fieldConfig": {
         "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Host detail for ${__field.labels.host_name}",
+              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "min": 0,
+          "max": 100,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 8,
+        "w": 8,
+        "h": 7
+      },
+      "id": 4
+    },
+    {
+      "type": "timeseries",
+      "title": "Root disk used by host",
+      "description": "Used share of the root filesystem, as df reports it. Root reserve excluded.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * sum by (host_name) (label_copy(last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=\"used\"}[5m]), \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=~\"used|free\"}[5m]), \"k8s_node_name\", \"host_name\"))",
+          "legendFormat": "{{host_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Host detail for ${__field.labels.host_name}",
+              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "min": 0,
+          "max": 100,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 8,
+        "w": 8,
+        "h": 7
+      },
+      "id": 5
+    },
+    {
+      "type": "row",
+      "title": "Services at the edge",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 24,
+        "h": 1
+      },
+      "id": 6
+    },
+    {
+      "type": "stat",
+      "title": "Requests",
+      "description": "Requests per second across both edge proxies.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(rate(traefik_service_requests_total[$__rate_interval]))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "reqps",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Edge traffic",
+              "url": "/d/edge?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 4,
+        "h": 4
+      },
+      "id": 7
+    },
+    {
+      "type": "stat",
+      "title": "Server errors",
+      "description": "Share of requests answered with 5xx. Above 1 % turns orange, above 5 % red.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * sum(rate(traefik_service_requests_total{code=~\"5..\"}[$__rate_interval])) / sum(rate(traefik_service_requests_total[$__rate_interval]))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Edge traffic",
+              "url": "/d/edge?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 16,
+        "w": 4,
+        "h": 4
+      },
+      "id": 8
+    },
+    {
+      "type": "stat",
+      "title": "Latency p95",
+      "description": "95th percentile of request duration across all services. Traefik buckets stop at 5 s.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(traefik_service_request_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Edge traffic",
+              "url": "/d/edge?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 16,
+        "w": 4,
+        "h": 4
+      },
+      "id": 9
+    },
+    {
+      "type": "stat",
+      "title": "Open connections",
+      "description": "Connections held open by the edge proxies, websockets included.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(traefik_open_connections)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Edge traffic",
+              "url": "/d/edge?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 4,
+        "h": 4
+      },
+      "id": 10
+    },
+    {
+      "type": "stat",
+      "title": "Certificate expiry",
+      "description": "Days until the first served TLS certificate expires. cert-manager renews at 30 days left.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "(min(traefik_tls_certs_not_after) - time()) / 86400",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
           "unit": "d",
           "decimals": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "orange", "value": 7 },
-              { "color": "green", "value": 21 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 14
+              },
+              {
+                "color": "green",
+                "value": 21
+              }
             ]
+          },
+          "links": [
+            {
+              "title": "Edge traffic",
+              "url": "/d/edge?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "colorMode": "value",
         "graphMode": "none",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 16,
+        "w": 4,
+        "h": 4
+      },
+      "id": 11
+    },
+    {
+      "type": "stat",
+      "title": "Nix cache",
+      "description": "Garage cluster health. Red means the S3 store lost quorum and nix pulls fail.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
       },
       "targets": [
         {
-          "refId": "A",
-          "expr": "(min(traefik_tls_certs_not_after) - time()) / 86400",
-          "legendFormat": "min days left"
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "min(cluster_healthy{job=\"garage\"})",
+          "legendFormat": "",
+          "refId": "A"
         }
-      ]
-    },
-    {
-      "id": 13,
-      "type": "timeseries",
-      "title": "Error logs",
-      "description": "ERROR and above from all sources: pod logs, host journals, Kubernetes events.",
-      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 18 },
-      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "min": 0,
-          "color": { "mode": "fixed", "fixedColor": "red" },
-          "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 60, "showPoints": "never" }
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Garage and nix cache",
+              "url": "/d/garage?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "degraded",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "healthy",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
         },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
       },
-      "targets": [
-        { "refId": "A", "expr": "severity_number:>=17", "queryType": "hits" }
-      ]
+      "gridPos": {
+        "x": 20,
+        "y": 16,
+        "w": 4,
+        "h": 4
+      },
+      "id": 12
     },
     {
-      "id": 14,
+      "type": "timeseries",
+      "title": "Requests by status class",
+      "description": "Requests per second split by status class. A rising 5xx band means a backend is failing.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (class) (label_replace(rate(traefik_service_requests_total{code=~\"[0-9]{3}\"}[$__rate_interval]), \"class\", \"${1}xx\", \"code\", \"([0-9])..\")) ",
+          "legendFormat": "{{class}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Edge traffic",
+              "url": "/d/edge?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "5xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "4xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "2xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "3xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "id": 13
+    },
+    {
+      "type": "table",
+      "title": "Services",
+      "description": "Each service behind the edge over the selected range: request rate, error share and 95th percentile latency. Select a row for its traffic.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (svc) (label_replace(rate(traefik_service_requests_total[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\"))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * sum by (svc) (label_replace(rate(traefik_service_requests_total{code=~\"5..\"}[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\")) / sum by (svc) (label_replace(rate(traefik_service_requests_total[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\"))",
+          "legendFormat": "",
+          "refId": "B",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_replace(rate(traefik_service_request_duration_seconds_bucket[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\")))",
+          "legendFormat": "",
+          "refId": "C",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Service"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Edge traffic for ${__data.fields.Service}",
+                    "url": "/d/edge?var-svc=${__data.fields.Service}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Requests"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "reqps"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "5xx"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 5
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "noValue",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p95"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 3
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "svc",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "svc": "Service",
+              "Value #A": "Requests",
+              "Value #B": "5xx",
+              "Value #C": "p95"
+            }
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Service|Requests|5xx|p95)$"
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "id": 14
+    },
+    {
+      "type": "row",
+      "title": "Cluster",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 24,
+        "h": 1
+      },
+      "id": 15
+    },
+    {
+      "type": "stat",
+      "title": "Nodes ready",
+      "description": "Kubernetes nodes reporting Ready.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(min by (k8s_node_name) (k8s_node_condition_ready))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Kubernetes workloads",
+              "url": "/d/k8s?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 29,
+        "w": 4,
+        "h": 4
+      },
+      "id": 16
+    },
+    {
+      "type": "stat",
+      "title": "Pods not running",
+      "description": "Pods in any phase other than Running or Succeeded.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "count(max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase) != 2 and max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase) != 3) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Kubernetes workloads",
+              "url": "/d/k8s?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 29,
+        "w": 4,
+        "h": 4
+      },
+      "id": 17
+    },
+    {
+      "type": "stat",
+      "title": "Restarts",
+      "description": "Container restarts over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(increase(k8s_container_restarts[$__range]))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Kubernetes workloads",
+              "url": "/d/k8s?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 29,
+        "w": 4,
+        "h": 4
+      },
+      "id": 18
+    },
+    {
+      "type": "stat",
+      "title": "Workloads short of replicas",
+      "description": "Deployments, StatefulSets and DaemonSets with fewer ready pods than desired.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "(count(k8s_deployment_available < k8s_deployment_desired) or vector(0)) + (count(k8s_statefulset_ready_pods < k8s_statefulset_desired_pods) or vector(0)) + (count(k8s_daemonset_ready_nodes < k8s_daemonset_desired_scheduled_nodes) or vector(0))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Kubernetes workloads",
+              "url": "/d/k8s?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 29,
+        "w": 4,
+        "h": 4
+      },
+      "id": 19
+    },
+    {
+      "type": "stat",
+      "title": "Apps out of sync",
+      "description": "Argo CD applications whose live state differs from git.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "count(argocd_app_info{sync_status!=\"Synced\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 29,
+        "w": 4,
+        "h": 4
+      },
+      "id": 20
+    },
+    {
+      "type": "stat",
+      "title": "Apps unhealthy",
+      "description": "Argo CD applications reporting a health other than Healthy.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "count(argocd_app_info{health_status!=\"Healthy\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 29,
+        "w": 4,
+        "h": 4
+      },
+      "id": 21
+    },
+    {
+      "type": "row",
+      "title": "Logs",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 24,
+        "h": 1
+      },
+      "id": 22
+    },
+    {
+      "type": "timeseries",
+      "title": "Errors by source",
+      "description": "Error lines per interval, by Kubernetes namespace or host journal unit. A new band means a new failure.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "severity_number:>=17 | stats by (k8s.namespace.name, unit) count() errors",
+          "queryType": "statsRange",
+          "refId": "A",
+          "legendFormat": "{{k8s.namespace.name}}{{unit}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Logs explorer",
+              "url": "/d/logs?var-level=error&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 12,
+        "h": 8
+      },
+      "id": 23
+    },
+    {
       "type": "logs",
-      "title": "Recent error logs",
-      "description": "Expanding a line shows its fields; k8s.pod.name or unit plus host.name locate the emitter.",
-      "gridPos": { "h": 7, "w": 16, "x": 8, "y": 18 },
-      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "title": "Recent errors",
+      "description": "Newest error lines from every host and pod.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "severity_number:>=17",
+          "queryType": "instant",
+          "refId": "A",
+          "maxLines": 200
+        }
+      ],
       "options": {
         "showTime": true,
         "showLabels": false,
@@ -541,227 +2198,473 @@
         "wrapLogMessage": true,
         "prettifyLogMessage": false,
         "enableLogDetails": true,
+        "enableInfiniteScrolling": true,
         "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
-      "targets": [
-        { "refId": "A", "expr": "severity_number:>=17", "queryType": "instant", "maxLines": 100 }
-      ]
+      "links": [
+        {
+          "title": "Logs explorer",
+          "url": "/d/logs?var-level=error&${__url_time_range}",
+          "targetBlank": false
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 12,
+        "h": 8
+      },
+      "id": 24
     },
     {
-      "id": 15,
+      "type": "row",
+      "title": "Network and telemetry",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 1
+      },
+      "id": 25
+    },
+    {
       "type": "stat",
-      "title": "Telemetry freshness",
-      "description": "Age of each machine's newest sample; normal is under a minute. Climbing means the machine or its push path is down and its other panels are stale, not current.",
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 25 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
+      "title": "Inbound connections from the internet",
+      "description": "New connections from internet addresses to any host over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "conn.event:=new source.network:=internet | stats count() connections",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
+          "custom": {},
           "decimals": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 120 },
-              { "color": "red", "value": 600 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{k8s_node_name=\"vmk3s\"}[6h]))",
-          "legendFormat": "vmk3s"
-        },
-        {
-          "refId": "D",
-          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{k8s_node_name=\"netcup-g12\"}[6h]))",
-          "legendFormat": "netcup-g12"
-        },
-        {
-          "refId": "B",
-          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{host_name=\"homelab\"}[6h]))",
-          "legendFormat": "homelab"
-        },
-        {
-          "refId": "C",
-          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{host_name=\"pi-4b-hh\"}[6h]))",
-          "legendFormat": "pi-4b-hh"
-        }
-      ]
-    },
-    {
-      "id": 16,
-      "type": "timeseries",
-      "title": "Collector export failures",
-      "description": "Telemetry dropped after retries: real gaps in the stores, not a display problem.",
-      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 25 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "min": 0,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(otelcol_exporter_send_failed_metric_points_total[$__rate_interval]))",
-          "legendFormat": "metric points"
-        },
-        {
-          "refId": "B",
-          "expr": "sum(rate(otelcol_exporter_send_failed_log_records_total[$__rate_interval]))",
-          "legendFormat": "log records"
-        },
-        {
-          "refId": "C",
-          "expr": "sum(rate(otelcol_exporter_send_failed_spans_total[$__rate_interval]))",
-          "legendFormat": "spans"
-        }
-      ]
-    },
-    {
-      "id": 17,
-      "type": "stat",
-      "title": "Scrape targets down",
-      "description": "up == 0 in Explore names the dead target via its job label.",
-      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 25 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "sum(up == bool 0)", "legendFormat": "down" }
-      ]
-    },
-    {
-      "id": 18,
-      "type": "stat",
-      "title": "SMART status",
-      "description": "Physical disks only; the VMs see virtual disks and report nothing. FAIL means replace the disk.",
-      "gridPos": { "h": 6, "w": 4, "x": 16, "y": 25 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": { "text": "FAIL", "color": "red" },
-                "1": { "text": "OK", "color": "green" }
+              {
+                "color": "green",
+                "value": null
               }
+            ]
+          },
+          "links": [
+            {
+              "title": "Network flows",
+              "url": "/d/network-flows?${__url_time_range}",
+              "targetBlank": false
             }
           ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "auto",
-        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "colorMode": "value",
         "graphMode": "none",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 4,
+        "h": 4
+      },
+      "id": 26
+    },
+    {
+      "type": "stat",
+      "title": "Refused connections",
+      "description": "Connection attempts the host firewalls refused over the selected range. Mostly scanners.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
       },
       "targets": [
         {
-          "refId": "A",
-          "expr": "min(smartctl_device_smart_status{host_name=\"homelab\"})",
-          "legendFormat": "homelab"
-        },
-        {
-          "refId": "B",
-          "expr": "min(smartctl_device_smart_status{host_name=\"pi-4b-hh\"})",
-          "legendFormat": "pi-4b-hh"
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "conn.event:=refused | stats count() refused",
+          "queryType": "stats",
+          "refId": "A"
         }
-      ]
-    },
-    {
-      "id": 19,
-      "type": "bargauge",
-      "title": "Store free disk",
-      "description": "Minimum across each store's replicas, cluster and pi. A full store stops accepting writes.",
-      "gridPos": { "h": 6, "w": 4, "x": 20, "y": 25 },
-      "datasource": { "type": "victoriametrics-metrics-datasource", "uid": "victoriametrics" },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "bytes",
-          "min": 0,
+          "custom": {},
+          "decimals": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "orange", "value": 5000000000 },
-              { "color": "green", "value": 20000000000 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1000
+              }
             ]
+          },
+          "links": [
+            {
+              "title": "Network flows",
+              "url": "/d/network-flows?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "orientation": "horizontal",
-        "displayMode": "basic",
-        "showUnfilled": true
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 43,
+        "w": 4,
+        "h": 4
+      },
+      "id": 27
+    },
+    {
+      "type": "stat",
+      "title": "Edge clients",
+      "description": "Distinct client addresses that reached the edge over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
       },
       "targets": [
-        { "refId": "A", "expr": "min(vm_free_disk_space_bytes{job=\"victoria-metrics\"})", "legendFormat": "metrics" },
-        { "refId": "B", "expr": "min(vl_free_disk_space_bytes{job=\"victoria-logs\"})", "legendFormat": "logs" },
-        { "refId": "C", "expr": "min(vt_free_disk_space_bytes{job=\"victoria-traces\"})", "legendFormat": "traces" }
-      ]
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "log.type:=access | stats count_uniq(ClientHost) clients",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Network flows",
+              "url": "/d/network-flows?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 43,
+        "w": 4,
+        "h": 4
+      },
+      "id": 28
+    },
+    {
+      "type": "stat",
+      "title": "Metric points dropped",
+      "description": "Points the collectors failed to deliver, per second. Anything above zero leaves gaps in the panels.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(rate(otelcol_exporter_send_failed_metric_points_total[$__rate_interval])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Telemetry pipeline",
+              "url": "/d/telemetry?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 43,
+        "w": 4,
+        "h": 4
+      },
+      "id": 29
+    },
+    {
+      "type": "stat",
+      "title": "Scrape targets down",
+      "description": "Scraped endpoints that did not answer their last scrape.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(up == bool 0) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Telemetry pipeline",
+              "url": "/d/telemetry?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 43,
+        "w": 4,
+        "h": 4
+      },
+      "id": 30
+    },
+    {
+      "type": "stat",
+      "title": "Store disk free",
+      "description": "Lowest free disk across the metric, log and trace stores.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "min(vm_free_disk_space_bytes or vl_free_disk_space_bytes or vt_free_disk_space_bytes)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "bytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10000000000.0
+              },
+              {
+                "color": "green",
+                "value": 20000000000.0
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Telemetry pipeline",
+              "url": "/d/telemetry?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 43,
+        "w": 4,
+        "h": 4
+      },
+      "id": 31
     }
-  ],
-  "refresh": "1m",
-  "schemaVersion": 41,
-  "tags": ["fleet", "overview"],
-  "templating": { "list": [] },
-  "time": { "from": "now-6h", "to": "now" },
-  "timepicker": {},
-  "timezone": "browser",
-  "title": "Fleet Overview",
-  "uid": "fleet-overview",
-  "version": 1
+  ]
 }

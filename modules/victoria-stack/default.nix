@@ -62,6 +62,8 @@ in
         http_addr = "0.0.0.0";
         http_port = 3000;
       };
+      # Fleet overview as landing page; every other dashboard links from it.
+      settings.dashboards.default_home_dashboard_path = "${./dashboards}/fleet-overview.json";
       # Module refuses Grafana's built-in default secret_key. Key generated
       # once on first start, never in the repo. Encrypts datasource secrets
       # in the Grafana DB; losing it only invalidates stored credentials,
@@ -122,7 +124,8 @@ in
         };
         # Dashboards mirror the in-cluster Grafana. Canonical copies live in
         # hh-cluster-infra (argocd/applications/observability/manifests/
-        # dashboards); the files in ./dashboards are synced copies.
+        # dashboards), written by its dashgen/generate.py, which takes
+        # ./dashboards as extra output directory.
         dashboards.settings = {
           apiVersion = 1;
           providers = [
