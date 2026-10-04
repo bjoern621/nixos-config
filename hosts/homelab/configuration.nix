@@ -13,7 +13,6 @@
     ../../modules/admin-ssh-keys.nix
     ../../modules/kitty-terminfo.nix
     ../../modules/homelab/vm/hypervisor
-    ../../modules/homelab/samba.nix
     ../../modules/homelab/mounts.nix
     ../../modules/homelab/storage.nix
     ../../modules/homelab/monitoring.nix
@@ -54,7 +53,6 @@
       "wheel"
       "docker"
       "libvirtd"
-      "smbshare"
     ];
   };
 
