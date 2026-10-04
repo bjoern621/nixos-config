@@ -123,6 +123,8 @@ Variants {
             Region { item: interactionZone }
             Region { item: root.maskItem(nowPlayingHoverItem.popupItem) }
             Region { item: root.maskItem(calendarHoverItem.popupItem) }
+            // Sibling of calendar menu, outside its popupItem.
+            Region { item: root.maskItem(dayPanel) }
             Region { item: root.maskItem(systemTray.popupItem) }
             Region { item: root.maskItem(networkHoverItem.popupItem) }
             Region { item: root.maskItem(bluetoothHoverItem.popupItem) }
