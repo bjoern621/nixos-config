@@ -10,8 +10,9 @@
 # Daemon restart therefore lands in strict state, not permissive.
 #
 # Two events drop it mid-session, both leaving an unlocked session policed:
-# usbguard restart (any rebuild touching it), and any permanent policy write
-# (allow-device -p, append-rule without -t), which rebuilds the rule set from file.
+# usbguard restart (any rebuild touching it), and allow-device -p.
+# allow-device -p upserts into the one rule matching the device, catch-all included:
+# lone match overwrites catch-all, two matches fail with "multiple matching rules".
 # Recover with `systemctl --user restart usbguard-session-policy`.
 #
 # Two boundaries, two triggers:
@@ -81,8 +82,10 @@ let
       case "$choice" in
         once) "$usbguard" allow-device "$1" ;;
         always)
+          # Catch-all matches every device.
+          # Upsert needs device's own rule as sole match.
+          ${sessionPolicy}/bin/usbguard-session-policy locked
           "$usbguard" allow-device -p "$1"
-          # Permanent write reloads rule set from file, dropping session rule.
           ${sessionPolicy}/bin/usbguard-session-policy unlocked
           ;;
       esac
