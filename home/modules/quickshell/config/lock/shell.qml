@@ -14,6 +14,17 @@ import Quickshell.Io
 // resume with no surface, leaving Hyprland's "lock app died" fallback. An
 // already-initialized, Wayland-connected process just maps a surface instead.
 ShellRoot {
+	id: root
+
+	// USB hotplug authorization follows the lock (home/modules/usbguard.nix).
+	// Locked drops the catch-all rule, leaving only the seeded allowlist, so a
+	// keyboard emulator plugged into the locked machine never binds.
+	// Fire-and-forget: the lock must not wait on the IPC round trip.
+	// Called at each edge: WlSessionLock emits lockedChanged on lock only, never on unlock.
+	function applyUsbPolicy(state: string): void {
+		Quickshell.execDetached(["usbguard-session-policy", state]);
+	}
+
 	// Shared state across every per-screen lock surface.
 	LockContext {
 		id: lockContext
@@ -21,7 +32,10 @@ ShellRoot {
 		// Release the lock and stay resident for the next cycle. Setting locked
 		// false destroys the surfaces; the process keeps running so the next lock
 		// is an instant state flip rather than a cold start.
-		onUnlocked: lock.locked = false
+		onUnlocked: {
+			lock.locked = false;
+			root.applyUsbPolicy("unlocked");
+		}
 	}
 
 	WlSessionLock {
@@ -30,15 +44,6 @@ ShellRoot {
 		// Idle until an IPC lock call arrives. While false, no WlSessionLockSurface
 		// is instantiated, so there is nothing for the compositor to composite.
 		locked: false
-
-		// USB hotplug authorization follows the lock (home/modules/usbguard.nix).
-		// Locked drops the catch-all rule, leaving only the seeded allowlist, so a
-		// keyboard emulator plugged into the locked machine never binds.
-		// Fire-and-forget: the lock must not wait on the IPC round trip.
-		onLockedChanged: Quickshell.execDetached([
-			"usbguard-session-policy",
-			locked ? "locked" : "unlocked",
-		])
 
 		WlSessionLockSurface {
 			LockSurface {
@@ -60,6 +65,9 @@ ShellRoot {
 				return;
 			lockContext.reset();
 			lock.locked = true;
+			// Failed acquire leaves locked false and session unlocked.
+			if (lock.locked)
+				root.applyUsbPolicy("locked");
 		}
 	}
 }

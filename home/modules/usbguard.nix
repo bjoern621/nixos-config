@@ -17,7 +17,7 @@
 #
 # Two boundaries, two triggers:
 #   session start/end - unit below, bound to graphical-session.target.
-#   lock/unlock       - WlSessionLock.onLockedChanged in
+#   lock/unlock       - applyUsbPolicy in
 #                       home/modules/quickshell/config/lock/shell.qml.
 let
   # Label is the handle for finding the rule again. Rule ids are assigned by the
