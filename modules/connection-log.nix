@@ -46,6 +46,12 @@ in
       description = "Interfaces whose traffic stays unlogged: loopback, pod and container bridges. iptables `+` wildcard.";
     };
 
+    ignoredUdpPorts = lib.mkOption {
+      type = lib.types.listOf lib.types.port;
+      default = [ 8472 ];
+      description = "UDP destination ports left unlogged. flannel's VXLAN picks a fresh source port per inner flow, so each one counts as a new connection.";
+    };
+
     services = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = { };
@@ -92,6 +98,9 @@ in
       ${lib.concatMapStrings (iface: ''
         ip46tables -t mangle -A nixos-conn-log -i ${iface} -j RETURN
       '') cfg.ignoredInterfaces}
+      ${lib.concatMapStrings (port: ''
+        ip46tables -t mangle -A nixos-conn-log -p udp --dport ${toString port} -j RETURN
+      '') cfg.ignoredUdpPorts}
       ip46tables -t mangle -A nixos-conn-log \
         -m conntrack --ctstate NEW -m addrtype --dst-type LOCAL \
         -m limit --limit ${cfg.rateLimit} --limit-burst 100 \
