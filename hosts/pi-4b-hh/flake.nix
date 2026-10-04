@@ -47,7 +47,7 @@
         (mkSystem [ "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix" ]).config.system.build.sdImage;
     in
     {
-      nixosConfigurations.pi-4b-hh = mkSystem [ ./hardware-configuration.nix ];
+      nixosConfigurations.pi-4b-hh = mkSystem [ ];
 
       # What CI builds.
       # The machine's hardware-configuration.nix reaches the repo only on the machine,

@@ -17,10 +17,7 @@
     { nixpkgs, ... }@inputs:
     {
       nixosConfigurations.netcup-g12 = nixpkgs.lib.nixosSystem {
-        modules = [
-          ./configuration.nix
-          ./hardware-configuration.nix
-        ];
+        modules = [ ./configuration.nix ];
 
         specialArgs = { inherit inputs; };
       };

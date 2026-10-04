@@ -103,7 +103,7 @@
         };
     in
     {
-      nixosConfigurations.nixos = mkSystem [ ./hardware-configuration.nix ];
+      nixosConfigurations.nixos = mkSystem [ ];
 
       # What CI builds.
       # modules/howdy.nix pins opencv4Full to an enableVtk = false override,
@@ -117,8 +117,8 @@
       #
       # The workarounds in modules/howdy.nix therefore go unchecked here.
       nixosConfigurations.nixos-ci = mkSystem [
-        # The machine's hardware-configuration.nix reaches the repo only on the machine,
-        # so a runner needs the stub.
+        # The machine's hardware-configuration.nix reaches the repo only on the machine
+        # (the committed file is a placeholder), so a runner needs the stub.
         ../../modules/ci-hardware-stub.nix
         (
           { lib, pkgs, ... }:

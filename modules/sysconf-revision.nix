@@ -14,10 +14,9 @@ let
 
   self = inputs.self;
 
-  # sysconf-reload shows the copied hardware-configuration.nix to Nix as an intent-to-add entry,
-  # so every deploy evaluates as dirty.
-  # dirtyRev still carries HEAD as "<sha>-dirty".
-  # Flag keeps the uncertainty visible.
+  # sysconf-reload copies hardware-configuration.nix into the tree and runs
+  # `git add -N .`, so a routine deploy can evaluate as dirty. dirtyRev still
+  # carries HEAD as "<sha>-dirty"; the flag keeps the uncertainty visible.
   dirty = !(self ? rev);
   rev = if !dirty then self.rev else lib.removeSuffix "-dirty" (self.dirtyRev or "unknown");
 in

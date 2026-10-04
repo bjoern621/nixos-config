@@ -79,10 +79,10 @@ let
         exit 1
       fi
 
-      # No explicit dirty check. sysconf-reload runs `git add -N .`,
-      # so a working tree is routinely dirty for reasons unrelated to the pull.
-      # --ff-only aborts on its own when the incoming commits would overwrite a local edit,
-      # and carries the rest through.
+      # No explicit dirty check. sysconf-reload copies hardware-configuration.nix
+      # into the repo and runs `git add -N .`, so a working tree is routinely
+      # dirty for reasons unrelated to the pull. --ff-only aborts on its own when
+      # the incoming commits would overwrite a local edit, and carries the rest through.
       echo "Fast-forwarding to origin/$BRANCH..."
       git merge --ff-only "origin/$BRANCH"
     fi
