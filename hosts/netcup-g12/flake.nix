@@ -17,7 +17,22 @@
     { nixpkgs, ... }@inputs:
     {
       nixosConfigurations.netcup-g12 = nixpkgs.lib.nixosSystem {
-        modules = [ ./configuration.nix ];
+        modules = [
+          ./configuration.nix
+          ./hardware-configuration.nix
+        ];
+
+        specialArgs = { inherit inputs; };
+      };
+
+      # What CI builds.
+      # The machine's hardware-configuration.nix reaches the repo only on the machine,
+      # so a runner needs the stub to get as far as the package set.
+      nixosConfigurations.netcup-g12-ci = nixpkgs.lib.nixosSystem {
+        modules = [
+          ./configuration.nix
+          ../../modules/ci-hardware-stub.nix
+        ];
 
         specialArgs = { inherit inputs; };
       };

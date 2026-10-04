@@ -47,7 +47,16 @@
         (mkSystem [ "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix" ]).config.system.build.sdImage;
     in
     {
-      nixosConfigurations.pi-4b-hh = mkSystem [ ];
+      nixosConfigurations.pi-4b-hh = mkSystem [ ./hardware-configuration.nix ];
+
+      # What CI builds.
+      # The machine's hardware-configuration.nix reaches the repo only on the machine,
+      # so a runner needs the stub to get as far as the package set.
+      # Stub defaults to x86_64-linux.
+      nixosConfigurations.pi-4b-hh-ci = mkSystem [
+        ../../modules/ci-hardware-stub.nix
+        { nixpkgs.hostPlatform = system; }
+      ];
 
       packages.aarch64-linux.sdImage = sdImage;
       packages.x86_64-linux.sdImage = sdImage;

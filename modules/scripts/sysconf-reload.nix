@@ -112,41 +112,43 @@ let
       fi
     fi
 
-    HARDWARE_TARGET="$NIXOS_CONFIG/hosts/$TARGET_HOST/hardware-configuration.nix"
+    # Git never carries a hardware-configuration.nix.
+    # Every rebuild copies it from /etc/nixos of the machine it activates on.
+    HARDWARE_SOURCE=/etc/nixos/hardware-configuration.nix
+    HARDWARE_PATH="hosts/$TARGET_HOST/hardware-configuration.nix"
+    HARDWARE_TARGET="$NIXOS_CONFIG/$HARDWARE_PATH"
 
+    # Git and file operations run as the invoking user (the repo owner) so the
+    # working tree stays owned by that user. Only nixos-rebuild needs root.
     if [[ $REMOTE -eq 1 ]]; then
-      # /etc/nixos/hardware-configuration.nix describes the machine running the
-      # script, so copying it onto a remote host would overwrite that host's layout
-      # with this one's. A remote host keeps its own, committed with the host.
-      if [[ ! -f "$HARDWARE_TARGET" ]]; then
-        echo "[sysconf-reload] Missing $HARDWARE_TARGET" >&2
-        echo "[sysconf-reload] Write it, or take the machine's own:" >&2
-        echo "[sysconf-reload]   ssh <host> nixos-generate-config --dir /tmp/hw" >&2
+      echo "[sysconf-reload] Copying $REMOTE_ADDRESS:$HARDWARE_SOURCE -> $HARDWARE_TARGET"
+      if ! ssh -- "$REMOTE_ADDRESS" cat "$HARDWARE_SOURCE" > "$HARDWARE_TARGET.tmp"; then
+        rm -f "$HARDWARE_TARGET.tmp"
+        echo "[sysconf-reload] Could not read $HARDWARE_SOURCE on $REMOTE_ADDRESS." >&2
+        echo "[sysconf-reload] Generate it there as root:" >&2
+        echo "[sysconf-reload]   nixos-generate-config --show-hardware-config > $HARDWARE_SOURCE" >&2
         exit 1
       fi
-      echo "[sysconf-reload] Remote deploy: keeping the committed hardware-configuration.nix."
-    elif [[ ! -f /etc/nixos/hardware-configuration.nix && -f "$HARDWARE_TARGET" ]]; then
-      # A host installed from a flake image never ran nixos-generate-config, so its hardware
-      # description is the committed one and there is nothing here to capture.
-      echo "[sysconf-reload] No /etc/nixos/hardware-configuration.nix: keeping the committed one."
+      mv -f "$HARDWARE_TARGET.tmp" "$HARDWARE_TARGET"
     else
-      if [[ ! -f /etc/nixos/hardware-configuration.nix ]]; then
-        echo "Missing /etc/nixos/hardware-configuration.nix, and $HARDWARE_TARGET is not there either" >&2
-        echo "[sysconf-reload] Write one, or take the machine's own:" >&2
-        echo "[sysconf-reload]   nixos-generate-config --dir /tmp/hw" >&2
+      if [[ ! -f "$HARDWARE_SOURCE" ]]; then
+        echo "[sysconf-reload] $HARDWARE_SOURCE does not exist. Generate it:" >&2
+        echo "[sysconf-reload]   sudo nixos-generate-config --show-hardware-config | sudo tee $HARDWARE_SOURCE" >&2
         exit 1
       fi
 
-      # Git and file operations run as the invoking user (the repo owner) so the
-      # working tree stays owned by that user. Only nixos-rebuild needs root.
-      mkdir -p "$NIXOS_CONFIG/hosts/$TARGET_HOST"
-      if [[ /etc/nixos/hardware-configuration.nix -ef "$HARDWARE_TARGET" ]]; then
+      if [[ "$HARDWARE_SOURCE" -ef "$HARDWARE_TARGET" ]]; then
         echo "[sysconf-reload] Skipping hardware-configuration.nix copy (source and target are the same file)."
       else
-        echo "[sysconf-reload] Copying /etc/nixos/hardware-configuration.nix -> $HARDWARE_TARGET"
-        cp -f /etc/nixos/hardware-configuration.nix "$HARDWARE_TARGET"
+        echo "[sysconf-reload] Copying $HARDWARE_SOURCE -> $HARDWARE_TARGET"
+        cp -f "$HARDWARE_SOURCE" "$HARDWARE_TARGET"
       fi
     fi
+
+    # Nix reads tracked files alone, and the copy is gitignored.
+    # An intent-to-add entry shows it to Nix and leaves on exit, so no commit takes it.
+    git -C "$NIXOS_CONFIG" add --intent-to-add --force -- "$HARDWARE_PATH"
+    trap 'git -C "$NIXOS_CONFIG" rm --cached --quiet -- "$HARDWARE_PATH"' EXIT
 
     NEW_FILES=$(git -C "$NIXOS_CONFIG" ls-files --others --exclude-standard | wc -l)
     git -C "$NIXOS_CONFIG" add -N .

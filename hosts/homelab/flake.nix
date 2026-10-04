@@ -40,7 +40,7 @@
         };
     in
     {
-      nixosConfigurations.homelab = mkSystem [ ];
+      nixosConfigurations.homelab = mkSystem [ ./hardware-configuration.nix ];
 
       # What CI builds.
       # The machine's hardware-configuration.nix reaches the repo only on the machine,
