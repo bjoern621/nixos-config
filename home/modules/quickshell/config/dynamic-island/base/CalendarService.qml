@@ -49,6 +49,7 @@ Singleton {
     }
 
     readonly property string _script: Qt.resolvedUrl("../calendar_events.py").toString().replace("file://", "")
+    readonly property string _newEventScript: Qt.resolvedUrl("../calendar_new_event.sh").toString().replace("file://", "")
 
     function dateKey(year, monthIndex, day) {
         return year + "-" + ("0" + (monthIndex + 1)).slice(-2) + "-" + ("0" + day).slice(-2);
@@ -75,6 +76,13 @@ Singleton {
 
     function calendarColor(uid) {
         return (root.calendars[uid] || {}).color || "";
+    }
+
+    // Opens GNOME Calendar's new-event editor on that day.
+    // Saved event reaches the grid as a helper payload.
+    function createEventOn(key) {
+        const parts = key.split("-");
+        Quickshell.execDetached(["bash", root._newEventScript, parts[1] + "/" + parts[2] + "/" + parts[0]]);
     }
 
     // Pulls every calendar from its server, starting the helper on first use.

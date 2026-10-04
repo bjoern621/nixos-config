@@ -74,7 +74,8 @@ PopReveal {
     }
 
     readonly property int rowHeight: Math.ceil(rowMetrics.height) + Spacing.spacing4
-    readonly property int headerHeight: Math.ceil(rowMetrics.height) + Spacing.spacing8
+    readonly property int newEventButtonSize: 24 + Shape.buttonShadowOffset
+    readonly property int headerHeight: Math.max(Math.ceil(rowMetrics.height) + Spacing.spacing8, newEventButtonSize + Spacing.spacing4)
 
     // Empty day still holds one row, for the empty state.
     readonly property int _rows: Math.max(1, root.entries.length)
@@ -114,11 +115,34 @@ PopReveal {
                 width: parent.width
                 spacing: 0
 
-                Label {
+                Item {
                     width: parent.width
                     height: root.headerHeight
-                    text: root._headerText(root._shownKey)
-                    verticalAlignment: Text.AlignVCenter
+
+                    Label {
+                        anchors {
+                            left: parent.left
+                            right: newEventButton.left
+                            rightMargin: Spacing.spacing8
+                            verticalCenter: parent.verticalCenter
+                        }
+                        text: root._headerText(root._shownKey)
+                        elide: Text.ElideRight
+                    }
+
+                    StaticButton {
+                        id: newEventButton
+                        anchors {
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
+                        }
+                        width: root.newEventButtonSize
+                        height: root.newEventButtonSize
+                        centered: true
+                        label: "+"
+                        fontPixelSize: Typography.fontSize16
+                        onClicked: CalendarService.createEventOn(root._shownKey)
+                    }
                 }
 
                 ScrollView {
