@@ -81,7 +81,8 @@
         "includeAll": true,
         "description": "Cluster nodes to include.",
         "hide": 0,
-        "options": []
+        "options": [],
+        "allValue": ".*"
       },
       {
         "name": "namespace",
@@ -100,7 +101,8 @@
         "includeAll": true,
         "description": "Namespaces to include.",
         "hide": 0,
-        "options": []
+        "options": [],
+        "allValue": ".*"
       },
       {
         "name": "pod",
@@ -119,7 +121,8 @@
         "includeAll": true,
         "description": "Pods to include.",
         "hide": 0,
-        "options": []
+        "options": [],
+        "allValue": ".*"
       },
       {
         "name": "search",
