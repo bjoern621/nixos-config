@@ -211,6 +211,8 @@ in
                 type = "severity_parser";
                 "if" = ''attributes["priority"] != nil'';
                 parse_from = "attributes.priority";
+                # Text "ERROR" instead of the raw priority digit, matching the pod logs.
+                overwrite_text = true;
                 mapping = {
                   error = [ "0" "1" "2" "3" ];
                   warn = [ "4" ];
