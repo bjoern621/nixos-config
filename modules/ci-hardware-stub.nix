@@ -1,5 +1,5 @@
-# Stands in for the machine's own hardware-configuration.nix,
-# which sysconf-reload copies from /etc/nixos and git never carries.
+# Stands in for the machine's own hardware-configuration.nix on hosts that keep a placeholder
+# in git and take the real file from /etc/nixos at sysconf-reload time.
 # Supplies the values a NixOS eval refuses to proceed without,
 # so the host's package set builds on a runner with no machine present.
 #

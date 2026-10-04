@@ -35,33 +35,31 @@ The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endp
     ```bash
     export HOST=<host>
     ```
-7. Copy the hardware configuration into the selected host and show it to the flake for this one build (see [Hardware configuration](#hardware-configuration)):
+7. Copy the hardware configuration into the selected host:
     ```bash
-    cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
-    git -C ~/git/nixos-config add --intent-to-add --force hosts/$HOST/hardware-configuration.nix
+    sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
     ```
-8. Apply the flake configuration:
+8. Mark the hardware configuration as local-only so git ignores changes to it:
+    ```bash
+    git -C ~/git/nixos-config update-index --skip-worktree hosts/$HOST/hardware-configuration.nix
+    ```
+9. Apply the flake configuration:
     ```bash
     sudo nixos-rebuild switch --flake ~/git/nixos-config/hosts/$HOST
-    ```
-9. Drop the hardware configuration from the index again, which leaves the file on disk:
-    ```bash
-    git -C ~/git/nixos-config rm --cached hosts/$HOST/hardware-configuration.nix
     ```
 
 The checkout stays where step 4 put it. Every `sysconf-*` command reads `sysconf.configPath`,
 which each host derives from `sysconf.user` as that account's `~/git/nixos-config`.
-From then on `sysconf-reload` runs steps 7 to 9 itself.
 
 ## Hardware configuration
 
 > [!CAUTION]
-> `hardware-configuration.nix` never goes into git, for any host.
-> Every build takes it from `/etc/nixos` on the machine it activates on.
+> A machine's real `hardware-configuration.nix` never goes into git.
+> Git carries a placeholder at `hosts/<host>/hardware-configuration.nix`, and the placeholder stays.
 
-`sysconf-reload` copies `/etc/nixos/hardware-configuration.nix` into `hosts/<host>/` before each build: from the local machine, or from the `--remote` target over ssh.
-The path is gitignored.
-The script shows the copy to Nix through an intent-to-add entry and removes the entry when it exits, so no commit picks the file up.
+Each machine keeps its real file at `/etc/nixos/hardware-configuration.nix`.
+`sysconf-reload` copies it over the placeholder before every build, and `skip-worktree` keeps the copy out of `git status` and out of commits.
+A `--remote` deploy copies the target's file over ssh instead and puts the previous file back when it exits.
 
 A machine without the file, such as one installed from an image, gets it once, as root:
 
@@ -69,7 +67,7 @@ A machine without the file, such as one installed from an image, gets it once, a
 nixos-generate-config --show-hardware-config > /etc/nixos/hardware-configuration.nix
 ```
 
-CI builds each host's `-ci` attribute, which takes `modules/ci-hardware-stub.nix` in place of the machine's file.
+CI builds each host's `-ci` attribute, which layers `modules/ci-hardware-stub.nix` over the placeholder.
 
 ## Raspberry Pi SD Card Hosts
 
@@ -207,19 +205,23 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │   ├── nixos/                      # Daily driver, full input set
 │   │   ├── flake.nix
 │   │   ├── flake.lock
-│   │   └── configuration.nix
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix
 │   ├── homelab/                    # Server, nixpkgs + home-manager only
 │   │   ├── flake.nix
 │   │   ├── flake.lock
-│   │   └── configuration.nix
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix
 │   ├── vmk3s/                      # Server, nixpkgs + home-manager only
 │   │   ├── flake.nix
 │   │   ├── flake.lock
-│   │   └── configuration.nix
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix
 │   └── pi-4b-hh/                   # Raspberry Pi 4, SD card image
 │       ├── flake.nix               # exposes packages.<system>.sdImage
 │       ├── flake.lock
-│       └── configuration.nix
+│       ├── configuration.nix
+│       └── hardware-configuration.nix
 ├── modules/                        # Shared system-level modules
 ├── home/                           # Shared Home Manager configs
 │   ├── bjoern.nix                  # User config for the `nixos` host

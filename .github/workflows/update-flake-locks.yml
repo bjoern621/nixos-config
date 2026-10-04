@@ -54,8 +54,8 @@ jobs:
   # short of activation, which no runner can perform.
   #
   # Each host builds its `-ci` attribute,
-  # which takes modules/ci-hardware-stub.nix in place of the hardware-configuration.nix
-  # git never carries.
+  # which layers modules/ci-hardware-stub.nix over the placeholder hardware-configuration.nix
+  # every host commits.
   #
   # nixos-ci also drops howdy and the TAS2781 kernel patch,
   # for the reasons given in hosts/nixos/flake.nix.

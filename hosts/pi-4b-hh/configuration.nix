@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./hardware-configuration.nix
     ../../modules/scripts/default.nix
     ../../modules/sysconf-checkout.nix
     ../../modules/sysconf-sudo.nix

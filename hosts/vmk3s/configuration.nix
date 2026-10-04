@@ -10,6 +10,7 @@ let
 in
 {
   imports = [
+    ./hardware-configuration.nix
     ../../modules/scripts/default.nix
     ../../modules/sysconf-sudo.nix
     ../../modules/sysconf-auto-pull.nix

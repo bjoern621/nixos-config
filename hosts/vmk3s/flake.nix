@@ -40,7 +40,7 @@
         };
     in
     {
-      nixosConfigurations.vmk3s = mkSystem [ ./hardware-configuration.nix ];
+      nixosConfigurations.vmk3s = mkSystem [ ];
 
       # What CI builds.
       # The machine's hardware-configuration.nix reaches the repo only on the machine,
