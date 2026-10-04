@@ -20,7 +20,9 @@ in
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
     ../../modules/telemetry-agent.nix
+    ../../modules/connection-log.nix
     ../../modules/k3s-tailnet.nix
+    ../../modules/k3s-geoip-db.nix
     ../../modules/k3s-gitlab-registry.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
@@ -35,6 +37,7 @@ in
     hostMetrics = false;
     otlpForward = "http://127.0.0.1:30318";
   };
+  services.connection-log.enable = true;
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";

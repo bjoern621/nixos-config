@@ -15,6 +15,7 @@
     ../../modules/smokeping.nix
     ../../modules/pi-backup
     ../../modules/telemetry-agent.nix
+    ../../modules/connection-log.nix
     ../../modules/victoria-stack
   ];
 
@@ -143,6 +144,7 @@
   # (VM, VL, VT, 14d) + Grafana. Ingests replicas from vmk3s and homelab
   # over the tailnet; own collector pushes the same fan-out back.
   services.victoria-stack.enable = true;
+  services.connection-log.enable = true;
 
   services.telemetry-agent = {
     enable = true;

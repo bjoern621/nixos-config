@@ -5,7 +5,12 @@
 # stack and the pi-4b-hh stack. Grafana on either target shows this host.
 
 {
-  imports = [ ../telemetry-agent.nix ];
+  imports = [
+    ../telemetry-agent.nix
+    ../connection-log.nix
+  ];
+
+  services.connection-log.enable = true;
 
   services.telemetry-agent = {
     enable = true;

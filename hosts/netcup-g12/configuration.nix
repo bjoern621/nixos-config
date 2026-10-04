@@ -23,8 +23,10 @@ in
     ../../modules/sysconf-auto-pull.nix
     ../../modules/sysconf-revision.nix
     ../../modules/k3s-tailnet.nix
+    ../../modules/k3s-geoip-db.nix
     ../../modules/k3s-gitlab-registry.nix
     ../../modules/telemetry-agent.nix
+    ../../modules/connection-log.nix
   ];
 
   sysconf.checkout.enable = true;
@@ -147,6 +149,16 @@ in
     enable = true;
     hostMetrics = false;
     otlpForward = "http://127.0.0.1:30318";
+  };
+  services.connection-log = {
+    enable = true;
+    services = {
+      "1936" = "rtmps";
+      "8189" = "webrtc";
+      "8322" = "rtsps";
+      "8890" = "srt";
+      "8892" = "moq";
+    };
   };
 
   # What this machine exposes for the workloads pinned to it. The relay pod runs on the host
