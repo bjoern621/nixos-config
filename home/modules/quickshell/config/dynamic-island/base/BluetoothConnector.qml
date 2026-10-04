@@ -17,8 +17,7 @@ Singleton {
 
     // Paired audio devices.
     // Listed in output menu while disconnected, so connecting needs no Bluetooth settings app.
-    // Names mirror the PipeWire sink description.
-    // Label stays put once the sink entry replaces the placeholder.
+    // Name labels row while connected too, overriding PipeWire sink description.
     // Spare Anker: F4:2B:7D:54:EF:8A
     readonly property var targets: [
         {

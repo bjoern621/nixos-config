@@ -72,26 +72,29 @@ function buildOutputDevices(sinks, bluetoothTargets) {
     for (let i = 0; i < sinks.length; i++) {
         const n = sinks[i];
         const sinkMac = extractBluetoothMacFromNodeName(n.name);
+        let targetName = "";
 
         if (sinkMac.length > 0) {
-            let isKnownTarget = false;
             for (let t = 0; t < bluetoothTargets.length; t++) {
                 if (bluetoothTargets[t].mac === sinkMac) {
-                    isKnownTarget = true;
+                    targetName = bluetoothTargets[t].name;
                     break;
                 }
             }
 
-            if (isKnownTarget) {
+            if (targetName.length > 0) {
                 if (presentTargetMacs[sinkMac]) continue;
                 presentTargetMacs[sinkMac] = true;
             }
         }
 
+        // Known target keeps its own label.
+        // Headset advertising two names ("Fractal Scape", "LE-Fractal Scape")
+        // hands PipeWire either one, varying per connect.
         result.push({
             type: "sink",
             node: n,
-            name: n.description || n.name,
+            name: targetName || n.description || n.name,
             isBluetooth: isBluetoothSink(n),
             mac: sinkMac,
         });
