@@ -162,7 +162,7 @@
     },
     {
       "type": "stat",
-      "title": "Nodes connected",
+      "title": "Nodes",
       "description": "Storage nodes this node reaches, out of those in the layout.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -233,7 +233,7 @@
     },
     {
       "type": "stat",
-      "title": "Partitions with quorum",
+      "title": "Quorum",
       "description": "Share of partitions whose replicas reach quorum. Below 100 % some objects are unreadable.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -363,7 +363,7 @@
     },
     {
       "type": "stat",
-      "title": "Blocks failing repair",
+      "title": "Lost blocks",
       "description": "Blocks the resync worker could not fetch from any peer. They stay missing until a peer returns.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -429,7 +429,7 @@
     },
     {
       "type": "stat",
-      "title": "Resync queue",
+      "title": "Resync",
       "description": "Blocks waiting for repair or replication.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",

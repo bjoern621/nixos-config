@@ -81,7 +81,7 @@
     },
     {
       "type": "stat",
-      "title": "Metric points dropped",
+      "title": "Points lost",
       "description": "Points per second the collectors failed to deliver. Above zero, panels show gaps or flip between values.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -147,7 +147,7 @@
     },
     {
       "type": "stat",
-      "title": "Log records dropped",
+      "title": "Logs lost",
       "description": "Log records per second the collectors failed to deliver.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -284,7 +284,7 @@
     },
     {
       "type": "stat",
-      "title": "Scrape targets down",
+      "title": "Scrape gaps",
       "description": "Scraped endpoints that missed their last scrape.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -350,7 +350,7 @@
     },
     {
       "type": "stat",
-      "title": "Collector throttling",
+      "title": "Throttling",
       "description": "Highest share of CPU periods any collector container spent throttled. Above 10 % exports start to time out.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -421,7 +421,7 @@
     },
     {
       "type": "stat",
-      "title": "Store disk free",
+      "title": "Store free",
       "description": "Lowest free disk across the metric, log and trace stores of both stacks.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -641,8 +641,8 @@
     },
     {
       "type": "table",
-      "title": "Newest log line per host",
-      "description": "Time of the newest journal line from each host. A host far behind the others stopped shipping logs.",
+      "title": "Journal lines per host",
+      "description": "Journal lines from each host over the last ten minutes. A host missing here stopped shipping logs.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
         "uid": "victorialogs"
@@ -653,7 +653,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_time:1h host.name:* | stats by (host.name) max(_time) newest",
+          "expr": "_time:10m host.name:* | stats by (host.name) count() lines",
           "queryType": "stats",
           "refId": "A"
         }
@@ -696,16 +696,16 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "newest"
+              "options": "lines"
             },
             "properties": [
               {
                 "id": "displayName",
-                "value": "Newest"
+                "value": "Lines"
               },
               {
-                "id": "unit",
-                "value": "dateTimeFromNow"
+                "id": "decimals",
+                "value": 0
               }
             ]
           }

@@ -231,7 +231,7 @@
     },
     {
       "type": "stat",
-      "title": "Load per core",
+      "title": "Load/core",
       "description": "5 minute load average divided by core count. Above 1 means runnable tasks wait for a CPU.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -374,7 +374,7 @@
     },
     {
       "type": "stat",
-      "title": "Root disk used",
+      "title": "Root disk",
       "description": "Used share of the root filesystem.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -580,7 +580,7 @@
     },
     {
       "type": "stat",
-      "title": "Errors logged",
+      "title": "Errors",
       "description": "Error lines in this host's journal and its pods over the selected range.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",

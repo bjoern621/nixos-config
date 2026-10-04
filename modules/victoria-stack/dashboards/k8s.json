@@ -158,7 +158,7 @@
     },
     {
       "type": "stat",
-      "title": "Pods running",
+      "title": "Running",
       "description": "Pods in the Running phase within the selection.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -220,7 +220,7 @@
     },
     {
       "type": "stat",
-      "title": "Pods not running",
+      "title": "Pods down",
       "description": "Pods Pending, Failed or Unknown. Completed jobs excluded.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -426,7 +426,7 @@
     },
     {
       "type": "stat",
-      "title": "Most throttled container",
+      "title": "Throttling",
       "description": "Highest share of CPU periods any container spent throttled at its limit. Above 10 % its limit is too tight.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -497,7 +497,7 @@
     },
     {
       "type": "stat",
-      "title": "Warning events",
+      "title": "Warnings",
       "description": "Kubernetes Warning events over the selected range: failed probes, scheduling failures, image pulls.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -568,7 +568,7 @@
     {
       "type": "table",
       "title": "Pods",
-      "description": "Current resource use per pod against what it requested and what its limit allows. Above 100 % of request the pod borrows from neighbours; near 100 % of limit it gets throttled or killed.",
+      "description": "Current resource use per pod against its limits. Near the CPU limit the pod gets throttled; at the memory limit the kernel kills it.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1464,7 +1464,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "event.type:=Warning k8s.namespace.name:in($namespace) | stats by (k8s.namespace.name, k8s.object.kind, k8s.object.name, event.reason) count() events, max(_time) last | sort by (events desc) | limit 50",
+          "expr": "event.type:=Warning k8s.namespace.name:in($namespace) | stats by (k8s.namespace.name, k8s.object.kind, k8s.object.name, event.reason) count() events | sort by (events desc) | limit 50",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1554,22 +1554,6 @@
               {
                 "id": "decimals",
                 "value": 0
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "last"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Last seen"
-              },
-              {
-                "id": "unit",
-                "value": "dateTimeAsLocal"
               }
             ]
           }

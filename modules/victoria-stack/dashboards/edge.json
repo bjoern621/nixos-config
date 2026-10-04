@@ -184,7 +184,7 @@
     },
     {
       "type": "stat",
-      "title": "Server errors",
+      "title": "5xx share",
       "description": "Share of requests answered 5xx. These are failures of a backend or the edge.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -256,7 +256,7 @@
     },
     {
       "type": "stat",
-      "title": "Client errors",
+      "title": "4xx share",
       "description": "Share of requests answered 4xx: unknown paths, missing auth, refused methods.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -470,7 +470,7 @@
     },
     {
       "type": "stat",
-      "title": "Sent to clients",
+      "title": "Sent",
       "description": "Response bytes per second for the selection.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",

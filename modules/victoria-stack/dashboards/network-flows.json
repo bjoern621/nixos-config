@@ -170,7 +170,7 @@
     },
     {
       "type": "stat",
-      "title": "New connections",
+      "title": "Connections",
       "description": "Inbound connections the host firewalls saw open over the selected range.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -232,7 +232,7 @@
     },
     {
       "type": "stat",
-      "title": "Distinct sources",
+      "title": "Sources",
       "description": "Different source addresses among those connections.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -294,7 +294,7 @@
     },
     {
       "type": "stat",
-      "title": "Refused attempts",
+      "title": "Refused",
       "description": "Connection attempts a host firewall refused. Internet scanners make up most of them.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -360,7 +360,7 @@
     },
     {
       "type": "stat",
-      "title": "Source countries",
+      "title": "Countries",
       "description": "Countries the connecting internet addresses resolve to.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -422,7 +422,7 @@
     },
     {
       "type": "stat",
-      "title": "Web requests",
+      "title": "Requests",
       "description": "Requests the edge proxies served for these sources.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -571,7 +571,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "conn.event:=new host.name:$host source.network:$network source.address:~\"$ip\" | stats by (source.address, source.network, geo.country_name, geo.city_name, host.name, destination.address, destination.port, destination.service, network.transport) count() connections, min(_time) first, max(_time) last | sort by (connections desc) | limit 300",
+          "expr": "conn.event:=new host.name:$host source.network:$network source.address:~\"$ip\" | stats by (source.address, source.network, geo.country_name, geo.city_name, host.name, destination.address, destination.port, destination.service, network.transport) count() connections | sort by (connections desc) | limit 300",
           "queryType": "stats",
           "refId": "A"
         }
@@ -741,38 +741,6 @@
               {
                 "id": "decimals",
                 "value": 0
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "first"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "First"
-              },
-              {
-                "id": "unit",
-                "value": "dateTimeAsLocal"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "last"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Last"
-              },
-              {
-                "id": "unit",
-                "value": "dateTimeAsLocal"
               }
             ]
           }
@@ -1275,7 +1243,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "conn.event:=refused host.name:$host source.network:$network source.address:~\"$ip\" | stats by (source.address, geo.country_name, host.name) count() attempts, count_uniq(destination.port) ports, max(_time) last | sort by (attempts desc) | limit 100",
+          "expr": "conn.event:=refused host.name:$host source.network:$network source.address:~\"$ip\" | stats by (source.address, geo.country_name, host.name) count() attempts, count_uniq(destination.port) ports | sort by (attempts desc) | limit 100",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1379,22 +1347,6 @@
               {
                 "id": "decimals",
                 "value": 0
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "last"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Last"
-              },
-              {
-                "id": "unit",
-                "value": "dateTimeAsLocal"
               }
             ]
           }
@@ -1564,7 +1516,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\" | stats by (ClientHost, client.network, geo.country_name, RequestHost, edge.service, ServiceAddr, k8s.node.name) count() requests, count() if (DownstreamStatus:>=400) errors, max(_time) last | sort by (requests desc) | limit 300",
+          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\" | stats by (ClientHost, client.network, geo.country_name, RequestHost, edge.service, ServiceAddr, k8s.node.name) count() requests, count() if (DownstreamStatus:>=400) errors | sort by (requests desc) | limit 300",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1752,22 +1704,6 @@
                     }
                   ]
                 }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "last"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Last"
-              },
-              {
-                "id": "unit",
-                "value": "dateTimeAsLocal"
               }
             ]
           }

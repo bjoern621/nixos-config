@@ -864,7 +864,7 @@
     },
     {
       "type": "stat",
-      "title": "Server errors",
+      "title": "5xx share",
       "description": "Share of requests answered with 5xx. Above 1 % turns orange, above 5 % red.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1021,7 +1021,7 @@
     },
     {
       "type": "stat",
-      "title": "Open connections",
+      "title": "Connections",
       "description": "Connections held open by the edge proxies, websockets included.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1091,7 +1091,7 @@
     },
     {
       "type": "stat",
-      "title": "Certificate expiry",
+      "title": "Cert expiry",
       "description": "Days until the first served TLS certificate expires. cert-manager renews at 30 days left.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1724,7 +1724,7 @@
     },
     {
       "type": "stat",
-      "title": "Pods not running",
+      "title": "Pods down",
       "description": "Pods in any phase other than Running or Succeeded.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1878,7 +1878,7 @@
     },
     {
       "type": "stat",
-      "title": "Workloads short of replicas",
+      "title": "Unready",
       "description": "Deployments, StatefulSets and DaemonSets with fewer ready pods than desired.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1951,7 +1951,7 @@
     },
     {
       "type": "stat",
-      "title": "Apps out of sync",
+      "title": "Out of sync",
       "description": "Argo CD applications whose live state differs from git.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2017,7 +2017,7 @@
     },
     {
       "type": "stat",
-      "title": "Apps unhealthy",
+      "title": "Unhealthy",
       "description": "Argo CD applications reporting a health other than Healthy.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2232,7 +2232,7 @@
     },
     {
       "type": "stat",
-      "title": "Inbound connections from the internet",
+      "title": "Internet in",
       "description": "New connections from internet addresses to any host over the selected range.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -2301,7 +2301,7 @@
     },
     {
       "type": "stat",
-      "title": "Refused connections",
+      "title": "Refused",
       "description": "Connection attempts the host firewalls refused over the selected range. Mostly scanners.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -2374,7 +2374,7 @@
     },
     {
       "type": "stat",
-      "title": "Edge clients",
+      "title": "Web clients",
       "description": "Distinct client addresses that reached the edge over the selected range.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -2443,7 +2443,7 @@
     },
     {
       "type": "stat",
-      "title": "Metric points dropped",
+      "title": "Points lost",
       "description": "Points the collectors failed to deliver, per second. Anything above zero leaves gaps in the panels.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2517,7 +2517,7 @@
     },
     {
       "type": "stat",
-      "title": "Scrape targets down",
+      "title": "Scrape gaps",
       "description": "Scraped endpoints that did not answer their last scrape.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2590,7 +2590,7 @@
     },
     {
       "type": "stat",
-      "title": "Store disk free",
+      "title": "Store free",
       "description": "Lowest free disk across the metric, log and trace stores.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
