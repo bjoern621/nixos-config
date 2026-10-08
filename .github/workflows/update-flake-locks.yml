@@ -38,7 +38,7 @@ jobs:
           DELAY_DAYS: ${{ github.event.inputs.delay_days || '7' }}
           # Outside the repo tree, so create-pull-request does not commit it.
           PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
-        run: bash .github/scripts/update-stable-locks.sh hosts/homelab hosts/vmk3s hosts/nixos hosts/pi-4b-hh hosts/netcup-g12
+        run: bash .github/scripts/update-stable-locks.sh hosts/homelab hosts/vmk3s hosts/nixos hosts/pi-4b-hh hosts/netcup-g12 hosts/hetzner-hel1
 
       - name: Open pull request
         id: cpr
@@ -73,6 +73,9 @@ jobs:
         include:
           - dir: netcup-g12
             attr: netcup-g12-ci
+            runner: ubuntu-latest
+          - dir: hetzner-hel1
+            attr: hetzner-hel1-ci
             runner: ubuntu-latest
           - dir: homelab
             attr: homelab-ci

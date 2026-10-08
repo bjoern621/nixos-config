@@ -1,6 +1,6 @@
 # k3s Cluster Nodes
 
-The hh cluster is one k3s server and one agent on two different networks.
+The hh cluster is one k3s server and two agents on three different networks.
 This page covers the machines.
 What runs on them, and how a workload asks for one node over the other, is the GitOps repository's business and lives in `hh-cluster-infra`.
 
@@ -8,18 +8,19 @@ What runs on them, and how a workload asks for one node over the other, is the G
 | --- | --- | --- | --- |
 | `vmk3s` | server | libvirt guest on `homelab`, behind the house NAT | [hosts/vmk3s/configuration.nix](../hosts/vmk3s/configuration.nix) |
 | `netcup-g12` | agent | netcup VPS, public IPv4 | [hosts/netcup-g12/configuration.nix](../hosts/netcup-g12/configuration.nix) |
+| `hetzner-hel1` | agent | Hetzner Cloud VM in Helsinki, public IPv4 | [hosts/hetzner-hel1/configuration.nix](../hosts/hetzner-hel1/configuration.nix) |
 
 ## Why the tailnet carries it
 
-The server sits behind NAT with no inbound route, and the agent is on the public internet.
-There is no address pair the two reach each other on directly, and forwarding the API port off the house router would put the cluster's front door on the internet.
+The server sits behind NAT with no inbound route, and the agents are on the public internet.
+There is no address pair the server and an agent reach each other on directly, and forwarding the API port off the house router would put the cluster's front door on the internet.
 
 Tailscale gives each node one address that works from both sides.
 [modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) enables the client, opens the k3s ports on `tailscale0` alone, and turns MagicDNS off.
 MagicDNS is off because kubelet writes the `resolv.conf` CoreDNS reads, and a takeover of that file moves every cluster lookup onto `100.100.100.100`.
 Peers are therefore addressed by number, out of [lib/tailnet.nix](../lib/tailnet.nix).
 
-Both nodes carry `--node-ip` on that address, and two more flags on the server point k3s at it:
+Every node carries `--node-ip` on that address, and two more flags on the server point k3s at it:
 
 - `--advertise-address` is what the `kubernetes` Service in every namespace resolves to. Its default is the node's own IP, which for the server is a LAN address a pod on the VPS cannot reach.
 - `--tls-san` puts that address in the API server's serving certificate, which an agent dialling it validates.
@@ -27,6 +28,21 @@ Both nodes carry `--node-ip` on that address, and two more flags on the server p
 The pod network comes from Cilium, installed out of `hh-cluster-infra`, and k3s runs with `--flannel-backend=none` and `--disable-network-policy`.
 Cilium builds its vxlan tunnel to a peer's node address, which is why `--node-ip` names the tailnet one.
 [modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) opens the tunnel, health and Hubble ports, trusts the Cilium interfaces and puts the `loopback` and `portmap` plugins into `/opt/cni/bin`, where containerd looks once flannel is off.
+
+## Installing a cloud host
+
+netcup takes an uploaded disk image, and `hosts/netcup-g12/flake.nix` names the command that builds it.
+Hetzner takes no image upload, so a host there is written over whatever the Cloud Console booted, with nixos-anywhere from a machine that holds this repository:
+
+```sh
+ssh-keygen -t ed25519 -N "" -f extra/etc/ssh/ssh_host_ed25519_key
+nixos-anywhere --flake hosts/hetzner-hel1#hetzner-hel1-bootstrap --target-host root@<address> \
+  --extra-files extra \
+  --generate-hardware-config nixos-generate-config extra/etc/nixos/hardware-configuration.nix
+```
+
+The installer kexecs into a NixOS installer, formats the disk as `disko.nix` declares, installs the bootstrap configuration and copies `extra/` over the new root.
+The ssh host key goes in that way so its age recipient (`ssh-to-age < extra/etc/ssh/ssh_host_ed25519_key.pub`) can enter `.sops.yaml` ahead of the first boot, and the hardware file lands where `sysconf-reload --remote` reads it.
 
 ## Adding a node
 
@@ -72,12 +88,12 @@ A kubelet must not be newer than the API server it registers with, so the server
 
 ## Placement
 
-`netcup-g12` carries the taint `node.hh/site=netcup:NoSchedule` and the matching label.
-Nothing schedules there that did not ask to.
+`netcup-g12` carries the taint `node.hh/site=netcup:NoSchedule` and `hetzner-hel1` the taint `node.hh/site=hetzner:NoSchedule`, each with the matching label.
+Nothing schedules on either that did not ask to.
 
 Storage is what makes the taint necessary rather than merely tidy.
 The cluster's only StorageClass is k3s' `local-path`, whose volumes are directories on the node that first bound them.
-A pod holding such a PVC that moved to the other node would come up on an empty disk.
+A pod holding such a PVC that moved to another node would come up on an empty disk.
 
 A workload opts in with the toleration, and picks the node in particular with a `nodeSelector` on the label.
 Both are written in `hh-cluster-infra`, per workload.
