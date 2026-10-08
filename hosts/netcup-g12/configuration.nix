@@ -103,17 +103,9 @@ in
     serverAddr = "https://${tailnet.vmk3s}:6443";
     tokenFile = config.sops.secrets.k3s-agent-token.path;
     extraFlags = [
-      # Both are the tailnet address. node-ip is what the rest of the cluster dials this node
-      # on, and eth0's public address would put the kubelet on the internet. node-external-ip
-      # is what flannel builds its tunnel to, which the server's --flannel-external-ip asks
-      # for.
+      # The tailnet address: the rest of the cluster dials this node on it,
+      # Cilium tunnels to it, and eth0's public address would put the kubelet on the internet.
       "--node-ip=${tailnet.netcup-g12}"
-      "--node-external-ip=${tailnet.netcup-g12}"
-
-      # Which interface flannel sizes its MTU against. It picks the one holding the
-      # default route otherwise, and eth0's 1500 leaves a pod MTU 220 bytes wider than
-      # the tunnel that carries it (modules/k3s-tailnet.nix).
-      "--flannel-iface=tailscale0"
 
       # Swap on the host stops the kubelet from starting unless it is told to expect it, so
       # this flag and swapDevices above land in one activation or the node drops out.

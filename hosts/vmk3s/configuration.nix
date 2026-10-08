@@ -72,11 +72,11 @@ in
 
   # CNI links churn with pods. dhcpcd chasing them logs an error burst on
   # every pod delete (dhcp_readbpf/arp_read "Network is down") and its SLAAC
-  # attempts on cni0/flannel.1 fail with "ipv6_addaddr1: Invalid argument".
+  # attempts on the Cilium devices fail with "ipv6_addaddr1: Invalid argument".
   networking.dhcpcd.denyInterfaces = [
     "veth*"
-    "cni*"
-    "flannel*"
+    "lxc*"
+    "cilium_*"
   ];
 
   time.timeZone = "Europe/Berlin";
@@ -146,14 +146,18 @@ in
     extraFlags = [
       "--disable=traefik"
 
-      # Pin the node to its stable LAN IPv4. Without --node-ip, k3s
-      # auto-detects node addresses and also picks up the global IPv6 that
-      # the router hands out via RA. The ISP rotates that prefix, so the
-      # address later vanishes from the interface and kubelet logs "failed to
-      # validate secondaryNodeIP" every status cycle. .80 is the same address
-      # the traefik LoadBalancer already depends on, so it is effectively
-      # static (DHCP reservation on the router).
-      "--node-ip=192.168.178.80"
+      # Cilium holds the CNI slot and the policy engine,
+      # installed from hh-cluster-infra (argocd/applications/cilium).
+      "--flannel-backend=none"
+      "--disable-network-policy"
+
+      # Pinned: detection would also take the global IPv6 the router hands out,
+      # whose prefix the ISP rotates, and kubelet logs "failed to validate secondaryNodeIP"
+      # every status cycle once it vanishes.
+      # The tailnet address: Cilium tunnels to a peer's node address,
+      # and the LAN one answers nobody on the VPS.
+      # The LAN address holds before this host's first `tailscale up`.
+      "--node-ip=${if tailnet.vmk3s != null then tailnet.vmk3s else "192.168.178.80"}"
 
       # NodePorts bind loopback alone. kube-proxy DNATs a NodePort in PREROUTING,
       # so the packet takes FORWARD and the INPUT-only firewall never sees it;
@@ -172,11 +176,6 @@ in
     # until this host's first `tailscale up`, and the server runs single-node
     # without it, so it is added rather than assumed.
     #
-    # node-ip stays the LAN address above because the hostPort edge, the backup
-    # pull and the local kubectl all resolve this node there.
-    #
-    #   node-external-ip   what flannel builds its tunnel to, given
-    #                      --flannel-external-ip below.
     #   advertise-address  what the `kubernetes` Service in every namespace
     #                      points at. Left at its default it would be the LAN
     #                      address, and a pod on netcup-g12 asking for the API
@@ -185,16 +184,9 @@ in
     #   tls-san            the API server's serving certificate is presented to
     #                      an agent dialling this address, and a name not in it
     #                      is a handshake failure.
-    #   flannel-iface      which interface flannel sizes its MTU against. It
-    #                      picks the one holding the default route otherwise,
-    #                      whose 1500 leaves a pod MTU 220 bytes wider than the
-    #                      tunnel that carries it (modules/k3s-tailnet.nix).
     ++ lib.optionals (tailnet.vmk3s != null) [
-      "--node-external-ip=${tailnet.vmk3s}"
       "--advertise-address=${tailnet.vmk3s}"
       "--tls-san=${tailnet.vmk3s}"
-      "--flannel-external-ip"
-      "--flannel-iface=tailscale0"
     ];
   };
 

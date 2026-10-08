@@ -19,14 +19,14 @@ Tailscale gives each node one address that works from both sides.
 MagicDNS is off because kubelet writes the `resolv.conf` CoreDNS reads, and a takeover of that file moves every cluster lookup onto `100.100.100.100`.
 Peers are therefore addressed by number, out of [lib/tailnet.nix](../lib/tailnet.nix).
 
-Three flags on the server point k3s at those addresses:
+Both nodes carry `--node-ip` on that address, and two more flags on the server point k3s at it:
 
-- `--node-external-ip` is what flannel builds its tunnel to, given `--flannel-external-ip`.
 - `--advertise-address` is what the `kubernetes` Service in every namespace resolves to. Its default is the node's own IP, which for the server is a LAN address a pod on the VPS cannot reach.
 - `--tls-san` puts that address in the API server's serving certificate, which an agent dialling it validates.
 
-The server's `--node-ip` stays on the LAN address.
-The edge's host ports, the backup pull and a local `kubectl` all find that node there, and moving it would move all three.
+The pod network comes from Cilium, installed out of `hh-cluster-infra`, and k3s runs with `--flannel-backend=none` and `--disable-network-policy`.
+Cilium builds its vxlan tunnel to a peer's node address, which is why `--node-ip` names the tailnet one.
+[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) opens the tunnel, health and Hubble ports, trusts the Cilium interfaces and puts the `loopback` and `portmap` plugins into `/opt/cni/bin`, where containerd looks once flannel is off.
 
 ## Adding a node
 
@@ -124,4 +124,4 @@ kubectl get nodes -o wide
 kubectl -n observability get pods -o wide
 ```
 
-A node stuck `NotReady` with the agent running is usually the flannel path: check that UDP 8472 reaches the peer's tailnet address, and that both nodes carry a `--node-external-ip`.
+A node stuck `NotReady` with the agent running is usually the Cilium agent on it: `kubectl -n kube-system get pods -l k8s-app=cilium -o wide` names the pod, and `cilium status` (from `nixpkgs#cilium-cli`) reports which node the health check cannot reach.

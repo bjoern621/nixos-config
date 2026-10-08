@@ -36,20 +36,21 @@ in
       type = lib.types.listOf lib.types.str;
       default = [
         "lo"
-        "cni0"
-        "flannel.1"
-        "flannel-v6.1"
+        "cilium_host"
+        "cilium_net"
+        "cilium_vxlan"
+        "lxc+"
         "veth+"
         "docker0"
         "br-+"
       ];
-      description = "Interfaces whose traffic stays unlogged: loopback, pod and container bridges. iptables `+` wildcard.";
+      description = "Interfaces whose traffic stays unlogged: loopback, pod and container devices. iptables `+` wildcard.";
     };
 
     ignoredUdpPorts = lib.mkOption {
       type = lib.types.listOf lib.types.port;
       default = [ 8472 ];
-      description = "UDP destination ports left unlogged. flannel's VXLAN picks a fresh source port per inner flow, so each one counts as a new connection.";
+      description = "UDP destination ports left unlogged. VXLAN picks a fresh source port per inner flow, so each one counts as a new connection.";
     };
 
     services = lib.mkOption {
@@ -81,7 +82,7 @@ in
       "6443" = "k3s-api";
       "8081" = "smokeping";
       "8428" = "victoria-metrics";
-      "8472" = "flannel-vxlan";
+      "8472" = "vxlan";
       "9428" = "victoria-logs";
       "10250" = "kubelet";
       "10428" = "victoria-traces";

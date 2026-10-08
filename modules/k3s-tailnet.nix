@@ -13,6 +13,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -42,22 +43,29 @@ in
     # every cluster lookup onto 100.100.100.100.
     services.tailscale-client.acceptDns = false;
 
-    # tailscale0 is 1280, and the vxlan header the pod network adds costs 50, so the pod MTU
-    # has to be 1230. Flannel derives it from the interface named in --flannel-iface, which
-    # the host configs point here for that reason.
+    # Both hosts carry --node-ip on tailscale0.
+    # Ordering is no gate: the interface exists as soon as the daemon is up,
+    # an address arrives at login alone,
+    # and a k3s that started too early restarts itself every 5s until it does.
     #
-    # Named rather than detected: flannel takes the default-route interface otherwise, whose
-    # 1500 leaves a full-size pod packet arriving at the tunnel 220 bytes too wide. Small
-    # packets still pass, so the symptom is not a dead network but stalled TLS handshakes and
-    # truncated bodies.
-    #
-    # k3s reads the interface at start, which is why it waits for tailscaled here. Ordering is
-    # not a gate: the interface exists as soon as the daemon is up, an address arrives only at
-    # login, and a k3s that started too early restarts itself every 5s until it does.
+    # The pod MTU sits in the Cilium chart (hh-cluster-infra): tailscale0 is 1280
+    # and the vxlan header costs 50. Detected, it would come off the default-route interface,
+    # whose 1500 leaves a full-size pod packet 220 bytes too wide for the tunnel.
+    # Small packets still pass, so the symptom reads as stalled TLS handshakes
+    # and truncated bodies.
     systemd.services.k3s = {
       after = [ "tailscaled.service" ];
       wants = [ "tailscaled.service" ];
     };
+
+    # containerd reads /opt/cni/bin once k3s runs without flannel.
+    # Cilium drops cilium-cni beside these: loopback for every sandbox,
+    # portmap for the hostPort of the edge.
+    systemd.tmpfiles.rules = [
+      "d /opt/cni/bin 0755 root root -"
+      "L+ /opt/cni/bin/loopback - - - - ${pkgs.cni-plugins}/bin/loopback"
+      "L+ /opt/cni/bin/portmap - - - - ${pkgs.cni-plugins}/bin/portmap"
+    ];
 
     # Direct node-to-node paths instead of a DERP relay. Closed, tailscale still connects and
     # every vxlan frame between the two nodes takes a detour through Tailscale's servers.
@@ -66,8 +74,10 @@ in
     networking.firewall = {
       # Pods reach host-network workloads and the node's own services over these.
       trustedInterfaces = [
-        "cni0"
-        "flannel.1"
+        "cilium_host"
+        "cilium_net"
+        "cilium_vxlan"
+        "lxc+"
       ];
 
       interfaces."tailscale0" = {
@@ -75,10 +85,14 @@ in
           # kubelet: the API server's exec and logs path, metrics-server, and the collector's
           # kubeletstats receiver.
           10250
+          # Cilium health checks between the agents.
+          4240
+          # Hubble relay reading the agents.
+          4244
         ]
         ++ lib.optional (cfg.role == "server") 6443;
 
-        # flannel vxlan. Encapsulated pod traffic between the nodes rides this one port.
+        # vxlan. Encapsulated pod traffic between the nodes rides this one port.
         allowedUDPPorts = [ 8472 ];
       };
     };
