@@ -71,6 +71,15 @@
         IdentityFile = "/home/bjoern/.ssh/id_ed25519";
         IdentitiesOnly = true;
       };
+
+      # Hetzner CX33 in Helsinki, carrying CI jobs for the k3s cluster.
+      # root, because the cloud image declares no other account.
+      hetzner-hel1 = {
+        HostName = "2.29.45.107";
+        User = "root";
+        IdentityFile = "/home/bjoern/.ssh/id_ed25519";
+        IdentitiesOnly = true;
+      };
     };
   };
 }
