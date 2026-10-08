@@ -15,5 +15,5 @@
 {
   vmk3s = "100.79.197.78";
   netcup-g12 = "100.69.84.4";
-  hetzner-hel1 = null;
+  hetzner-hel1 = "100.99.35.17";
 }
