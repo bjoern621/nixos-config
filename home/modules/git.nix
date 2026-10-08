@@ -37,7 +37,7 @@
       let
         # GitLab private commit email.
         # Keeps a reachable address out of published history.
-        gitlab.user.email = "2-bjoern@users.noreply.gitlab.tail115f30.ts.net";
+        gitlab.user.email = "2-bjoern@users.noreply.gitlab.tail598964.ts.net";
         # `**` spans slashes only as whole path component,
         # so scp form needs `*` for namespace segment.
         urlForms = host: [
@@ -49,7 +49,7 @@
         hosts = [
           "gitlab.bjoernblessin.de"
           "gitlab.pidgemail.com"
-          "gitlab.tail115f30.ts.net"
+          "gitlab.tail598964.ts.net"
         ];
       in
       map (url: {

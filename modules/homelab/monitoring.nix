@@ -20,14 +20,14 @@
 
     stacks = {
       vmk3s = {
-        metricsUrl = "http://victoria-metrics-vmk3s.tail115f30.ts.net:8428/api/v1/write";
-        logsUrl = "http://victoria-logs-vmk3s.tail115f30.ts.net:9428/insert/opentelemetry/v1/logs";
-        tracesUrl = "http://victoria-traces-vmk3s.tail115f30.ts.net:10428/insert/opentelemetry/v1/traces";
+        metricsUrl = "http://victoria-metrics-vmk3s.tail598964.ts.net:8428/api/v1/write";
+        logsUrl = "http://victoria-logs-vmk3s.tail598964.ts.net:9428/insert/opentelemetry/v1/logs";
+        tracesUrl = "http://victoria-traces-vmk3s.tail598964.ts.net:10428/insert/opentelemetry/v1/traces";
       };
       pi-hh = {
-        metricsUrl = "http://pi-4b-hh.tail115f30.ts.net:8428/api/v1/write";
-        logsUrl = "http://pi-4b-hh.tail115f30.ts.net:9428/insert/opentelemetry/v1/logs";
-        tracesUrl = "http://pi-4b-hh.tail115f30.ts.net:10428/insert/opentelemetry/v1/traces";
+        metricsUrl = "http://pi-4b-hh.tail598964.ts.net:8428/api/v1/write";
+        logsUrl = "http://pi-4b-hh.tail598964.ts.net:9428/insert/opentelemetry/v1/logs";
+        tracesUrl = "http://pi-4b-hh.tail598964.ts.net:10428/insert/opentelemetry/v1/traces";
       };
     };
 

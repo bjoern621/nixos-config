@@ -71,18 +71,18 @@ in
           options = {
             metricsUrl = lib.mkOption {
               type = lib.types.str;
-              example = "http://victoria-metrics-vmk3s.tail115f30.ts.net:8428/api/v1/write";
+              example = "http://victoria-metrics-vmk3s.tail598964.ts.net:8428/api/v1/write";
               description = "Prometheus remote write endpoint of the stack's VictoriaMetrics.";
             };
             logsUrl = lib.mkOption {
               type = lib.types.str;
-              example = "http://victoria-logs-vmk3s.tail115f30.ts.net:9428/insert/opentelemetry/v1/logs";
+              example = "http://victoria-logs-vmk3s.tail598964.ts.net:9428/insert/opentelemetry/v1/logs";
               description = "OTLP/HTTP logs endpoint of the stack's VictoriaLogs.";
             };
             tracesUrl = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
               default = null;
-              example = "http://victoria-traces-vmk3s.tail115f30.ts.net:10428/insert/opentelemetry/v1/traces";
+              example = "http://victoria-traces-vmk3s.tail598964.ts.net:10428/insert/opentelemetry/v1/traces";
               description = "OTLP/HTTP traces endpoint of the stack's VictoriaTraces. `null` -> no traces to this stack.";
             };
           };
