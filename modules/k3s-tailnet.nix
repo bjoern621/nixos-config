@@ -89,6 +89,8 @@ in
           4240
           # Hubble relay reading the agents.
           4244
+          # Hubble metrics, scraped by the cluster collector from the other node.
+          9965
         ]
         ++ lib.optional (cfg.role == "server") 6443;
 
