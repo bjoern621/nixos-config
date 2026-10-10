@@ -29,6 +29,15 @@ The pod network comes from Cilium, installed out of `hh-cluster-infra`, and k3s 
 Cilium builds its vxlan tunnel to a peer's node address, which is why `--node-ip` names the tailnet one.
 [modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) opens the tunnel, health and Hubble ports, trusts the Cilium interfaces and puts the `loopback` and `portmap` plugins into `/opt/cni/bin`, where containerd looks once flannel is off.
 
+k3s hands out the pod range `10.42.0.0/16` and the Service range `10.43.0.0/16`.
+Each node takes one `/24` of the pod range as it joins, and `kubectl get nodes -o custom-columns=NAME:.metadata.name,CIDR:.spec.podCIDR` lists the assignment.
+Cilium puts one address out of that `/24` on the node's `cilium_host` interface, and pods and the tunnel see the node under that address.
+
+tailscaled offers every address of the machine as an endpoint, the `cilium_host` one included, and a disco ping sent there crosses the vxlan tunnel and gets its answer.
+A peer taking that endpoint sends its WireGuard packets into the tunnel, which rides `tailscale0` to the same peer, and the pair loses each other until tailscaled gives the endpoint up.
+[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) drops the tailscale port for sources in the pod range in the raw PREROUTING hook, ahead of the accept tailscaled keeps in its own input chain.
+The ping gets no answer and the endpoint never ranks.
+
 ## Installing a cloud host
 
 netcup takes an uploaded disk image, and `hosts/netcup-g12/flake.nix` names the command that builds it.
