@@ -10,7 +10,6 @@
     kubernetes-helm # helm cmd (Kubernetes package manager)
     ripgrep # rg cmd (fast grep)
     bruno # API client
-    dbeaver-bin # SQL database GUI
     dnsutils # dig, nslookup, host
     wdisplays # Wayland display layout GUI
     wlr-randr # xrandr (X11 Resize and Rotate) for wlroots (wayland roots) compositors
