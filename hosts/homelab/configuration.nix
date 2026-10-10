@@ -12,6 +12,7 @@
     ../../modules/sysconf-revision.nix
     ../../modules/admin-ssh-keys.nix
     ../../modules/kitty-terminfo.nix
+    ../../modules/cleanup.nix
     ../../modules/homelab/vm/hypervisor
     ../../modules/homelab/mounts.nix
     ../../modules/homelab/storage.nix
