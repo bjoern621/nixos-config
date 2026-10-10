@@ -239,6 +239,7 @@ QtObject {
     }
 
     onPlayerChanged: _syncPolledPosition()
+    onViewVisibleChanged: if (viewVisible) _syncPolledPosition()
     Component.onCompleted: _syncPolledPosition()
 
     onQueueExpandedChanged: {
@@ -306,11 +307,14 @@ QtObject {
         }
     }
 
+    // Polls only while the view shows: each poll redraws the Bar surface.
+    property bool viewVisible: true
+
     property Timer _positionTimer: Timer {
         id: positionTimer
         interval: 250
         repeat: true
-        running: root.isPlaying
+        running: root.isPlaying && root.viewVisible
         onTriggered: root._syncPolledPosition()
     }
 

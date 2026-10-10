@@ -25,6 +25,7 @@ Item {
         player: root.player
         // seekActive needs the live slider press state.
         sliderPressed: positionSlider.pressed
+        viewVisible: root.visible
     }
 
     // Neo card: cream fill + ink border + offset shadow. Classic: glass + hairline.

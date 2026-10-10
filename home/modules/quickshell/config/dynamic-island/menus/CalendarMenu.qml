@@ -137,6 +137,10 @@ Item {
 
                 Grid {
                     id: monthGrid
+                    // Cached as one texture: the grid holds thousands of nodes,
+                    // and the sky above redraws the card 30 times a second.
+                    // Without the layer each of those frames re-batches every node.
+                    layer.enabled: true
                     columns: 4
                     columnSpacing: root.monthHorizontalGap
                     rowSpacing: root.monthVerticalGap

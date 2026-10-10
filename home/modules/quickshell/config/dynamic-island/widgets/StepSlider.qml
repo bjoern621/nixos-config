@@ -22,6 +22,9 @@ Item {
 
     property real externalValue: 0
 
+    // Animations hold off while hidden: a hidden popup still redraws the whole
+    // Bar surface per frame, and the position poll would keep that going.
+
     readonly property color fillColor: root.isMuted ? root.mutedColor : root.accentColor
 
     // Drag and wheel both write `value` imperatively, dropping whatever binding sits on it.
@@ -57,7 +60,7 @@ Item {
         }
 
         Behavior on width {
-            enabled: !sliderArea.pressed
+            enabled: !sliderArea.pressed && root.visible
             NumberAnimation {
                 duration: 80
                 easing.type: Easing.OutCubic
@@ -113,7 +116,7 @@ Item {
             color: root.fillColor
 
             Behavior on width {
-                enabled: !sliderArea.pressed
+                enabled: !sliderArea.pressed && root.visible
                 NumberAnimation {
                     duration: 80
                     easing.type: Easing.OutCubic
@@ -135,7 +138,7 @@ Item {
         border.color: NeoTokens.ink
 
         Behavior on x {
-            enabled: !sliderArea.pressed
+            enabled: !sliderArea.pressed && root.visible
             NumberAnimation {
                 duration: 80
                 easing.type: Easing.OutCubic
