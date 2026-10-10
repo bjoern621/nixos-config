@@ -72,11 +72,14 @@ let
   '';
 in
 {
-  # thunderbolt.dprx_timeout=-1: wait indefinitely for DP RX capability read.
+  # thunderbolt.dprx_timeout: DP RX capability read timeout, ms. Default 12000, too short through the dock.
+  #   -1 (wait forever) hangs reboot. Cap read retries on a tb->wq delayed work,
+  #   nhi_pci_remove drains that workqueue from device_shutdown, and the drain never ends.
+  #   Dock disconnects mid-reboot, so every retry fails from then on.
   # amdgpu.dcdebugmask=0x10: PSR off, works around flip_done timeouts.
   # pci=hpbussize=0x33,hpmemsize=256M: PCIe BAR sizing for USB4 hotplug.
   boot.kernelParams = [
-    "thunderbolt.dprx_timeout=-1"
+    "thunderbolt.dprx_timeout=60000"
     "amdgpu.dcdebugmask=0x10"
     "pci=hpbussize=0x33,hpmemsize=256M"
   ];
