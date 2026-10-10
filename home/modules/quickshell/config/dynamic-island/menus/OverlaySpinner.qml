@@ -17,11 +17,9 @@ TintedIcon {
     source: "../icons/icons8-spinner.svg"
     color: Colors.accentColor
 
-    RotationAnimation on rotation {
+    StepSpin {
+        target: root
         running: root.spinning
-        loops: Animation.Infinite
-        from: 0
-        to: 360
-        duration: root.spinDuration
+        turnMs: root.spinDuration
     }
 }

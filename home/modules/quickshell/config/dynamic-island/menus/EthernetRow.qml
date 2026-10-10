@@ -94,13 +94,9 @@ Item {
                 color: Colors.textColorMuted
                 visible: root.busy
                 anchors.verticalCenter: parent.verticalCenter
-                NumberAnimation on rotation {
-                    from: 0
-                    to: 360
-                    duration: 900
-                    loops: Animation.Infinite
+                StepSpin {
+                    target: rowSpinner
                     running: rowSpinner.visible
-                    easing.type: Easing.Linear
                 }
             }
 

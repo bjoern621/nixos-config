@@ -81,13 +81,9 @@ Item {
                 rotation: 0
                 anchors.verticalCenter: parent.verticalCenter
 
-                NumberAnimation on rotation {
-                    from: 0
-                    to: 360
-                    duration: 900
-                    loops: Animation.Infinite
+                StepSpin {
+                    target: busyIcon
                     running: busyIcon.visible
-                    easing.type: Easing.Linear
                 }
             }
         }

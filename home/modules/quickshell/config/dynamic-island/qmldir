@@ -31,6 +31,7 @@ ContentSlide 1.0 animations/ContentSlide.qml
 ExpandSection 1.0 animations/ExpandSection.qml
 ContentReplace 1.0 animations/ContentReplace.qml
 ExpandArrow 1.0 animations/ExpandArrow.qml
+StepSpin 1.0 animations/StepSpin.qml
 
 HoverItem 1.0 widgets/HoverItem.qml
 HoverMenu 1.0 widgets/HoverMenu.qml

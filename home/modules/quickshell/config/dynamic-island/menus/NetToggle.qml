@@ -58,13 +58,9 @@ Item {
         size: parent.height - 8
         color: Colors.textColor
         visible: root.busy
-        NumberAnimation on rotation {
-            from: 0
-            to: 360
-            duration: 900
-            loops: Animation.Infinite
+        StepSpin {
+            target: spinner
             running: spinner.visible
-            easing.type: Easing.Linear
         }
     }
 

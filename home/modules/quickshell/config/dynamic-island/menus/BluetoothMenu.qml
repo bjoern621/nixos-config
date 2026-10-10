@@ -281,13 +281,9 @@ Item {
                     color: Colors.textColorMuted
                     visible: BluetoothService.discovering
                     anchors.verticalCenter: parent.verticalCenter
-                    NumberAnimation on rotation {
-                        from: 0
-                        to: 360
-                        duration: 900
-                        loops: Animation.Infinite
+                    StepSpin {
+                        target: scanSpinner
                         running: scanSpinner.visible
-                        easing.type: Easing.Linear
                     }
                 }
             }

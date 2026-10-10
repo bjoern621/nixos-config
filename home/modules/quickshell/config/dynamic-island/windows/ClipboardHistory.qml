@@ -334,13 +334,9 @@ Scope {
                         size: Typography.fontSize24
                         color: Colors.textColorMuted
 
-                        NumberAnimation on rotation {
-                            from: 0
-                            to: 360
-                            duration: 900
-                            loops: Animation.Infinite
+                        StepSpin {
+                            target: clipPendingIcon
                             running: clipPendingIcon.visible
-                            easing.type: Easing.Linear
                         }
                     }
 
