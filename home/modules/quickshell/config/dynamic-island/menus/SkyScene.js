@@ -1,10 +1,13 @@
 .pragma library
 
-// Stylized weather sky, drawn on a QML Canvas Context2D.
+// Stylized weather sky behind SkyScene.qml.
 // Layered flat-landscape: 3-stop time-of-day sky, sun/moon behind parallax hills,
-// two-tone clouds, stylized rain/snow/fog/lightning. Hour-driven; condition + temp
-// come from the forecast. State (particles, frame, flash) lives in a plain object P
-// owned by SkyScene.qml; seed(P,w,h) fills it, paint(ctx,w,h,inp,P) advances + draws.
+// two-tone clouds, stylized rain/snow/fog/lightning. Hour-driven; condition
+// comes from the forecast. scene(h,inp) derives the per-frame values every layer
+// reads. The still layers paint on a Canvas: paintBack, paintHills, paintVignette.
+// Clouds, fog bands and birds paint their own small textures (paintPuff, paintFog,
+// paintBird); the QML moves them. Hill shapes and lightning state live in a plain
+// object P owned by SkyScene.qml; seed(P,w,h) fills it, stepStorm advances the flash.
 //
 // Qt Context2D note: ellipse(x,y,w,h) takes a bounding box, not HTML5's
 // (cx,cy,rx,ry,rot,a,b). fillEllipse wraps that. arc() matches HTML5.
@@ -135,80 +138,84 @@ function daylight(h) {
 }
 
 function seed(P, w, h) {
-    var i, rnd = Math.random;
-    P.frame = P.frame || 0; P.flash = 0; P.boltPts = null; P.nextBolt = BOLT_GAP_MS + rnd()*BOLT_JITTER_MS; P.w = w; P.h = h;
-    P.stars = []; for (i = 0; i < 95; i++) P.stars.push({ x:rnd()*w, y:rnd()*h*0.66, r:rnd()*1.1+0.35, tw:rnd()*6.28 });
-    P.sparkle = []; for (i = 0; i < 6; i++) P.sparkle.push({ x:rnd()*w, y:rnd()*h*0.5, s:rnd()*2+2.5, tw:rnd()*6.28 });
-    P.clouds = []; for (i = 0; i < 9; i++) { var dd = 0.5 + rnd()*0.9; P.clouds.push({ x:rnd()*w, y:h*(0.1+rnd()*0.32), s:dd, v:(0.08+rnd()*0.22)*dd }); }
-    P.rain = []; for (i = 0; i < 170; i++) P.rain.push({ x:rnd()*w, y:rnd()*h, l:9+rnd()*11, v:6+rnd()*3.5 });
-    P.snow = []; for (i = 0; i < 95; i++) { var ss = rnd(); P.snow.push({ x:rnd()*w, y:rnd()*h, r:1.2+ss*2.6, v:0.5+ss*1.1, d:rnd()*6.28, a:0.5+rnd()*0.5 }); }
-    P.birds = []; for (i = 0; i < 3; i++) P.birds.push({ x:rnd()*w, y:h*(0.18+rnd()*0.2), v:0.25+rnd()*0.2, ph:rnd()*6.28 });
+    var rnd = Math.random;
+    P.flash = 0; P.boltPts = null; P.nextBolt = BOLT_GAP_MS + rnd()*BOLT_JITTER_MS; P.w = w; P.h = h;
     P.hills = [
         { by:0.70, amp:0.045, f1:0.010, p1:rnd()*6.28, f2:0.021, p2:rnd()*6.28, sh:0.74 },
         { by:0.80, amp:0.060, f1:0.008, p1:rnd()*6.28, f2:0.019, p2:rnd()*6.28, sh:0.52 },
         { by:0.90, amp:0.075, f1:0.006, p1:rnd()*6.28, f2:0.015, p2:rnd()*6.28, sh:0.32 }
     ];
 }
+function ensure(P, w, h) { if (!P.hills || P.w !== w || P.h !== h) seed(P, w, h); }
 
 function fillEllipse(ctx, cx, cy, rx, ry) { ctx.beginPath(); ctx.ellipse(cx-rx, cy-ry, rx*2, ry*2); ctx.fill(); }
 function fillCircle(ctx, cx, cy, r) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.283); ctx.fill(); }
 
-function paint(ctx, w, h, inp, P) {
-    if (!P.stars || P.w !== w || P.h !== h) seed(P, w, h);
-    P.frame++;
-    // Wall-clock delta drives lightning. Clamp covers menu reopen after a long
-    // close, where P carries a stale timestamp.
-    var now = Date.now(), dt = P.t ? clamp(now - P.t, 0, 120) : 33;
-    P.t = now;
-    var base = inp.base, temp = inp.temp;
+// Derived scene values, computed once per input change and read by every layer.
+function scene(h, inp) {
+    var base = inp.base;
     // Warp into the reference frame once; sun arc, gradient and day/night all read it.
     var hour = warp(inp.hour, inp.sr, inp.ss);
     // Seasonal solar geometry from place + date: noon sun height and hue cast.
     var sol = (isFinite(inp.lat) && isFinite(inp.doy)) ? solar(inp.doy, inp.lat) : { altScale: 1, season: 0 };
-    var sev = SEV[base] || 0, dl = daylight(hour), sky = grade(tintSeason(skyAt(hour), sol.season), sev, base);
-    var horizonPix = h * 0.68;
+    var sev = SEV[base] || 0, dl = daylight(hour);
     // Wind -> horizontal drift factor, +right. ~1 at 30 km/h from due west; sign
     // flips for an easterly. windDir is the meteorological direction wind blows FROM.
     var windX = -Math.sin((inp.windDir || 0) * Math.PI / 180) * ((inp.wind || 0) / 30);
-    var cloud = inp.cloud || 0, precip = inp.precip || 0, snowAmt = inp.snow || 0;
+    // Cloud count from actual cloud_cover, floored to the base's character so rain/thunder
+    // stay heavy and a "clear" sky can still carry a wisp at high cover.
+    var cloudFloor = ({ clear:0, partly:2, cloudy:4, fog:2, rain:5, snow:4, thunder:6 }[base] || 0);
+    // Rain count from precip mm: a floor keeps a rain/thunder code visible even at 0 mm,
+    // and it climbs with intensity toward a downpour.
+    var rainFloor = base === "thunder" ? 90 : 45;
+    var raining = base === "rain" || base === "thunder";
+    return {
+        base: base, hour: hour, sev: sev, dl: dl, altScale: sol.altScale,
+        sky: grade(tintSeason(skyAt(hour), sol.season), sev, base),
+        horizonPix: h * 0.68,
+        moon: inp.moon || 0,
+        starAlpha: (1 - dl) * (1 - sev * 0.7),
+        cloudCount: clamp(Math.max(Math.round((inp.cloud || 0) * 9), cloudFloor), 0, 9),
+        // Drift scales with wind and keeps the cloud's own base speed as a calm floor.
+        driftMag: 0.4 + Math.abs(windX) * 1.6,
+        driftDir: windX < 0 ? -1 : 1,
+        birds: (base === "clear" || base === "partly") && isDay(hour) && sev < 0.2,
+        raining: raining,
+        rainCount: raining ? Math.round(clamp(rainFloor + (inp.precip || 0) * 26, rainFloor, 170)) : 0,
+        slant: 1.5 + windX * 4,   // horizontal advance per frame, signed by wind
+        snowing: base === "snow",
+        snowCount: Math.round(clamp(30 + (inp.snow || 0) * 40, 30, 95)),
+        gust: windX * 1.2,   // steady sideways push from wind, over the gentle sway
+        fogging: base === "fog",
+        storming: base === "thunder"
+    };
+}
 
+// Sky gradient + sun/moon.
+function paintBack(ctx, w, h, S) {
     ctx.clearRect(0, 0, w, h);
     var g = ctx.createLinearGradient(0, 0, 0, h);
-    skyStops(g, sky.top, sky.mid, 0, 0.52);
-    skyStops(g, sky.mid, sky.hor, 0.52, 1);
+    skyStops(g, S.sky.top, S.sky.mid, 0, 0.52);
+    skyStops(g, S.sky.mid, S.sky.hor, 0.52, 1);
     ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    drawBody(ctx, S.hour, S.base, w, h, S.horizonPix, S.sev, S.dl, S.altScale, S.moon);
+}
 
-    // stars + sparkles
-    var sa = (1 - dl) * (1 - sev * 0.7);
-    if (sa > 0.03) {
-        for (var i = 0; i < P.stars.length; i++) {
-            var st = P.stars[i], tw = 0.5 + 0.5 * Math.sin(P.frame*0.05 + st.tw);
-            ctx.fillStyle = rgba([255,255,255], sa*tw*0.85); fillCircle(ctx, st.x, st.y, st.r);
-        }
-        for (i = 0; i < P.sparkle.length; i++) {
-            var sp = P.sparkle[i], t2 = 0.4 + 0.6 * Math.sin(P.frame*0.06 + sp.tw);
-            spark(ctx, sp.x, sp.y, sp.s*(0.7+t2*0.5), sa*t2);
-        }
-    }
 
-    drawBody(ctx, hour, base, w, h, horizonPix, sev, dl, sol.altScale, inp.moon || 0);
-    drawClouds(ctx, base, w, h, sev, dl, P, cloud, windX);
-    if ((base === "clear" || base === "partly") && isDay(hour) && sev < 0.2) drawBirds(ctx, w, h, P);
-    drawHills(ctx, w, h, sky.hor, dl, P);
-    if (base === "rain" || base === "thunder") drawRain(ctx, w, h, base, precip, P, windX);
-    if (base === "snow") drawSnow(ctx, w, h, snowAmt, P, windX);
-    if (base === "fog") drawFog(ctx, w, h, horizonPix, P);
-    if (base === "thunder") drawStorm(ctx, w, h, dt, P);
+// Hills in front of the clouds.
+function paintHills(ctx, w, h, S, P) {
+    ensure(P, w, h);
+    ctx.clearRect(0, 0, w, h);
+    drawHills(ctx, w, h, S.sky.hor, S.dl, P);
+}
 
+
+// Edge darkening over everything. Size alone shapes it.
+function paintVignette(ctx, w, h) {
+    ctx.clearRect(0, 0, w, h);
     var vg = ctx.createRadialGradient(w/2, h*0.44, h*0.3, w/2, h*0.5, h*0.95);
     vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.24)");
     ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
-}
-
-function spark(ctx, cx, cy, s, a) {
-    ctx.save(); ctx.globalAlpha = clamp(a,0,1); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.3; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(cx-s,cy); ctx.lineTo(cx+s,cy); ctx.moveTo(cx,cy-s); ctx.lineTo(cx,cy+s); ctx.stroke();
-    ctx.fillStyle = "rgba(255,255,255," + (a*0.6).toFixed(2) + ")"; fillCircle(ctx, cx, cy, 1.1); ctx.restore();
 }
 
 function drawBody(ctx, hour, base, w, h, horizonPix, sev, dl, altScale, phase) {
@@ -261,35 +268,25 @@ function drawMoonShadow(ctx, cx, cy, R, phase, style) {
     }
 }
 
-function drawClouds(ctx, base, w, h, sev, dl, P, cloud, windX) {
-    // Count from actual cloud_cover, floored to the base's character so rain/thunder
-    // stay heavy and a "clear" sky can still carry a wisp at high cover.
-    var maxN = Math.min(9, P.clouds.length);
-    var floorN = ({ clear:0, partly:2, cloudy:4, fog:2, rain:5, snow:4, thunder:6 }[base] || 0);
-    var n = clamp(Math.max(Math.round((cloud || 0) * maxN), floorN), 0, maxN);
+function cloudColors(S) {
     var day = [240,244,251], night = [92,102,132];
-    var base0 = lc(night, day, dl), storm = (base === "rain" || base === "thunder") ? [74,82,104] : [150,156,170];
-    var col = lc(base0, storm, sev*0.92), hi = lc(col, [255,255,255], 0.2+dl*0.12), under = shade(col, 0.82);
-    var opac = { clear:0.62, partly:0.8 }[base] || 0.96;
-    // Drift scales with wind and keeps the cloud's own base speed as a calm floor.
-    var mag = 0.4 + Math.abs(windX) * 1.6, dir = windX < 0 ? -1 : 1;
-    for (var i = 0; i < n && i < P.clouds.length; i++) {
-        var c = P.clouds[i], m = 90 * c.s;
-        c.x += c.v * mag * dir;
-        if (c.x > w + m) c.x = -m;
-        if (c.x < -m) c.x = w + m;
-        puff(ctx, c.x, c.y, c.s*(h/200), col, hi, under, opac);
-    }
+    var base0 = lc(night, day, S.dl), storm = (S.base === "rain" || S.base === "thunder") ? [74,82,104] : [150,156,170];
+    var col = lc(base0, storm, S.sev*0.92);
+    return { col: col, hi: lc(col, [255,255,255], 0.2+S.dl*0.12), under: shade(col, 0.82), op: { clear:0.62, partly:0.8 }[S.base] || 0.96 };
 }
-function puff(ctx, cx, cy, s, col, hi, under, op) {
-    ctx.save(); ctx.globalAlpha = op;
+// One cloud into its own texture. The box spans 100s x 43s with the puff centre
+// at (50s, 19s), the extent of the widest and tallest ellipses below plus a pixel.
+function paintPuff(ctx, w, h, s, c) {
+    ctx.clearRect(0, 0, w, h);
+    var cx = 50 * s, cy = 19 * s;
+    ctx.save(); ctx.globalAlpha = c.op;
     var body = [[0,4,1.0],[-22,6,0.72],[22,6,0.72],[-38,10,0.5],[38,10,0.5]], i;
-    ctx.fillStyle = rgba(under);
+    ctx.fillStyle = rgba(c.under);
     for (i = 0; i < body.length; i++) fillEllipse(ctx, cx+body[i][0]*s, cy+(body[i][1]+3)*s, body[i][2]*22*s, body[i][2]*16*s);
-    ctx.fillStyle = rgba(col);
+    ctx.fillStyle = rgba(c.col);
     for (i = 0; i < body.length; i++) fillEllipse(ctx, cx+body[i][0]*s, cy+body[i][1]*s, body[i][2]*22*s, body[i][2]*17*s);
     var top = [[-6,-6,0.7],[12,-8,0.62],[-20,-2,0.5],[0,-11,0.5]];
-    ctx.fillStyle = rgba(hi);
+    ctx.fillStyle = rgba(c.hi);
     for (i = 0; i < top.length; i++) fillEllipse(ctx, cx+top[i][0]*s, cy+top[i][1]*s, top[i][2]*20*s, top[i][2]*15*s);
     ctx.restore();
 }
@@ -314,74 +311,45 @@ function drawHills(ctx, w, h, hor, dl, P) {
     }
 }
 
-function drawRain(ctx, w, h, base, precip, P, windX) {
-    // Count from precip mm: a floor keeps a rain/thunder code visible even at 0 mm,
-    // and it climbs with intensity toward a downpour.
-    var floorN = base === "thunder" ? 90 : 45;
-    var n = Math.min(Math.round(clamp(floorN + (precip || 0) * 26, floorN, 170)), P.rain.length);
-    var slant = 1.5 + windX * 4;   // horizontal advance per frame, signed by wind
-    ctx.lineCap = "round";
-    for (var i = 0; i < n; i++) {
-        var d = P.rain[i]; d.y += d.v; d.x += slant;
-        if (d.y > h*0.96) { d.y = -10; d.x = Math.random()*w; }
-        if (d.x > w) d.x -= w; if (d.x < 0) d.x += w;
-        var a = 0.35 + (d.l-9)/11*0.4; ctx.strokeStyle = "rgba(200,222,246," + a.toFixed(2) + ")"; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - slant*1.7, d.y + d.l); ctx.stroke();
-    }
+
+// One fog band, 30px tall, the ellipse 18px wider than the scene on each side
+// so the sway never bares an edge.
+function paintFog(ctx, w, h, i) {
+    ctx.clearRect(0, 0, w, h);
+    var g = ctx.createLinearGradient(0, 0, w, 0);
+    g.addColorStop(0, "rgba(222,226,232,0)"); g.addColorStop(0.5, "rgba(222,226,232," + (0.3-i*0.05) + ")"); g.addColorStop(1, "rgba(222,226,232,0)");
+    ctx.fillStyle = g; fillEllipse(ctx, w/2, h/2, (w-36)*0.62, 15);
 }
-function drawSnow(ctx, w, h, snowAmt, P, windX) {
-    var n = Math.min(Math.round(clamp(30 + (snowAmt || 0) * 40, 30, P.snow.length)), P.snow.length);
-    var gust = windX * 1.2;   // steady sideways push from wind, over the gentle sway
-    for (var i = 0; i < n; i++) {
-        var f = P.snow[i]; f.y += f.v; f.x += Math.sin(P.frame*0.02+f.d)*0.7 + gust;
-        if (f.y > h*0.97) { f.y = -6; f.x = Math.random()*w; }
-        if (f.x > w) f.x -= w; if (f.x < 0) f.x += w;
-        ctx.fillStyle = "rgba(255,255,255," + f.a.toFixed(2) + ")"; fillCircle(ctx, f.x, f.y, f.r);
-    }
-}
-function drawFog(ctx, w, h, hy, P) {
-    for (var i = 0; i < 4; i++) {
-        var y = hy - 40 + i*20, off = Math.sin(P.frame*0.012 + i*1.5)*18;
-        var g = ctx.createLinearGradient(0, y, w, y);
-        g.addColorStop(0, "rgba(222,226,232,0)"); g.addColorStop(0.5, "rgba(222,226,232," + (0.3-i*0.05) + ")"); g.addColorStop(1, "rgba(222,226,232,0)");
-        ctx.fillStyle = g; ctx.save(); ctx.translate(off, 0); fillEllipse(ctx, w/2, y, w*0.62, 15); ctx.restore();
-    }
-}
-function drawBirds(ctx, w, h, P) {
+// One bird in a 10x10 box; fl is the wing lift in px, -3..3.
+function paintBird(ctx, fl) {
+    ctx.clearRect(0, 0, 10, 10);
     ctx.strokeStyle = "rgba(30,36,50,0.5)"; ctx.lineWidth = 1.6; ctx.lineCap = "round";
-    for (var i = 0; i < P.birds.length; i++) {
-        var b = P.birds[i]; b.x += b.v; if (b.x > w+20) b.x = -20;
-        var fl = Math.sin(P.frame*0.12 + b.ph)*3, s = 4;
-        ctx.beginPath(); ctx.moveTo(b.x-s, b.y); ctx.lineTo(b.x, b.y-fl-1); ctx.lineTo(b.x+s, b.y); ctx.stroke();
-    }
+    ctx.beginPath(); ctx.moveTo(1, 5); ctx.lineTo(5, 4-fl); ctx.lineTo(9, 5); ctx.stroke();
 }
-// Glow is stacked wide strokes, widest and faintest first. Canvas shadowBlur is
-// a software blur per stroke on the render thread: it drops the scene to 0.3fps,
-// which in turn stalls the flash decay and leaves the whole sky white.
+// Glow is stacked wide strokes, widest and faintest first; a blur per frame
+// would cost more than the rest of the scene.
 var BOLT_PASS = [[14,[255,246,180],0.10], [9,[255,246,180],0.18], [4,[255,255,255],1], [1.6,[180,210,255],1]];
 
 function strike(w, h, P) {
     var x = Math.random()*w*0.6 + w*0.2, y = h*0.14, pts = [[x,y]];
     for (var k = 0; k < 4; k++) { x += (Math.random()-0.5)*w*0.06; y += h*0.14; pts.push([x,y]); }
-    P.boltPts = pts; P.flash = 1;
+    P.boltPts = pts.map(function (p) { return Qt.point(p[0], p[1]); }); P.flash = 1;
 }
 
-function drawStorm(ctx, w, h, dt, P) {
-    if (P.flash <= 0) {
-        P.nextBolt -= dt;
-        if (P.nextBolt > 0) return;
-        P.nextBolt = BOLT_GAP_MS + Math.random()*BOLT_JITTER_MS;
-        strike(w, h, P);
+// Advances flash decay and bolt timing on wall-clock time. Returns true on a new strike,
+// whose path then stays fixed for the strike's life: re-rolling it per frame reads as static.
+function stepStorm(P, w, h) {
+    ensure(P, w, h);
+    // Clamp covers menu reopen after a long close, where P carries a stale timestamp.
+    var now = Date.now(), dt = P.t ? clamp(now - P.t, 0, 120) : 33;
+    P.t = now;
+    if (P.flash > 0) {
+        P.flash -= dt / FLASH_MS;
+        return false;
     }
-    // Path fixed for the strike's life. Re-rolling it per frame reads as static.
-    var pts = P.boltPts, f = clamp(P.flash, 0, 1), i, k;
-    ctx.fillStyle = rgba([255,252,235], f*0.42); ctx.fillRect(0, 0, w, h);
-    ctx.lineCap = "round"; ctx.lineJoin = "round";
-    for (i = 0; i < BOLT_PASS.length; i++) {
-        ctx.lineWidth = BOLT_PASS[i][0]; ctx.strokeStyle = rgba(BOLT_PASS[i][1], f*BOLT_PASS[i][2]);
-        ctx.beginPath();
-        for (k = 0; k < pts.length; k++) { if (k === 0) ctx.moveTo(pts[k][0],pts[k][1]); else ctx.lineTo(pts[k][0],pts[k][1]); }
-        ctx.stroke();
-    }
-    P.flash -= dt / FLASH_MS;
+    P.nextBolt -= dt;
+    if (P.nextBolt > 0) return false;
+    P.nextBolt = BOLT_GAP_MS + Math.random()*BOLT_JITTER_MS;
+    strike(w, h, P);
+    return true;
 }
