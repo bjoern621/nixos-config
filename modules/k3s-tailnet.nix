@@ -97,6 +97,15 @@ in
         # vxlan. Encapsulated pod traffic between the nodes rides this one port.
         allowedUDPPorts = [ 8472 ];
       };
+
+      # tailscaled offers its cilium_host address as an endpoint too. A peer whose disco
+      # ping gets a pong over the overlay moves WireGuard onto it, and the vxlan carrying
+      # that WireGuard rides tailscale0 to the same peer: a loop that cuts the pair off
+      # until tailscaled gives the endpoint up. No pong, no switch. The pod range comes
+      # from k3s. Ahead of the trusted-interface accept, which admits cilium_host whole.
+      extraCommands = ''
+        iptables -I nixos-fw 1 -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP
+      '';
     };
   };
 }
