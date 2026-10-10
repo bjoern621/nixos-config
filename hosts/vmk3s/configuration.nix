@@ -70,6 +70,7 @@ in
   boot.blacklistedKernelModules = [ "qxl" ];
 
   networking.hostName = "vmk3s";
+  nixpkgs.hostPlatform = "x86_64-linux";
 
   # CNI links churn with pods. dhcpcd chasing them logs an error burst on
   # every pod delete (dhcp_readbpf/arp_read "Network is down") and its SLAAC

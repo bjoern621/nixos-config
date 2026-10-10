@@ -29,6 +29,7 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "homelab";
+  nixpkgs.hostPlatform = "x86_64-linux";
 
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "de_DE.UTF-8";
