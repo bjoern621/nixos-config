@@ -428,18 +428,37 @@ function parseVpnServiceTypes(text) {
     return map;
 }
 
+// Profile names carry the transport as a suffix ("Cyberghost Germany TCP").
+// The row shows it beside the protocol, so the name drops it. No suffix ->
+// transport "".
+function splitTransport(name) {
+    const m = /^(.*\S)\s+(TCP|UDP)$/i.exec(name || "");
+    if (!m)
+        return {
+            name: name,
+            transport: ""
+        };
+    return {
+        name: m[1],
+        transport: m[2].toUpperCase()
+    };
+}
+
 // serviceTypes: uuid -> protocol label, from parseVpnServiceTypes. Missing entry
-// (lookup not yet returned) -> "VPN".
+// (lookup not yet returned) -> "VPN". NM WireGuard profiles always ride UDP.
 function buildVpnModel(connections, serviceTypes) {
     const types = serviceTypes || {};
     const out = [];
     for (let i = 0; i < connections.length; i++) {
         const c = connections[i];
         if (c.type === "vpn" || c.type === "wireguard") {
+            const wg = c.type === "wireguard";
+            const split = splitTransport(c.name);
             out.push({
-                name: c.name,
+                name: split.name,
                 uuid: c.uuid,
-                kind: c.type === "wireguard" ? "WireGuard" : (types[c.uuid] || "VPN"),
+                kind: wg ? "WireGuard" : (types[c.uuid] || "VPN"),
+                transport: wg ? "UDP" : split.transport,
                 active: c.active
             });
         }

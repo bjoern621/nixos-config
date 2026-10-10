@@ -10,7 +10,7 @@ import "../base"
 Item {
     id: root
 
-    required property var vpn   // { name, uuid, kind, active }
+    required property var vpn   // { name, uuid, kind, transport, active }
 
     readonly property bool busy: NetworkService.busyKey === ("vpn:" + vpn.uuid)
 
@@ -37,7 +37,7 @@ Item {
         }
         Label {
             width: parent.width
-            text: root.vpn.active ? root.vpn.kind + " · aktiv" : root.vpn.kind
+            text: [root.vpn.kind, root.vpn.transport || "", root.vpn.active ? "aktiv" : ""].filter(s => s.length > 0).join(" · ")
             font.pixelSize: Typography.fontSize12
             font.weight: Font.Normal
             color: Colors.textColorMuted
