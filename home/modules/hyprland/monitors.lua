@@ -5,6 +5,11 @@
 -- its origin at 2560 - 736 = 1824.
 -- bitdepth 10: panel is 10 bpc; XRGB2101010 is 32bpp like XRGB8888, so free.
 -- cm stays srgb; hdr-toggle flips it at runtime and partial hl.monitor specs latch.
+-- Chrome offsets tab-modal dialogs ("Leave site?") by monitor position.
+-- At 1824x1440 box lands off screen.
+-- Page dim still shows.
+-- Fullscreen toggle (SUPER + F) relayouts it into view.
+-- https://github.com/hyprwm/Hyprland/discussions/13827
 hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10 })
 -- 1440p144 needs HBR3.
 -- amdgpu-force-hbr3 (modules/external-monitors.nix) forces it on dock DPIA links,
