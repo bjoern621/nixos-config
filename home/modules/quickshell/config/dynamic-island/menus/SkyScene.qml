@@ -338,9 +338,10 @@ Item {
         onPaint: Sky.paintVignette(getContext("2d"), width, height)
     }
 
-    // ~30fps while open. Idle (menu closed) -> stopped, nothing drawn on battery.
+    // 15fps while open: every frame redraws the Bar surface at screen width,
+    // and the compositor composites it again. Idle (menu closed) -> stopped.
     Timer {
-        interval: 33
+        interval: 66
         repeat: true
         running: root.animating
         onTriggered: {
