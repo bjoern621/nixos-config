@@ -102,9 +102,14 @@ in
       # ping gets a pong over the overlay moves WireGuard onto it, and the vxlan carrying
       # that WireGuard rides tailscale0 to the same peer: a loop that cuts the pair off
       # until tailscaled gives the endpoint up. No pong, no switch. The pod range comes
-      # from k3s. Ahead of the trusted-interface accept, which admits cilium_host whole.
+      # from k3s. Raw PREROUTING, since tailscaled accepts its port in its own ts-input
+      # chain ahead of nixos-fw. The rule outlives a reload, hence the check first.
       extraCommands = ''
-        iptables -I nixos-fw 1 -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP
+        iptables -t raw -C PREROUTING -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP 2>/dev/null \
+          || iptables -t raw -I PREROUTING 1 -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP
+      '';
+      extraStopCommands = ''
+        iptables -t raw -D PREROUTING -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP 2>/dev/null || true
       '';
     };
   };
