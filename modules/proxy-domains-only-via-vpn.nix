@@ -72,7 +72,8 @@ in
 
   # tun* matches the NM OpenVPN devices alone; Tailscale sits on tailscale0.
   # lo carries the 127.0.0.1 listener side.
-  # Lookups go to MagicDNS at 100.100.100.100, which tailscaled answers on tailscale0.
+  # Port 53 passes on any interface: the resolver moves with tailscaled and wg-quick,
+  # and the chain confines connections, never lookups.
   # tcp-reset not icmp REJECT: ICMP unreachable races the SYN-SENT socket,
   # connect only dies on the retransmit ~1s later. RST kills it in ms.
   networking.firewall = {
@@ -80,8 +81,8 @@ in
       ip46tables -N vpn-proxy-out 2>/dev/null || true
       ip46tables -F vpn-proxy-out
       ip46tables -A vpn-proxy-out -o lo -j ACCEPT
-      ip46tables -A vpn-proxy-out -o tailscale0 -p udp --dport 53 -j ACCEPT
-      ip46tables -A vpn-proxy-out -o tailscale0 -p tcp --dport 53 -j ACCEPT
+      ip46tables -A vpn-proxy-out -p udp --dport 53 -j ACCEPT
+      ip46tables -A vpn-proxy-out -p tcp --dport 53 -j ACCEPT
       ip46tables -A vpn-proxy-out -o tun+ -j ACCEPT
       ip46tables -A vpn-proxy-out -p tcp -j REJECT --reject-with tcp-reset
       ip46tables -A vpn-proxy-out -j REJECT
