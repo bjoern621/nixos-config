@@ -37,7 +37,6 @@
     ./modules/image-viewer.nix
     ./modules/mpv.nix
     ./modules/tailscale-client.nix
-    ./modules/eduvpn.nix
     ./modules/direnv.nix
     ./modules/scanning.nix
     ./modules/firewall-viewer.nix

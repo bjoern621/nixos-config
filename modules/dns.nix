@@ -4,7 +4,7 @@
 # answers MagicDNS itself and forwards the rest to the resolvers NM saw.
 # An answer comes back as the upstream sent it,
 # so a public CNAME onto a ts.net name fails here as on Windows and Android.
-# VPN-pushed resolvers (eduVPN) go unused while that VPN is up.
+# VPN-pushed resolvers go unused while that VPN is up.
 #
 # ipv6.ignore-auto-dns: FritzBox advertises three resolvers over RA/DHCP.
 # IPv4 192.168.178.1 stable. ULA fd66::... and GUA 2a04:4540:.../64 not.

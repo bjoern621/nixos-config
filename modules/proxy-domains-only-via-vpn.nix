@@ -70,7 +70,7 @@ in
     };
   };
 
-  # tun* matches only NM OpenVPN devices here: eduVPN is WireGuard, Tailscale is tailscale0.
+  # tun* matches the NM OpenVPN devices alone; Tailscale sits on tailscale0.
   # lo carries the 127.0.0.1 listener side.
   # Lookups go to MagicDNS at 100.100.100.100, which tailscaled answers on tailscale0.
   # tcp-reset not icmp REJECT: ICMP unreachable races the SYN-SENT socket,
