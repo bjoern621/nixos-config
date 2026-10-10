@@ -10,7 +10,9 @@ hl.config({
             color_inactive = "0x221a1a1a",
         },
         blur = {
-            enabled = true,
+            -- Off: with blur on, every damaged frame re-blurs the whole screen on the iGPU,
+            -- and a popup animating inside the Bar surface then holds the cursor at 45 fps.
+            enabled = false,
             size = 6,
             passes = 3,
             contrast = 1.0,
