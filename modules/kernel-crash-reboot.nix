@@ -22,4 +22,9 @@
   };
 
   services.tlp.settings.NMI_WATCHDOG = 1;
+
+  # systemd-shutdown arms the hardware watchdog before reboot().
+  # Only thing left when reboot() wedges in device_shutdown, past journald.
+  # Default 10min of a dead machine.
+  systemd.settings.Manager.RebootWatchdogSec = "60s";
 }
