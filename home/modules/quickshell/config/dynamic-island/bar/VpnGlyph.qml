@@ -1,16 +1,14 @@
 import QtQuick
 import "../base"
 
-// VPN-active glyph: filled shield with a check. Drawn rather than an SVG so it
-// recolors with the theme, matching NetworkGlyph's shape.
+// Tunnel-active glyph: key with a ring head, Android's VPN status icon. Drawn
+// rather than an SVG so it recolors with the theme, matching NetworkGlyph.
 Canvas {
     id: root
 
     property color color: Colors.accentColor
-    property color markColor: Colors.pillBackground
 
     onColorChanged: requestPaint()
-    onMarkColorChanged: requestPaint()
 
     onPaint: {
         const ctx = getContext("2d");
@@ -19,25 +17,26 @@ Canvas {
         ctx.reset();
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(1.4, w * 0.14);
 
-        // Shield: flat top, sides taper to a bottom point.
+        // Ring head on the left.
         ctx.beginPath();
-        ctx.moveTo(w * 0.14, h * 0.16);
-        ctx.lineTo(w * 0.86, h * 0.16);
-        ctx.lineTo(w * 0.86, h * 0.54);
-        ctx.quadraticCurveTo(w * 0.86, h * 0.80, w * 0.5, h * 0.94);
-        ctx.quadraticCurveTo(w * 0.14, h * 0.80, w * 0.14, h * 0.54);
-        ctx.closePath();
-        ctx.fillStyle = color;
-        ctx.fill();
+        ctx.arc(w * 0.28, h * 0.5, w * 0.19, 0, Math.PI * 2);
+        ctx.stroke();
 
-        // Check cut into the shield.
-        ctx.strokeStyle = markColor;
-        ctx.lineWidth = Math.max(1.4, w * 0.12);
+        // Shaft to the right edge.
         ctx.beginPath();
-        ctx.moveTo(w * 0.32, h * 0.50);
-        ctx.lineTo(w * 0.44, h * 0.63);
-        ctx.lineTo(w * 0.70, h * 0.36);
+        ctx.moveTo(w * 0.47, h * 0.5);
+        ctx.lineTo(w * 0.92, h * 0.5);
+        ctx.stroke();
+
+        // Two teeth hanging off the shaft.
+        ctx.beginPath();
+        ctx.moveTo(w * 0.74, h * 0.5);
+        ctx.lineTo(w * 0.74, h * 0.72);
+        ctx.moveTo(w * 0.90, h * 0.5);
+        ctx.lineTo(w * 0.90, h * 0.68);
         ctx.stroke();
     }
 }

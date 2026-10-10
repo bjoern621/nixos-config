@@ -3,8 +3,8 @@ import "../"
 import "../base"
 import "../animations"
 
-// Bar network indicator: wifi/ethernet/off glyph, plus a VPN shield to its right
-// while a tunnel is active. State comes from the NetworkService singleton.
+// Bar network indicator: wifi/ethernet/off glyph, plus a VPN key to its right
+// while a tunnel besides Tailscale is active. State comes from the NetworkService singleton.
 Row {
     id: root
 
@@ -30,11 +30,11 @@ Row {
         }
     }
 
-    // VPN active: shield glyph right of the network icon.
+    // Tunnel active: key glyph right of the network icon.
     VpnGlyph {
         width: 14
         height: 14
         anchors.verticalCenter: parent.verticalCenter
-        visible: NetworkService.vpnActive
+        visible: NetworkService.tunnelBesidesTailscaleActive
     }
 }

@@ -113,6 +113,13 @@ Singleton {
                 return true;
         return false;
     }
+    // Tailscale stays up around the clock, so the bar glyph keys on the other tunnels.
+    readonly property bool tunnelBesidesTailscaleActive: {
+        for (let i = 0; i < vpnConnections.length; i++)
+            if (vpnConnections[i].active && !vpnConnections[i].tailscale)
+                return true;
+        return false;
+    }
     readonly property string activeVpnName: {
         for (let i = 0; i < vpnConnections.length; i++)
             if (vpnConnections[i].active)
