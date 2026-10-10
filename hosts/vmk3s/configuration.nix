@@ -192,6 +192,13 @@ in
     ];
   };
 
+  # k3s re-applies its bundled CoreDNS at every start,
+  # which would undo the Deployment hh-cluster-infra manages (argocd/kube-system/coredns.yaml).
+  # The skip file keeps k3s off it and leaves the objects in place.
+  systemd.tmpfiles.rules = [
+    "f /var/lib/rancher/k3s/server/manifests/coredns.yaml.skip 0644 root root -"
+  ];
+
   environment.systemPackages = with pkgs; [
     k3s
     kubectl
