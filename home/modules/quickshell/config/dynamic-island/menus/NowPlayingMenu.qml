@@ -163,7 +163,9 @@ Item {
                     handleVerticalSize: Spacing.spacing12
                     // StepSlider ignores externalValue while pressed, and currentPosition
                     // follows the drag, so this stays a plain binding.
-                    externalValue: controller.trackLength > 0 ? controller.currentPosition / controller.trackLength : 0
+                    // Snapped to stepSize: a 250 ms poll moves the handle a fraction of a pixel,
+                    // and every unsnapped change would run the 80 ms fill animation.
+                    externalValue: controller.trackLength > 0 ? Math.round(controller.currentPosition / controller.trackLength / stepSize) * stepSize : 0
 
                     // Guards live in the controller.
                     onPressedChanged: {
