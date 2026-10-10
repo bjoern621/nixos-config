@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 {
   # https://nixos.wiki/wiki/Git
@@ -14,7 +14,7 @@
     settings = {
       user = {
         name = "Björn";
-        email = "41452212+bjoern621@users.noreply.github.com";
+        email = "bjoern@bjoernblessin.de";
       };
       init.defaultBranch = "main";
 
@@ -30,31 +30,5 @@
       # Works with e.g. gnome-keyring
       credential.credentialStore = "secretservice";
     };
-
-    # Author email per forge.
-    # No per-repo setup on clone.
-    includes =
-      let
-        # GitLab private commit email.
-        # Keeps a reachable address out of published history.
-        gitlab.user.email = "22-bjoern1@users.noreply.gitlab.bjoernblessin.de";
-        # `**` spans slashes only as whole path component,
-        # so scp form needs `*` for namespace segment.
-        urlForms = host: [
-          "https://${host}/**"
-          "ssh://git@${host}/**"
-          "git@${host}:*/**"
-        ];
-        # Both names reach the same instance.
-        hosts = [
-          "gitlab.bjoernblessin.de"
-          "gitlab.pidgemail.com"
-          "gitlab.tail598964.ts.net"
-        ];
-      in
-      map (url: {
-        condition = "hasconfig:remote.*.url:${url}";
-        contents = gitlab;
-      }) (lib.concatMap urlForms hosts);
   };
 }
