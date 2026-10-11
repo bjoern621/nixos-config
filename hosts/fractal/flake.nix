@@ -1,0 +1,155 @@
+{
+  description = "fractal host (gaming desktop) - full input set";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    # No nixpkgs.follows: cachix serves only builds against hyprland's own nixpkgs pin,
+    # and unstable stdenv or glaze drift breaks the hypr stack.
+    hyprland.url = "github:hyprwm/Hyprland";
+
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix-search-tv = {
+      url = "github:3timeslazy/nix-search-tv";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Prebuilt nix-index database (weekly), avoids local index build
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    quickshell = {
+      url = "github:quickshell-mirror/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    ttydnd = {
+      url = "github:bjoern621/ttydnd";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixd = {
+      url = "github:nix-community/nixd";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.1.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # nixos-anywhere formats the NixOS disk from disko.nix and the running system mounts by it.
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # The app package plus the kmsgrab CAP_SYS_ADMIN wrapper module.
+    #
+    # No nixpkgs.follows: the release workflow builds mirrorme against the revision
+    # the flake pins itself, and the screen-sharing Attic cache serves that build
+    # (modules/attic-pull-screen-sharing.nix).
+    screen-sharing.url = "github:bjoern621/screen-sharing";
+  };
+
+  outputs =
+    {
+      nixpkgs,
+      home-manager,
+      ...
+    }@inputs:
+    let
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      customLib = import ../../lib/customLib.nix { inherit pkgs; };
+
+      baseModules = [
+        ./configuration.nix
+
+        {
+          # https://wiki.hypr.land/Nix/Cachix/
+          nix.settings = {
+            extra-substituters = [ "https://hyprland.cachix.org" ];
+            extra-trusted-substituters = [ "https://hyprland.cachix.org" ];
+            extra-trusted-public-keys = [
+              "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+            ];
+          };
+        }
+
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";
+          home-manager.users.bjoern = {
+            imports = [
+              ../../home/bjoern.nix
+              ../../home/modules/gaming.nix
+            ];
+
+            # Switches declared in home/host.nix. No lock and no sleep on a desk at home;
+            # the USBGuard daemon stays off this host; the monitors run at scale 1.
+            host = {
+              sessionLock = false;
+              hibernate = false;
+              usbguard = false;
+              hidpi = false;
+            };
+          };
+          home-manager.extraSpecialArgs = { inherit inputs customLib; };
+        }
+      ];
+
+      mkSystem =
+        modules:
+        nixpkgs.lib.nixosSystem {
+          modules = baseModules ++ modules;
+
+          specialArgs = { inherit inputs customLib; }; # https://wiki.hypr.land/Nix/Hyprland-on-NixOS/
+        };
+    in
+    {
+      nixosConfigurations.fractal = mkSystem [ ];
+
+      # What CI builds.
+      # The machine's hardware-configuration.nix reaches the repo only on the machine
+      # (the committed file is a placeholder), so a runner needs the stub.
+      nixosConfigurations.fractal-ci = mkSystem [ ../../modules/ci-hardware-stub.nix ];
+
+      # First install only: what nixos-anywhere writes onto the wiped NixOS disk.
+      # The machine's facts, ssh for root and nothing of the desktop.
+      # docs/fractal.md holds the command and the files it carries over.
+      # Everything after that arrives with `sysconf-reload fractal --remote`.
+      nixosConfigurations.fractal-bootstrap = nixpkgs.lib.nixosSystem {
+        modules = [
+          ./machine.nix
+          ../../modules/admin-ssh-keys.nix
+          {
+            services.openssh = {
+              enable = true;
+              settings.PermitRootLogin = "prohibit-password";
+              settings.PasswordAuthentication = false;
+            };
+            services.admin-ssh-keys.users = [ "root" ];
+            nix.settings.experimental-features = [
+              "nix-command"
+              "flakes"
+            ];
+          }
+        ];
+
+        specialArgs = { inherit inputs; };
+      };
+    };
+}

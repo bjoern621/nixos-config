@@ -13,7 +13,7 @@ The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endp
 
 > [!IMPORTANT]
 > Create the correct username during installation based on the selected host profile.
-> For `nixos`, use user `bjoern`. For `homelab` or `vmk3s`, use user `ops`.
+> For `nixos` and `fractal`, use user `bjoern`. For `homelab` or `vmk3s`, use user `ops`.
 > Using a different username can cause the previous home files to be replaced after rebuild,
 > which means cloning this repo and recreating symlinks must be done again.
 
@@ -50,6 +50,8 @@ The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endp
 
 The checkout stays where step 4 put it. Every `sysconf-*` command reads `sysconf.configPath`,
 which each host derives from `sysconf.user` as that account's `~/git/nixos-config`.
+
+The gaming desktop is installed over the network with disko, and [docs/fractal.md](docs/fractal.md) holds its runbook.
 
 ## Hardware configuration
 
@@ -207,6 +209,13 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │   │   ├── flake.lock
 │   │   ├── configuration.nix
 │   │   └── hardware-configuration.nix
+│   ├── fractal/                    # Gaming desktop, full input set plus disko
+│   │   ├── flake.nix
+│   │   ├── flake.lock
+│   │   ├── configuration.nix
+│   │   ├── machine.nix
+│   │   ├── disko.nix
+│   │   └── hardware-configuration.nix
 │   ├── homelab/                    # Server, nixpkgs + home-manager only
 │   │   ├── flake.nix
 │   │   ├── flake.lock
@@ -224,7 +233,8 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │       └── hardware-configuration.nix
 ├── modules/                        # Shared system-level modules
 ├── home/                           # Shared Home Manager configs
-│   ├── bjoern.nix                  # User config for the `nixos` host
+│   ├── bjoern.nix                  # User config for the desktop hosts
+│   ├── host.nix                    # Switches a desktop host flips on it
 │   ├── ops.nix                     # User config for the server hosts
 │   └── modules/
 └── README.md
