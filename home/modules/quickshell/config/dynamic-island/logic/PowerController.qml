@@ -8,7 +8,11 @@ import ".."
 QtObject {
     id: root
 
-    readonly property var actions: [
+    // QUICKSHELL_POWER_ACTIONS (quickshell.nix) names the actions this host offers.
+    readonly property var enabledActions: (Quickshell.env("QUICKSHELL_POWER_ACTIONS") || "").split(",")
+    readonly property var actions: allActions.filter(a => enabledActions.indexOf(a.action) !== -1)
+
+    readonly property var allActions: [
         {
             action: "shutdown",
             iconSource: Qt.resolvedUrl("../icons/icons8-shutdown.svg"),

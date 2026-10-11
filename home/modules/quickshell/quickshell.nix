@@ -1,5 +1,6 @@
 {
   inputs,
+  lib,
   pkgs,
   config,
   customLib,
@@ -8,6 +9,17 @@
 
 let
   qs = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
+  # Read by PowerController.qml; an action missing here never reaches the menu.
+  powerActions = lib.concatStringsSep "," (
+    [
+      "shutdown"
+      "reboot"
+    ]
+    ++ lib.optional config.host.sessionLock "lock"
+    ++ [ "logout" ]
+    ++ lib.optional config.host.hibernate "hibernate"
+  );
 
   # keyring + secretstorage: Spotify API.
   # pygobject3: calendar_events.py, against the typelibs in giDeps below.
@@ -70,15 +82,18 @@ let
   # Emoji dataset for the EmojiPicker (Super+.). Built from Unicode's
   # emoji-test.txt + CLDR annotations (en + de) at home-manager rebuild,
   # so updating nixpkgs auto-bumps the dataset.
-  emojiData = pkgs.runCommand "quickshell-emoji-data.json" {
-    nativeBuildInputs = [ pkgs.python3 ];
-  } ''
-    python3 ${./gen-emoji.py} \
-      ${pkgs.unicode-emoji}/share/unicode/emoji/emoji-test.txt \
-      ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/en.xml \
-      ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/de.xml \
-      > $out
-  '';
+  emojiData =
+    pkgs.runCommand "quickshell-emoji-data.json"
+      {
+        nativeBuildInputs = [ pkgs.python3 ];
+      }
+      ''
+        python3 ${./gen-emoji.py} \
+          ${pkgs.unicode-emoji}/share/unicode/emoji/emoji-test.txt \
+          ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/en.xml \
+          ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/de.xml \
+          > $out
+      '';
 in
 
 {
@@ -86,11 +101,11 @@ in
   # NOTE: This module is paired with modules/quickshell.nix
   # which contains system-level dependencies like UPower.
 
-  home.packages = with pkgs; [
+  home.packages = [
     qsWrapped # quickshell + private PATH/fonts (imagemagick, python3+keyring, font-awesome, inter)
     spotifyCli # quickshell-spotify: user-facing CLI for setup/auth/clear
-    quickshellLock # quickshell-lock: launches the session lock (config/lock)
-  ];
+  ]
+  ++ lib.optional config.host.sessionLock quickshellLock; # quickshell-lock: launches the session lock (config/lock)
 
   # Link quickshell config to ~/.config/quickshell via an out-of-store symlink
   # so that Quickshell's hot reload can detect file changes directly in the repo.
@@ -99,8 +114,9 @@ in
 
   # Separate config tree for the session lock, so it runs as its own Quickshell
   # process (launched by quickshell-lock) instead of inside the bar instance.
-  xdg.configFile."quickshell-lock".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/nixos-config/home/modules/quickshell/config/lock";
+  xdg.configFile."quickshell-lock" = lib.mkIf config.host.sessionLock {
+    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/nixos-config/home/modules/quickshell/config/lock";
+  };
 
   # Autostart quickshell as a systemd user service (UWSM-managed session)
   systemd.user.services.quickshell = {
@@ -127,6 +143,7 @@ in
       Environment = [
         "QT_QPA_PLATFORMTHEME=gtk3"
         "QUICKSHELL_EMOJI_DATA=${emojiData}"
+        "QUICKSHELL_POWER_ACTIONS=${powerActions}"
         "QT_LOGGING_RULES=quickshell.dbus.properties.warning=false"
       ];
     };
@@ -143,7 +160,7 @@ in
   # Restart=on-failure recovers an idle crash so the lock is always available. A
   # crash while locked is held by the compositor (the session stays locked, as
   # with any session-lock client), so a restart cannot bypass it.
-  systemd.user.services.quickshell-lock = {
+  systemd.user.services.quickshell-lock = lib.mkIf config.host.sessionLock {
     Unit = {
       Description = "Quickshell session lock (resident)";
       PartOf = [ "graphical-session.target" ];

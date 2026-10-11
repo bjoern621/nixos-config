@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   home.packages = [
@@ -16,10 +21,12 @@
         url = "https://api.snapcraft.io/api/v1/snaps/download/pOBIoZ2LrCB3rDohMxoYGnbN14EHOgD7_93.snap";
         sha512 = "5fd22c95787530713126906ee399979c8a307619af901928f9fba9936dd684a36850f491dfb8db8f911ee15d9960ac42b60c83817f0fc7560aca7bb728455416";
       };
-      postInstall = (old.postInstall or "") + ''
-        wrapProgram $out/bin/spotify \
-          --add-flags "--force-device-scale-factor=0.905"
-      '';
+      postInstall =
+        (old.postInstall or "")
+        + lib.optionalString config.host.hidpi ''
+          wrapProgram $out/bin/spotify \
+            --add-flags "--force-device-scale-factor=0.905"
+        '';
     }))
   ];
 }

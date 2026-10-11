@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 {
   # Lock the session before the machine sleeps (suspend/hibernate), so resume
@@ -10,7 +10,7 @@
   # No DPMS commands here on purpose: `dpms off` is a known Hyprland crash
   # trigger on AMD GPUs, and this machine is AMD.
   services.hypridle = {
-    enable = true;
+    enable = config.host.sessionLock;
     settings.general = {
       # Manual lock path: loginctl lock-session (Super+L) emits the Lock signal,
       # which hypridle turns into quickshell-lock. quickshell-lock is an IPC call

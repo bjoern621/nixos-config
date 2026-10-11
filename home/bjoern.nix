@@ -7,6 +7,7 @@
 
 {
   imports = [
+    ./host.nix
     ./modules/spotify.nix
     ./modules/dbeaver.nix
     ./modules/discord.nix

@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   home.packages = [
@@ -6,7 +11,7 @@
       # Discord has a min width of 940px. On the laptop (eDP-1, scale 2) each
       # tiled half is 724 logical px wide. Scale 0.77 * 940 = 724,
       # so Discord fits side-by-side with Spotify.
-      commandLineArgs = "--force-device-scale-factor=0.77";
+      commandLineArgs = lib.optionalString config.host.hidpi "--force-device-scale-factor=0.77";
     })
   ];
 }
