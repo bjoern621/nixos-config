@@ -7,11 +7,8 @@ The firmware boot menu picks the disk; neither boot loader knows about the other
 
 | Disk | Holds |
 | --- | --- |
-| Crucial T700 2 TB | NixOS: ESP and a LUKS root (ext4), as `hosts/fractal/disko.nix` declares. The TPM unlocks the root, bound to Secure Boot state. |
+| Crucial T700 2 TB | NixOS: an ESP (partlabel `ESP`) and a LUKS root (partlabel `cryptroot`, ext4 inside). The TPM unlocks the root, bound to Secure Boot state. |
 | Samsung 990 PRO 4 TB | Windows on the first 2 TB with its own ESP, then a LUKS ext4 volume mounted at `/games`, partlabel `games`, opened with the key file at `/etc/luks/games.key`. |
-
-The Windows disk never enters `disko.nix`.
-disko formats whole disks, and a layout naming the 990 PRO would take Windows with it.
 
 ## Installing Windows
 
@@ -36,64 +33,107 @@ The Windows installer puts its boot files onto an ESP it finds on any disk, and 
 
 ## Installing NixOS
 
-The install runs from the laptop over the LAN with nixos-anywhere, as for the cloud hosts in [k3s-cluster.md](k3s-cluster.md).
-The bootstrap configuration `fractal-bootstrap` carries the disks, systemd-boot and ssh for root; the full system follows over `sysconf-reload`.
+The install follows the README's installation steps, with the disk prepared by hand.
+Two disks sit in the machine, and the one holding Windows stays untouched throughout.
 
 1. In the firmware, clear the Secure Boot keys (Boot, Secure Boot, Key Management).
-   With no platform key the firmware sits in setup mode and boots the unsigned bootstrap.
-   The full system enrolls its own keys together with the Microsoft ones on its first activation and reboots with Secure Boot on.
-2. Boot the NixOS minimal ISO from a USB stick, set a root password with `passwd` and read the address with `ip a`.
-3. Read the T700's stable device path on the target and keep the serial:
+   With no platform key the firmware sits in setup mode and boots the unsigned installer and the first system.
+   The flake configuration enrolls its own keys together with the Microsoft ones on its first activation and reboots with Secure Boot on.
+2. Boot the NixOS minimal ISO from a USB stick and find the T700:
 
     ```sh
     ls -l /dev/disk/by-id/ | grep CT2000T700
     ```
 
-4. On the laptop, prepare what the installer carries onto the new root: the sops age key, the games key file and a passphrase for the root volume.
+    Every command below names that path, and the 990 PRO appears in none of them.
+
+3. Partition, encrypt, format and mount.
+   This wipes the T700.
 
     ```sh
-    # laptop, in a scratch directory
-    mkdir -p extra/var/lib/sops-nix extra/etc/luks
-    nix shell nixpkgs#age --command age-keygen -o extra/var/lib/sops-nix/key.txt
-    head -c 64 /dev/urandom > extra/etc/luks/games.key
-    chmod 700 extra/etc/luks
-    chmod 600 extra/var/lib/sops-nix/key.txt extra/etc/luks/games.key
-    printf '%s' '<passphrase>' > cryptroot.key
+    # installer, as root
+    disk=/dev/disk/by-id/nvme-CT2000T700SSD3_<serial>
+    sgdisk --zap-all "$disk"
+    sgdisk --new=1:0:+1G --typecode=1:EF00 --change-name=1:ESP "$disk"
+    sgdisk --new=2:0:0 --typecode=2:8309 --change-name=2:cryptroot "$disk"
+    udevadm settle
+    cryptsetup luksFormat --type luks2 /dev/disk/by-partlabel/cryptroot
+    cryptsetup open /dev/disk/by-partlabel/cryptroot cryptroot
+    mkfs.ext4 -L nixos /dev/mapper/cryptroot
+    mkfs.fat -F 32 -n ESP /dev/disk/by-partlabel/ESP
+    mount /dev/mapper/cryptroot /mnt
+    mount --mkdir -o umask=0077 /dev/disk/by-partlabel/ESP /mnt/boot
     ```
 
+    The mapper name `cryptroot` lands in the hardware file, and `hosts/fractal/configuration.nix` lists it for the TPM unlock.
     The passphrase stays the fallback for a TPM that refuses to unlock, so it goes into the password manager.
 
-5. Register the host key with sops before the first activation, in the repository:
+4. Generate the hardware file and write a first system that boots and reaches the network:
 
     ```sh
-    nix shell nixpkgs#age --command age-keygen -y extra/var/lib/sops-nix/key.txt
+    nixos-generate-config --root /mnt
     ```
 
-    Add the printed key to `.sops.yaml` as `host_fractal`, list it in the catch-all rule, then run `sops updatekeys secrets/*.yaml`, commit and push.
-    The first activation reads the Attic token out of `secrets/attic.yaml`.
+    ```nix
+    # /mnt/etc/nixos/configuration.nix
+    { pkgs, ... }:
 
-6. Install the bootstrap.
-   The flag `--disk main` names the disk disko formats; without it disko stops, since `disko.nix` points at `/dev/null`.
+    {
+      imports = [ ./hardware-configuration.nix ];
 
-    ```sh
-    nixos-anywhere --flake hosts/fractal#fractal-bootstrap --target-host root@<address> \
-      --disk main /dev/disk/by-id/nvme-CT2000T700SSD3_<serial> \
-      --disk-encryption-keys /tmp/cryptroot.key ./cryptroot.key \
-      --extra-files extra \
-      --generate-hardware-config nixos-generate-config extra/etc/nixos/hardware-configuration.nix
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.efi.canTouchEfiVariables = true;
+
+      networking.hostName = "fractal";
+      networking.networkmanager.enable = true;
+
+      nix.settings.experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+
+      users.users.bjoern = {
+        isNormalUser = true;
+        extraGroups = [
+          "wheel"
+          "networkmanager"
+        ];
+        initialPassword = "fractal";
+      };
+
+      environment.systemPackages = [ pkgs.git ];
+
+      system.stateVersion = "26.11";
+    }
     ```
 
-    nixos-anywhere generates the hardware file without file systems, which disko already declares.
-    A hardware file written by hand on this host takes `nixos-generate-config --no-filesystems` for the same reason.
+    Then `nixos-install --root /mnt`, which asks for the root password, and reboot without the stick.
 
-7. Deploy the full system once the bootstrap is up:
+5. On fractal, follow the README installation steps 4 to 8 with `HOST=fractal`: clone the repository, copy the hardware file into `hosts/fractal/` and mark it skip-worktree.
+
+6. Place the two keys the configuration reads before the first switch.
+   The sops age key decrypts the Attic token, and the games key opens the volume on the Windows disk:
 
     ```sh
-    sysconf-reload fractal --remote root@<address>
+    sudo install -d -m 700 /var/lib/sops-nix /etc/luks
+    sudo nix shell nixpkgs#age --command age-keygen -o /var/lib/sops-nix/key.txt
+    sudo sh -c 'head -c 64 /dev/urandom > /etc/luks/games.key'
+    sudo chmod 600 /var/lib/sops-nix/key.txt /etc/luks/games.key
+    sudo nix shell nixpkgs#age --command age-keygen -y /var/lib/sops-nix/key.txt
+    ```
+
+    On the laptop, add the printed public key to `.sops.yaml` as `host_fractal`, list it in the catch-all rule, run `sops updatekeys secrets/*.yaml`, commit and push.
+    Pull on fractal.
+
+7. Switch to the flake configuration:
+
+    ```sh
+    sudo nixos-rebuild switch --flake ~/git/nixos-config/hosts/fractal
     ```
 
     The activation enrolls the Secure Boot keys and reboots.
     The machine comes back with Secure Boot on and logs `bjoern` straight into Hyprland.
+    Set the password with `passwd` afterwards.
 
 ## After the first boot
 
@@ -102,7 +142,7 @@ Each step runs on fractal as root.
 1. Enroll the TPM, after Secure Boot is on, since PCR 7 settles only then:
 
     ```sh
-    systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/disk/by-partlabel/disk-main-root
+    systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/disk/by-partlabel/cryptroot
     ```
 
 2. Create the games volume in the space Windows left unallocated:

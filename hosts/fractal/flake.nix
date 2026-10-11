@@ -49,12 +49,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # nixos-anywhere formats the NixOS disk from disko.nix and the running system mounts by it.
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # The app package plus the kmsgrab CAP_SYS_ADMIN wrapper module.
     #
     # No nixpkgs.follows: the release workflow builds mirrorme against the revision
@@ -127,29 +121,5 @@
       # (the committed file is a placeholder), so a runner needs the stub.
       nixosConfigurations.fractal-ci = mkSystem [ ../../modules/ci-hardware-stub.nix ];
 
-      # First install only: what nixos-anywhere writes onto the wiped NixOS disk.
-      # The machine's facts, ssh for root and nothing of the desktop.
-      # docs/fractal.md holds the command and the files it carries over.
-      # Everything after that arrives with `sysconf-reload fractal --remote`.
-      nixosConfigurations.fractal-bootstrap = nixpkgs.lib.nixosSystem {
-        modules = [
-          ./machine.nix
-          ../../modules/admin-ssh-keys.nix
-          {
-            services.openssh = {
-              enable = true;
-              settings.PermitRootLogin = "prohibit-password";
-              settings.PasswordAuthentication = false;
-            };
-            services.admin-ssh-keys.users = [ "root" ];
-            nix.settings.experimental-features = [
-              "nix-command"
-              "flakes"
-            ];
-          }
-        ];
-
-        specialArgs = { inherit inputs; };
-      };
     };
 }

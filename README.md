@@ -51,7 +51,8 @@ The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endp
 The checkout stays where step 4 put it. Every `sysconf-*` command reads `sysconf.configPath`,
 which each host derives from `sysconf.user` as that account's `~/git/nixos-config`.
 
-The gaming desktop is installed over the network with disko, and [docs/fractal.md](docs/fractal.md) holds its runbook.
+The gaming desktop dual boots Windows from a second disk.
+[docs/fractal.md](docs/fractal.md) holds its install order.
 
 ## Hardware configuration
 
@@ -209,12 +210,10 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │   │   ├── flake.lock
 │   │   ├── configuration.nix
 │   │   └── hardware-configuration.nix
-│   ├── fractal/                    # Gaming desktop, full input set plus disko
+│   ├── fractal/                    # Gaming desktop, full input set
 │   │   ├── flake.nix
 │   │   ├── flake.lock
 │   │   ├── configuration.nix
-│   │   ├── machine.nix
-│   │   ├── disko.nix
 │   │   └── hardware-configuration.nix
 │   ├── homelab/                    # Server, nixpkgs + home-manager only
 │   │   ├── flake.nix

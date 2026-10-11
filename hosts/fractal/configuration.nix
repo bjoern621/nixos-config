@@ -3,7 +3,6 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./machine.nix
     ../../modules/hyprland.nix
     ../../modules/nvidia.nix
     ../../modules/gaming.nix
@@ -47,10 +46,29 @@
     ../../modules/screen-sharing.nix
   ];
 
+  networking.hostName = "fractal";
+
   services.tailscale-client.operator = "bjoern";
 
-  # disko names the root volume (hosts/fractal/disko.nix).
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  # Mapper name the install gives the root volume (docs/fractal.md).
   boot.initrd.luks.tpm2Unlock.devices = [ "cryptroot" ];
+
+  # LUKS volume in the space Windows left on its disk, created by hand (docs/fractal.md)
+  # with partlabel `games`. The key file lives on the encrypted root,
+  # so the volume opens after root with no prompt.
+  environment.etc.crypttab.text = ''
+    games /dev/disk/by-partlabel/games /etc/luks/games.key luks,discard,nofail
+  '';
+  fileSystems."/games" = {
+    device = "/dev/mapper/games";
+    fsType = "ext4";
+    options = [
+      "nofail"
+      "x-systemd.device-timeout=10s"
+    ];
+  };
 
   # Windows and the GPU option ROM carry Microsoft signatures;
   # a db without the Microsoft CA leaves the card dark before the kernel loads.
@@ -138,4 +156,6 @@
     schedule = "Mon 03:00";
   };
   services.sysconf-revision.enable = true;
+
+  system.stateVersion = "26.11";
 }
