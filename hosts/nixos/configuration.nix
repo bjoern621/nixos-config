@@ -59,6 +59,8 @@
 
   boot.loader.efi.canTouchEfiVariables = true;
 
+  boot.initrd.luks.tpm2Unlock.devices = [ "luks-d3e9b59e-a5a9-4a07-b5b2-405fca67f400" ];
+
   # Check after every kernel bump: reboot finishes in about 15 s,
   # journal clean of amdgpu ttm oopses after a hibernate resume.
   # 7.2.0 stalled reboots 100 to 260 s after journald stopped;

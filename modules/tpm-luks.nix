@@ -1,25 +1,33 @@
-{ lib, ... }:
+{ config, lib, ... }:
 
-# TPM2-based automatic LUKS unlock, bound to Secure Boot state (PCR 7).
-# The TPM only releases the key when Secure Boot is active with enrolled keys.
+# TPM2 unlock for LUKS devices, bound to Secure Boot state (PCR 7).
+# The TPM releases the key while Secure Boot runs with the enrolled keys.
 #
-# One-time setup after first rebuild:
-#   sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/disk/by-uuid/d3e9b59e-a5a9-4a07-b5b2-405fca67f400
+# One-time enrolment after the first rebuild, per device:
+#   sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/disk/by-uuid/<uuid>
 #
-# If you ever need to re-enroll (e.g. after key rotation):
-#   sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/disk/by-uuid/d3e9b59e-a5a9-4a07-b5b2-405fca67f400
-#   sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/disk/by-uuid/d3e9b59e-a5a9-4a07-b5b2-405fca67f400
+# Re-enrolment after a key rotation:
+#   sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/disk/by-uuid/<uuid>
+#   sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/disk/by-uuid/<uuid>
+
+let
+  cfg = config.boot.initrd.luks.tpm2Unlock;
+in
 {
-  boot.initrd.systemd.enable = true;
+  options.boot.initrd.luks.tpm2Unlock.devices = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    description = "Names under boot.initrd.luks.devices the TPM unlocks.";
+  };
 
-  boot.initrd.luks.devices."luks-d3e9b59e-a5a9-4a07-b5b2-405fca67f400" = {
-    # The machine's generated hardware-configuration.nix sets the same path at normal priority,
-    # so it wins. mkDefault keeps the eval alive where the committed placeholder stands in.
-    device = lib.mkDefault "/dev/disk/by-uuid/d3e9b59e-a5a9-4a07-b5b2-405fca67f400";
+  config = lib.mkIf (cfg.devices != [ ]) {
+    boot.initrd.systemd.enable = true;
 
-    crypttabExtraOpts = [
-      "tpm2-device=auto"
-      "tpm2-pcrs=7"
-    ];
+    boot.initrd.luks.devices = lib.genAttrs cfg.devices (_: {
+      crypttabExtraOpts = [
+        "tpm2-device=auto"
+        "tpm2-pcrs=7"
+      ];
+    });
   };
 }
