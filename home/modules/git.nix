@@ -6,6 +6,7 @@
   home.packages = with pkgs; [
     git
     git-credential-manager
+    git-crypt # nixos-config icons; key in ~/.config/git-crypt/
   ];
 
   programs.git = {
