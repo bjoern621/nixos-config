@@ -19,9 +19,17 @@ The Windows installer puts its boot files onto an ESP it finds on any disk, and 
 2. Boot the Windows 11 installer and choose the custom installation.
    Delete every partition on the 990 PRO, create one partition of 2 TB and leave the rest unallocated.
    The installer adds its own ESP, MSR and recovery partitions next to it.
-3. At the account screen press Shift+F10 and run `start ms-cxh:localonly` to create a local account.
+3. Setup carries no driver for the board's MediaTek Wi-Fi.
+   At the network screen press Shift+F10, install the ASUS MT7925 driver from a USB stick and go back one screen:
+
+    ```bat
+    rem Windows setup, Shift+F10
+    pnputil /add-driver E:\<driver folder>\mtkwecx.inf /install
+    ```
+
+4. At the account screen press Shift+F10 and run `start ms-cxh:localonly` to create a local account.
    A local account skips Device Encryption, which would otherwise bind the disk to the TPM and ask for a recovery key after every Secure Boot change.
-4. After the first login, confirm that encryption is off and disable it where it is on:
+5. After the first login, confirm that encryption is off and disable it where it is on:
 
     ```powershell
     # Windows, elevated PowerShell
@@ -29,16 +37,17 @@ The Windows installer puts its boot files onto an ESP it finds on any disk, and 
     manage-bde -off C:
     ```
 
-5. Put the T700 back.
+6. Put the T700 back.
 
 ## Installing NixOS
 
 The install follows the README's installation steps, with the disk prepared by hand.
 Two disks sit in the machine, and the one holding Windows stays untouched throughout.
 
-1. In the firmware, clear the Secure Boot keys (Boot, Secure Boot, Key Management).
+1. In the firmware, set Secure Boot Mode to Custom and clear the Secure Boot keys (Boot, Secure Boot, Key Management).
+   On Standard the firmware reinstalls its factory keys at the next boot.
    With no platform key the firmware sits in setup mode and boots the unsigned installer and the first system.
-   The flake configuration enrolls its own keys together with the Microsoft ones on its first activation and reboots with Secure Boot on.
+   The flake configuration enrolls its own keys together with the Microsoft ones on its first boot and reboots with Secure Boot on.
 2. Boot the NixOS minimal ISO from a USB stick and find the T700:
 
     ```sh
@@ -125,14 +134,17 @@ Two disks sit in the machine, and the one holding Windows stays untouched throug
     On the laptop, add the printed public key to `.sops.yaml` as `host_fractal`, list it in the catch-all rule, run `sops updatekeys secrets/*.yaml`, commit and push.
     Pull on fractal.
 
-7. Switch to the flake configuration:
+7. Install the flake configuration as the next boot entry and reboot into it:
 
     ```sh
-    sudo nixos-rebuild switch --flake ~/git/nixos-config/hosts/fractal
+    sudo NIXOS_REBUILD_NO_SYSTEMD_RUN=1 nixos-rebuild boot --flake ~/git/nixos-config/hosts/fractal
+    sudo reboot
     ```
 
-    The activation enrolls the Secure Boot keys and reboots.
-    The machine comes back with Secure Boot on and logs `bjoern` straight into Hyprland.
+    `nixos-rebuild` hands the switch to `systemd-run --output=cat`, and the installed system's older `systemd-run` rejects that option.
+    Without `systemd-run` the switch would run inside the console login, so the configuration goes in as a boot entry.
+    The first boot writes the Secure Boot keys to the ESP and reboots, and systemd-boot enrolls them on the boot after.
+    The machine comes back with Secure Boot on, `bootctl status` showing `enabled (user)`, and logs `bjoern` straight into Hyprland.
     Set the password with `passwd` afterwards.
 
 ## After the first boot
