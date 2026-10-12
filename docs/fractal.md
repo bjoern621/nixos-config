@@ -120,7 +120,21 @@ Two disks sit in the machine, and the one holding Windows stays untouched throug
 
 5. On fractal, follow the README installation steps 4 to 8 with `HOST=fractal`: clone the repository, copy the hardware file into `hosts/fractal/` and mark it skip-worktree.
 
-6. Place the two keys the configuration reads before the first switch.
+6. Unlock the git-crypt files before the first build.
+   The Icons8 SVGs of Quickshell and the SDDM theme sit encrypted in the repository, and a build from a locked clone deploys them as ciphertext, which Quickshell logs as `Unsupported image format`.
+   The key comes from a USB stick, as `nixos-config-key` (`nixos-config-key.b64` holds the same key in base64):
+
+    ```sh
+    install -d -m 700 ~/.config/git-crypt
+    install -m 600 /run/media/bjoern/<stick>/nixos-config-key ~/.config/git-crypt/
+    cd ~/git/nixos-config
+    nix shell nixpkgs#git-crypt --command git-crypt unlock ~/.config/git-crypt/nixos-config-key
+    ```
+
+    The unlock writes git filters that call `git-crypt`, and git fails on them until the first switch installs it.
+    Until then, run git commands inside `nix shell nixpkgs#git-crypt`.
+
+7. Place the two keys the configuration reads before the first switch.
    The sops age key decrypts the Attic token, and the games key opens the volume on the Windows disk:
 
     ```sh
@@ -134,7 +148,7 @@ Two disks sit in the machine, and the one holding Windows stays untouched throug
     On the laptop, add the printed public key to `.sops.yaml` as `host_fractal`, list it in the catch-all rule, run `sops updatekeys secrets/*.yaml`, commit and push.
     Pull on fractal.
 
-7. Install the flake configuration as the next boot entry and reboot into it:
+8. Install the flake configuration as the next boot entry and reboot into it:
 
     ```sh
     sudo NIXOS_REBUILD_NO_SYSTEMD_RUN=1 nixos-rebuild boot --flake ~/git/nixos-config/hosts/fractal
