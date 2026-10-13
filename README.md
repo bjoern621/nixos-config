@@ -47,6 +47,15 @@ The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endp
     ```bash
     sudo nixos-rebuild switch --flake ~/git/nixos-config/hosts/$HOST
     ```
+10. On `nixos` and `fractal`, copy the admin SSH key from Bitwarden.
+    The servers list its public half in `modules/admin-ssh-keys.nix`.
+    Run the commands, paste the private key, press Enter after its last line and finish with Ctrl+D (OpenSSH rejects the file without its final newline):
+    ```bash
+    install -d -m 700 ~/.ssh
+    install -m 600 /dev/null ~/.ssh/id_ed25519
+    cat > ~/.ssh/id_ed25519
+    ```
+    `ssh-keygen -y -f ~/.ssh/id_ed25519` then prints a public key matching one entry in `modules/admin-ssh-keys.nix`.
 
 The checkout stays where step 4 put it. Every `sysconf-*` command reads `sysconf.configPath`,
 which each host derives from `sysconf.user` as that account's `~/git/nixos-config`.

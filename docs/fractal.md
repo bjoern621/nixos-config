@@ -175,6 +175,7 @@ Each step runs on fractal as root.
 4. Put the NixOS entry first in the firmware boot order.
    `sudo reboot-to-windows` starts Windows once and leaves the order alone.
 5. Import the CyberGhost profile as on the laptop: `nmcli connection import type openvpn file <profile>.ovpn`.
+6. As `bjoern`, copy the admin SSH key from Bitwarden as in README installation step 10.
 
 ## Games on NixOS
 
