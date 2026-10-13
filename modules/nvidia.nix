@@ -12,7 +12,8 @@
 
   hardware.nvidia = {
     open = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    # 595.x breaks EGL for Minecraft 26.3 (eglChooseConfig EGL_BAD_DISPLAY); fixed in 615+.
+    package = config.boot.kernelPackages.nvidiaPackages.latest;
     nvidiaSettings = true;
   };
 
