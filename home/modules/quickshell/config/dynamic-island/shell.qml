@@ -30,7 +30,10 @@ ShellRoot {
     LoadingOverlay {}
     VolumeOsd {}
     BrightnessOsd {}
-    BatteryWarning {}
+    LazyLoader {
+        active: HostFeatures.hasBattery
+        BatteryWarning {}
+    }
     ModalOverlay {}
 
     // App launcher renders one design variant, chosen by Globals.designTheme.

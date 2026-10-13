@@ -371,6 +371,7 @@ Variants {
 
                         HoverItem {
                             id: batteryHoverItem
+                            visible: HostFeatures.hasBattery
                             clickable: false
                             menu: batteryMenu
                             Battery {}

@@ -144,6 +144,7 @@ in
         "QT_QPA_PLATFORMTHEME=gtk3"
         "QUICKSHELL_EMOJI_DATA=${emojiData}"
         "QUICKSHELL_POWER_ACTIONS=${powerActions}"
+        "QUICKSHELL_HAS_BATTERY=${lib.boolToString config.host.battery}"
         "QT_LOGGING_RULES=quickshell.dbus.properties.warning=false"
       ];
     };

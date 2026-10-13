@@ -22,6 +22,12 @@
       description = "Run the USBGuard session policy and prompts; needs modules/usbguard.nix on the host.";
     };
 
+    battery = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Show the Quickshell battery pill, its menu and the low-battery warnings.";
+    };
+
     hidpi = lib.mkOption {
       type = lib.types.bool;
       default = true;

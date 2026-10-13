@@ -93,12 +93,14 @@
             ];
 
             # Switches declared in home/host.nix. No lock and no sleep on a desk at home;
-            # the USBGuard daemon stays off this host; the monitors run at scale 1.
+            # the USBGuard daemon stays off this host; the monitors run at scale 1;
+            # a desktop has no battery.
             host = {
               sessionLock = false;
               hibernate = false;
               usbguard = false;
               hidpi = false;
+              battery = false;
             };
           };
           home-manager.extraSpecialArgs = { inherit inputs customLib; };

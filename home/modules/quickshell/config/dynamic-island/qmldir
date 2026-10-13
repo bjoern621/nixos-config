@@ -7,6 +7,7 @@ singleton Shape 1.0 base/Shape.qml
 singleton Typography 1.0 base/Typography.qml
 singleton Spacing 1.0 base/Spacing.qml
 singleton ShellStartup 1.0 base/ShellStartup.qml
+singleton HostFeatures 1.0 base/HostFeatures.qml
 singleton LoadingHost 1.0 base/LoadingHost.qml
 singleton GracefulShutdown 1.0 base/GracefulShutdown.qml
 singleton WindowFocus 1.0 base/WindowFocus.qml
