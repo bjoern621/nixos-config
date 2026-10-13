@@ -28,6 +28,12 @@
       description = "Show the Quickshell battery pill, its menu and the low-battery warnings.";
     };
 
+    vscodeAutostart = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Launch VSCode at login via XDG autostart.";
+    };
+
     hidpi = lib.mkOption {
       type = lib.types.bool;
       default = true;

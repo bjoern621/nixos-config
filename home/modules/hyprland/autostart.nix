@@ -1,4 +1,4 @@
-{ ... }:
+{ config, lib, ... }:
 
 {
   # Chrome and VSCode are started through XDG autostart (systemd-ordered), not
@@ -18,11 +18,13 @@
       Name=Google Chrome
       Exec=uwsm app -- google-chrome.desktop
     '';
-    "autostart/code.desktop".text = ''
-      [Desktop Entry]
-      Type=Application
-      Name=Visual Studio Code
-      Exec=uwsm app -- code.desktop
-    '';
+    "autostart/code.desktop" = lib.mkIf config.host.vscodeAutostart {
+      text = ''
+        [Desktop Entry]
+        Type=Application
+        Name=Visual Studio Code
+        Exec=uwsm app -- code.desktop
+      '';
+    };
   };
 }
