@@ -8,9 +8,11 @@ import ".."
 QtObject {
     id: root
 
-    // QUICKSHELL_POWER_ACTIONS (quickshell.nix) names the actions this host offers.
-    readonly property var enabledActions: (Quickshell.env("QUICKSHELL_POWER_ACTIONS") || "").split(",")
-    readonly property var actions: allActions.filter(a => enabledActions.indexOf(a.action) !== -1)
+    // QUICKSHELL_POWER_ACTIONS names actions this host offers.
+    // Unset offers all: QML hot-reloads from repo before rebuild sets the variable.
+    readonly property string enabledActionsEnv: Quickshell.env("QUICKSHELL_POWER_ACTIONS") || ""
+    readonly property var actions: enabledActionsEnv === "" ? allActions
+        : allActions.filter(a => enabledActionsEnv.split(",").indexOf(a.action) !== -1)
 
     readonly property var allActions: [
         {
