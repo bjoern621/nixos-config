@@ -94,7 +94,7 @@
 
             # Switches declared in home/host.nix. No lock and no sleep on a desk at home;
             # the USBGuard daemon stays off this host; the monitors run at scale 1;
-            # a desktop has no battery; VSCode stays closed until opened.
+            # a desktop has no battery; VSCode stays closed until opened and workspace 2 tiles like any other.
             host = {
               sessionLock = false;
               hibernate = false;

@@ -31,7 +31,7 @@
     vscodeAutostart = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Launch VSCode at login via XDG autostart.";
+      description = "Launch VSCode at login via XDG autostart and float every other window on its workspace 2.";
     };
 
     hidpi = lib.mkOption {
