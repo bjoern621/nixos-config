@@ -4,6 +4,12 @@ let
   sysconf-reload = pkgs.writeShellScriptBin "sysconf-reload" ''
     set -euo pipefail
 
+    # System tools first.
+    # Dev shells (this repo's direnv) prepend their own nixpkgs' systemd.
+    # nixos-rebuild calls bare `systemd-run` with flags matching system nixos-rebuild.
+    # Older dev-shell systemd-run fails: `unrecognized option '--output=cat'`.
+    export PATH="/run/wrappers/bin:/run/current-system/sw/bin:$PATH"
+
     NIXOS_CONFIG="${config.sysconf.configPath}"
     TARGET_HOST=""
     REMOTE=0
