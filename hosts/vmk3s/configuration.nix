@@ -168,6 +168,13 @@ in
       # net collector push OTLP to the agent on their own node.
       "--kube-proxy-arg=nodeport-addresses=127.0.0.0/8"
 
+      # Pinned: k3s reads the host resolv.conf once at start.
+      # A boot that beats the router's DHCP lease leaves only link-local entries,
+      # and CoreDNS then forwards to 8.8.8.8 until the next k3s restart,
+      # where fritz.box resolves to AVM's public address.
+      # Router's IPv4 resolver stays fixed; its IPv6 ones rotate with the prefix.
+      "--resolv-conf=${pkgs.writeText "k3s-resolv.conf" "nameserver 192.168.178.1\n"}"
+
       # This flag alone encrypts nothing on a cluster that started without it.
       # k3s keeps the identity provider first
       # until `k3s secrets-encrypt rotate-keys` runs.
