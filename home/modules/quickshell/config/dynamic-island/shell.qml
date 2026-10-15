@@ -51,6 +51,7 @@ ShellRoot {
 
     ClipboardHistory {}
     EmojiPicker {}
+    WindowSwitcher {}
     WallpaperChooser {}
     ThemeSwitcher {}
     NotificationToast {}

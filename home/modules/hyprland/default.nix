@@ -14,6 +14,7 @@
     ./animations.nix
     ./clipboard-history.nix
     ./emoji-picker.nix
+    ./window-switcher.nix
     ./preferred-workspaces.nix
     ./hyprpolkit.nix
     ./monitors.nix

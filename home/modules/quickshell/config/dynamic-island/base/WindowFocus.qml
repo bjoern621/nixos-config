@@ -62,6 +62,16 @@ Singleton {
         return root._dispatchWithWindow(root._selectors(pid, names), "hl.dsp.focus({ window = w })");
     }
 
+    // One window by Hyprland address ("0x55d…"), as `hyprctl clients -j` reports it.
+    // Address becomes Lua source, so anything but hex is refused.
+    function focusAddress(address) {
+        const addr = (address ?? "").toString();
+        if (!/^0x[0-9a-fA-F]+$/.test(addr))
+            return false;
+        Hyprland.dispatch('hl.dsp.focus({ window = "address:' + addr + '" })');
+        return true;
+    }
+
     // Key chord delivered to the app's window. Keyboard focus stays where it is.
     // mods: bind syntax ("CTRL", "CTRL SHIFT"). key: xkb keysym name ("s", "Down").
     // Both are shell constants, so nothing user-typed reaches the Lua.
