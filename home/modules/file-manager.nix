@@ -3,8 +3,6 @@
 {
   dconf.settings."org/gtk/gtk4/settings/file-chooser".show-hidden = true;
 
-  # Kate registers itself as an inode/directory handler, so xdg-open on a folder
-  # would launch Kate instead of a file manager. Pin directories to Nautilus.
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {

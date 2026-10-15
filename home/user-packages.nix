@@ -2,7 +2,7 @@
 
 {
   home.packages = with pkgs; [
-    kdePackages.kate # text editor
+    gnome-text-editor
     gimp
     obsidian
     kubectl # Kubernetes CLI
