@@ -40,6 +40,14 @@
     "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}/glib-2.0/schemas"
   ];
 
+  # Show dotfiles in file dialogs.
+  # Portal picker is GTK3, reads org/gtk/settings; Nautilus is GTK4, reads org/gtk/gtk4/settings.
+  # Toggling Ctrl+H in one never reaches other.
+  dconf.settings = {
+    "org/gtk/settings/file-chooser".show-hidden = true;
+    "org/gtk/gtk4/settings/file-chooser".show-hidden = true;
+  };
+
   # Portal stack lifecycle hardening. Two independent failures leave file
   # dialogs broken for apps that are already running:
   #
