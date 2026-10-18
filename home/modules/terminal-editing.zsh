@@ -101,7 +101,7 @@ _shift-select-paste() {
 zle -N shift-select-paste _shift-select-paste
 bindkey -M shift-select '^[[200~' shift-select-paste
 
-# Ctrl+Shift+C copies region via OSC 52, selection stays.
+# Ctrl+Shift+C copies region via OSC 52, then drops it.
 # kitty sends CSI u form only while zsh_selection set.
 # Main keymap binding swallows stale sends.
 _shift-select-copy() {
@@ -109,6 +109,7 @@ _shift-select-copy() {
   local start=$(( MARK < CURSOR ? MARK : CURSOR ))
   local end=$(( MARK < CURSOR ? CURSOR : MARK ))
   print -n "\e]52;c;$(print -rn -- ${BUFFER[start+1,end]} | base64 -w0)\a" >$TTY
+  _shift-select-end
 }
 zle -N shift-select-copy _shift-select-copy
 bindkey -M main '^[[99;6u' shift-select-copy
