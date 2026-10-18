@@ -11,7 +11,8 @@ later.
 
 Seal the login password inside the TPM. After a successful face login a PAM
 session helper ([modules/display-manager.nix](../modules/display-manager.nix))
-decrypts it and pipes it to `gnome-keyring-daemon --unlock`.
+decrypts it and pipes it to `gnome-keyring-daemon --replace --unlock`.
+`--replace` takes over from the daemon `pam_gnome_keyring` started, so one daemon owns the keyring files.
 
 Files live in `${XDG_DATA_HOME:-~/.local/share}/sddm/keyring-tpm/`:
 

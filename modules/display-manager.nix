@@ -92,9 +92,14 @@ let
     # pam_exec runs us as root; gnome-keyring would abort with
     # "failed dropping capabilities -9". runuser drops to PAM_USER and zeroes caps.
     [ -n "$PAM_USER" ] || fail "PAM_USER not set."
+    # --unlock never contacts running daemon; it starts own one.
+    # pam_gnome_keyring already started one in this session.
+    # Two daemons on same keyring files reload each other's writes,
+    # leaving phantom collections that break libsecret clients (git-credential-manager).
+    # --replace hands control socket and D-Bus name to new daemon.
     if ! ${pkgs.util-linux}/bin/runuser -u "$PAM_USER" -- \
-        ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --unlock < "$TMP/password.txt" >"$TMP/out" 2>&1; then
-      fail "gnome-keyring-daemon --unlock: $(cat "$TMP/out"). Stored password may not match current login password; re-seal after password change."
+        ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --replace --unlock < "$TMP/password.txt" >"$TMP/out" 2>&1; then
+      fail "gnome-keyring-daemon --replace --unlock: $(cat "$TMP/out"). Stored password may not match current login password; re-seal after password change."
     fi
     log "OK: keyring unlocked via TPM-sealed password"
   '';
