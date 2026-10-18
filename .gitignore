@@ -16,3 +16,7 @@ __pycache__/
 # Non-free assets
 #home/modules/quickshell/config/dynamic-island/icons/
 #sddm icons
+
+# Claude Code worktrees, each its own checkout.
+# sysconf-reload would stage them as embedded repositories.
+/.claude/worktrees/
