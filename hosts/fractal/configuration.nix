@@ -44,6 +44,7 @@
     ../../modules/attic-push.nix
     ../../modules/attic-pull-screen-sharing.nix
     ../../modules/screen-sharing.nix
+    ../../modules/mt7927-bluetooth.nix
   ];
 
   networking.hostName = "fractal";
@@ -52,10 +53,10 @@
 
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Mapper name the install gives the root volume (docs/fractal.md).
+  # Root LUKS mapper name, read off hardware-configuration.nix (docs/installation.md).
   boot.initrd.luks.tpm2Unlock.devices = [ "cryptroot" ];
 
-  # LUKS volume in the space Windows left on its disk, created by hand (docs/fractal.md)
+  # LUKS volume on second disk, created by hand (docs/installation.md)
   # with partlabel `games`. The key file lives on the encrypted root,
   # so the volume opens after root with no prompt.
   environment.etc.crypttab.text = ''
