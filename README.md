@@ -11,56 +11,8 @@ The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endp
 
 ## Installation
 
-> [!IMPORTANT]
-> Create the correct username during installation based on the selected host profile.
-> For `nixos` and `fractal`, use user `bjoern`. For `homelab` or `vmk3s`, use user `ops`.
-> Using a different username can cause the previous home files to be replaced after rebuild,
-> which means cloning this repo and recreating symlinks must be done again.
-
-1. Install NixOS using any preferred method, for example the graphical installer.
-2. Boot into the installed system.
-3. Install Git temporarily:
-    ```bash
-    nix-shell -p git
-    ```
-4. Clone this repository:
-    ```bash
-    git clone https://github.com/bjoern621/nixos-config.git ~/git/nixos-config
-    ```
-5. List available host names and pick one:
-    ```bash
-    ls ~/git/nixos-config/hosts
-    ```
-6. Set the host name as an environment variable:
-    ```bash
-    export HOST=<host>
-    ```
-7. Copy the hardware configuration into the selected host:
-    ```bash
-    sudo cp /etc/nixos/hardware-configuration.nix ~/git/nixos-config/hosts/$HOST/hardware-configuration.nix
-    ```
-8. Mark the hardware configuration as local-only so git ignores changes to it:
-    ```bash
-    git -C ~/git/nixos-config update-index --skip-worktree hosts/$HOST/hardware-configuration.nix
-    ```
-9. Apply the flake configuration:
-    ```bash
-    sudo nixos-rebuild switch --flake ~/git/nixos-config/hosts/$HOST
-    ```
-10. On `nixos` and `fractal`, copy the admin SSH key from Bitwarden.
-    The servers list its public half in `modules/admin-ssh-keys.nix`.
-    Run the commands, paste the private key, press Enter after its last line and finish with Ctrl+D (OpenSSH rejects the file without its final newline):
-    ```bash
-    install -d -m 700 ~/.ssh
-    install -m 600 /dev/null ~/.ssh/id_ed25519
-    cat > ~/.ssh/id_ed25519
-    ```
-
-The checkout stays where step 4 put it. Every `sysconf-*` command reads `sysconf.configPath`,
-which each host derives from `sysconf.user` as that account's `~/git/nixos-config`.
-
-The gaming desktop dual boots Windows from a second disk.
-[docs/fractal.md](docs/fractal.md) holds its install order.
+[docs/installation.md](docs/installation.md) walks through installing any host: the general steps every host takes, then one section per module that needs work by hand.
+It recommends the graphical NixOS installer over the minimal one.
 
 ## Hardware configuration
 
