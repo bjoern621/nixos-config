@@ -10,9 +10,9 @@ import "../base"
 
 // Alt+Tab window switcher, Windows-style.
 // Alt+Tab steps forward, Alt+Shift+Tab back, Alt release focuses the selection, Escape cancels.
-// Hyprland owns all four keys (hyprland/window-switcher.lua):
+// Hyprland owns all four keys and submap `alttab` (hyprland/window-switcher.lua):
 // Alt+Tab never reaches a client, so the surface takes no keyboard focus.
-// Alt release comes from a transparent release bind.
+// Alt release comes from a Lua key listener.
 // Overlay with keyboard focus misses a release that lands before it maps.
 //
 // Order is most recently focused first, so one Alt+Tab lands on the previous window.
@@ -45,8 +45,6 @@ Scope {
             commitPending = false;
             index = 0;
             windows = [];
-            // Submap holds Escape for switch duration only.
-            Hyprland.dispatch('hl.dsp.submap("alttab")');
             const mon = Hyprland.focusedMonitor;
             const s = mon ? Quickshell.screens.find(sc => sc.name === mon.name) : null;
             if (s)
