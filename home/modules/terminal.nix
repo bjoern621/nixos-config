@@ -1,6 +1,10 @@
 { ... }:
 
 {
+  # Kitty only delivers keys; zsh owns line buffer.
+  # Editing keys need both halves, so zsh half lives here, not in shell.nix.
+  programs.zsh.initContent = builtins.readFile ./terminal-editing.zsh;
+
   programs.kitty = {
     enable = true;
 
@@ -17,6 +21,19 @@
 
       # Kitty's default new_os_window starts in the directory kitty itself was launched from.
       "ctrl+shift+n" = "new_os_window_with_cwd";
+
+      # GUI-style text editing keys. zsh side lives in terminal-editing.zsh.
+      # Empty action unmaps kitty default, passing key to program.
+      "ctrl+shift+left" = ""; # previous_tab
+      "ctrl+shift+right" = ""; # next_tab
+      "ctrl+shift+home" = ""; # scroll_home
+      "ctrl+shift+end" = ""; # scroll_end
+      "ctrl+shift+delete" = ""; # clear_terminal reset active
+      # Legacy encoding drops shift from these, so zsh cannot tell them apart.
+      # Send CSI u form instead.
+      # send_text skips kitty keyboard protocol mode, so nvim still gets real key.
+      "ctrl+shift+backspace" = "send_text normal,application \\e[127;6u"; # change_font_size all 0
+      "ctrl+shift+z" = "send_text normal,application \\e[122;6u"; # scroll_to_prompt -1
     };
 
     settings = {
