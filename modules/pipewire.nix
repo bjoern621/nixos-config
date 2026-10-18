@@ -55,13 +55,18 @@
       };
     };
 
-    # Disable the AMD GPU HDMI/DisplayPort audio controller. It exposes three
-    # HDMI/DP output sinks that are not wired to any usable output on this
-    # machine.
-    wireplumber.extraConfig."52-disable-radeon-hdmi-audio" = {
+    # Disable GPU HDMI/DP audio controllers; monitor audio unused.
+    # Laptop (nixos) matched by PCI address, fractal by product name.
+    # PCI address differs per host; product name does not.
+    # `matches` entries OR together.
+    wireplumber.extraConfig."52-disable-gpu-hdmi-audio" = {
       "monitor.alsa.rules" = [
         {
-          matches = [ { "device.name" = "alsa_card.pci-0000_c3_00.1"; } ];
+          matches = [
+            { "device.name" = "alsa_card.pci-0000_c3_00.1"; }
+            { "device.product.name" = "Radeon High Definition Audio Controller"; }
+            { "device.product.name" = "GB203 High Definition Audio Controller"; }
+          ];
           actions.update-props = {
             "device.disabled" = true;
           };
