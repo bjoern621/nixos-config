@@ -34,6 +34,10 @@
       # send_text skips kitty keyboard protocol mode, so nvim still gets real key.
       "ctrl+shift+backspace" = "send_text normal,application \\e[127;6u"; # change_font_size all 0
       "ctrl+shift+z" = "send_text normal,application \\e[122;6u"; # scroll_to_prompt -1
+      # zsh sets user var zsh_selection while its selection is active.
+      # Then Ctrl+Shift+C goes to zsh, which copies via OSC 52.
+      # Otherwise kitty copies its own mouse selection.
+      "--when-focus-on var:zsh_selection ctrl+shift+c" = "send_text normal,application \\e[99;6u";
     };
 
     settings = {
