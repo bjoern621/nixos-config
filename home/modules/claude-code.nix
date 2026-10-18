@@ -73,6 +73,9 @@ in
 
     # MCP server for Grafana. Claude spawns it by bare command name, so it sits on PATH.
     pkgs.mcp-grafana
+
+    # `glab mcp serve` hands Claude the self-hosted GitLab: merge requests, notes and pipelines.
+    pkgs.glab
   ];
 
   home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
