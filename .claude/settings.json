@@ -1,13 +1,14 @@
 {
+  "enabledPlugins": {
+    "bjoern@bjoern-skills": true
+  },
   "extraKnownMarketplaces": {
     "bjoern-skills": {
       "source": {
         "source": "github",
         "repo": "bjoern621/claude-skills"
-      }
+      },
+      "autoUpdate": true
     }
-  },
-  "enabledPlugins": {
-    "bjoern@bjoern-skills": true
   }
 }
