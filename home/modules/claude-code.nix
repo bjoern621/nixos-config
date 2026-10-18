@@ -26,10 +26,11 @@ let
       yellow=$'\033[33m'
       red=$'\033[31m'
       blue=$'\033[34m'
+      lightBlue=$'\033[94m'
       reset=$'\033[0m'
 
       line="''${green}$(whoami)@$(hostname -s)''${reset}:''${blue}''${cwd}''${reset}"
-      [ -n "$model" ] && line+=" $model"
+      [ -n "$model" ] && line+=" ''${lightBlue}$model''${reset}"
 
       if [ -n "$pct" ]; then
         if [ "$pct" -ge 80 ]; then
