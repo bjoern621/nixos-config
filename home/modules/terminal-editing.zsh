@@ -104,16 +104,28 @@ bindkey -M shift-select '^[[200~' shift-select-paste
 # Ctrl+Shift+C copies region via OSC 52, then drops it.
 # kitty sends CSI u form only while zsh_selection set.
 # Main keymap binding swallows stale sends.
-_shift-select-copy() {
-  (( REGION_ACTIVE )) || return 0
+_shift-select-clipboard() {
   local start=$(( MARK < CURSOR ? MARK : CURSOR ))
   local end=$(( MARK < CURSOR ? CURSOR : MARK ))
   print -n "\e]52;c;$(print -rn -- ${BUFFER[start+1,end]} | base64 -w0)\a" >$TTY
+}
+_shift-select-copy() {
+  (( REGION_ACTIVE )) || return 0
+  _shift-select-clipboard
   _shift-select-end
 }
 zle -N shift-select-copy _shift-select-copy
 bindkey -M main '^[[99;6u' shift-select-copy
 bindkey -M shift-select '^[[99;6u' shift-select-copy
+
+# Ctrl+X cuts region.
+# shift-select keymap alone; ^X prefix in main keymap untouched.
+_shift-select-cut() {
+  _shift-select-clipboard
+  _shift-select-delete
+}
+zle -N shift-select-cut _shift-select-cut
+bindkey -M shift-select '^X' shift-select-cut
 
 # Shift+movement sets mark on first press, then extends.
 # Target passed as argument, not read from $WIDGET.
