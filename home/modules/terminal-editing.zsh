@@ -143,8 +143,21 @@ do
   zle -N $widget _$widget
 done
 
+# Ctrl+A selects whole buffer.
+# Takes emacs beginning-of-line off ^A; Home covers it.
+_shift-select-all() {
+  (( $#BUFFER )) || return 0
+  MARK=0
+  CURSOR=$#BUFFER
+  REGION_ACTIVE=1
+  zle -K shift-select
+  _shift-select-flag 1
+}
+zle -N shift-select-all _shift-select-all
+
 # Bound in both keymaps: first press comes from main, later ones from shift-select.
 for keymap in main shift-select; do
+  bindkey -M $keymap '^A' shift-select-all          # Ctrl+A
   bindkey -M $keymap '^[[1;2D' select-backward-char  # Shift+Left
   bindkey -M $keymap '^[[1;2C' select-forward-char   # Shift+Right
   bindkey -M $keymap '^[[1;6D' select-backward-word  # Ctrl+Shift+Left
