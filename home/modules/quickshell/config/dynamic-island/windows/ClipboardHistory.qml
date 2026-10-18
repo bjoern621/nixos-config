@@ -244,7 +244,7 @@ Scope {
 
     PanelWindow {
         id: clipWindow
-        visible: clipScope.clipVisible
+        visible: panel.mapped
         WlrLayershell.namespace: "quickshell-clipboard"
 
         // No anchors: the compositor centers a card-sized surface.
@@ -266,6 +266,7 @@ Scope {
         LauncherPanel {
             id: panel
             anchors.fill: parent
+            showing: clipScope.clipVisible
             searchText: clipScope.searchText
             placeholder: "Zwischenablage durchsuchen..."
             contentMaxHeight: clipScope.maxVisibleHeight

@@ -41,7 +41,8 @@ Scope {
 
     PanelWindow {
         id: launcherWindow
-        visible: LauncherController.launcherVisible
+        visible: LauncherController.launcherVisible || !hideComplete
+        property bool hideComplete: true
         WlrLayershell.namespace: "quickshell-launcher"
         screen: Quickshell.screens.find(s => s.name === Globals.launcherScreenName) ?? null
 
@@ -102,456 +103,472 @@ Scope {
                 onClicked: Globals.launcherVisible = false
             }
 
-            // Card + hard offset shadow group.
-            Item {
-                id: cardWrap
-                width: 620 + theme.shadow
-                height: card.height + theme.shadow
-                anchors.centerIn: parent
-
-                // Hard offset shadow: solid, no blur, down-right.
-                Rectangle {
-                    x: theme.shadow
-                    y: theme.shadow
-                    width: card.width
-                    height: card.height
-                    radius: 6
-                    color: theme.ink
+            // Same reveal as ModalOverlay.
+            PopReveal {
+                id: reveal
+                anchors.fill: parent
+                showing: LauncherController.launcherVisible
+                slideOffset: 0
+                showDuration: 100
+                hideDuration: 80
+                enabled: showing
+                onShowingChanged: {
+                    if (showing)
+                        launcherWindow.hideComplete = false;
                 }
+                onHidden: launcherWindow.hideComplete = true
 
-                Rectangle {
-                    id: card
-                    x: 0
-                    y: 0
-                    width: 620
-                    height: cardCol.implicitHeight
-                    radius: 6
-                    color: theme.paper
-                    border.width: 3
-                    border.color: theme.ink
+                // Card + hard offset shadow group.
+                Item {
+                    id: cardWrap
+                    width: 620 + theme.shadow
+                    height: card.height + theme.shadow
+                    anchors.centerIn: parent
 
-                    // Click-eater: clicks inside the card must not dismiss.
-                    MouseArea {
-                        anchors.fill: parent
+                    // Hard offset shadow: solid, no blur, down-right.
+                    Rectangle {
+                        x: theme.shadow
+                        y: theme.shadow
+                        width: card.width
+                        height: card.height
+                        radius: 6
+                        color: theme.ink
                     }
 
-                    Column {
-                        id: cardCol
-                        width: parent.width
+                    Rectangle {
+                        id: card
+                        x: 0
+                        y: 0
+                        width: 620
+                        height: cardCol.implicitHeight
+                        radius: 6
+                        color: theme.paper
+                        border.width: 3
+                        border.color: theme.ink
 
-                        // Search header.
-                        Item {
+                        // Click-eater: clicks inside the card must not dismiss.
+                        MouseArea {
+                            anchors.fill: parent
+                        }
+
+                        Column {
+                            id: cardCol
                             width: parent.width
-                            height: 50
 
+                            // Search header.
                             Item {
-                                id: mag
-                                width: 16
-                                height: 16
-                                anchors.left: parent.left
-                                anchors.leftMargin: 18
-                                anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width
+                                height: 50
 
-                                Rectangle {
-                                    id: magRing
-                                    width: 11
-                                    height: 11
-                                    radius: 5.5
-                                    color: "transparent"
-                                    border.width: 2
-                                    border.color: theme.ink
-                                    anchors.top: parent.top
+                                Item {
+                                    id: mag
+                                    width: 16
+                                    height: 16
                                     anchors.left: parent.left
-                                }
-                                Rectangle {
-                                    width: 5
-                                    height: 2
-                                    radius: 1
-                                    color: theme.ink
-                                    x: magRing.x + magRing.width - 1
-                                    y: magRing.y + magRing.height - 1
-                                    rotation: 45
-                                    transformOrigin: Item.TopLeft
-                                }
-                            }
-
-                            Item {
-                                anchors.left: mag.right
-                                anchors.leftMargin: 12
-                                anchors.right: parent.right
-                                anchors.rightMargin: 18
-                                anchors.verticalCenter: parent.verticalCenter
-                                height: 24
-
-                                Text {
-                                    visible: LauncherController.searchText === ""
-                                    anchors.left: parent.left
+                                    anchors.leftMargin: 18
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: "Anwendung oder Befehl suchen..."
-                                    color: theme.placeholder
-                                    font.family: theme.font
-                                    font.pixelSize: 15
-                                    font.weight: Font.ExtraBold
+
+                                    Rectangle {
+                                        id: magRing
+                                        width: 11
+                                        height: 11
+                                        radius: 5.5
+                                        color: "transparent"
+                                        border.width: 2
+                                        border.color: theme.ink
+                                        anchors.top: parent.top
+                                        anchors.left: parent.left
+                                    }
+                                    Rectangle {
+                                        width: 5
+                                        height: 2
+                                        radius: 1
+                                        color: theme.ink
+                                        x: magRing.x + magRing.width - 1
+                                        y: magRing.y + magRing.height - 1
+                                        rotation: 45
+                                        transformOrigin: Item.TopLeft
+                                    }
                                 }
 
-                                Row {
-                                    visible: LauncherController.searchText !== ""
-                                    anchors.left: parent.left
+                                Item {
+                                    anchors.left: mag.right
+                                    anchors.leftMargin: 12
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 18
                                     anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 2
+                                    height: 24
 
                                     Text {
+                                        visible: LauncherController.searchText === ""
+                                        anchors.left: parent.left
                                         anchors.verticalCenter: parent.verticalCenter
-                                        text: LauncherController.searchText
-                                        color: theme.textPrimary
+                                        text: "Anwendung oder Befehl suchen..."
+                                        color: theme.placeholder
                                         font.family: theme.font
                                         font.pixelSize: 15
                                         font.weight: Font.ExtraBold
                                     }
-                                    // Bold block cursor: solid, steady, no blink.
-                                    Rectangle {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: 9
-                                        height: 18
-                                        color: theme.ink
-                                    }
-                                }
-                            }
-                        }
 
-                        Rectangle {
-                            width: parent.width
-                            height: 3
-                            color: theme.ink
-                        }
-
-                        // Results.
-                        Item {
-                            id: resultsRegion
-                            width: parent.width
-                            readonly property bool empty: LauncherController.filteredApps.length === 0 && LauncherController.searchText !== ""
-                            implicitHeight: empty ? 120 : contentCol.implicitHeight + 16
-
-                            // Empty state, centered in the results region.
-                            Text {
-                                visible: resultsRegion.empty
-                                anchors.centerIn: parent
-                                text: "Keine Ergebnisse"
-                                color: theme.textPrimary
-                                font.family: theme.font
-                                font.pixelSize: 14
-                                font.weight: Font.ExtraBold
-                            }
-
-                            Column {
-                                id: contentCol
-                                visible: !resultsRegion.empty
-                                x: 8
-                                y: 8
-                                width: parent.width - 16
-                                spacing: 4
-
-                                Item {
-                                    visible: LauncherController.filteredApps.length > 0
-                                    width: parent.width
-                                    height: 22
-
-                                    Text {
+                                    Row {
+                                        visible: LauncherController.searchText !== ""
                                         anchors.left: parent.left
-                                        anchors.leftMargin: 10
                                         anchors.verticalCenter: parent.verticalCenter
-                                        text: "Anwendungen"
-                                        color: theme.ink
-                                        font.family: theme.font
-                                        font.pixelSize: 12
-                                        font.weight: Font.ExtraBold
-                                        font.capitalization: Font.AllUppercase
-                                        font.letterSpacing: 0.5
-                                    }
+                                        spacing: 2
 
-                                    // Selection index / result count for the current query.
-                                    Text {
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: 10
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: (LauncherController.activeIndex + 1) + "/" + LauncherController.filteredApps.length
-                                        color: theme.textMuted
-                                        font.family: theme.font
-                                        font.pixelSize: 12
-                                        font.weight: Font.ExtraBold
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: LauncherController.searchText
+                                            color: theme.textPrimary
+                                            font.family: theme.font
+                                            font.pixelSize: 15
+                                            font.weight: Font.ExtraBold
+                                        }
+                                        // Bold block cursor: solid, steady, no blink.
+                                        Rectangle {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 9
+                                            height: 18
+                                            color: theme.ink
+                                        }
                                     }
                                 }
+                            }
 
-                                // ListView + neobrutalist scrollbar overlay.
-                                Item {
-                                    id: listWrap
-                                    width: parent.width
-                                    height: resultsList.height
+                            Rectangle {
+                                width: parent.width
+                                height: 3
+                                color: theme.ink
+                            }
 
-                                LauncherListView {
-                                    id: resultsList
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    // Reserve gutter for the scrollbar only when it shows.
-                                    anchors.rightMargin: scrollable ? Spacing.scrollGutter : 0
-                                    height: Math.min(contentHeight, launcherScope.maxVisibleRows * launcherScope.rowHeight)
-                                    model: LauncherController.filteredApps
+                            // Results.
+                            Item {
+                                id: resultsRegion
+                                width: parent.width
+                                readonly property bool empty: LauncherController.filteredApps.length === 0 && LauncherController.searchText !== ""
+                                implicitHeight: empty ? 120 : contentCol.implicitHeight + 16
+
+                                // Empty state, centered in the results region.
+                                Text {
+                                    visible: resultsRegion.empty
+                                    anchors.centerIn: parent
+                                    text: "Keine Ergebnisse"
+                                    color: theme.textPrimary
+                                    font.family: theme.font
+                                    font.pixelSize: 14
+                                    font.weight: Font.ExtraBold
+                                }
+
+                                Column {
+                                    id: contentCol
+                                    visible: !resultsRegion.empty
+                                    x: 8
+                                    y: 8
+                                    width: parent.width - 16
                                     spacing: 4
-                                    rowStride: launcherScope.rowHeight + spacing
 
-                                    // Selection lives here; the controller reads it back as activeIndex.
-                                    // Guarded clear: on a theme switch the replacement view may register first.
-                                    Component.onCompleted: LauncherController.selectionView = resultsList
-                                    Component.onDestruction: {
-                                        if (LauncherController.selectionView === resultsList)
-                                            LauncherController.selectionView = null;
-                                    }
+                                    Item {
+                                        visible: LauncherController.filteredApps.length > 0
+                                        width: parent.width
+                                        height: 22
 
-                                    Connections {
-                                        target: LauncherController
-                                        function onLauncherVisibleChanged() {
-                                            if (LauncherController.launcherVisible) {
-                                                resultsList.positionViewAtBeginning();
-                                                resultsList.reset();
-                                            }
-                                        }
-                                    }
-
-                                    delegate: Item {
-                                        id: del
-                                        required property var modelData
-                                        required property int index
-                                        readonly property bool active: LauncherController.activeIndex === index
-                                        readonly property bool lit: active || hov.hovered || tap.pressed
-                                        width: resultsList.width
-                                        height: launcherScope.rowHeight
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            radius: 4
-                                            color: tap.pressed ? theme.selPressed : del.active ? theme.selAccent : hov.hovered ? Colors.hoverItemHovered : "transparent"
-                                            border.width: del.lit ? 2 : 0
-                                            border.color: theme.ink
-                                        }
-
-                                        // Bordered icon tile.
-                                        Rectangle {
-                                            id: iconFrame
-                                            width: 28
-                                            height: 28
-                                            radius: 5
+                                        Text {
                                             anchors.left: parent.left
                                             anchors.leftMargin: 10
                                             anchors.verticalCenter: parent.verticalCenter
-                                            color: theme.paper
-                                            border.width: 2
-                                            border.color: theme.ink
-
-                                            Image {
-                                                id: icon
-                                                anchors.centerIn: parent
-                                                width: 18
-                                                height: 18
-                                                source: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
-                                                sourceSize: Qt.size(width, width)
-                                            }
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                visible: icon.status !== Image.Ready
-                                                text: modelData.app.name && modelData.app.name.length ? modelData.app.name[0].toUpperCase() : "?"
-                                                color: theme.ink
-                                                font.family: theme.font
-                                                font.pixelSize: 13
-                                                font.weight: Font.Black
-                                            }
+                                            text: "Anwendungen"
+                                            color: theme.ink
+                                            font.family: theme.font
+                                            font.pixelSize: 12
+                                            font.weight: Font.ExtraBold
+                                            font.capitalization: Font.AllUppercase
+                                            font.letterSpacing: 0.5
                                         }
 
+                                        // Selection index / result count for the current query.
                                         Text {
-                                            id: accessory
                                             anchors.right: parent.right
-                                            anchors.rightMargin: 14
+                                            anchors.rightMargin: 10
                                             anchors.verticalCenter: parent.verticalCenter
-                                            text: modelData.app.comment || modelData.app.genericName || "Anwendung"
+                                            text: (LauncherController.activeIndex + 1) + "/" + LauncherController.filteredApps.length
                                             color: theme.textMuted
                                             font.family: theme.font
                                             font.pixelSize: 12
-                                            font.weight: Font.DemiBold
-                                            elide: Text.ElideRight
-                                            width: Math.min(implicitWidth, del.width / 3)
-                                        }
-
-                                        Text {
-                                            anchors.left: iconFrame.right
-                                            anchors.leftMargin: 12
-                                            anchors.right: accessory.left
-                                            anchors.rightMargin: 12
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: modelData.query ? FzfLib.highlightHtml(modelData.app.name, modelData.query) : (modelData.app.name || "")
-                                            textFormat: modelData.query ? Text.RichText : Text.PlainText
-                                            color: theme.textPrimary
-                                            font.family: theme.font
-                                            font.pixelSize: 14
                                             font.weight: Font.ExtraBold
-                                            elide: Text.ElideRight
-                                        }
-
-                                        HoverHandler {
-                                            id: hov
-                                            cursorShape: Qt.PointingHandCursor
-                                        }
-
-                                        TapHandler {
-                                            id: tap
-                                            onTapped: LauncherController.launchApp(del.modelData.app)
                                         }
                                     }
-                                }
 
-                                    // Shared draggable handle. Neo defaults (cream track,
-                                    // ink border/handle, accent on press) apply since neo is active.
-                                    ScrollHandle {
-                                        target: resultsList
-                                        visible: resultsList.scrollable
-                                        anchors.right: parent.right
-                                        anchors.top: parent.top
-                                        anchors.bottom: parent.bottom
-                                    }
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            width: parent.width
-                            height: 3
-                            color: theme.ink
-                        }
-
-                        // Action bar.
-                        Item {
-                            width: parent.width
-                            height: 46
-
-                            Row {
-                                anchors.left: parent.left
-                                anchors.leftMargin: 14
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 8
-
-                                Image {
-                                    width: 16
-                                    height: 16
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    visible: LauncherController.selectedApp && LauncherController.selectedApp.icon
-                                    source: LauncherController.selectedApp && LauncherController.selectedApp.icon ? ("image://icon/" + LauncherController.selectedApp.icon) : ""
-                                    sourceSize: Qt.size(width, width)
-                                }
-
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: LauncherController.selectedApp ? LauncherController.selectedApp.name : "Kein Treffer"
-                                    color: LauncherController.selectedApp ? theme.textPrimary : theme.textMuted
-                                    font.family: theme.font
-                                    font.pixelSize: 12
-                                    font.weight: Font.ExtraBold
-                                }
-                            }
-
-                            Row {
-                                anchors.right: parent.right
-                                anchors.rightMargin: 12
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 12
-
-                                Row {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 6
-
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: "Öffnen"
-                                        color: theme.textMuted
-                                        font.family: theme.font
-                                        font.pixelSize: 12
-                                        font.weight: Font.Bold
-                                    }
+                                    // ListView + neobrutalist scrollbar overlay.
                                     Item {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        implicitWidth: openPill.implicitWidth + 2
-                                        implicitHeight: openPill.implicitHeight + 2
+                                        id: listWrap
+                                        width: parent.width
+                                        height: resultsList.height
 
-                                        Rectangle {
-                                            x: 2
-                                            y: 2
-                                            width: openPill.implicitWidth
-                                            height: openPill.implicitHeight
-                                            radius: 3
-                                            color: theme.ink
+                                    LauncherListView {
+                                        id: resultsList
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        // Reserve gutter for the scrollbar only when it shows.
+                                        anchors.rightMargin: scrollable ? Spacing.scrollGutter : 0
+                                        height: Math.min(contentHeight, launcherScope.maxVisibleRows * launcherScope.rowHeight)
+                                        model: LauncherController.filteredApps
+                                        spacing: 4
+                                        rowStride: launcherScope.rowHeight + spacing
+
+                                        // Selection lives here; the controller reads it back as activeIndex.
+                                        // Guarded clear: on a theme switch the replacement view may register first.
+                                        Component.onCompleted: LauncherController.selectionView = resultsList
+                                        Component.onDestruction: {
+                                            if (LauncherController.selectionView === resultsList)
+                                                LauncherController.selectionView = null;
                                         }
-                                        Rectangle {
-                                            id: openPill
-                                            radius: 3
-                                            color: theme.selAccent
-                                            border.width: 2
-                                            border.color: theme.ink
-                                            implicitWidth: Math.max(22, openKey.implicitWidth + 14)
-                                            implicitHeight: 22
+
+                                        Connections {
+                                            target: LauncherController
+                                            function onLauncherVisibleChanged() {
+                                                if (LauncherController.launcherVisible) {
+                                                    resultsList.positionViewAtBeginning();
+                                                    resultsList.reset();
+                                                }
+                                            }
+                                        }
+
+                                        delegate: Item {
+                                            id: del
+                                            required property var modelData
+                                            required property int index
+                                            readonly property bool active: LauncherController.activeIndex === index
+                                            readonly property bool lit: active || hov.hovered || tap.pressed
+                                            width: resultsList.width
+                                            height: launcherScope.rowHeight
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: 4
+                                                color: tap.pressed ? theme.selPressed : del.active ? theme.selAccent : hov.hovered ? Colors.hoverItemHovered : "transparent"
+                                                border.width: del.lit ? 2 : 0
+                                                border.color: theme.ink
+                                            }
+
+                                            // Bordered icon tile.
+                                            Rectangle {
+                                                id: iconFrame
+                                                width: 28
+                                                height: 28
+                                                radius: 5
+                                                anchors.left: parent.left
+                                                anchors.leftMargin: 10
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                color: theme.paper
+                                                border.width: 2
+                                                border.color: theme.ink
+
+                                                Image {
+                                                    id: icon
+                                                    anchors.centerIn: parent
+                                                    width: 18
+                                                    height: 18
+                                                    source: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
+                                                    sourceSize: Qt.size(width, width)
+                                                }
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    visible: icon.status !== Image.Ready
+                                                    text: modelData.app.name && modelData.app.name.length ? modelData.app.name[0].toUpperCase() : "?"
+                                                    color: theme.ink
+                                                    font.family: theme.font
+                                                    font.pixelSize: 13
+                                                    font.weight: Font.Black
+                                                }
+                                            }
 
                                             Text {
-                                                id: openKey
-                                                anchors.centerIn: parent
-                                                text: "↵"
-                                                color: theme.ink
+                                                id: accessory
+                                                anchors.right: parent.right
+                                                anchors.rightMargin: 14
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: modelData.app.comment || modelData.app.genericName || "Anwendung"
+                                                color: theme.textMuted
                                                 font.family: theme.font
                                                 font.pixelSize: 12
-                                                font.weight: Font.Black
+                                                font.weight: Font.DemiBold
+                                                elide: Text.ElideRight
+                                                width: Math.min(implicitWidth, del.width / 3)
+                                            }
+
+                                            Text {
+                                                anchors.left: iconFrame.right
+                                                anchors.leftMargin: 12
+                                                anchors.right: accessory.left
+                                                anchors.rightMargin: 12
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: modelData.query ? FzfLib.highlightHtml(modelData.app.name, modelData.query) : (modelData.app.name || "")
+                                                textFormat: modelData.query ? Text.RichText : Text.PlainText
+                                                color: theme.textPrimary
+                                                font.family: theme.font
+                                                font.pixelSize: 14
+                                                font.weight: Font.ExtraBold
+                                                elide: Text.ElideRight
+                                            }
+
+                                            HoverHandler {
+                                                id: hov
+                                                cursorShape: Qt.PointingHandCursor
+                                            }
+
+                                            TapHandler {
+                                                id: tap
+                                                onTapped: LauncherController.launchApp(del.modelData.app)
                                             }
                                         }
                                     }
+
+                                        // Shared draggable handle. Neo defaults (cream track,
+                                        // ink border/handle, accent on press) apply since neo is active.
+                                        ScrollHandle {
+                                            target: resultsList
+                                            visible: resultsList.scrollable
+                                            anchors.right: parent.right
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                        }
+                                    }
                                 }
+                            }
+
+                            Rectangle {
+                                width: parent.width
+                                height: 3
+                                color: theme.ink
+                            }
+
+                            // Action bar.
+                            Item {
+                                width: parent.width
+                                height: 46
 
                                 Row {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 14
                                     anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 6
+                                    spacing: 8
+
+                                    Image {
+                                        width: 16
+                                        height: 16
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        visible: LauncherController.selectedApp && LauncherController.selectedApp.icon
+                                        source: LauncherController.selectedApp && LauncherController.selectedApp.icon ? ("image://icon/" + LauncherController.selectedApp.icon) : ""
+                                        sourceSize: Qt.size(width, width)
+                                    }
 
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        text: "Schließen"
-                                        color: theme.textMuted
+                                        text: LauncherController.selectedApp ? LauncherController.selectedApp.name : "Kein Treffer"
+                                        color: LauncherController.selectedApp ? theme.textPrimary : theme.textMuted
                                         font.family: theme.font
                                         font.pixelSize: 12
-                                        font.weight: Font.Bold
+                                        font.weight: Font.ExtraBold
                                     }
-                                    Item {
+                                }
+
+                                Row {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 12
+
+                                    Row {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        implicitWidth: escPill.implicitWidth + 2
-                                        implicitHeight: escPill.implicitHeight + 2
+                                        spacing: 6
 
-                                        Rectangle {
-                                            x: 2
-                                            y: 2
-                                            width: escPill.implicitWidth
-                                            height: escPill.implicitHeight
-                                            radius: 3
-                                            color: theme.ink
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: "Öffnen"
+                                            color: theme.textMuted
+                                            font.family: theme.font
+                                            font.pixelSize: 12
+                                            font.weight: Font.Bold
                                         }
-                                        Rectangle {
-                                            id: escPill
-                                            radius: 3
-                                            color: theme.selAccent
-                                            border.width: 2
-                                            border.color: theme.ink
-                                            implicitWidth: Math.max(22, escKey.implicitWidth + 14)
-                                            implicitHeight: 22
+                                        Item {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            implicitWidth: openPill.implicitWidth + 2
+                                            implicitHeight: openPill.implicitHeight + 2
 
-                                            Text {
-                                                id: escKey
-                                                anchors.centerIn: parent
-                                                text: "Esc"
+                                            Rectangle {
+                                                x: 2
+                                                y: 2
+                                                width: openPill.implicitWidth
+                                                height: openPill.implicitHeight
+                                                radius: 3
                                                 color: theme.ink
-                                                font.family: theme.font
-                                                font.pixelSize: 12
-                                                font.weight: Font.Black
+                                            }
+                                            Rectangle {
+                                                id: openPill
+                                                radius: 3
+                                                color: theme.selAccent
+                                                border.width: 2
+                                                border.color: theme.ink
+                                                implicitWidth: Math.max(22, openKey.implicitWidth + 14)
+                                                implicitHeight: 22
+
+                                                Text {
+                                                    id: openKey
+                                                    anchors.centerIn: parent
+                                                    text: "↵"
+                                                    color: theme.ink
+                                                    font.family: theme.font
+                                                    font.pixelSize: 12
+                                                    font.weight: Font.Black
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Row {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 6
+
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: "Schließen"
+                                            color: theme.textMuted
+                                            font.family: theme.font
+                                            font.pixelSize: 12
+                                            font.weight: Font.Bold
+                                        }
+                                        Item {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            implicitWidth: escPill.implicitWidth + 2
+                                            implicitHeight: escPill.implicitHeight + 2
+
+                                            Rectangle {
+                                                x: 2
+                                                y: 2
+                                                width: escPill.implicitWidth
+                                                height: escPill.implicitHeight
+                                                radius: 3
+                                                color: theme.ink
+                                            }
+                                            Rectangle {
+                                                id: escPill
+                                                radius: 3
+                                                color: theme.selAccent
+                                                border.width: 2
+                                                border.color: theme.ink
+                                                implicitWidth: Math.max(22, escKey.implicitWidth + 14)
+                                                implicitHeight: 22
+
+                                                Text {
+                                                    id: escKey
+                                                    anchors.centerIn: parent
+                                                    text: "Esc"
+                                                    color: theme.ink
+                                                    font.family: theme.font
+                                                    font.pixelSize: 12
+                                                    font.weight: Font.Black
+                                                }
                                             }
                                         }
                                     }

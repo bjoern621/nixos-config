@@ -18,7 +18,7 @@ Scope {
 
     PanelWindow {
         id: launcherWindow
-        visible: Globals.launcherVisible
+        visible: panel.mapped
         WlrLayershell.namespace: "quickshell-launcher"
         screen: Quickshell.screens.find(s => s.name === Globals.launcherScreenName) ?? null
 
@@ -41,6 +41,7 @@ Scope {
         LauncherPanel {
             id: panel
             anchors.fill: parent
+            showing: Globals.launcherVisible
             searchText: LauncherController.searchText
             placeholder: "Suchen..."
             contentMaxHeight: launcherScope.maxVisibleRows * launcherScope.rowHeight

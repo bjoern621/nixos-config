@@ -327,7 +327,7 @@ Verify with: `hyprctl layers | grep quickshell`
 
 | Type                       | Pattern                                                                     | Example                                     |
 | -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------- |
-| Toggled overlay (IPC/flag) | `visible: <flag>` bound to the owning Scope's property                      | AppLauncher, ClipboardHistory, EmojiPicker  |
+| Toggled overlay (IPC/flag) | `visible: <flag> \|\| !hideComplete`; `PopReveal` `onHidden` sets `hideComplete` | AppLauncher, ClipboardHistory, EmojiPicker, WindowSwitcher |
 | Transient OSD              | `visible: false` default, set `true` before `show()`, `false` on `onHidden` | VolumeOsd, BrightnessOsd                    |
 | Notification-driven        | `visible: <model>.count > 0`                                                | NotificationToast                           |
 | Hover-triggered            | Keep mapped, **shrink** `implicitHeight` when idle                          | Bar (1000px idle-collapses to `0`, which the surface clamps to a 1px trigger strip) |
@@ -373,6 +373,8 @@ implicitHeight: panel.surfaceHeight
 A fullscreen transparent layer costs roughly 30fps on the battery iGPU, which is bandwidth-bound and blends the whole layer every frame.
 
 **Fixed height.** The surface holds the overlay's tallest layout, not its current one, so typing does not resize the layer. Consumers pass that bound as `LauncherPanel.contentMaxHeight`, derived from the same constants that cap the view (`maxVisibleRows * rowHeight`, `maxVisibleHeight`, `cellSize * gridRows`). The panel itself still hugs its content and stays centered in the surface; a short result set leaves transparent slack. A bound that is too small costs a resize, not a clipped panel.
+
+**Reveal.** `LauncherPanel` plays the ModalOverlay reveal (`PopReveal`, `slideOffset: 0`, 100ms in, 80ms out). The host binds `LauncherPanel.showing` to its open flag and `visible` to `LauncherPanel.mapped`, which stays true until the hide animation ends. `AppLauncherNeo` wraps its card in the same reveal.
 
 **Closing.** Escape and picking an entry are the host's business. Everything else is `LauncherDismiss`:
 

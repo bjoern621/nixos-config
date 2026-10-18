@@ -1,4 +1,5 @@
 import QtQuick
+import "../"
 import "../base"
 
 // Inner chrome for keyboard-driven launcher overlays
@@ -11,7 +12,7 @@ import "../base"
 //
 //   PanelWindow {
 //       id: fooWindow
-//       visible: scope.open
+//       visible: panel.mapped
 //       WlrLayershell.namespace: "quickshell-foo"
 //       focusable: true
 //       color: "transparent"
@@ -30,6 +31,7 @@ import "../base"
 //       LauncherPanel {
 //           id: panel
 //           anchors.fill: parent
+//           showing: scope.open
 //           searchText: scope.searchText
 //           contentMaxHeight: <view at its tallest>
 //           onSearchEdited: text => scope.searchText = text
@@ -37,8 +39,6 @@ import "../base"
 //           LauncherListView { ... }   // default content
 //       }
 //   }
-//
-// No animations, deliberate: matches AppLauncher's snappy feel.
 Item {
     id: root
     focus: true
@@ -50,6 +50,11 @@ Item {
     property bool searchAccent: true
     property bool emptyVisible: false
     property string emptyText: "Keine Ergebnisse"
+
+    // Host binds window visible to mapped: surface stays up through hide animation.
+    property bool showing: false
+    readonly property bool mapped: showing || !_hideComplete
+    property bool _hideComplete: true
 
     // Content slot at its tallest, set by the consumer from the same constants
     // that cap its view. Surface is sized from this, so a short result set
@@ -121,90 +126,107 @@ Item {
         onClicked: root.escaped()
     }
 
-    // Neo hard offset shadow: solid, no blur, down-right. Classic: shadowOffset 0, hidden.
-    // Panel and shadow each shift by half the offset so the pair stays centered.
-    Rectangle {
-        visible: Shape.shadowOffset > 0
-        width: panel.width
-        height: panel.height
-        radius: panel.radius
-        color: Colors.separatorColor
-        anchors.centerIn: parent
-        anchors.horizontalCenterOffset: Shape.shadowOffset / 2
-        anchors.verticalCenterOffset: Shape.shadowOffset / 2
-    }
-
-    Rectangle {
-        id: panel
-        width: root.panelWidth
-        height: root.panelHeight
-        anchors.centerIn: parent
-        anchors.horizontalCenterOffset: -Shape.shadowOffset / 2
-        anchors.verticalCenterOffset: -Shape.shadowOffset / 2
-
-        radius: Shape.usesBlur ? Spacing.spacing12 : Shape.cardRadius
-        color: Colors.pillBackground
-        border.width: Shape.usesBlur ? 1 : Shape.borderWidth
-        border.color: Colors.pillBorder
-
-        // Click-eater: absorbs clicks on panel padding,
-        // else they bubble out to the dismiss MouseArea.
-        // Descendant TapHandlers (delegates, category cells) still fire.
-        MouseArea {
-            anchors.fill: parent
+    // Same reveal as ModalOverlay.
+    // Keys stay on root: disabled reveal would drop key focus.
+    PopReveal {
+        id: reveal
+        anchors.fill: parent
+        showing: root.showing
+        slideOffset: 0
+        showDuration: 100
+        hideDuration: 80
+        enabled: showing
+        onShowingChanged: {
+            if (showing)
+                root._hideComplete = false;
         }
+        onHidden: root._hideComplete = true
 
-        // Header. Classic: rounded box inset 12px.
-        // Neo: flush full-width 50px header, followed by the flush ink divider.
-        LauncherSearchBar {
-            id: searchBar
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.topMargin: root.neo ? 0 : Spacing.spacing12
-            anchors.leftMargin: root.neo ? 0 : Spacing.spacing12
-            anchors.rightMargin: root.neo ? 0 : Spacing.spacing12
-            height: root.neo ? root.neoHeaderHeight : root.searchBarHeight
-            text: root.searchText
-            placeholder: root.placeholder
-            accent: root.searchAccent
-        }
-
-        // Neo: full-bleed ink divider under the header (app-launcher style).
+        // Neo hard offset shadow: solid, no blur, down-right. Classic: shadowOffset 0, hidden.
+        // Panel and shadow each shift by half the offset so the pair stays centered.
         Rectangle {
-            id: headerDivider
-            visible: root.neo
-            anchors.top: searchBar.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: Shape.borderWidth
+            visible: Shape.shadowOffset > 0
+            width: panel.width
+            height: panel.height
+            radius: panel.radius
             color: Colors.separatorColor
+            anchors.centerIn: parent
+            anchors.horizontalCenterOffset: Shape.shadowOffset / 2
+            anchors.verticalCenterOffset: Shape.shadowOffset / 2
         }
 
-        Column {
-            id: contentColumn
-            anchors.top: root.neo ? headerDivider.bottom : searchBar.bottom
-            anchors.topMargin: Spacing.spacing8
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: Spacing.spacing12
-            anchors.rightMargin: Spacing.spacing12
-            spacing: Spacing.spacing8
+        Rectangle {
+            id: panel
+            width: root.panelWidth
+            height: root.panelHeight
+            anchors.centerIn: parent
+            anchors.horizontalCenterOffset: -Shape.shadowOffset / 2
+            anchors.verticalCenterOffset: -Shape.shadowOffset / 2
 
-            Item {
-                id: contentSlot
-                width: parent.width
-                implicitHeight: childrenRect.height
+            radius: Shape.usesBlur ? Spacing.spacing12 : Shape.cardRadius
+            color: Colors.pillBackground
+            border.width: Shape.usesBlur ? 1 : Shape.borderWidth
+            border.color: Colors.pillBorder
+
+            // Click-eater: absorbs clicks on panel padding,
+            // else they bubble out to the dismiss MouseArea.
+            // Descendant TapHandlers (delegates, category cells) still fire.
+            MouseArea {
+                anchors.fill: parent
             }
 
-            Label {
-                visible: root.emptyVisible
-                text: root.emptyText
-                font.weight: Font.Normal
-                color: Colors.textColorMuted
-                anchors.horizontalCenter: parent.horizontalCenter
-                topPadding: Spacing.spacing8
-                bottomPadding: Spacing.spacing8
+            // Header. Classic: rounded box inset 12px.
+            // Neo: flush full-width 50px header, followed by the flush ink divider.
+            LauncherSearchBar {
+                id: searchBar
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: root.neo ? 0 : Spacing.spacing12
+                anchors.leftMargin: root.neo ? 0 : Spacing.spacing12
+                anchors.rightMargin: root.neo ? 0 : Spacing.spacing12
+                height: root.neo ? root.neoHeaderHeight : root.searchBarHeight
+                text: root.searchText
+                placeholder: root.placeholder
+                accent: root.searchAccent
+            }
+
+            // Neo: full-bleed ink divider under the header (app-launcher style).
+            Rectangle {
+                id: headerDivider
+                visible: root.neo
+                anchors.top: searchBar.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: Shape.borderWidth
+                color: Colors.separatorColor
+            }
+
+            Column {
+                id: contentColumn
+                anchors.top: root.neo ? headerDivider.bottom : searchBar.bottom
+                anchors.topMargin: Spacing.spacing8
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: Spacing.spacing12
+                anchors.rightMargin: Spacing.spacing12
+                spacing: Spacing.spacing8
+
+                Item {
+                    id: contentSlot
+                    width: parent.width
+                    implicitHeight: childrenRect.height
+                }
+
+                Label {
+                    visible: root.emptyVisible
+                    text: root.emptyText
+                    font.weight: Font.Normal
+                    color: Colors.textColorMuted
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    topPadding: Spacing.spacing8
+                    bottomPadding: Spacing.spacing8
+                }
             }
         }
     }

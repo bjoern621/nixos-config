@@ -183,7 +183,7 @@ Scope {
         property string emoji: ""
         // Copy the emoji to the clipboard, then paste it into the focused client
         // with Ctrl+Shift+V. The paste is fired from onExited so the copy has
-        // landed and the emoji window has unmapped, letting keyboard focus return
+        // landed and the emoji window has dropped keyboard focus back
         // to the previous client before the keys are injected. Direct `wtype`
         // typing of the codepoints is unreliable across apps (synthetic keymap,
         // ZWJ/skin-tone sequences), so the clipboard route is used instead.
@@ -200,7 +200,7 @@ Scope {
 
     PanelWindow {
         id: emojiWindow
-        visible: emojiScope.emojiVisible
+        visible: panel.mapped
         WlrLayershell.namespace: "quickshell-emoji"
 
         // No anchors: the compositor centers a card-sized surface.
@@ -222,6 +222,7 @@ Scope {
         LauncherPanel {
             id: panel
             anchors.fill: parent
+            showing: emojiScope.emojiVisible
             searchText: emojiScope.searchText
             placeholder: "Emoji suchen..."
             // Extra gutter width so all gridCols columns survive next to the bar.

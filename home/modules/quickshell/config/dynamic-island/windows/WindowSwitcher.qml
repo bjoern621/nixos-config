@@ -44,7 +44,6 @@ Scope {
             pendingSteps = delta;
             commitPending = false;
             index = 0;
-            windows = [];
             const mon = Hyprland.focusedMonitor;
             const s = mon ? Quickshell.screens.find(sc => sc.name === mon.name) : null;
             if (s)
@@ -191,7 +190,9 @@ Scope {
     PanelWindow {
         id: switcherWindow
         // Session fixes window list, so size holds until close.
-        visible: root.shown && root.windows.length > 0
+        // List survives close: hide animation keeps its rows.
+        visible: reveal.showing || !hideComplete
+        property bool hideComplete: true
         color: "transparent"
         exclusiveZone: 0
         // No anchors: compositor centers card-sized surface.
@@ -199,10 +200,20 @@ Scope {
         implicitHeight: card.height
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
+        // Same reveal as ModalOverlay.
         PopReveal {
+            id: reveal
             anchors.fill: parent
-            edge: 0
-            showing: switcherWindow.visible
+            showing: root.shown && !root.loading && root.windows.length > 0
+            slideOffset: 0
+            showDuration: 100
+            hideDuration: 80
+            enabled: showing
+            onShowingChanged: {
+                if (showing)
+                    switcherWindow.hideComplete = false;
+            }
+            onHidden: switcherWindow.hideComplete = true
 
             Card {
                 id: card
