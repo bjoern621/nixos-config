@@ -14,8 +14,9 @@ hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", sc
 -- 1440p144 needs HBR3.
 -- amdgpu-force-hbr3 (modules/external-monitors.nix) forces it on dock DPIA links,
 -- bypassing broken Phoenix1 AUX cap probe through CalDigit TS5 Plus.
-hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1 })
-hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1 })
+-- VRR off: panels flicker as refresh rate swings on idle desktop.
+hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAPN9YD64", mode = "2560x1440@144", position = "0x0", scale = 1, vrr = 0 })
+hl.monitor({ output = "desc:LG Electronics LG ULTRAGEAR 308MAVD9YD63", mode = "2560x1440@144", position = "2560x0", scale = 1, vrr = 0 })
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 
 -- Disable the internal display on lid close only while an external monitor
