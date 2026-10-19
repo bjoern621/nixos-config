@@ -61,6 +61,27 @@ in
       settings.server = {
         http_addr = "0.0.0.0";
         http_port = 3000;
+        # Keycloak sends the browser back here; the client registers the same URL.
+        root_url = "http://${config.networking.hostName}.tail598964.ts.net:3000/";
+      };
+      # Realm main of the keycloak Application in hh-cluster-infra,
+      # public client grafana-<host>: PKCE in place of a secret.
+      # Local admin signs in at /login?disableAutoLogin, for a Keycloak outage.
+      settings."auth.generic_oauth" = {
+        enabled = true;
+        name = "bjoernblessin.de";
+        client_id = "grafana-${config.networking.hostName}";
+        auth_style = "InParams";
+        scopes = "openid profile email";
+        auth_url = "https://identity.bjoernblessin.de/realms/main/protocol/openid-connect/auth";
+        token_url = "https://identity.bjoernblessin.de/realms/main/protocol/openid-connect/token";
+        api_url = "https://identity.bjoernblessin.de/realms/main/protocol/openid-connect/userinfo";
+        use_pkce = true;
+        auto_login = true;
+        # Server admin for the admins group; strict refuses every other account.
+        role_attribute_path = "contains(groups[*], 'admins') && 'GrafanaAdmin'";
+        role_attribute_strict = true;
+        allow_assign_grafana_admin = true;
       };
       # Fleet overview as landing page; every other dashboard links from it.
       settings.dashboards.default_home_dashboard_path = "${./dashboards}/fleet-overview.json";
