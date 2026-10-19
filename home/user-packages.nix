@@ -2,7 +2,6 @@
 
 {
   home.packages = with pkgs; [
-    gnome-text-editor
     gimp
     obsidian
     kubectl # Kubernetes CLI

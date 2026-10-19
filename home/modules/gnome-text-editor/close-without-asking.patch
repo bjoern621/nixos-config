@@ -1,0 +1,26 @@
+diff --git a/src/editor-application-actions.c b/src/editor-application-actions.c
+index 10eff7d..8631e68 100644
+--- a/src/editor-application-actions.c
++++ b/src/editor-application-actions.c
+@@ -295,7 +295,7 @@ editor_application_actions_quit (GSimpleAction *action,
+         g_ptr_array_add (unsaved, g_object_ref (page));
+     }
+ 
+-  if (unsaved->len > 0)
++  if (unsaved->len > 0 && !self->session->restore_pages)
+     {
+       _editor_save_changes_dialog_run_async (gtk_application_get_active_window (GTK_APPLICATION (self)),
+                                              unsaved,
+diff --git a/src/editor-window.c b/src/editor-window.c
+index aa78e0a..0283041 100644
+--- a/src/editor-window.c
++++ b/src/editor-window.c
+@@ -338,7 +338,7 @@ editor_window_close_request (GtkWindow *window)
+         g_ptr_array_add (unsaved, g_object_ref (page));
+     }
+ 
+-  if (unsaved->len > 0)
++  if (unsaved->len > 0 && !EDITOR_SESSION_DEFAULT->restore_pages)
+     {
+       _editor_save_changes_dialog_run_async (GTK_WINDOW (self),
+                                              unsaved,

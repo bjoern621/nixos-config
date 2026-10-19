@@ -43,6 +43,7 @@
     ./modules/screen-sharing.nix
     ./modules/usbguard.nix
     ./modules/handy.nix
+    ./modules/gnome-text-editor/gnome-text-editor.nix
   ];
 
   home.username = "bjoern";
