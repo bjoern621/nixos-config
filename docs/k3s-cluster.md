@@ -38,6 +38,12 @@ A peer taking that endpoint sends its WireGuard packets into the tunnel, which r
 [modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) drops the tailscale port for sources in the pod range in the raw PREROUTING hook, ahead of the accept tailscaled keeps in its own input chain.
 The ping gets no answer and the endpoint never ranks.
 
+Cilium writes each pod's security identity into the packet mark, and the vxlan packet carrying the pod's traffic keeps that mark.
+Tailscale sends every packet whose mark matches `0x80000/0xff0000` to the `main` table, so its own WireGuard packets skip the tailnet.
+An identity whose low byte is `0x08` matches as well, and its tunnel traffic would leave over the default route and reach no peer.
+[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) adds a rule at priority 5200, ahead of Tailscale's, that keeps vxlan to tailnet addresses on Tailscale's table 52 whatever the mark.
+`ip route get <peer> mark 0x25080f00` on a node answers with `dev tailscale0` once the rule holds.
+
 ## Installing a cloud host
 
 netcup takes an uploaded disk image, and `hosts/netcup-g12/flake.nix` names the command that builds it.

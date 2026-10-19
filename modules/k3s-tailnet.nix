@@ -67,6 +67,32 @@ in
       "L+ /opt/cni/bin/portmap - - - - ${pkgs.cni-plugins}/bin/portmap"
     ];
 
+    # Cilium writes a pod's security identity into the skb mark (identity << 16 | 0x0f00),
+    # and the vxlan packet carrying that pod's traffic keeps it.
+    # Tailscale's rules 5210-5250 send any mark matching 0x80000/0xff0000 to `main`:
+    # an identity whose low byte is 0x08 would leave over the default route and reach no peer.
+    # This rule ranks above them and keeps the tunnel on table 52 whatever the mark.
+    systemd.services.k3s-vxlan-route = {
+      description = "Route the Cilium vxlan tunnel over the tailnet whatever the packet mark";
+      after = [ "tailscaled.service" ];
+      before = [ "k3s.service" ];
+      # Wanted, never required: a restart of this unit leaves k3s running.
+      wantedBy = [
+        "multi-user.target"
+        "k3s.service"
+      ];
+      path = [ pkgs.iproute2 ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      script = ''
+        ip rule del priority 5200 2>/dev/null || true
+        ip rule add priority 5200 to 100.64.0.0/10 ipproto udp dport 8472 lookup 52
+      '';
+      postStop = "ip rule del priority 5200 2>/dev/null || true";
+    };
+
     # Direct node-to-node paths instead of a DERP relay. Closed, tailscale still connects and
     # every vxlan frame between the two nodes takes a detour through Tailscale's servers.
     services.tailscale.openFirewall = true;
