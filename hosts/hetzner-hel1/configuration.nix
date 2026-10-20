@@ -108,13 +108,13 @@ in
   };
 
   # Host journald is the one signal the in-cluster DaemonSet cannot read.
-  # Same shape as the other nodes: forwarded via OTLP into the collector's NodePort,
+  # Same shape as the other nodes: forwarded via OTLP into the collector's ClusterIP,
   # so it inherits the full store fan-out rather than naming any store here.
   # hostMetrics stays off because the DaemonSet's hostmetrics already reports this machine.
   services.telemetry-agent = {
     enable = true;
     hostMetrics = false;
-    otlpForward = "http://127.0.0.1:30318";
+    otlpForward = "http://10.43.113.170:4318";
   };
 
   # Nothing public. Edge DaemonSet tolerates netcup taint alone and stays off this node,

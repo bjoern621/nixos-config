@@ -135,13 +135,13 @@ in
 
   # Host journald is the one signal the in-cluster DaemonSet cannot read, and this machine's
   # own services (the relay, the group service, tailscaled) are all in it. Same shape as
-  # vmk3s: forwarded via OTLP into the collector's NodePort, so it inherits the full store
+  # vmk3s: forwarded via OTLP into the collector's ClusterIP, so it inherits the full store
   # fan-out rather than naming any store here.
   # hostMetrics stays off because the DaemonSet's hostmetrics already reports this machine.
   services.telemetry-agent = {
     enable = true;
     hostMetrics = false;
-    otlpForward = "http://127.0.0.1:30318";
+    otlpForward = "http://10.43.113.170:4318";
   };
   services.connection-log = {
     enable = true;
