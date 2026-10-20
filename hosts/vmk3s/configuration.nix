@@ -160,6 +160,10 @@ in
       # The LAN address holds before this host's first `tailscale up`.
       "--node-ip=${if tailnet.vmk3s != null then tailnet.vmk3s else "192.168.178.80"}"
 
+      # Address that Cilium's Node IPAM gives the Gateway hh (hh-cluster-infra);
+      # without the flag k3s reports the tailnet one.
+      "--node-external-ip=192.168.178.80"
+
       # Cilium serves Services, NodePorts and hostPorts (hh-cluster-infra).
       # Agents take both settings from this server.
       "--disable-kube-proxy"

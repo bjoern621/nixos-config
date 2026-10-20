@@ -108,6 +108,10 @@ in
       # Cilium tunnels to it, and eth0's public address would put the kubelet on the internet.
       "--node-ip=${tailnet.netcup-g12}"
 
+      # Address that Cilium's Node IPAM gives the Gateway netcup (hh-cluster-infra);
+      # without the flag k3s reports the tailnet one.
+      "--node-external-ip=${(builtins.head config.networking.interfaces.eth0.ipv4.addresses).address}"
+
       # Swap on the host stops the kubelet from starting unless it is told to expect it, so
       # this flag and swapDevices above land in one activation or the node drops out.
       # GitLab and a job pod both run burstable here, and the kubelet lends a burstable pod
