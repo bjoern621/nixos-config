@@ -100,6 +100,10 @@ in
     services.tailscale.openFirewall = true;
 
     networking.firewall = {
+      # Replies to Cilium's Envoy carry its proxy mark, under which the reverse lookup
+      # lands in Cilium's routing table and drops them.
+      checkReversePath = false;
+
       # Pods reach host-network workloads and the node's own services over these.
       trustedInterfaces = [
         "cilium_host"
