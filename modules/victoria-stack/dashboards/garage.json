@@ -984,7 +984,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "log.type:=access RequestHost:in(\"nix-cache.bjoernblessin.de\",\"s3.bjoernblessin.de\") | stats by (ClientHost, client.network, geo.country_name, RequestHost) count() requests, sum(DownstreamContentSize) bytes, count() if (DownstreamStatus:>=400) errors | sort by (requests desc) | limit 50",
+          "expr": "log.type:=access RequestHost:in(\"nix-cache.bjoernblessin.de\",\"nix-cache-s3.bjoernblessin.de\") | stats by (ClientHost, client.network, geo.country_name, RequestHost) count() requests, sum(DownstreamContentSize) bytes, count() if (DownstreamStatus:>=400) errors | sort by (requests desc) | limit 50",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1195,7 +1195,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "log.type:=access RequestHost:in(\"nix-cache.bjoernblessin.de\",\"s3.bjoernblessin.de\") | stats by (RequestHost, DownstreamStatus) count() requests",
+          "expr": "log.type:=access RequestHost:in(\"nix-cache.bjoernblessin.de\",\"nix-cache-s3.bjoernblessin.de\") | stats by (RequestHost, DownstreamStatus) count() requests",
           "queryType": "statsRange",
           "refId": "A",
           "legendFormat": "{{RequestHost}} {{DownstreamStatus}}"
