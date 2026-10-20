@@ -43,6 +43,10 @@ in
     # every cluster lookup onto 100.100.100.100.
     services.tailscale-client.acceptDns = false;
 
+    # Static-band ClusterIP that the collector Service pins (hh-cluster-infra):
+    # the host namespace resolves no cluster DNS.
+    services.telemetry-agent.otlpForward = "http://10.43.0.43:4318";
+
     # Both hosts carry --node-ip on tailscale0.
     # Ordering is no gate: the interface exists as soon as the daemon is up,
     # an address arrives at login alone,

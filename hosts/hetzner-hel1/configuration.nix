@@ -109,7 +109,6 @@ in
   services.telemetry-agent = {
     enable = true;
     hostMetrics = false;
-    otlpForward = "http://10.43.113.170:4318";
   };
 
   # Nothing public. Edge DaemonSet tolerates netcup taint alone and stays off this node,

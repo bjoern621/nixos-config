@@ -36,7 +36,6 @@ in
   services.telemetry-agent = {
     enable = true;
     hostMetrics = false;
-    otlpForward = "http://10.43.113.170:4318";
   };
   services.connection-log.enable = true;
 
