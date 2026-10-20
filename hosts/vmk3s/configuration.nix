@@ -161,12 +161,10 @@ in
       # The LAN address holds before this host's first `tailscale up`.
       "--node-ip=${if tailnet.vmk3s != null then tailnet.vmk3s else "192.168.178.80"}"
 
-      # NodePorts bind loopback alone. kube-proxy DNATs a NodePort in PREROUTING,
-      # so the packet takes FORWARD and the INPUT-only firewall never sees it;
-      # bound to every address, a NodePort answers on netcup-g12's public one.
-      # Everything using one dials 127.0.0.1: the host journald agent and the
-      # net collector push OTLP to the agent on their own node.
-      "--kube-proxy-arg=nodeport-addresses=127.0.0.0/8"
+      # Cilium serves Services, NodePorts and hostPorts (hh-cluster-infra).
+      # Agents take both settings from this server.
+      "--disable-kube-proxy"
+      "--disable=servicelb"
 
       # Pinned: k3s reads the host resolv.conf once at start.
       # A boot that beats the router's DHCP lease leaves only link-local entries,

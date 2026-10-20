@@ -99,11 +99,6 @@ in
       # with nodeSelector on the label. The runner manager does, for its job pods.
       "--node-label=node.hh/site=hetzner"
       "--node-taint=node.hh/site=hetzner:NoSchedule"
-
-      # NodePorts bind loopback alone. DNAT in PREROUTING puts a NodePort on the FORWARD
-      # path, past the INPUT-only firewall, and eth0 faces the internet.
-      # The host journald agent dials 127.0.0.1.
-      "--kube-proxy-arg=nodeport-addresses=127.0.0.0/8"
     ];
   };
 

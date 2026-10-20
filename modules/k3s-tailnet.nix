@@ -59,12 +59,10 @@ in
     };
 
     # containerd reads /opt/cni/bin once k3s runs without flannel.
-    # Cilium drops cilium-cni beside these: loopback for every sandbox,
-    # portmap for the hostPort of the edge.
+    # Cilium drops cilium-cni beside loopback, which every sandbox takes.
     systemd.tmpfiles.rules = [
       "d /opt/cni/bin 0755 root root -"
       "L+ /opt/cni/bin/loopback - - - - ${pkgs.cni-plugins}/bin/loopback"
-      "L+ /opt/cni/bin/portmap - - - - ${pkgs.cni-plugins}/bin/portmap"
     ];
 
     # Cilium writes a pod's security identity into the skb mark (identity << 16 | 0x0f00),
