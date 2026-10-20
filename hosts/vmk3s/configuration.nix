@@ -136,10 +136,7 @@ in
   ];
 
   # netcup-g12 joins as an agent over the tailnet. See docs/k3s-cluster.md.
-  services.k3s-tailnet = {
-    enable = true;
-    role = "server";
-  };
+  services.k3s-tailnet.enable = true;
 
   services.k3s = {
     enable = true;

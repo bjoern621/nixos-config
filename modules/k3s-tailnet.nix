@@ -7,8 +7,7 @@
 # What is not here: which flags k3s takes. Those name addresses out of lib/tailnet.nix and
 # differ per node, so they stay in the host configs beside the rest of that node's k3s.
 #
-# Ports are opened on tailscale0 alone. On netcup-g12 eth0 faces the internet, and the k3s
-# API and the kubelet are the two things on that machine no stranger may reach.
+# k3s ports stay closed on every interface but tailscale0: eth0 on netcup-g12 faces the internet.
 
 {
   config,
@@ -25,17 +24,6 @@ in
 
   options.services.k3s-tailnet = {
     enable = lib.mkEnableOption "k3s node-to-node traffic over the tailnet";
-
-    role = lib.mkOption {
-      type = lib.types.enum [
-        "server"
-        "agent"
-      ];
-      description = ''
-        Which k3s role this node runs. Decides whether the supervisor and API port is opened
-        to the tailnet.
-      '';
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -99,48 +87,31 @@ in
     # every vxlan frame between the two nodes takes a detour through Tailscale's servers.
     services.tailscale.openFirewall = true;
 
-    # tailscaled sets all.src_valid_mark (tailscale/tailscale#19796),
-    # so the kernel's source check looks up packets bound for Cilium's Envoy under its proxy mark,
-    # meets the local route of Cilium's proxy table and drops them as local sources.
-    boot.kernel.sysctl."net.ipv4.conf.all.accept_local" = 1;
+    # Leaves the firewall to nixos-fw. Netfilter mode on sets all.src_valid_mark
+    # (tailscale/tailscale#19796), under which the kernel drops every packet that Cilium hands to Envoy.
+    services.tailscale.extraSetFlags = [ "--netfilter-mode=nodivert" ];
 
     networking.firewall = {
       # Replies to Cilium's Envoy carry its proxy mark, under which the reverse lookup
       # lands in Cilium's routing table and drops them.
       checkReversePath = false;
 
-      # Pods reach host-network workloads and the node's own services over these.
       trustedInterfaces = [
+        # Tailnet policy decides who reaches a node, enforced by tailscaled.
+        "tailscale0"
+        # Pods reach host-network workloads and the node's own services over these.
         "cilium_host"
         "cilium_net"
         "cilium_vxlan"
         "lxc+"
       ];
 
-      interfaces."tailscale0" = {
-        allowedTCPPorts = [
-          # kubelet: the API server's exec and logs path, metrics-server, and the collector's
-          # kubeletstats receiver.
-          10250
-          # Cilium health checks between the agents.
-          4240
-          # Hubble relay reading the agents.
-          4244
-          # Hubble metrics, scraped by the cluster collector from the other node.
-          9965
-        ]
-        ++ lib.optional (cfg.role == "server") 6443;
-
-        # vxlan. Encapsulated pod traffic between the nodes rides this one port.
-        allowedUDPPorts = [ 8472 ];
-      };
-
       # tailscaled offers its cilium_host address as an endpoint too. A peer whose disco
       # ping gets a pong over the overlay moves WireGuard onto it, and the vxlan carrying
       # that WireGuard rides tailscale0 to the same peer: a loop that cuts the pair off
       # until tailscaled gives the endpoint up. No pong, no switch. The pod range comes
-      # from k3s. Raw PREROUTING, since tailscaled accepts its port in its own ts-input
-      # chain ahead of nixos-fw. The rule outlives a reload, hence the check first.
+      # from k3s. Raw PREROUTING, ahead of nixos-fw's accept for that port.
+      # The rule outlives a reload, hence the check first.
       extraCommands = ''
         iptables -t raw -C PREROUTING -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP 2>/dev/null \
           || iptables -t raw -I PREROUTING 1 -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP

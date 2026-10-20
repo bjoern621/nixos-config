@@ -87,10 +87,7 @@ in
 
   # Second node of the hh cluster, joining the vmk3s server over the tailnet.
   # See docs/k3s-cluster.md for what schedules here and how a workload asks to.
-  services.k3s-tailnet = {
-    enable = true;
-    role = "agent";
-  };
+  services.k3s-tailnet.enable = true;
 
   warnings = lib.optional (
     !joinable

@@ -16,7 +16,8 @@ The server sits behind NAT with no inbound route, and the agents are on the publ
 There is no address pair the server and an agent reach each other on directly, and forwarding the API port off the house router would put the cluster's front door on the internet.
 
 Tailscale gives each node one address that works from both sides.
-[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) enables the client, opens the k3s ports on `tailscale0` alone, and turns MagicDNS off.
+[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) enables the client, leaves the firewall to NixOS, which trusts `tailscale0`, and turns MagicDNS off.
+Who reaches a node over the tailnet follows the tailnet policy, which tailscaled enforces itself.
 MagicDNS is off because kubelet writes the `resolv.conf` CoreDNS reads, and a takeover of that file moves every cluster lookup onto `100.100.100.100`.
 Peers are therefore addressed by number, out of [lib/tailnet.nix](../lib/tailnet.nix).
 
@@ -27,7 +28,7 @@ Every node carries `--node-ip` on that address, and two more flags on the server
 
 The pod network comes from Cilium, installed out of `hh-cluster-infra`, and k3s runs with `--flannel-backend=none` and `--disable-network-policy`.
 Cilium builds its vxlan tunnel to a peer's node address, which is why `--node-ip` names the tailnet one.
-[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) opens the tunnel, health and Hubble ports, trusts the Cilium interfaces and puts the `loopback` and `portmap` plugins into `/opt/cni/bin`, where containerd looks once flannel is off.
+[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) trusts the Cilium interfaces and puts the `loopback` plugin into `/opt/cni/bin`, where containerd looks once flannel is off.
 
 k3s hands out the pod range `10.42.0.0/16` and the Service range `10.43.0.0/16`.
 Each node takes one `/24` of the pod range as it joins, and `kubectl get nodes -o custom-columns=NAME:.metadata.name,CIDR:.spec.podCIDR` lists the assignment.
@@ -35,7 +36,7 @@ Cilium puts one address out of that `/24` on the node's `cilium_host` interface,
 
 tailscaled offers every address of the machine as an endpoint, the `cilium_host` one included, and a disco ping sent there crosses the vxlan tunnel and gets its answer.
 A peer taking that endpoint sends its WireGuard packets into the tunnel, which rides `tailscale0` to the same peer, and the pair loses each other until tailscaled gives the endpoint up.
-[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) drops the tailscale port for sources in the pod range in the raw PREROUTING hook, ahead of the accept tailscaled keeps in its own input chain.
+[modules/k3s-tailnet.nix](../modules/k3s-tailnet.nix) drops the tailscale port for sources in the pod range in the raw PREROUTING hook, ahead of the firewall's accept for that port.
 The ping gets no answer and the endpoint never ranks.
 
 Cilium writes each pod's security identity into the packet mark, and the vxlan packet carrying the pod's traffic keeps that mark.
