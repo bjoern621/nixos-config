@@ -117,6 +117,6 @@ in
     otlpForward = "http://127.0.0.1:30318";
   };
 
-  # Nothing public. The edge DaemonSet binds 80 and 443 here as on every node,
-  # and no DNS record points at this address, so the firewall keeps them closed.
+  # Nothing public. Edge DaemonSet tolerates netcup taint alone and stays off this node,
+  # where its hostPorts would bypass this firewall.
 }
