@@ -99,6 +99,11 @@ in
     # every vxlan frame between the two nodes takes a detour through Tailscale's servers.
     services.tailscale.openFirewall = true;
 
+    # tailscaled sets all.src_valid_mark (tailscale/tailscale#19796),
+    # so the kernel's source check looks up packets bound for Cilium's Envoy under its proxy mark,
+    # meets the local route of Cilium's proxy table and drops them as local sources.
+    boot.kernel.sysctl."net.ipv4.conf.all.accept_local" = 1;
+
     networking.firewall = {
       # Replies to Cilium's Envoy carry its proxy mark, under which the reverse lookup
       # lands in Cilium's routing table and drops them.
