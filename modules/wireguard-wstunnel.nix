@@ -8,7 +8,7 @@
 # WireGuard carried over wstunnel. The same tunnel and key as the plain WireGuard NM
 # profile, wrapped in a TLS websocket so a network that blocks WireGuard's UDP still
 # passes it. wstunnel carries the UDP over wss to assets.bjoernblessin.de, where the
-# cluster's wireguard pod (hh-cluster-infra) unwraps it back to the WireGuard server.
+# vmk3s host's wstunnel (modules/vmk3s/travel-vpn.nix) unwraps it back to the WireGuard server.
 # Full tunnel: every packet exits the house.
 #
 # NetworkManager cannot host wstunnel, so the quickshell bar toggles it like Tailscale.
@@ -79,8 +79,8 @@ in
     privateKeyFile = config.sops.secrets.wireguard-client-key.path;
     address = [ "10.13.13.2/24" ];
     dns = [ "1.1.1.1" ];
-    # Server side derives 1150 from its pod interface. wg-quick here would derive ~65k
-    # from the loopback endpoint, and inner packets that size die on the server's egress.
+    # wg-quick here would derive ~65k from the loopback endpoint,
+    # and inner packets that size die on the server's egress.
     mtu = 1150;
     peers = [
       {
