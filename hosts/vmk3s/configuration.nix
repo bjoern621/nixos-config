@@ -166,6 +166,10 @@ in
       "--disable-kube-proxy"
       "--disable=servicelb"
 
+      # Above kubelet's default of 110, which the many small pods here reach.
+      # CPU and memory bound this node first; its /24 pod range caps the count below 254.
+      "--kubelet-arg=max-pods=150"
+
       # Pinned: k3s reads the host resolv.conf once at start.
       # A boot that beats the router's DHCP lease leaves only link-local entries,
       # and CoreDNS then forwards to 8.8.8.8 until the next k3s restart,
