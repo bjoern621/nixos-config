@@ -25,7 +25,6 @@ in
     ../../modules/telemetry-agent.nix
     ../../modules/connection-log.nix
     ../../modules/k3s-tailnet.nix
-    ../../modules/k3s-geoip-db.nix
     ../../modules/k3s-gitlab-registry.nix
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
@@ -129,12 +128,8 @@ in
   };
 
   # Kubernetes API server for remote kubectl and GitOps controllers.
-  # 80/443 carry public web traffic to traefik-proxy's hostPorts.
-  # Bundled k3s Traefik is disabled below so traefik-proxy owns them.
   networking.firewall.allowedTCPPorts = [
     6443
-    80
-    443
   ];
 
   # netcup-g12 joins as an agent over the tailnet. See docs/k3s-cluster.md.

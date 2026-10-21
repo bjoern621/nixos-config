@@ -24,7 +24,6 @@ in
     ../../modules/sysconf-auto-pull.nix
     ../../modules/sysconf-revision.nix
     ../../modules/k3s-tailnet.nix
-    ../../modules/k3s-geoip-db.nix
     ../../modules/k3s-gitlab-registry.nix
     ../../modules/telemetry-agent.nix
     ../../modules/connection-log.nix
@@ -163,8 +162,6 @@ in
   #   8888/8889   HLS and WebRTC signalling, both loopback and both behind the pod's proxy.
   #   8893        MoQ for a native client, which no reader in the app is.
   networking.firewall.allowedTCPPorts = [
-    80 # Traefik's hostPort, which redirects
-    443 # Traefik's hostPort, the edge for every HTTP name pointed at this machine
     8322 # RTSPS, which carries its RTP interleaved in the TLS connection
     1936 # RTMPS
     8892 # the MoQ player page
