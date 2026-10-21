@@ -20,6 +20,8 @@ in
     ../../modules/cleanup.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
+    ../../modules/vmk3s/travel-vpn.nix
+    ../../modules/sops.nix
     ../../modules/telemetry-agent.nix
     ../../modules/connection-log.nix
     ../../modules/k3s-tailnet.nix

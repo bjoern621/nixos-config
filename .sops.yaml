@@ -4,6 +4,7 @@
 #   host_fractal    /var/lib/sops-nix/key.txt, decrypts on that host only
 #   host_netcup_g12 derived from that host's ssh host key, which sops-nix reads directly
 #   host_hetzner_hel1 derived the same way, from the key the installer placed
+#   host_vmk3s      derived from that host's ssh host key as well
 # New or replaced host: add its public key, then `sops updatekeys secrets/*.yaml`.
 # An ssh-derived recipient comes from `ssh-keyscan -t ed25519 <host> | ssh-to-age`.
 
@@ -13,6 +14,7 @@ keys:
   - &host_fractal age1nwgt2dqaxsyds5kcrrkwt20suullyxs6d6ux9rs36chqam5wku6sgcy0ys
   - &host_netcup_g12 age1gs5ah3yvpysyqt5sjn3wt7at6gkqwuzr8v5ea5680rs9r7y2efwsntr8kx
   - &host_hetzner_hel1 age1czkysnrx6xaqhyv9d70436de0h8a5cuh0f67s4v2kwg8twc77u2svlzke6
+  - &host_vmk3s age1y8e4t63gwxfvanxy4la7h3mm4l0n93rwj3vxvr03c79x50ur0pkq4twajn
 
 creation_rules:
   # The k3s join token, which only the agent presents. Listed before the catch-all because
@@ -24,6 +26,13 @@ creation_rules:
           - *admin_bjoern
           - *host_netcup_g12
           - *host_hetzner_hel1
+
+  # The travel VPN server's key, which vmk3s alone runs.
+  - path_regex: secrets/wireguard-server\.yaml$
+    key_groups:
+      - age:
+          - *admin_bjoern
+          - *host_vmk3s
 
   - path_regex: secrets/[^/]+\.yaml$
     key_groups:
