@@ -182,6 +182,16 @@ in
       # until `k3s secrets-encrypt rotate-keys` runs.
       # Procedure in docs/k3s-cluster.md.
       "--secrets-encryption"
+
+      # kubectl logins through Keycloak realm main (client kubernetes in hh-cluster-infra).
+      # The prefixes keep a Keycloak name or group apart from a certificate's or a ServiceAccount's,
+      # so RBAC binds them as oidc:<user> and oidc:<group>.
+      "--kube-apiserver-arg=oidc-issuer-url=https://identity.bjoernblessin.de/realms/main"
+      "--kube-apiserver-arg=oidc-client-id=kubernetes"
+      "--kube-apiserver-arg=oidc-username-claim=preferred_username"
+      "--kube-apiserver-arg=oidc-username-prefix=oidc:"
+      "--kube-apiserver-arg=oidc-groups-claim=groups"
+      "--kube-apiserver-arg=oidc-groups-prefix=oidc:"
     ]
     # The tailnet address, for everything an off-LAN node has to reach. Absent
     # until this host's first `tailscale up`, and the server runs single-node
