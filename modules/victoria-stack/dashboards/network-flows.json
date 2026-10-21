@@ -1,7 +1,7 @@
 {
   "uid": "network-flows",
   "title": "Network flows",
-  "description": "Who connects to what. Host firewalls log the first packet of every inbound connection; the edge logs every HTTP request. Both carry the source address, its network and location, and the port and service it reached. Select an address anywhere to follow it.",
+  "description": "Who connects to what. Host firewalls log the first packet of every inbound connection with its source address, network and location, and the port and service it reached. Select an address anywhere to follow it.",
   "tags": [
     "hh",
     "network",
@@ -225,7 +225,7 @@
       "gridPos": {
         "x": 0,
         "y": 1,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
       "id": 2
@@ -285,9 +285,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 4,
+        "x": 6,
         "y": 1,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
       "id": 3
@@ -351,9 +351,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 8,
+        "x": 12,
         "y": 1,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
       "id": 4
@@ -413,136 +413,12 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 12,
+        "x": 18,
         "y": 1,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
       "id": 5
-    },
-    {
-      "type": "stat",
-      "title": "Requests",
-      "description": "Requests the edge proxies served for these sources.",
-      "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "victorialogs"
-          },
-          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\" | stats count() requests",
-          "queryType": "stats",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "gridPos": {
-        "x": 16,
-        "y": 1,
-        "w": 4,
-        "h": 4
-      },
-      "id": 6
-    },
-    {
-      "type": "stat",
-      "title": "Web clients",
-      "description": "Distinct client addresses at the edge.",
-      "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "victorialogs"
-          },
-          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\" | stats count_uniq(ClientHost) clients",
-          "queryType": "stats",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "gridPos": {
-        "x": 20,
-        "y": 1,
-        "w": 4,
-        "h": 4
-      },
-      "id": 7
     },
     {
       "type": "row",
@@ -555,7 +431,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 8
+      "id": 6
     },
     {
       "type": "table",
@@ -803,7 +679,7 @@
         "w": 24,
         "h": 11
       },
-      "id": 9
+      "id": 7
     },
     {
       "type": "timeseries",
@@ -872,7 +748,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 10
+      "id": 8
     },
     {
       "type": "timeseries",
@@ -987,7 +863,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 11
+      "id": 9
     },
     {
       "transformations": [
@@ -1142,7 +1018,7 @@
         "w": 12,
         "h": 10
       },
-      "id": 12
+      "id": 10
     },
     {
       "type": "barchart",
@@ -1233,7 +1109,7 @@
         "w": 12,
         "h": 10
       },
-      "id": 13
+      "id": 11
     },
     {
       "type": "row",
@@ -1246,7 +1122,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 14
+      "id": 12
     },
     {
       "type": "table",
@@ -1423,7 +1299,7 @@
         "w": 14,
         "h": 9
       },
-      "id": 15
+      "id": 13
     },
     {
       "type": "barchart",
@@ -1514,285 +1390,7 @@
         "w": 10,
         "h": 9
       },
-      "id": 16
-    },
-    {
-      "type": "row",
-      "title": "Requests to the web services",
-      "collapsed": false,
-      "panels": [],
-      "gridPos": {
-        "x": 0,
-        "y": 45,
-        "w": 24,
-        "h": 1
-      },
-      "id": 17
-    },
-    {
-      "type": "table",
-      "title": "Who calls which web service",
-      "description": "Edge requests grouped by client, requested hostname and the backend that answered. Backend names the pod address and port Traefik forwarded to.",
-      "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "victorialogs"
-          },
-          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\" | stats by (ClientHost, client.network, geo.country_name, RequestHost, edge.service, ServiceAddr, k8s.node.name) count() requests, count() if (DownstreamStatus:>=400) errors | sort by (requests desc) | limit 300",
-          "queryType": "stats",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "filterable": true,
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ClientHost"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Client"
-              },
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Follow ${__data.fields[\"ClientHost\"]}",
-                    "url": "/d/network-flows?var-ip=${__data.fields[\"ClientHost\"]}&${__url_time_range}",
-                    "targetBlank": false
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "client.network"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Network"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "geo.country_name"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Country"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "RequestHost"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Hostname"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "edge.service"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Service"
-              },
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Edge traffic for ${__data.fields[\"edge.service\"]}",
-                    "url": "/d/edge?var-svc=${__data.fields[\"edge.service\"]}&${__url_time_range}",
-                    "targetBlank": false
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ServiceAddr"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Backend"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "k8s.node.name"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Edge"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "requests"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Requests"
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "errors"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "4xx and 5xx"
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 1
-                    },
-                    {
-                      "color": "red",
-                      "value": 100
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": "",
-          "countRows": false
-        },
-        "sortBy": [
-          {
-            "displayName": "Requests",
-            "desc": true
-          }
-        ]
-      },
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "mode": "columns",
-            "valueLabel": "__name__"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {
-              "ClientHost": 0,
-              "client.network": 1,
-              "geo.country_name": 2,
-              "RequestHost": 3,
-              "edge.service": 4,
-              "ServiceAddr": 5,
-              "k8s.node.name": 6,
-              "requests": 7,
-              "errors": 8
-            },
-            "renameByName": {}
-          }
-        }
-      ],
-      "gridPos": {
-        "x": 0,
-        "y": 46,
-        "w": 24,
-        "h": 11
-      },
-      "id": 18
+      "id": 14
     },
     {
       "type": "row",
@@ -1801,11 +1399,11 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 57,
+        "y": 45,
         "w": 24,
         "h": 1
       },
-      "id": 19
+      "id": 15
     },
     {
       "type": "logs",
@@ -1840,50 +1438,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 58,
-        "w": 12,
+        "y": 46,
+        "w": 24,
         "h": 14
       },
-      "id": 20
-    },
-    {
-      "type": "logs",
-      "title": "Access log",
-      "description": "Edge requests for the selection: client, method, hostname and path, status and duration.",
-      "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "victorialogs"
-          },
-          "expr": "log.type:=access client.network:$network ClientHost:~\"$ip\" | copy severity_text as level",
-          "queryType": "instant",
-          "refId": "A",
-          "maxLines": 1000
-        }
-      ],
-      "options": {
-        "showTime": true,
-        "showLabels": false,
-        "showCommonLabels": false,
-        "wrapLogMessage": true,
-        "prettifyLogMessage": false,
-        "enableLogDetails": true,
-        "enableInfiniteScrolling": true,
-        "dedupStrategy": "none",
-        "sortOrder": "Descending"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 58,
-        "w": 12,
-        "h": 14
-      },
-      "id": 21
+      "id": 16
     }
   ]
 }

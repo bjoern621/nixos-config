@@ -795,7 +795,7 @@
     {
       "type": "stat",
       "title": "Requests",
-      "description": "Requests per second across both edge proxies.",
+      "description": "Requests per second across every Gateway.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -806,7 +806,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum(rate(traefik_service_requests_total[$__rate_interval]))",
+          "expr": "sum(rate(hubble_http_requests_total[$__rate_interval]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -857,7 +857,7 @@
       "gridPos": {
         "x": 0,
         "y": 16,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
       "id": 7
@@ -876,7 +876,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum(rate(traefik_service_requests_total{code=~\"5..\"}[$__rate_interval])) / sum(rate(traefik_service_requests_total[$__rate_interval]))",
+          "expr": "100 * sum(rate(hubble_http_requests_total{status=~\"5..\"}[$__rate_interval])) / sum(rate(hubble_http_requests_total[$__rate_interval]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -934,9 +934,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 4,
+        "x": 6,
         "y": 16,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
       "id": 8
@@ -944,7 +944,7 @@
     {
       "type": "stat",
       "title": "Latency p95",
-      "description": "95th percentile of request duration across all services. Traefik buckets stop at 5 s.",
+      "description": "95th percentile of request duration across all services. Hubble buckets stop at 10 s.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -955,7 +955,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(traefik_service_request_duration_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(hubble_http_request_duration_seconds_bucket[$__rate_interval])))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -1012,160 +1012,12 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 8,
+        "x": 12,
         "y": 16,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
       "id": 9
-    },
-    {
-      "type": "stat",
-      "title": "Connections",
-      "description": "Connections held open by the edge proxies, websockets included.",
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-metrics-datasource",
-            "uid": "victoriametrics"
-          },
-          "expr": "sum(traefik_open_connections)",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "short",
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "links": [
-            {
-              "title": "Edge traffic",
-              "url": "/d/edge?${__url_time_range}",
-              "targetBlank": false
-            }
-          ],
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 16,
-        "w": 4,
-        "h": 4
-      },
-      "id": 10
-    },
-    {
-      "type": "stat",
-      "title": "Cert expiry",
-      "description": "Days until the first served TLS certificate expires. cert-manager renews at 30 days left.",
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-metrics-datasource",
-            "uid": "victoriametrics"
-          },
-          "expr": "(min(traefik_tls_certs_not_after) - time()) / 86400",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "d",
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 14
-              },
-              {
-                "color": "green",
-                "value": 21
-              }
-            ]
-          },
-          "links": [
-            {
-              "title": "Edge traffic",
-              "url": "/d/edge?${__url_time_range}",
-              "targetBlank": false
-            }
-          ],
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "gridPos": {
-        "x": 16,
-        "y": 16,
-        "w": 4,
-        "h": 4
-      },
-      "id": 11
     },
     {
       "type": "stat",
@@ -1247,12 +1099,12 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 20,
+        "x": 18,
         "y": 16,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
-      "id": 12
+      "id": 10
     },
     {
       "type": "timeseries",
@@ -1268,7 +1120,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (class) (label_replace(rate(traefik_service_requests_total{code=~\"[0-9]{3}\"}[$__rate_interval]), \"class\", \"${1}xx\", \"code\", \"([0-9])..\")) ",
+          "expr": "sum by (class) (label_replace(rate(hubble_http_requests_total{status=~\"[0-9]{3}\"}[$__rate_interval]), \"class\", \"${1}xx\", \"status\", \"([0-9])..\")) ",
           "legendFormat": "{{class}}",
           "refId": "A"
         }
@@ -1389,7 +1241,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 13
+      "id": 11
     },
     {
       "type": "table",
@@ -1405,7 +1257,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (svc) (label_replace(rate(traefik_service_requests_total[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\"))",
+          "expr": "sum by (svc) (label_join(rate(hubble_http_requests_total[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"))",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -1417,7 +1269,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum by (svc) (label_replace(rate(traefik_service_requests_total{code=~\"5..\"}[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\")) / sum by (svc) (label_replace(rate(traefik_service_requests_total[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\"))",
+          "expr": "100 * sum by (svc) (label_join(rate(hubble_http_requests_total{status=~\"5..\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\")) / sum by (svc) (label_join(rate(hubble_http_requests_total[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"))",
           "legendFormat": "",
           "refId": "B",
           "instant": true,
@@ -1429,7 +1281,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_replace(rate(traefik_service_request_duration_seconds_bucket[$__range]), \"svc\", \"$1\", \"service\", \"httproute-.*-svc-(.+)-[0-9]+@kubernetesgateway\")))",
+          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_join(rate(hubble_http_request_duration_seconds_bucket[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\")))",
           "legendFormat": "",
           "refId": "C",
           "instant": true,
@@ -1468,7 +1320,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 220
+                "value": 280
               },
               {
                 "id": "links",
@@ -1642,7 +1494,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 14
+      "id": 12
     },
     {
       "type": "row",
@@ -1655,7 +1507,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 15
+      "id": 13
     },
     {
       "type": "stat",
@@ -1724,7 +1576,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 16
+      "id": 14
     },
     {
       "type": "stat",
@@ -1801,7 +1653,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 17
+      "id": 15
     },
     {
       "type": "stat",
@@ -1878,7 +1730,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 18
+      "id": 16
     },
     {
       "type": "stat",
@@ -1951,7 +1803,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 19
+      "id": 17
     },
     {
       "type": "stat",
@@ -2017,7 +1869,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 20
+      "id": 18
     },
     {
       "type": "stat",
@@ -2083,7 +1935,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 21
+      "id": 19
     },
     {
       "type": "row",
@@ -2096,7 +1948,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 22
+      "id": 20
     },
     {
       "type": "timeseries",
@@ -2173,7 +2025,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 23
+      "id": 21
     },
     {
       "type": "logs",
@@ -2219,7 +2071,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 24
+      "id": 22
     },
     {
       "type": "row",
@@ -2232,7 +2084,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 25
+      "id": 23
     },
     {
       "type": "stat",
@@ -2298,10 +2150,10 @@
       "gridPos": {
         "x": 0,
         "y": 43,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
-      "id": 26
+      "id": 24
     },
     {
       "type": "stat",
@@ -2369,81 +2221,12 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 4,
+        "x": 6,
         "y": 43,
-        "w": 4,
+        "w": 6,
         "h": 4
       },
-      "id": 27
-    },
-    {
-      "type": "stat",
-      "title": "Web clients",
-      "description": "Distinct client addresses that reached the edge over the selected range.",
-      "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "victorialogs"
-          },
-          "expr": "log.type:=access | stats count_uniq(ClientHost) clients",
-          "queryType": "stats",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "links": [
-            {
-              "title": "Network flows",
-              "url": "/d/network-flows?${__url_time_range}",
-              "targetBlank": false
-            }
-          ],
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "gridPos": {
-        "x": 8,
-        "y": 43,
-        "w": 4,
-        "h": 4
-      },
-      "id": 28
+      "id": 25
     },
     {
       "type": "stat",
@@ -2517,7 +2300,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 29
+      "id": 26
     },
     {
       "type": "stat",
@@ -2590,7 +2373,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 30
+      "id": 27
     },
     {
       "type": "stat",
@@ -2668,7 +2451,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 31
+      "id": 28
     }
   ]
 }

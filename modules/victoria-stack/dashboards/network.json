@@ -686,7 +686,7 @@
       "id": 13,
       "type": "timeseries",
       "title": "Requests and errors",
-      "description": "Counted at Traefik, per node and entrypoint. web is plain HTTP on port 80, websecure is TLS on 443.",
+      "description": "Counted at each node's Gateway Envoy. Errors split by 4xx and 5xx status.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -700,13 +700,13 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (node, entrypoint) (rate(traefik_entrypoint_requests_total{entrypoint=~\"web|websecure\"}[$__rate_interval]))",
-          "legendFormat": "{{node}} {{entrypoint}}"
+          "expr": "sum by (node) (rate(hubble_http_requests_total[$__rate_interval]))",
+          "legendFormat": "{{node}}"
         },
         {
           "refId": "B",
-          "expr": "sum by (node, code) (rate(traefik_entrypoint_requests_total{entrypoint=~\"web|websecure\",code=~\"[45]..\"}[$__rate_interval]))",
-          "legendFormat": "{{node}} {{code}}"
+          "expr": "sum by (node, class) (label_replace(rate(hubble_http_requests_total{status=~\"[45]..\"}[$__rate_interval]), \"class\", \"${1}xx\", \"status\", \"([45])..\"))",
+          "legendFormat": "{{node}} {{class}}"
         }
       ],
       "fieldConfig": {
@@ -743,7 +743,7 @@
       "id": 14,
       "type": "timeseries",
       "title": "Edge latency, 95th percentile",
-      "description": "Time Traefik spent on a request, backend included.",
+      "description": "Time from request to response at each node's Gateway Envoy, backend included.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -757,8 +757,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, node, entrypoint) (rate(traefik_entrypoint_request_duration_seconds_bucket{entrypoint=~\"web|websecure\"}[$__rate_interval])))",
-          "legendFormat": "{{node}} {{entrypoint}}"
+          "expr": "histogram_quantile(0.95, sum by (le, node) (rate(hubble_http_request_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "{{node}}"
         }
       ],
       "fieldConfig": {

@@ -1,7 +1,7 @@
 {
   "uid": "garage",
   "title": "Garage and nix cache",
-  "description": "The S3 store behind Attic and the nix cache: cluster quorum, request rate, errors and latency per S3 call, block repair and the clients pulling from the cache.",
+  "description": "The S3 store behind Attic and the nix cache: cluster quorum, request rate, errors and latency per S3 call, block repair and the requests the Gateways pass to the cache.",
   "tags": [
     "hh",
     "storage",
@@ -959,7 +959,7 @@
     },
     {
       "type": "row",
-      "title": "Cache clients",
+      "title": "Cache requests",
       "collapsed": false,
       "panels": [],
       "gridPos": {
@@ -971,242 +971,30 @@
       "id": 15
     },
     {
-      "type": "table",
-      "title": "Who pulls from the cache",
-      "description": "Clients of the nix cache and its S3 endpoint by request count. Requests from the house's own public address are atticd fetching chunks for a client it streams to.",
+      "type": "timeseries",
+      "title": "Cache requests by status",
+      "description": "Requests per second the Gateways passed to atticd and the Garage S3 endpoint, by status.",
       "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
       },
       "targets": [
         {
           "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "victorialogs"
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
           },
-          "expr": "log.type:=access RequestHost:in(\"nix-cache.bjoernblessin.de\",\"nix-cache-s3.bjoernblessin.de\") | stats by (ClientHost, client.network, geo.country_name, RequestHost) count() requests, sum(DownstreamContentSize) bytes, count() if (DownstreamStatus:>=400) errors | sort by (requests desc) | limit 50",
-          "queryType": "stats",
+          "expr": "sum by (svc, status) (label_join(rate(hubble_http_requests_total{destination_namespace=~\"atticd|garage\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"))",
+          "legendFormat": "{{svc}} {{status}}",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "align": "auto",
-            "filterable": true,
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ClientHost"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Client"
-              },
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Follow ${__data.fields.ClientHost}",
-                    "url": "/d/network-flows?var-ip=${__data.fields.ClientHost}&${__url_time_range}",
-                    "targetBlank": false
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "client.network"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Network"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "geo.country_name"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Country"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "RequestHost"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Hostname"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "requests"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Requests"
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "bytes"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Sent"
-              },
-              {
-                "id": "unit",
-                "value": "bytes"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "errors"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "4xx and 5xx"
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": "",
-          "countRows": false
-        },
-        "sortBy": [
-          {
-            "displayName": "Requests",
-            "desc": true
-          }
-        ]
-      },
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "mode": "columns",
-            "valueLabel": "__name__"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {
-              "ClientHost": 0,
-              "client.network": 1,
-              "geo.country_name": 2,
-              "RequestHost": 3,
-              "requests": 4,
-              "bytes": 5,
-              "errors": 6
-            },
-            "renameByName": {}
-          }
-        }
-      ],
-      "gridPos": {
-        "x": 0,
-        "y": 31,
-        "w": 14,
-        "h": 9
-      },
-      "id": 16
-    },
-    {
-      "type": "timeseries",
-      "title": "Cache requests by status",
-      "description": "Requests per interval to the cache hostnames by status.",
-      "datasource": {
-        "type": "victoriametrics-logs-datasource",
-        "uid": "victorialogs"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "victorialogs"
-          },
-          "expr": "log.type:=access RequestHost:in(\"nix-cache.bjoernblessin.de\",\"nix-cache-s3.bjoernblessin.de\") | stats by (RequestHost, DownstreamStatus) count() requests",
-          "queryType": "statsRange",
-          "refId": "A",
-          "legendFormat": "{{RequestHost}} {{DownstreamStatus}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "bars",
+            "drawStyle": "line",
             "lineWidth": 1,
-            "fillOpacity": 80,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "showPoints": "never",
             "spanNulls": 120000,
@@ -1216,6 +1004,7 @@
             },
             "axisSoftMin": 0
           },
+          "unit": "reqps",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1243,12 +1032,12 @@
         }
       },
       "gridPos": {
-        "x": 14,
+        "x": 0,
         "y": 31,
-        "w": 10,
-        "h": 9
+        "w": 24,
+        "h": 8
       },
-      "id": 17
+      "id": 16
     },
     {
       "type": "logs",
@@ -1283,11 +1072,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 40,
+        "y": 39,
         "w": 12,
         "h": 10
       },
-      "id": 18
+      "id": 17
     },
     {
       "type": "logs",
@@ -1322,11 +1111,11 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 40,
+        "y": 39,
         "w": 12,
         "h": 10
       },
-      "id": 19
+      "id": 18
     }
   ]
 }
