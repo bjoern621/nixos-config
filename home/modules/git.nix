@@ -50,7 +50,6 @@
         # Both names reach the same instance.
         hosts = [
           "gitlab.bjoernblessin.de"
-          "gitlab.pidgemail.com"
           "gitlab.tail598964.ts.net"
         ];
       in

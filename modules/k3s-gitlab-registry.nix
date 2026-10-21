@@ -16,6 +16,5 @@
 {
   networking.hosts."10.43.180.246" = [
     "gitlab.bjoernblessin.de"
-    "gitlab.pidgemail.com"
   ];
 }
