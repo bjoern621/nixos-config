@@ -46,7 +46,6 @@ in
   # console=ttyS0 (modules/server-base.nix) stays for early boot output.
   systemd.services."serial-getty@ttyS0".enable = false;
 
-
   # GitLab Omnibus runs beside the cluster on this host, and its four Ruby workers hold
   # about 5 GiB of the 8 GiB. A job pod asking for a gigabyte found none and died without
   # a line in its log, so the kernel gets somewhere to put what nothing is reading.
@@ -64,7 +63,6 @@ in
   # Idle pages go out, pages a build is working on stay in. The default of 60 swaps a
   # working set that a CI job is about to read again.
   boot.kernel.sysctl."vm.swappiness" = 20;
-
 
   # The kubelet takes swap away from every container unless it is told otherwise: NodeSwap
   # is GA and on, but the default behaviour is NoSwap, which pins memory.swap.max at 0 and
@@ -148,34 +146,49 @@ in
     };
   };
 
-  # What this machine exposes for the workloads pinned to it. The relay pod runs on the host
-  # network, so its listeners are this host's ports and the numbers are the same ones the
-  # relay's own configuration binds (argocd/applications/screenshare in hh-cluster-infra).
+  # What this machine exposes for the workloads pinned to it.
   #
-  # Every leg here is one no reverse proxy can carry, and each is encrypted by something of
-  # its own: RTSP and RTMP terminate TLS in MediaMTX, SRT is keyed by a passphrase, WebRTC
-  # media is DTLS-SRTP by construction, and MoQ's session is a CONNECT over HTTP/3 that a
-  # listener on TCP 443 never sees.
+  # screenshare publishes its legs as hostPorts (argocd/applications/screenshare in hh-cluster-infra).
+  # No reverse proxy can carry any of them, so each brings its own encryption:
+  # RTSP and RTMP terminate TLS in MediaMTX, SRT takes a passphrase, WebRTC media runs DTLS-SRTP,
+  # MoQ's session runs as a CONNECT over HTTP/3, which a listener on TCP 443 never sees.
   #
-  # Not opened, and each for its own reason:
+  # coturn (argocd/applications/turn) runs on the host network and binds 81.16.16.252 alone.
+  #
+  # Not opened, each for its own reason:
   #   9997        the relay's API, bound to loopback and shared with the group service.
   #   8888/8889   HLS and WebRTC signalling, both loopback and both behind the pod's proxy.
   #   8893        MoQ for a native client, which no reader in the app is.
+  #   9641        coturn's metrics, which the collector reaches over the tailnet.
   networking.firewall.allowedTCPPorts = [
     8322 # RTSPS, which carries its RTP interleaved in the TLS connection
     1936 # RTMPS
     8892 # the MoQ player page
+    3478 # TURN over TCP
+    443 # TURNS for networks that pass HTTPS alone (Cilium answers 159.195.203.244:443 first)
   ];
 
   networking.firewall.allowedUDPPorts = [
     8890 # SRT
     8189 # WebRTC media, which negotiates a direct path and never meets a proxy
     8892 # the MoQ WebTransport session, HTTP/3 on the port the page came from
+    3478 # STUN and TURN
   ];
 
-  # The lists above document what the machine answers on. They do not gate it: a published
-  # container port arrives by DNAT into the pod network and is forwarded rather than
-  # delivered locally, and this firewall filters INPUT alone. Turning on
-  # networking.firewall.filterForward is what would make them load-bearing, and what would
-  # drop every leg here until each is named in a forward rule too.
+  # coturn's relay range, one port per allocation: --min-port and --max-port in its Deployment.
+  networking.firewall.allowedUDPPortRanges = [
+    {
+      from = 50000;
+      to = 50399;
+    }
+  ];
+
+  # The screenshare entries document what the machine answers on without gating it.
+  # A published container port arrives by DNAT into the pod network and gets forwarded.
+  # This firewall filters INPUT alone.
+  # networking.firewall.filterForward would make them load-bearing,
+  # dropping every leg there until a forward rule names it too.
+  #
+  # The coturn entries gate it: host-network traffic gets delivered locally, through INPUT.
+  # A port opened on one side alone fails silently, with the client timing out.
 }

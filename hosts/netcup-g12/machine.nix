@@ -27,6 +27,13 @@
         address = "159.195.203.244";
         prefixLength = 22;
       }
+      # Additional IPv4 booked in SCP, routed to this server: a /32 without a gateway of its own.
+      # coturn binds it alone (hh-cluster-infra, turn), so its 443 stays clear of the Gateway.
+      # It stays second: k3s takes the first address as the node's ExternalIP.
+      {
+        address = "81.16.16.252";
+        prefixLength = 32;
+      }
     ];
     ipv6.addresses = [
       {
