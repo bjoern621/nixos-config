@@ -2154,7 +2154,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (k8s_pod_name) (k8s_pod_cpu_usage{k8s_namespace_name=\"peerdrop\"})",
+          "expr": "sum by (k8s_pod_name) (k8s_pod_cpu_usage{k8s_namespace_name=~\"peerdrop|turn\"})",
           "legendFormat": "{{k8s_pod_name}}",
           "refId": "A"
         }
@@ -2223,7 +2223,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (k8s_pod_name) (k8s_pod_memory_working_set_bytes{k8s_namespace_name=\"peerdrop\"})",
+          "expr": "sum by (k8s_pod_name) (k8s_pod_memory_working_set_bytes{k8s_namespace_name=~\"peerdrop|turn\"})",
           "legendFormat": "{{k8s_pod_name}}",
           "refId": "A"
         },
@@ -2232,7 +2232,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (k8s_pod_name) (k8s_container_memory_limit_bytes{k8s_namespace_name=\"peerdrop\"})",
+          "expr": "sum by (k8s_pod_name) (k8s_container_memory_limit_bytes{k8s_namespace_name=~\"peerdrop|turn\"})",
           "legendFormat": "limit {{k8s_pod_name}}",
           "refId": "B"
         }
@@ -2317,7 +2317,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum(increase(k8s_container_restarts{k8s_namespace_name=\"peerdrop\"}[$__range])) or vector(0)",
+          "expr": "sum(increase(k8s_container_restarts{k8s_namespace_name=~\"peerdrop|turn\"}[$__range])) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -2489,7 +2489,7 @@
       "gridPos": {
         "x": 0,
         "y": 77,
-        "w": 12,
+        "w": 8,
         "h": 12
       },
       "id": 39
@@ -2526,12 +2526,51 @@
         "sortOrder": "Descending"
       },
       "gridPos": {
-        "x": 12,
+        "x": 8,
         "y": 77,
-        "w": 12,
+        "w": 8,
         "h": 12
       },
       "id": 40
+    },
+    {
+      "type": "logs",
+      "title": "Relay",
+      "description": "Every coturn log line, newest first. Scanners probing 443 and 3478 leave socket errors here.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "k8s.namespace.name:=turn k8s.container.name:=coturn | copy severity_text as level",
+          "queryType": "instant",
+          "refId": "A",
+          "maxLines": 500
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "enableInfiniteScrolling": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 77,
+        "w": 8,
+        "h": 12
+      },
+      "id": 41
     }
   ]
 }
