@@ -85,6 +85,11 @@ in
       # Cilium tunnels to it, and eth0's public address would put the kubelet on the internet.
       "--node-ip=${tailnet.hetzner-hel1}"
 
+      # Address that Cilium's Node IPAM gives the Gateway hetzner (hh-cluster-infra);
+      # without the flag k3s reports the tailnet one.
+      # Hetzner keeps the primary IPv4 for the server's lifetime and hands it out over DHCP.
+      "--node-external-ip=2.29.45.107"
+
       # Swap on the host stops the kubelet from starting unless it is told to expect it, so
       # this flag and swapDevices above land in one activation or the node drops out.
       "--kubelet-arg=fail-swap-on=false"
@@ -107,6 +112,6 @@ in
     hostMetrics = false;
   };
 
-  # Nothing public. Edge DaemonSet tolerates netcup taint alone and stays off this node,
-  # where its hostPorts would bypass this firewall.
+  # 80 and 443 reach Gateway hetzner through Cilium's datapath ahead of this firewall.
+  # Nothing else listens publicly.
 }
