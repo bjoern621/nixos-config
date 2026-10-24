@@ -46,7 +46,6 @@
     ../../modules/tpm-luks.nix
     ../../modules/usbguard.nix
     ../../modules/system-packages.nix
-    ../../modules/tas2781-calibration/default.nix
     ../../modules/sops.nix
     ../../modules/nix-substituter-fallback.nix
     ../../modules/attic-push.nix
