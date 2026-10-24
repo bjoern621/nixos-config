@@ -30,6 +30,12 @@
         update_url = "https://clients2.google.com/service/update2/crx";
       };
 
+      # AdGuard Extra
+      "gkeojjjcdcopjkbelgbcpckplegclfeg" = {
+        installation_mode = "force_installed";
+        update_url = "https://clients2.google.com/service/update2/crx";
+      };
+
       # Refined GitHub
       "hlepfoohegkhhmjieoechaddaejaokhf" = {
         installation_mode = "force_installed";
