@@ -7,6 +7,30 @@
 
 let
   cfg = config.system.hibernate;
+
+  # Counts externals as logind's docked check does: enabled and not "disconnected".
+  dockLidWatch = pkgs.writeShellScript "dock-lid-watch" ''
+    external_display_connected() {
+      for dir in /sys/class/drm/card*-*; do
+        case "$dir" in
+          *-eDP-* | *-LVDS-* | *-DSI-* | *-Writeback-*) continue ;;
+        esac
+        [ "$(cat "$dir/enabled" 2>/dev/null)" = "enabled" ] || continue
+        [ "$(cat "$dir/status" 2>/dev/null)" != "disconnected" ] && return 0
+      done
+      return 1
+    }
+
+    absent=0
+    while [ "$absent" -lt 30 ]; do
+      if external_display_connected; then
+        absent=0
+      else
+        absent=$((absent + 1))
+      fi
+      sleep 1
+    done
+  '';
 in
 {
   options.system.hibernate = {
@@ -79,5 +103,19 @@ in
       HandleLidSwitchDocked = "ignore";
       HandleLidSwitchExternalPower = "hibernate";
     };
+
+    # logind rechecks docked state for as long as lid stays closed.
+    # Dock can drop off USB4 for ~1 s right after lid close,
+    # externals vanish with it and that recheck hibernates a docked laptop.
+    # Inhibitor bridges such drops, released 30 s after last external display goes.
+    systemd.services.dock-lid-inhibit = {
+      description = "Block lid switch action while an external display is connected";
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig.ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=handle-lid-switch --mode=block --who=dock-lid-inhibit \"--why=Lid close stays ignored while an external display is connected.\" ${dockLidWatch}";
+    };
+
+    services.udev.extraRules = ''
+      SUBSYSTEM=="drm", ACTION=="change", RUN+="${pkgs.systemd}/bin/systemctl --no-block start dock-lid-inhibit.service"
+    '';
   };
 }
