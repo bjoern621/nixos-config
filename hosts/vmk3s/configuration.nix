@@ -167,6 +167,12 @@ in
       # CPU and memory bound this node first; its /24 pod range caps the count below 254.
       "--kubelet-arg=max-pods=150"
 
+      # Cores the API server, its datastore and the host keep out of pod requests.
+      # kubelet sizes the pods' cgroup share from what remains,
+      # which keeps the control plane responsive while pods saturate the node.
+      "--kubelet-arg=kube-reserved=cpu=400m,memory=1Gi"
+      "--kubelet-arg=system-reserved=cpu=200m,memory=512Mi"
+
       # Pinned: k3s reads the host resolv.conf once at start.
       # A boot that beats the router's DHCP lease leaves only link-local entries,
       # and CoreDNS then forwards to 8.8.8.8 until the next k3s restart,
