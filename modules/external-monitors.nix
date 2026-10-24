@@ -7,7 +7,7 @@
 # "4 0x1e 0" (4 lanes, HBR3) into per-connector debugfs link_settings triggers retrain.
 # Enables dual 1440p144.
 #
-# Force gated four times:
+# Force gated five times:
 # - TS5 Plus on thunderbolt bus. Keeps force off other docks.
 #   device_name reads exactly "TS5 Plus" (vendor_name "CalDigit, Inc.").
 # - is_dpia_link == "yes". Native DP and HDMI PCON negotiate fine alone.
@@ -21,6 +21,9 @@
 #   reads 0 lanes forever, and is the link needing force.
 # - Current rate below 0x1e. Every retrain emits another DRM change event,
 #   and retraining a link already at HBR3 only reopens the window above.
+# - Two forces per connector until HBR3 sticks or dock re-attaches.
+#   Untrainable link drops output and sink re-asserts HPD seconds later.
+#   Unbounded force on each HPD flaps that monitor until replug.
 #
 # Banned thunderbolt params: bw_alloc_mode=1, asym_threshold=0.
 # Both stick link at HBR/RBR or kill training on this dock + APU combo.
@@ -65,8 +68,20 @@ let
       cur=$(current_link "$dbg/link_settings")
       [ -n "$cur" ] || continue
       rate=''${cur##* }
-      [ "$rate" != "0x1e" ] || continue
+      attempts_file="$RUNTIME_DIRECTORY/$conn"
+      if [ "$rate" = "0x1e" ]; then
+        rm -f "$attempts_file"
+        continue
+      fi
 
+      attempts=$(cat "$attempts_file" 2>/dev/null || echo 0)
+      if [ "$attempts" -ge 2 ]; then
+        echo "$conn: HBR3 did not train after $attempts forces, link stays at rate $rate until dock replug"
+        continue
+      fi
+      echo $((attempts + 1)) > "$attempts_file"
+
+      echo "$conn: forcing HBR3 from rate $rate"
       echo "4 0x1e 0" > "$dbg/link_settings" 2>/dev/null || true
     done
   '';
@@ -106,10 +121,14 @@ in
       ExecStart = forceScript;
       # Script waits up to 20 s per connector for the commit.
       TimeoutStartSec = 120;
+      # Force counters per connector, cleared on dock attach.
+      RuntimeDirectory = "amdgpu-force-hbr3";
+      RuntimeDirectoryPreserve = "yes";
     };
   };
 
   services.udev.extraRules = ''
     SUBSYSTEM=="drm", ACTION=="change", RUN+="${pkgs.systemd}/bin/systemctl --no-block start amdgpu-force-hbr3.service"
+    SUBSYSTEM=="thunderbolt", ACTION=="add", ATTR{device_name}=="TS5 Plus", RUN+="${pkgs.coreutils}/bin/rm -rf /run/amdgpu-force-hbr3"
   '';
 }
