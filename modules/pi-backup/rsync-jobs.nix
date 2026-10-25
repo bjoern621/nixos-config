@@ -195,8 +195,12 @@ let
   mkService = job: {
     description = "Pull backup snapshot from ${job.host} (${job._name})";
 
-    after = [ "network-online.target" ];
+    after = [
+      "network-online.target"
+      "pi-backup-volume.service"
+    ];
     wants = [ "network-online.target" ];
+    requires = [ "pi-backup-volume.service" ];
 
     unitConfig = {
       ConditionPathIsMountPoint = storage.mountPoint;
@@ -249,6 +253,10 @@ in
     systemd.tmpfiles.rules = [
       "d /var/lib/pi-backup 0700 root root - -"
     ];
+
+    services.pi-backup.storage.directories = lib.listToAttrs (
+      map (job: lib.nameValuePair "snapshots/${job._name}" { }) jobsList
+    );
 
     systemd.services = lib.listToAttrs (
       map (job: {

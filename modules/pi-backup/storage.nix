@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -11,6 +12,33 @@
 
 let
   cfg = config.services.pi-backup.storage;
+
+  # Root 0711: contents are unencrypted once LUKS is open, so each tenant keeps its own directory closed.
+  rules = pkgs.writeText "pi-backup-volume.conf" (
+    lib.concatStrings (
+      [ "d ${cfg.mountPoint} 0711 root root - -\n" ]
+      ++ lib.mapAttrsToList (
+        path: d: "d ${cfg.mountPoint}/${path} ${d.mode} ${d.user} ${d.group} - -\n"
+      ) cfg.directories
+    )
+  );
+
+  directoryModule = lib.types.submodule {
+    options = {
+      mode = lib.mkOption {
+        type = lib.types.str;
+        default = "0700";
+      };
+      user = lib.mkOption {
+        type = lib.types.str;
+        default = "root";
+      };
+      group = lib.mkOption {
+        type = lib.types.str;
+        default = "root";
+      };
+    };
+  };
 in
 {
   options.services.pi-backup.storage = {
@@ -32,6 +60,22 @@ in
       type = lib.types.str;
       default = "/srv/backups";
     };
+
+    directories = lib.mkOption {
+      type = lib.types.attrsOf directoryModule;
+      default = { };
+      example = {
+        garage = {
+          user = "garage";
+          group = "garage";
+        };
+      };
+      description = ''
+        Directories on the volume, by path under `mountPoint`.
+        pi-backup-volume.service creates them once the volume is mounted.
+        A service writing there requires that unit: systemd sets up `ReadWritePaths` before any `ExecStartPre`, and fails on a path that does not exist yet.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -48,11 +92,21 @@ in
       ];
     };
 
-    # Contents are unencrypted once LUKS is open, so each tenant keeps its own directory closed.
-    # 0711 lets the Garage service user through to its directory.
-    systemd.tmpfiles.rules = [
-      "d ${cfg.mountPoint} 0711 root root - -"
-      "d ${cfg.mountPoint}/snapshots 0700 root root - -"
-    ];
+    services.pi-backup.storage.directories.snapshots = { };
+
+    # Not systemd-tmpfiles-setup: that runs before the nofail mount and would create the paths on the SD card.
+    systemd.services.pi-backup-volume = {
+      description = "Create the tenant directories on the backup volume";
+      wantedBy = [ "multi-user.target" ];
+      unitConfig = {
+        RequiresMountsFor = [ cfg.mountPoint ];
+        ConditionPathIsMountPoint = cfg.mountPoint;
+      };
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.systemd}/bin/systemd-tmpfiles --create ${rules}";
+      };
+    };
   };
 }

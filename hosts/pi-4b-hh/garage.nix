@@ -62,7 +62,24 @@ in
   };
   users.groups.garage = { };
 
+  services.pi-backup.storage.directories = {
+    garage = {
+      user = "garage";
+      group = "garage";
+    };
+    "garage/meta" = {
+      user = "garage";
+      group = "garage";
+    };
+    "garage/data" = {
+      user = "garage";
+      group = "garage";
+    };
+  };
+
   systemd.services.garage = {
+    requires = [ "pi-backup-volume.service" ];
+    after = [ "pi-backup-volume.service" ];
     unitConfig = {
       RequiresMountsFor = [ root ];
       ConditionPathIsMountPoint = storage.mountPoint;
@@ -72,7 +89,6 @@ in
       DynamicUser = false;
       User = "garage";
       Group = "garage";
-      ExecStartPre = [ "+${pkgs.coreutils}/bin/install -d -m 0700 -o garage -g garage ${root}" ];
       # The pi runs the observability stack next to it.
       MemoryMax = "1G";
     };
