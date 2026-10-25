@@ -94,11 +94,16 @@
   #   1. Plug in the drive, identify with `lsblk`.
   #   2. Create one partition.
   #   3. `cryptsetup luksFormat /dev/<part>` (strong passphrase, recorded offline).
-  #   4. `blkid /dev/<part>` -> copy UUID into `deviceUuid` below.
-  #   5. `cryptsetup luksOpen /dev/<part> backup`
+  #   4. Key file for the unattended unlock after boot:
+  #      `install -d -m 0700 /var/lib/pi-backup`
+  #      `dd if=/dev/urandom of=/var/lib/pi-backup/luks.key bs=64 count=1`
+  #      `chmod 0400 /var/lib/pi-backup/luks.key`
+  #      `cryptsetup luksAddKey /dev/<part> /var/lib/pi-backup/luks.key`
+  #   5. `blkid /dev/<part>` -> copy UUID into `deviceUuid` below.
+  #   6. `cryptsetup luksOpen --key-file /var/lib/pi-backup/luks.key /dev/<part> backup`
   #      `mkfs.ext4 /dev/mapper/backup`
   #      `cryptsetup luksClose backup`
-  #   6. Flip `enable = true` and run `sysconf-reload`.
+  #   7. Flip `enable = true` and run `sysconf-reload`.
   services.pi-backup.storage = {
     enable = false;
     deviceUuid = "00000000-0000-0000-0000-000000000000";
