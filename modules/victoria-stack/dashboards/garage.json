@@ -206,7 +206,7 @@
       "gridPos": {
         "x": 0,
         "y": 1,
-        "w": 4,
+        "w": 3,
         "h": 4
       },
       "id": 2
@@ -275,9 +275,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 4,
+        "x": 3,
         "y": 1,
-        "w": 4,
+        "w": 3,
         "h": 4
       },
       "id": 3
@@ -285,7 +285,7 @@
     {
       "type": "stat",
       "title": "",
-      "description": "Share of partitions whose replicas reach quorum. Below 100 % some objects are unreadable.",
+      "description": "Share of partitions whose replicas reach write quorum. Below 100 % some writes fail, and so do nix pushes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -322,7 +322,7 @@
           "color": {
             "mode": "thresholds"
           },
-          "displayName": "Quorum"
+          "displayName": "Write quorum"
         },
         "overrides": []
       },
@@ -343,9 +343,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 8,
+        "x": 6,
         "y": 1,
-        "w": 4,
+        "w": 3,
         "h": 4
       },
       "id": 4
@@ -407,9 +407,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 12,
+        "x": 9,
         "y": 1,
-        "w": 4,
+        "w": 3,
         "h": 4
       },
       "id": 5
@@ -417,7 +417,7 @@
     {
       "type": "stat",
       "title": "",
-      "description": "Blocks the resync worker could not fetch from any peer. They stay missing until a peer returns.",
+      "description": "Blocks whose last resync failed, retried after 1 to 64 min. A layout node that never connects fails every deletion and offload.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -453,7 +453,7 @@
           "color": {
             "mode": "thresholds"
           },
-          "displayName": "Lost blocks"
+          "displayName": "Blocks failing resync"
         },
         "overrides": []
       },
@@ -474,9 +474,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 16,
+        "x": 12,
         "y": 1,
-        "w": 4,
+        "w": 3,
         "h": 4
       },
       "id": 6
@@ -541,12 +541,141 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 20,
+        "x": 15,
         "y": 1,
-        "w": 4,
+        "w": 3,
         "h": 4
       },
       "id": 7
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "Time until the resync queue drains at its slope over the last 30 min.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "(max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "queue not shrinking",
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Resync done in"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 3,
+        "h": 4
+      },
+      "id": 8
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "When the resync queue drains at its slope over the last 30 min.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "(time() + (max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0))) * 1000",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "dateTimeAsLocalNoDateIfToday",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "queue not shrinking",
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Resync done at"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 21,
+        "y": 1,
+        "w": 3,
+        "h": 4
+      },
+      "id": 9
     },
     {
       "type": "row",
@@ -559,7 +688,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 8
+      "id": 10
     },
     {
       "type": "timeseries",
@@ -628,7 +757,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 9
+      "id": 11
     },
     {
       "type": "timeseries",
@@ -698,7 +827,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 10
+      "id": 12
     },
     {
       "type": "timeseries",
@@ -767,7 +896,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 11
+      "id": 13
     },
     {
       "type": "timeseries",
@@ -845,12 +974,12 @@
         "w": 12,
         "h": 8
       },
-      "id": 12
+      "id": 14
     },
     {
       "type": "timeseries",
       "title": "RPC errors and timeouts",
-      "description": "Calls to other Garage nodes that failed or timed out. A down node shows up here first.",
+      "description": "Calls to other Garage nodes that failed or timed out, by endpoint and peer. A down node shows up here first.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -861,8 +990,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (rpc_endpoint) (rate(rpc_netapp_error_counter_total{job=\"garage\"}[$__rate_interval]))",
-          "legendFormat": "{{rpc_endpoint}} error",
+          "expr": "sum by (rpc_endpoint, to) (rate(rpc_netapp_error_counter_total{job=\"garage\"}[$__rate_interval]))",
+          "legendFormat": "{{rpc_endpoint}} to {{to}} error",
           "refId": "A"
         },
         {
@@ -870,8 +999,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (rpc_endpoint) (rate(rpc_timeout_counter_total{job=\"garage\"}[$__rate_interval]))",
-          "legendFormat": "{{rpc_endpoint}} timeout",
+          "expr": "sum by (rpc_endpoint, to) (rate(rpc_timeout_counter_total{job=\"garage\"}[$__rate_interval]))",
+          "legendFormat": "{{rpc_endpoint}} to {{to}} timeout",
           "refId": "B"
         }
       ],
@@ -923,12 +1052,12 @@
         "w": 12,
         "h": 8
       },
-      "id": 13
+      "id": 15
     },
     {
       "type": "timeseries",
       "title": "Background queues",
-      "description": "Table GC, merkle updates and inserts waiting. Queues that only grow mean the node falls behind.",
+      "description": "Table GC, merkle updates, inserts and block resync waiting. Queues that only grow mean the node falls behind.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -960,6 +1089,15 @@
           "expr": "sum by (table_name) (table_insert_queue_length{job=\"garage\"})",
           "legendFormat": "insert {{table_name}}",
           "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "max(block_resync_queue_length{job=\"garage\"})",
+          "legendFormat": "block resync",
+          "refId": "D"
         }
       ],
       "fieldConfig": {
@@ -1010,11 +1148,11 @@
         "w": 12,
         "h": 8
       },
-      "id": 14
+      "id": 16
     },
     {
       "type": "row",
-      "title": "Cache requests",
+      "title": "Repair and peers",
       "collapsed": false,
       "panels": [],
       "gridPos": {
@@ -1023,7 +1161,367 @@
         "w": 24,
         "h": 1
       },
-      "id": 15
+      "id": 17
+    },
+    {
+      "type": "timeseries",
+      "title": "Resync throughput and errors",
+      "description": "Blocks resynced per second and the failures among them. Failures level with the total mean that no block gets through.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(rate(block_resync_counter_total{job=\"garage\"}[$__rate_interval]))",
+          "legendFormat": "resynced",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(rate(block_resync_error_counter_total{job=\"garage\"}[$__rate_interval]))",
+          "legendFormat": "failed",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "unit": "ops",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 8,
+        "h": 8
+      },
+      "id": 18
+    },
+    {
+      "type": "timeseries",
+      "title": "Peer connection by node",
+      "description": "1 while this node holds a connection to the layout node, 0 while not. A node never seen has no disconnected time.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "max by (id) (cluster_layout_node_connected{job=\"garage\"})",
+          "legendFormat": "{{id}} connected",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "max by (id) (cluster_layout_node_disconnected_time{job=\"garage\"}) > 0",
+          "legendFormat": "{{id}} disconnected for",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* disconnected for$"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 31,
+        "w": 8,
+        "h": 8
+      },
+      "id": 19
+    },
+    {
+      "type": "timeseries",
+      "title": "Ping timeouts by peer",
+      "description": "Pings unanswered for 10 s, from the Garage log. Five in a row drop the connection, and writes to that peer fail until it returns.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "k8s.namespace.name:=garage k8s.container.name:=garage \"Error pinging\" | extract \"Error pinging <peer>: \" | stats by (peer) count() timeouts",
+          "queryType": "statsRange",
+          "refId": "A",
+          "legendFormat": "{{peer}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No ping timeout",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 31,
+        "w": 8,
+        "h": 8
+      },
+      "id": 20
+    },
+    {
+      "type": "timeseries",
+      "title": "Write quorum over time",
+      "description": "Share of partitions with write quorum, and whether the cluster answers at all. Red marks time below 100 %.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "min(cluster_partitions_quorum{job=\"garage\"}) / min(cluster_partitions{job=\"garage\"})",
+          "legendFormat": "partitions with quorum",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "min(cluster_available{job=\"garage\"})",
+          "legendFormat": "cluster available",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "area"
+            }
+          },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "transparent",
+                "value": 1
+              }
+            ]
+          },
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 24,
+        "h": 6
+      },
+      "id": 21
+    },
+    {
+      "type": "row",
+      "title": "Cache requests",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 45,
+        "w": 24,
+        "h": 1
+      },
+      "id": 22
     },
     {
       "type": "timeseries",
@@ -1095,11 +1593,402 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 31,
+        "y": 46,
         "w": 24,
         "h": 8
       },
-      "id": 16
+      "id": 23
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache uploads by status",
+      "description": "Uploads to atticd per interval by final status. 408 and 504 after 5 min: Envoy's idle timeout cut a stalled upload. 503: atticd was down.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:=\"atticd/atticd\" url.path:=\"/_api/v1/upload-path\" edge.event:=response | stats by (http.response.status_code) count() uploads",
+          "queryType": "statsRange",
+          "refId": "A",
+          "legendFormat": "{{http.response.status_code}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "200"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 54,
+        "w": 12,
+        "h": 8
+      },
+      "id": 24
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache connections cut mid-request",
+      "description": "Connections from the vmk3s Envoy closed with a request in flight, by backend and side. Each one that atticd closes cuts a transfer.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_destroy_remote_with_active_rq{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
+          "legendFormat": "{{envoy_cluster_name}} closed by backend",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
+          "legendFormat": "{{envoy_cluster_name}} closed by Envoy",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_protocol_error{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
+          "legendFormat": "{{envoy_cluster_name}} protocol error",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_rq_xx{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\", envoy_response_code_class=\"5\"}[$__rate_interval]))",
+          "legendFormat": "{{envoy_cluster_name}} 5xx",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "unit": "cps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No cut connection",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 54,
+        "w": 12,
+        "h": 8
+      },
+      "id": 25
+    },
+    {
+      "type": "row",
+      "title": "Restarts and memory",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 62,
+        "w": 24,
+        "h": 1
+      },
+      "id": 26
+    },
+    {
+      "type": "timeseries",
+      "title": "Restarts and OOM kills",
+      "description": "Container restarts of atticd, Garage and the vmk3s Envoy, with OOM kills among them. A restart cuts every transfer in flight.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (k8s_namespace_name, k8s_pod_name, k8s_container_name) (increase(k8s_container_restarts{k8s_namespace_name=~\"atticd|garage\" or k8s_pod_name=~\"cilium-envoy-.+\", k8s_node_name=\"vmk3s\"}[$__interval])) > 0",
+          "legendFormat": "restart {{k8s_pod_name}} {{k8s_container_name}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (namespace, pod, container) (increase(container_oom_events_total{namespace=~\"atticd|garage\" or pod=~\"cilium-envoy-.+\", node=\"vmk3s\"}[$__interval])) > 0",
+          "legendFormat": "OOM {{pod}} {{container}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Workload view of ${__field.labels.k8s_pod_name}",
+              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "Logs of ${__field.labels.k8s_pod_name}",
+              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "No restart",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^OOM .*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 63,
+        "w": 12,
+        "h": 8
+      },
+      "id": 27
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory of limit",
+      "description": "Working set per container as a share of its limit. At 100 % the kernel kills the container.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "max by (k8s_namespace_name, k8s_pod_name, k8s_container_name) (container_memory_working_set_bytes{k8s_namespace_name=~\"atticd|garage\" or k8s_pod_name=~\"cilium-envoy-.+\", k8s_node_name=\"vmk3s\"}) / max by (k8s_namespace_name, k8s_pod_name, k8s_container_name) (k8s_container_memory_limit_bytes{k8s_namespace_name=~\"atticd|garage\" or k8s_pod_name=~\"cilium-envoy-.+\", k8s_node_name=\"vmk3s\"})",
+          "legendFormat": "{{k8s_pod_name}} {{k8s_container_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Workload view of ${__field.labels.k8s_pod_name}",
+              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "Logs of ${__field.labels.k8s_pod_name}",
+              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "min": 0,
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 63,
+        "w": 12,
+        "h": 8
+      },
+      "id": 28
     },
     {
       "type": "row",
@@ -1108,11 +1997,11 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 39,
+        "y": 71,
         "w": 24,
         "h": 1
       },
-      "id": 17
+      "id": 29
     },
     {
       "type": "table",
@@ -1363,11 +2252,11 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 40,
+        "y": 72,
         "w": 14,
         "h": 9
       },
-      "id": 18
+      "id": 30
     },
     {
       "type": "timeseries",
@@ -1432,11 +2321,11 @@
       },
       "gridPos": {
         "x": 14,
-        "y": 40,
+        "y": 72,
         "w": 10,
         "h": 9
       },
-      "id": 19
+      "id": 31
     },
     {
       "type": "logs",
@@ -1471,11 +2360,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 49,
+        "y": 81,
         "w": 12,
         "h": 10
       },
-      "id": 20
+      "id": 32
     },
     {
       "type": "logs",
@@ -1510,11 +2399,11 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 49,
+        "y": 81,
         "w": 12,
         "h": 10
       },
-      "id": 21
+      "id": 33
     }
   ]
 }
