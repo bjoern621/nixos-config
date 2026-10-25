@@ -15,6 +15,10 @@ on:
       delay_days:
         description: "Minimum age (days) of revisions to pin"
         default: "7"
+      build_main:
+        description: "Build and cache main as it stands, without updating locks"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -22,6 +26,7 @@ permissions:
 
 jobs:
   update-locks:
+    if: ${{ !inputs.build_main }}
     runs-on: ubuntu-latest
     outputs:
       pr-number: ${{ steps.cpr.outputs.pull-request-number }}
@@ -63,7 +68,8 @@ jobs:
   # since quickshell, nixd and lanzaboote follow nixpkgs rather than a cache of their own.
   build:
     needs: update-locks
-    if: needs.update-locks.outputs.pr-operation == 'created' || needs.update-locks.outputs.pr-operation == 'updated'
+    # always(): a skipped update-locks would skip this job too, build_main included.
+    if: always() && (inputs.build_main || needs.update-locks.outputs.pr-operation == 'created' || needs.update-locks.outputs.pr-operation == 'updated')
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -100,7 +106,7 @@ jobs:
       # and a shallow clone has no revision for it to read.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.update-locks.outputs.pr-sha }}
+          ref: ${{ needs.update-locks.outputs.pr-sha || github.sha }}
           fetch-depth: 0
 
       # The preinstalled toolchains outweigh what is left for the store,
@@ -143,11 +149,10 @@ jobs:
       - name: Push ${{ matrix.attr }} to the system cache
         env:
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
+          OUT: ${{ steps.build.outputs.out }}
         run: |
-          nix shell nixpkgs#attic-client --command bash -c '
-            attic login hh https://nix-cache.bjoernblessin.de/ "$ATTIC_TOKEN"
-            attic push hh:system "${{ steps.build.outputs.out }}"
-          '
+          nix run nixpkgs#attic-client -- login hh https://nix-cache.bjoernblessin.de/ "$ATTIC_TOKEN"
+          nix run nixpkgs#attic-client -- push hh:system "$OUT"
 
   merge:
     needs: [update-locks, build]
