@@ -135,10 +135,13 @@ jobs:
       #
       # --no-write-lock-file: the build reads the pins the pull request carries
       # and re-locks none of them.
+      #
+      # --fallback: a NAR download the cache breaks off builds locally
+      # in place of aborting the build.
       - name: Build ${{ matrix.attr }}
         id: build
         run: |
-          out=$(nix build --no-link --print-out-paths --print-build-logs --no-write-lock-file \
+          out=$(nix build --no-link --print-out-paths --print-build-logs --no-write-lock-file --fallback \
             "./hosts/${{ matrix.dir }}#nixosConfigurations.${{ matrix.attr }}.config.system.build.toplevel")
           echo "out=$out" >> "$GITHUB_OUTPUT"
 
