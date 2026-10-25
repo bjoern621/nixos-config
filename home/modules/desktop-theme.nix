@@ -17,7 +17,35 @@
 
 { pkgs, ... }:
 
+let
+  # Holds no icons. Searches hicolor first, where apps install their own icons;
+  # Papirus covers only names that no app ships.
+  # Qt moves hicolor to the end of a theme's own Inherits list.
+  # Reached through hicolor-first, a parent searched depth-first, it stays ahead of Papirus.
+  papirusFallback = base: {
+    "icons/${base}-Fallback/index.theme".text = ''
+      [Icon Theme]
+      Name=${base}-Fallback
+      Comment=App icons from hicolor, missing ones from ${base}
+      Inherits=hicolor-first,${base}
+      Directories=
+    '';
+  };
+in
 {
+  # Papirus-Fallback serves Quickshell (see quickshell.nix).
+  xdg.dataFile = {
+    "icons/hicolor-first/index.theme".text = ''
+      [Icon Theme]
+      Name=hicolor-first
+      Comment=Searches hicolor alone
+      Inherits=hicolor
+      Directories=
+    '';
+  }
+  // papirusFallback "Papirus-Dark"
+  // papirusFallback "Papirus";
+
   dconf.settings."org/gnome/desktop/interface" = {
     color-scheme = "prefer-dark";
     gtk-theme = "Adwaita-dark";
@@ -31,10 +59,9 @@
       name = "Adwaita-dark";
     };
 
-    # Papirus draws its own icon for most apps, ahead of their hicolor ones.
     iconTheme = {
       package = pkgs.papirus-icon-theme;
-      name = "Papirus-Dark";
+      name = "Papirus-Dark-Fallback";
     };
 
     font = {

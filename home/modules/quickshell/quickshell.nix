@@ -129,7 +129,7 @@ in
       ExecStart = "${qsWrapped}/bin/quickshell";
       Restart = "on-failure";
       RestartSec = 1;
-      # Shell draws on light surfaces, apps on dark ones (gtk.iconTheme Papirus-Dark).
+      # Shell draws on light surfaces, apps on dark ones (gtk.iconTheme Papirus-Dark-Fallback).
       # QS_ICON_THEME overrides the icon theme that gtk3 reads from GTK settings.
       #
       # Chromium-based tray apps (Discord, Electron) publish their icon only as
@@ -142,7 +142,7 @@ in
       # wholesale; remove this rule when debugging tray property updates.
       Environment = [
         "QT_QPA_PLATFORMTHEME=gtk3"
-        "QS_ICON_THEME=Papirus"
+        "QS_ICON_THEME=Papirus-Fallback"
         "QUICKSHELL_EMOJI_DATA=${emojiData}"
         "QUICKSHELL_POWER_ACTIONS=${powerActions}"
         "QUICKSHELL_HAS_BATTERY=${lib.boolToString config.host.battery}"
