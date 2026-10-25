@@ -130,9 +130,24 @@ jobs:
       # --no-write-lock-file: the build reads the pins the pull request carries
       # and re-locks none of them.
       - name: Build ${{ matrix.attr }}
+        id: build
         run: |
-          nix build --no-link --print-build-logs --no-write-lock-file \
-            "./hosts/${{ matrix.dir }}#nixosConfigurations.${{ matrix.attr }}.config.system.build.toplevel"
+          out=$(nix build --no-link --print-out-paths --print-build-logs --no-write-lock-file \
+            "./hosts/${{ matrix.dir }}#nixosConfigurations.${{ matrix.attr }}.config.system.build.toplevel")
+          echo "out=$out" >> "$GITHUB_OUTPUT"
+
+      # Hosts pull from system cache (modules/attic-pull-system.nix).
+      # Path missing upstream builds once here.
+      # pi-4b-hh lacks RAM for some of them, grafana among them.
+      # attic push skips paths cache.nixos.org signs.
+      - name: Push ${{ matrix.attr }} to the system cache
+        env:
+          ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
+        run: |
+          nix shell nixpkgs#attic-client --command bash -c '
+            attic login hh https://nix-cache.bjoernblessin.de/ "$ATTIC_TOKEN"
+            attic push hh:system "${{ steps.build.outputs.out }}"
+          '
 
   merge:
     needs: [update-locks, build]

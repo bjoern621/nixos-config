@@ -13,7 +13,8 @@
 # Upstream paths (cache.nixos.org) are filtered out by default, so only own
 # builds go up.
 #
-# Change the token: sops secrets/attic.yaml
+# Change the token: sops secrets/attic.yaml, and the ATTIC_TOKEN secret of the
+# GitHub repository, which the flake lock workflow pushes with.
 # Seed existing store once: attic push hh:system $(nix path-info --all)
 
 {
