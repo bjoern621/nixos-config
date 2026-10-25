@@ -27,6 +27,7 @@
     ./user-packages.nix
     ./modules/kubernetes.nix
     ./modules/ksystemlog.nix
+    ./modules/wdisplays.nix
     ./modules/quickshell/quickshell.nix
     ./modules/paintdotnet.nix
     ./modules/shell.nix

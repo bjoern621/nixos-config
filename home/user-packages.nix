@@ -9,7 +9,6 @@
     ripgrep # rg cmd (fast grep)
     bruno # API client
     dnsutils # dig, nslookup, host
-    wdisplays # Wayland display layout GUI
     wlr-randr # xrandr (X11 Resize and Rotate) for wlroots (wayland roots) compositors
     usbutils # lsusb
     brightnessctl # backlight control (used by Hyprland brightness keys)
