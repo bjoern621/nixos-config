@@ -363,13 +363,12 @@ Scope {
                                                 border.width: 2
                                                 border.color: theme.ink
 
-                                                Image {
+                                                ThemeIcon {
                                                     id: icon
                                                     anchors.centerIn: parent
-                                                    width: 18
-                                                    height: 18
+                                                    size: 18
+                                                    color: theme.ink
                                                     source: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
-                                                    sourceSize: Qt.size(width, width)
                                                 }
 
                                                 Text {
@@ -454,13 +453,12 @@ Scope {
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: 8
 
-                                    Image {
-                                        width: 16
-                                        height: 16
+                                    ThemeIcon {
+                                        size: 16
+                                        color: theme.textPrimary
                                         anchors.verticalCenter: parent.verticalCenter
                                         visible: LauncherController.selectedApp && LauncherController.selectedApp.icon
                                         source: LauncherController.selectedApp && LauncherController.selectedApp.icon ? ("image://icon/" + LauncherController.selectedApp.icon) : ""
-                                        sourceSize: Qt.size(width, width)
                                     }
 
                                     Text {

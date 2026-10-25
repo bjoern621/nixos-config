@@ -118,8 +118,8 @@ Rectangle {
 
                     // Menus mix both kinds: blueman's entries are all symbolic
                     // glyphs, while Tailscale's account entry carries the
-                    // user's avatar. TrayIcon tints only the former.
-                    TrayIcon {
+                    // user's avatar. ThemeIcon tints only the former.
+                    ThemeIcon {
                         id: itemIcon
                         source: row.modelData.icon ?? ""
                         visible: (row.modelData.icon ?? "") !== ""

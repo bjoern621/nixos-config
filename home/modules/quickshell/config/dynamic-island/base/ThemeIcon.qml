@@ -2,10 +2,9 @@ import QtQuick
 import QtQuick.Effects
 import "../"
 
-// Renders a StatusNotifierItem or menu icon. Items supply their icon either as
-// a freedesktop theme name (image://icon/<name>) or as a bitmap sent over D-Bus
-// (image://qspixmap/…, image://qsimage/…); Quickshell resolves both into a
-// single image url, so this only has to decide on colour.
+// Renders an app, tray or menu icon. Sources: freedesktop theme name
+// (image://icon/<name>) or bitmap sent over D-Bus (image://qspixmap/…,
+// image://qsimage/…). Quickshell resolves both into one image url.
 //
 // `mode` picks how:
 //   "auto"  keep the icon's own colours, except symbolic ones (see below)
@@ -35,9 +34,12 @@ Item {
 
     readonly property bool tinted: root.mode === "tint" || (root.mode === "auto" && root.symbolic)
 
-    // Tray icons are small and often come from a much larger source bitmap, so
-    // rasterize above the display size to keep the downscale sharp.
+    // Rasterizes above display size: keeps downscale sharp,
+    // and Breeze serves its colour icons from 32px up.
+    // Below that it ships tray glyphs, white in breeze-dark.
     property real sourceScale: 2.0
+
+    readonly property alias status: iconImage.status
 
     width: size
     height: size

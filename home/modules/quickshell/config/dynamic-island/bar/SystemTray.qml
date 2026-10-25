@@ -32,7 +32,7 @@ Item {
     readonly property int iconCellSize: 26
     readonly property int attentionDotSize: 6
 
-    // Tray icons keep their native colours, bar symbolic ones which TrayIcon
+    // Tray icons keep their native colours, bar symbolic ones which ThemeIcon
     // tints so they stay visible. An app whose icon ships an opaque or dark
     // background draws as a solid block against the translucent bar; to force
     // one either way, add its id here. `pattern` is a regular expression
@@ -201,7 +201,7 @@ Item {
                             // NO Behavior on color; hover must be instant
                         }
 
-                        TrayIcon {
+                        ThemeIcon {
                             anchors.centerIn: parent
                             source: iconItem.modelData.icon
                             size: Typography.fontSize16

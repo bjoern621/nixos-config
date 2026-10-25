@@ -95,15 +95,13 @@ Scope {
                         pressed: delegateTap.pressed
                     }
 
-                    Image {
+                    ThemeIcon {
                         id: appIcon
-                        width: Typography.fontSize24
-                        height: width
+                        size: Typography.fontSize24
                         anchors.left: parent.left
                         anchors.leftMargin: Spacing.spacing12
                         anchors.verticalCenter: parent.verticalCenter
                         source: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
-                        sourceSize: Qt.size(width, width)
                     }
 
                     TintedIcon {

@@ -25,6 +25,7 @@ WallpaperAccent 1.0 base/WallpaperAccent.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
 TintedIcon 1.0 base/TintedIcon.qml
+ThemeIcon 1.0 base/ThemeIcon.qml
 
 PopReveal 1.0 animations/PopReveal.qml
 SquishBehavior 1.0 animations/SquishBehavior.qml
@@ -116,7 +117,6 @@ DateTime 1.0 bar/DateTime.qml
 WorkspaceIndicator 1.0 bar/WorkspaceIndicator.qml
 Workspace3Apps 1.0 bar/Workspace3Apps.qml
 SystemTray 1.0 bar/SystemTray.qml
-TrayIcon 1.0 bar/TrayIcon.qml
 NowPlaying 1.0 bar/NowPlaying.qml
 MusicBars 1.0 bar/MusicBars.qml
 
