@@ -212,7 +212,7 @@
     },
     {
       "type": "stat",
-      "title": "CPU busy",
+      "title": "",
       "description": "Share of all cores doing work.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -255,7 +255,8 @@
           "max": 100,
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "CPU busy"
         },
         "overrides": []
       },
@@ -270,7 +271,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -285,8 +286,8 @@
     },
     {
       "type": "stat",
-      "title": "Load/core",
-      "description": "5 minute load average divided by core count. Above 1 means runnable tasks wait for a CPU.",
+      "title": "",
+      "description": "5 minute load average divided by the core count. Above 1 runnable tasks wait for a CPU.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -325,7 +326,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Load per core"
         },
         "overrides": []
       },
@@ -340,7 +342,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -355,7 +357,7 @@
     },
     {
       "type": "stat",
-      "title": "Memory",
+      "title": "",
       "description": "Memory held by processes, page cache excluded.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -398,7 +400,8 @@
           "max": 100,
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Memory"
         },
         "overrides": []
       },
@@ -413,7 +416,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -428,7 +431,7 @@
     },
     {
       "type": "stat",
-      "title": "Root disk",
+      "title": "",
       "description": "Used share of the root filesystem.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -471,7 +474,8 @@
           "max": 100,
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Root disk"
         },
         "overrides": []
       },
@@ -486,7 +490,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -501,70 +505,8 @@
     },
     {
       "type": "stat",
-      "title": "Cores",
-      "description": "Logical CPUs the host reports.",
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-metrics-datasource",
-            "uid": "victoriametrics"
-          },
-          "expr": "max(last_over_time(system_cpu_logical_count{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m]) or count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\",host_name=\"$host\" or state=\"idle\",k8s_node_name=\"$host\"}[5m]))))",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "gridPos": {
-        "x": 16,
-        "y": 1,
-        "w": 2,
-        "h": 4
-      },
-      "id": 6
-    },
-    {
-      "type": "stat",
-      "title": "Age",
-      "description": "Seconds since the newest metric from this host. Above 2 minutes means its collector stopped reporting.",
+      "title": "",
+      "description": "Seconds since the newest metric from this host. Above two minutes its collector stopped reporting.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -604,7 +546,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Metric age"
         },
         "overrides": []
       },
@@ -619,22 +562,22 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 18,
+        "x": 16,
         "y": 1,
-        "w": 2,
+        "w": 4,
         "h": 4
       },
-      "id": 7
+      "id": 6
     },
     {
       "type": "stat",
-      "title": "Errors",
+      "title": "",
       "description": "Error lines in this host's journal and its pods over the selected range.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -681,7 +624,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Error lines"
         },
         "overrides": []
       },
@@ -696,7 +640,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -707,7 +651,7 @@
         "w": 4,
         "h": 4
       },
-      "id": 8
+      "id": 7
     },
     {
       "type": "row",
@@ -720,7 +664,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 9
+      "id": 8
     },
     {
       "type": "timeseries",
@@ -821,7 +765,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 10
+      "id": 9
     },
     {
       "type": "timeseries",
@@ -943,7 +887,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 11
+      "id": 10
     },
     {
       "type": "row",
@@ -956,7 +900,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 12
+      "id": 11
     },
     {
       "type": "timeseries",
@@ -1056,7 +1000,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 13
+      "id": 12
     },
     {
       "type": "timeseries",
@@ -1133,7 +1077,7 @@
         "w": 12,
         "h": 8
       },
-      "id": 14
+      "id": 13
     },
     {
       "type": "row",
@@ -1146,7 +1090,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 15
+      "id": 14
     },
     {
       "type": "timeseries",
@@ -1223,7 +1167,7 @@
         "w": 8,
         "h": 8
       },
-      "id": 16
+      "id": 15
     },
     {
       "type": "timeseries",
@@ -1301,7 +1245,7 @@
         "w": 8,
         "h": 8
       },
-      "id": 17
+      "id": 16
     },
     {
       "type": "timeseries",
@@ -1370,7 +1314,7 @@
         "w": 8,
         "h": 8
       },
-      "id": 18
+      "id": 17
     },
     {
       "type": "table",
@@ -1648,7 +1592,7 @@
         "w": 16,
         "h": 8
       },
-      "id": 19
+      "id": 18
     },
     {
       "type": "timeseries",
@@ -1717,7 +1661,7 @@
         "w": 8,
         "h": 8
       },
-      "id": 20
+      "id": 19
     },
     {
       "type": "row",
@@ -1730,7 +1674,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 21
+      "id": 20
     },
     {
       "type": "table",
@@ -2107,7 +2051,7 @@
         "w": 14,
         "h": 7
       },
-      "id": 22
+      "id": 21
     },
     {
       "type": "timeseries",
@@ -2177,7 +2121,7 @@
         "w": 10,
         "h": 7
       },
-      "id": 23
+      "id": 22
     },
     {
       "type": "row",
@@ -2190,7 +2134,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 24
+      "id": 23
     },
     {
       "type": "timeseries",
@@ -2270,7 +2214,7 @@
         "w": 12,
         "h": 7
       },
-      "id": 25
+      "id": 24
     },
     {
       "type": "timeseries",
@@ -2351,7 +2295,7 @@
         "w": 12,
         "h": 7
       },
-      "id": 26
+      "id": 25
     },
     {
       "type": "row",
@@ -2364,7 +2308,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 27
+      "id": 26
     },
     {
       "type": "timeseries",
@@ -2442,7 +2386,7 @@
         "w": 8,
         "h": 8
       },
-      "id": 28
+      "id": 27
     },
     {
       "type": "timeseries",
@@ -2521,7 +2465,7 @@
         "w": 8,
         "h": 8
       },
-      "id": 29
+      "id": 28
     },
     {
       "type": "timeseries",
@@ -2590,7 +2534,7 @@
         "w": 8,
         "h": 8
       },
-      "id": 30
+      "id": 29
     },
     {
       "type": "row",
@@ -2603,7 +2547,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 31
+      "id": 30
     },
     {
       "type": "table",
@@ -2807,7 +2751,7 @@
         "w": 14,
         "h": 9
       },
-      "id": 32
+      "id": 31
     },
     {
       "type": "timeseries",
@@ -2883,7 +2827,7 @@
         "w": 10,
         "h": 9
       },
-      "id": 33
+      "id": 32
     },
     {
       "type": "row",
@@ -2896,7 +2840,7 @@
         "w": 24,
         "h": 1
       },
-      "id": 34
+      "id": 33
     },
     {
       "type": "timeseries",
@@ -3011,7 +2955,7 @@
         "w": 24,
         "h": 6
       },
-      "id": 35
+      "id": 34
     },
     {
       "type": "logs",
@@ -3050,7 +2994,7 @@
         "w": 24,
         "h": 14
       },
-      "id": 36
+      "id": 35
     }
   ]
 }

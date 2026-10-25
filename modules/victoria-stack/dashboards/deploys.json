@@ -145,7 +145,7 @@
     },
     {
       "type": "stat",
-      "title": "Applications",
+      "title": "",
       "description": "Argo CD applications in the selection.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -177,7 +177,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Applications"
         },
         "overrides": []
       },
@@ -192,7 +193,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -207,7 +208,7 @@
     },
     {
       "type": "stat",
-      "title": "Out of sync",
+      "title": "",
       "description": "Applications whose live state differs from git. Auto-sync closes the gap within minutes; one that stays points at a failing sync.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -243,7 +244,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Out of sync"
         },
         "overrides": []
       },
@@ -258,7 +260,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -273,7 +275,7 @@
     },
     {
       "type": "stat",
-      "title": "Unhealthy",
+      "title": "",
       "description": "Applications reporting a health other than Healthy: Degraded, Progressing or Missing.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -309,7 +311,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Unhealthy"
         },
         "overrides": []
       },
@@ -324,7 +327,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -339,7 +342,7 @@
     },
     {
       "type": "stat",
-      "title": "Syncs",
+      "title": "",
       "description": "Syncs over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -371,7 +374,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Syncs"
         },
         "overrides": []
       },
@@ -386,7 +390,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -401,7 +405,7 @@
     },
     {
       "type": "stat",
-      "title": "Failed syncs",
+      "title": "",
       "description": "Syncs over the selected range that ended Failed or Error.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -437,7 +441,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Failed syncs"
         },
         "overrides": []
       },
@@ -452,7 +457,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -467,7 +472,7 @@
     },
     {
       "type": "stat",
-      "title": "Host rebuilds",
+      "title": "",
       "description": "NixOS hosts that switched to another nixos-config revision over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -500,7 +505,8 @@
           "noValue": "0",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Host rebuilds"
         },
         "overrides": []
       },
@@ -515,7 +521,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false

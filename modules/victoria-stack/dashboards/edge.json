@@ -127,8 +127,8 @@
           "type": "victoriametrics-metrics-datasource",
           "uid": "victoriametrics"
         },
-        "query": "query_result(sum by (svc) (label_join(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\")))",
-        "definition": "query_result(sum by (svc) (label_join(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\")))",
+        "query": "query_result(sum by (svc) (label_replace(label_join(label_match(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\")))",
+        "definition": "query_result(sum by (svc) (label_replace(label_join(label_match(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\")))",
         "regex": "/svc=\"([^\"]+)\"/",
         "refresh": 2,
         "sort": 1,
@@ -253,7 +253,7 @@
     },
     {
       "type": "stat",
-      "title": "Requests",
+      "title": "",
       "description": "Requests per second for the selected services and nodes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -265,7 +265,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum(label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "sum(label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -286,7 +286,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Requests"
         },
         "overrides": []
       },
@@ -301,7 +302,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -316,7 +317,7 @@
     },
     {
       "type": "stat",
-      "title": "5xx share",
+      "title": "",
       "description": "Share of requests answered 5xx. These are failures of a backend or the Gateway.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -328,7 +329,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")) / sum (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "100 * sum (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")) / sum (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -358,7 +359,8 @@
           "noValue": "0",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "5xx share"
         },
         "overrides": []
       },
@@ -373,7 +375,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -388,7 +390,7 @@
     },
     {
       "type": "stat",
-      "title": "4xx share",
+      "title": "",
       "description": "Share of requests answered 4xx: unknown paths, missing auth, refused methods.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -400,7 +402,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")) / sum (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "100 * sum (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")) / sum (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -430,7 +432,8 @@
           "noValue": "0",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "4xx share"
         },
         "overrides": []
       },
@@ -445,7 +448,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -460,7 +463,7 @@
     },
     {
       "type": "stat",
-      "title": "Latency p95",
+      "title": "",
       "description": "95th percentile request duration. Hubble buckets above 0.1 s end at 0.25, 0.5, 1, 2.5, 5 and 10 s.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -472,7 +475,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (label_match(label_join(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")))",
+          "expr": "histogram_quantile(0.95, sum by (le) (label_match(label_replace(label_join(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -501,7 +504,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Latency p95"
         },
         "overrides": []
       },
@@ -516,7 +520,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -531,7 +535,7 @@
     },
     {
       "type": "stat",
-      "title": "Clients",
+      "title": "",
       "description": "Different clients in the request log for the whole selection over the selected range.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -563,7 +567,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Clients"
         },
         "overrides": []
       },
@@ -578,7 +583,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -593,7 +598,7 @@
     },
     {
       "type": "stat",
-      "title": "Countries",
+      "title": "",
       "description": "Countries the internet clients resolve to.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -625,7 +630,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Countries"
         },
         "overrides": []
       },
@@ -640,7 +646,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -667,7 +673,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "sum by (svc) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -679,7 +685,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum by (svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")) / sum by (svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "100 * sum by (svc) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\",status=~\"4..\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")) / sum by (svc) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "",
           "refId": "B",
           "instant": true,
@@ -691,7 +697,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum by (svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")) / sum by (svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "100 * sum by (svc) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")) / sum by (svc) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "",
           "refId": "C",
           "instant": true,
@@ -703,7 +709,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "histogram_quantile(0.5, sum by (svc, le) (label_match(label_join(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")))",
+          "expr": "histogram_quantile(0.5, sum by (svc, le) (label_match(label_replace(label_join(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")))",
           "legendFormat": "",
           "refId": "D",
           "instant": true,
@@ -715,7 +721,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_match(label_join(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")))",
+          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_match(label_replace(label_join(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")))",
           "legendFormat": "",
           "refId": "E",
           "instant": true,
@@ -1537,7 +1543,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (source_namespace, svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\",source_namespace!=\"\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "sum by (source_namespace, svc) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\",source_namespace!=\"\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",source_namespace!=\"\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",source_namespace!=\"\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\",source_namespace!=\"\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -2677,7 +2683,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "sum by (svc) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
@@ -2753,7 +2759,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (svc, status) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "sum by (svc, status) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\",status=~\"5..\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "{{svc}} {{status}}",
           "refId": "A"
         }
@@ -2830,7 +2836,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_match(label_join(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")))",
+          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_match(label_replace(label_join(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\")))",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
@@ -2906,7 +2912,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (node) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "expr": "sum by (node) (label_match(label_replace(label_join(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{node=~\"$node\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"), \"svc\", \"$svc\"))",
           "legendFormat": "{{node}}",
           "refId": "A"
         }

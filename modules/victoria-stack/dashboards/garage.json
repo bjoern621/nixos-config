@@ -124,8 +124,8 @@
     },
     {
       "type": "stat",
-      "title": "Health",
-      "description": "Garage's own verdict. Degraded means some partitions lost quorum and reads or writes fail.",
+      "title": "",
+      "description": "healthy: every storage node answers. degraded: a node is down, every partition keeps quorum and nix pulls work. unavailable: some partitions lost quorum, so reads and writes fail.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -136,7 +136,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "min(cluster_healthy{job=\"garage\"})",
+          "expr": "min(cluster_available{job=\"garage\"}) + min(cluster_healthy{job=\"garage\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -152,8 +152,12 @@
                 "value": null
               },
               {
-                "color": "green",
+                "color": "orange",
                 "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
               }
             ]
           },
@@ -162,10 +166,14 @@
               "type": "value",
               "options": {
                 "0": {
-                  "text": "degraded",
+                  "text": "unavailable",
                   "color": "red"
                 },
                 "1": {
+                  "text": "degraded",
+                  "color": "orange"
+                },
+                "2": {
                   "text": "healthy",
                   "color": "green"
                 }
@@ -174,7 +182,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Health"
         },
         "overrides": []
       },
@@ -189,7 +198,7 @@
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -204,8 +213,8 @@
     },
     {
       "type": "stat",
-      "title": "Nodes",
-      "description": "Storage nodes this node reaches, out of those in the layout.",
+      "title": "",
+      "description": "Storage nodes in the layout that this node does not reach. With three replicas one node down keeps quorum.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -216,18 +225,9 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "min(cluster_connected_nodes{job=\"garage\"})",
+          "expr": "min(cluster_storage_nodes{job=\"garage\"}) - min(cluster_storage_nodes_ok{job=\"garage\"})",
           "legendFormat": "",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "victoriametrics-metrics-datasource",
-            "uid": "victoriametrics"
-          },
-          "expr": "min(cluster_known_nodes{job=\"garage\"})",
-          "legendFormat": "",
-          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -240,12 +240,21 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 2
               }
             ]
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Nodes down"
         },
         "overrides": []
       },
@@ -275,7 +284,7 @@
     },
     {
       "type": "stat",
-      "title": "Quorum",
+      "title": "",
       "description": "Share of partitions whose replicas reach quorum. Below 100 % some objects are unreadable.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -312,7 +321,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Quorum"
         },
         "overrides": []
       },
@@ -327,7 +337,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -342,7 +352,7 @@
     },
     {
       "type": "stat",
-      "title": "Disk free",
+      "title": "",
       "description": "Free space on this node's data disk.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -375,7 +385,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Disk free"
         },
         "overrides": []
       },
@@ -390,7 +401,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -405,7 +416,7 @@
     },
     {
       "type": "stat",
-      "title": "Lost blocks",
+      "title": "",
       "description": "Blocks the resync worker could not fetch from any peer. They stay missing until a peer returns.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -441,7 +452,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Lost blocks"
         },
         "overrides": []
       },
@@ -456,7 +468,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -471,7 +483,7 @@
     },
     {
       "type": "stat",
-      "title": "Resync",
+      "title": "",
       "description": "Blocks waiting for repair or replication.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -507,7 +519,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Resync"
         },
         "overrides": []
       },
@@ -522,7 +535,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -1026,7 +1039,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (svc, status) (label_join(rate(hubble_http_requests_total{destination_namespace=~\"atticd|garage\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"))",
+          "expr": "sum by (svc, status) (label_replace(label_join(label_match(rate(hubble_http_requests_total{destination_namespace=~\"atticd|garage\"}[$__rate_interval]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{destination_namespace=~\"atticd|garage\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{destination_namespace=~\"atticd|garage\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{destination_namespace=~\"atticd|garage\"}[$__rate_interval]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"))",
           "legendFormat": "{{svc}} {{status}}",
           "refId": "A"
         }

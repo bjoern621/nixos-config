@@ -135,7 +135,7 @@
     },
     {
       "type": "stat",
-      "title": "peerdrop.de",
+      "title": "",
       "description": "Whether the probe got a 2xx answer from https://peerdrop.de in the last five minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -185,7 +185,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "peerdrop.de"
         },
         "overrides": []
       },
@@ -200,7 +201,7 @@
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -215,7 +216,7 @@
     },
     {
       "type": "stat",
-      "title": "Clients online",
+      "title": "",
       "description": "Browser tabs with an open WebSocket to the backend.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -247,7 +248,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Clients online"
         },
         "overrides": []
       },
@@ -262,7 +264,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -277,7 +279,7 @@
     },
     {
       "type": "stat",
-      "title": "Connections",
+      "title": "",
       "description": "Peer pairs the backend told to connect in the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -311,7 +313,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Connections"
         },
         "overrides": []
       },
@@ -326,7 +329,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -341,7 +344,7 @@
     },
     {
       "type": "stat",
-      "title": "Connection success",
+      "title": "",
       "description": "Share of peer connections that connected. The rest found no working network path.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -385,7 +388,8 @@
           "noValue": "No connection",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Connection success"
         },
         "overrides": []
       },
@@ -400,7 +404,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -415,7 +419,7 @@
     },
     {
       "type": "stat",
-      "title": "Over relay",
+      "title": "",
       "description": "Share of connected peers whose traffic runs through a TURN server.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -451,7 +455,8 @@
           "noValue": "No connection",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Over relay"
         },
         "overrides": []
       },
@@ -466,7 +471,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -481,7 +486,7 @@
     },
     {
       "type": "stat",
-      "title": "Transfer success",
+      "title": "",
       "description": "Share of ended file transfers that the receiver confirmed.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -525,7 +530,8 @@
           "noValue": "No transfer",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Transfer success"
         },
         "overrides": []
       },
@@ -540,7 +546,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -555,7 +561,7 @@
     },
     {
       "type": "stat",
-      "title": "Files sent",
+      "title": "",
       "description": "Files whose transfer ended in the selected range, confirmed or not.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -589,7 +595,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Files sent"
         },
         "overrides": []
       },
@@ -604,7 +611,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -619,7 +626,7 @@
     },
     {
       "type": "stat",
-      "title": "Data sent",
+      "title": "",
       "description": "Bytes that left senders in the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -654,7 +661,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Data sent"
         },
         "overrides": []
       },
@@ -669,7 +677,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -684,7 +692,7 @@
     },
     {
       "type": "stat",
-      "title": "Data over relay",
+      "title": "",
       "description": "Bytes sent through a TURN server. The relay carries each byte twice, once in and once out.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -719,7 +727,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Data over relay"
         },
         "overrides": []
       },
@@ -734,7 +743,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -749,7 +758,7 @@
     },
     {
       "type": "stat",
-      "title": "Setup time",
+      "title": "",
       "description": "Median time from opening the peer connection to connected.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -793,7 +802,8 @@
           "noValue": "No connection",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Setup time"
         },
         "overrides": []
       },
@@ -808,7 +818,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -823,7 +833,7 @@
     },
     {
       "type": "stat",
-      "title": "Accounts",
+      "title": "",
       "description": "Registered accounts.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -855,7 +865,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Accounts"
         },
         "overrides": []
       },
@@ -870,7 +881,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -885,7 +896,7 @@
     },
     {
       "type": "stat",
-      "title": "Devices",
+      "title": "",
       "description": "Devices registered with at least one account.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -917,7 +928,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Devices"
         },
         "overrides": []
       },
@@ -932,7 +944,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -1823,7 +1835,7 @@
     },
     {
       "type": "stat",
-      "title": "Relay certificate",
+      "title": "",
       "description": "Days until the certificate of turn.peerdrop.de expires. cert-manager renews it 30 days ahead.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1864,7 +1876,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Relay certificate"
         },
         "overrides": []
       },
@@ -1879,7 +1892,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -2359,7 +2372,7 @@
     },
     {
       "type": "stat",
-      "title": "Restarts",
+      "title": "",
       "description": "Container restarts in the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2397,7 +2410,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Restarts"
         },
         "overrides": []
       },
@@ -2412,7 +2426,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -2427,7 +2441,7 @@
     },
     {
       "type": "stat",
-      "title": "Certificate",
+      "title": "",
       "description": "Days until the certificate of peerdrop.de expires. cert-manager renews it 30 days ahead.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2468,7 +2482,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Certificate"
         },
         "overrides": []
       },
@@ -2483,7 +2498,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false

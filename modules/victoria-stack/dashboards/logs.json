@@ -1,7 +1,7 @@
 {
   "uid": "logs",
   "title": "Logs explorer",
-  "description": "Every log line from host journals and Kubernetes pods. Narrow by source, level and text. Recurring messages are grouped with their numbers masked, so a new kind of failure stands out.",
+  "description": "Every log line from host journals, Kubernetes pods and the Hubble flow logs. Narrow by source, level and text. Recurring messages are grouped with their numbers masked, so a new kind of failure stands out.",
   "tags": [
     "hh",
     "logs"
@@ -150,7 +150,7 @@
         "sort": 1,
         "multi": true,
         "includeAll": true,
-        "description": "Hosts whose journal to show.",
+        "description": "Hosts whose journal and flow log lines to show.",
         "hide": 0,
         "regex": "",
         "options": [],
@@ -562,17 +562,154 @@
       "id": 3
     },
     {
+      "type": "timeseries",
+      "title": "Flow log lines by kind",
+      "description": "Gateway requests, responses and dropped packets per interval, for the selected hosts. A response at 400 or above counts as a warning, at 500 or above as an error.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} k8s.node.name:$host severity_number:$level _msg:~\"$search\" edge.event:* | stats by (edge.event) count() lines",
+          "queryType": "statsRange",
+          "refId": "A",
+          "legendFormat": "{{edge.event}}"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} k8s.node.name:$host severity_number:$level _msg:~\"$search\" drop.reason:* | stats count() lines",
+          "queryType": "statsRange",
+          "refId": "B",
+          "legendFormat": "drop"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Edge traffic",
+              "url": "/d/edge?${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "Cluster network",
+              "url": "/d/cluster-network?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "drop"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "request"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "response"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 6
+      },
+      "id": 4
+    },
+    {
       "type": "row",
       "title": "Patterns",
       "collapsed": false,
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 8,
+        "y": 14,
         "w": 24,
         "h": 1
       },
-      "id": 4
+      "id": 5
     },
     {
       "type": "table",
@@ -588,7 +725,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "(k8s.namespace.name:$namespace k8s.pod.name:$pod severity_number:$level _msg:~\"$search\") or (host.name:$host unit:$unit severity_number:$level _msg:~\"$search\") | collapse_nums prettify | stats by (_msg) count() lines, count_uniq(_stream) sources | sort by (lines desc) | limit 50",
+          "expr": "(k8s.namespace.name:$namespace k8s.pod.name:$pod severity_number:$level _msg:~\"$search\") or (host.name:$host unit:$unit severity_number:$level _msg:~\"$search\") or (_stream:{service.name=\"hubble\"} k8s.node.name:$host severity_number:$level _msg:~\"$search\") | collapse_nums prettify | stats by (_msg) count() lines, count_uniq(_stream) sources | sort by (lines desc) | limit 50",
           "queryType": "stats",
           "refId": "A"
         }
@@ -717,11 +854,11 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 9,
+        "y": 15,
         "w": 16,
         "h": 10
       },
-      "id": 5
+      "id": 6
     },
     {
       "type": "table",
@@ -737,7 +874,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "(k8s.namespace.name:$namespace k8s.pod.name:$pod severity_number:$level _msg:~\"$search\") or (host.name:$host unit:$unit severity_number:$level _msg:~\"$search\") | stats by (_stream) count() lines | sort by (lines desc) | limit 20",
+          "expr": "(k8s.namespace.name:$namespace k8s.pod.name:$pod severity_number:$level _msg:~\"$search\") or (host.name:$host unit:$unit severity_number:$level _msg:~\"$search\") or (_stream:{service.name=\"hubble\"} k8s.node.name:$host severity_number:$level _msg:~\"$search\") | stats by (_stream) count() lines | sort by (lines desc) | limit 20",
           "queryType": "stats",
           "refId": "A"
         }
@@ -845,11 +982,11 @@
       ],
       "gridPos": {
         "x": 16,
-        "y": 9,
+        "y": 15,
         "w": 8,
         "h": 10
       },
-      "id": 6
+      "id": 7
     },
     {
       "type": "row",
@@ -858,11 +995,11 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 19,
+        "y": 25,
         "w": 24,
         "h": 1
       },
-      "id": 7
+      "id": 8
     },
     {
       "type": "logs",
@@ -897,11 +1034,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 20,
+        "y": 26,
         "w": 24,
         "h": 14
       },
-      "id": 8
+      "id": 9
     },
     {
       "type": "logs",
@@ -936,11 +1073,50 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 34,
+        "y": 40,
         "w": 24,
         "h": 14
       },
-      "id": 9
+      "id": 10
+    },
+    {
+      "type": "logs",
+      "title": "Gateway and drop flows",
+      "description": "One line per Gateway request, response or dropped packet for the selection, newest first. Edge traffic and Cluster network break them down by client and source.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} k8s.node.name:$host severity_number:$level _msg:~\"$search\" | copy severity_text as level",
+          "queryType": "instant",
+          "refId": "A",
+          "maxLines": 1000
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "enableInfiniteScrolling": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 54,
+        "w": 24,
+        "h": 14
+      },
+      "id": 11
     }
   ]
 }

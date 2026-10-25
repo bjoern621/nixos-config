@@ -227,7 +227,7 @@
     },
     {
       "type": "stat",
-      "title": "Running",
+      "title": "",
       "description": "Pods in the Running phase within the selection.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -259,7 +259,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Running"
         },
         "overrides": []
       },
@@ -274,7 +275,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -289,7 +290,7 @@
     },
     {
       "type": "stat",
-      "title": "Pods down",
+      "title": "",
       "description": "Pods Pending, Failed or Unknown. Completed jobs excluded.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -329,7 +330,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Pods down"
         },
         "overrides": []
       },
@@ -344,7 +346,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -359,7 +361,7 @@
     },
     {
       "type": "stat",
-      "title": "Restarts",
+      "title": "",
       "description": "Container restarts over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -399,7 +401,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Restarts"
         },
         "overrides": []
       },
@@ -414,7 +417,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -429,7 +432,7 @@
     },
     {
       "type": "stat",
-      "title": "OOM kills",
+      "title": "",
       "description": "Containers the kernel killed for exceeding their memory limit over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -465,7 +468,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "OOM kills"
         },
         "overrides": []
       },
@@ -480,7 +484,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -495,7 +499,7 @@
     },
     {
       "type": "stat",
-      "title": "Throttling",
+      "title": "",
       "description": "Highest share of CPU periods any container spent throttled at its limit. Above 10 % its limit is too tight.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -536,7 +540,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Throttling"
         },
         "overrides": []
       },
@@ -551,7 +556,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -566,7 +571,7 @@
     },
     {
       "type": "stat",
-      "title": "Warnings",
+      "title": "",
       "description": "Kubernetes Warning events over the selected range: failed probes, scheduling failures, image pulls.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -606,7 +611,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Warnings"
         },
         "overrides": []
       },
@@ -621,7 +627,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false

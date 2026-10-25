@@ -196,7 +196,7 @@
     },
     {
       "type": "stat",
-      "title": "Dropped",
+      "title": "",
       "description": "Packets that policy dropped over the selected range, from Hubble's counters.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -232,7 +232,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Dropped"
         },
         "overrides": []
       },
@@ -247,7 +248,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -262,7 +263,7 @@
     },
     {
       "type": "stat",
-      "title": "Drop share",
+      "title": "",
       "description": "Share of policy verdicts that dropped the packet.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -304,7 +305,8 @@
           "noValue": "0",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Drop share"
         },
         "overrides": []
       },
@@ -319,7 +321,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -334,7 +336,7 @@
     },
     {
       "type": "stat",
-      "title": "Drops logged",
+      "title": "",
       "description": "Dropped packets in the drop log for the selection, every reason included.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
@@ -366,7 +368,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Drops logged"
         },
         "overrides": []
       },
@@ -381,7 +384,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -396,7 +399,7 @@
     },
     {
       "type": "stat",
-      "title": "DNS failures",
+      "title": "",
       "description": "Share of DNS answers with SERVFAIL or REFUSED. NXDOMAIN counts as an answer: search domains produce it on every lookup.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -438,7 +441,8 @@
           "noValue": "0",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "DNS failures"
         },
         "overrides": []
       },
@@ -453,7 +457,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -468,7 +472,7 @@
     },
     {
       "type": "stat",
-      "title": "DNS p95",
+      "title": "",
       "description": "95th percentile time CoreDNS took to answer.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -509,7 +513,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "DNS p95"
         },
         "overrides": []
       },
@@ -524,7 +529,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -539,7 +544,7 @@
     },
     {
       "type": "stat",
-      "title": "Flows lost",
+      "title": "",
       "description": "Flows Hubble could not keep or export over the selected range. Lost flows leave holes in the drop and request logs.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -579,7 +584,8 @@
           },
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Flows lost"
         },
         "overrides": []
       },
@@ -594,7 +600,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false

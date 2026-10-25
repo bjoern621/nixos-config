@@ -1,59 +1,23 @@
 {
   "uid": "claude-bot",
   "title": "Claude Bot",
+  "description": "Whether the Discord bot answers the questions it gets, what limits it, who asks, and one log line per decision. Counts over the selected range, since the bot answers a handful of questions an hour.",
   "tags": [
+    "hh",
     "claude-bot",
-    "discord",
-    "hh"
+    "discord"
   ],
-  "timezone": "browser",
-  "editable": true,
+  "editable": false,
   "graphTooltip": 1,
   "schemaVersion": 41,
-  "version": 2,
-  "refresh": "30s",
   "time": {
     "from": "now-24h",
     "to": "now"
   },
-  "timepicker": {},
-  "annotations": {
-    "list": [
-      {
-        "name": "Argo CD syncs",
-        "datasource": {
-          "type": "victoriametrics-metrics-datasource",
-          "uid": "victoriametrics"
-        },
-        "enable": true,
-        "hide": false,
-        "iconColor": "purple",
-        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\"}[2m])) > 0 unless on (name) sum by (name) (increase(argocd_app_sync_total{dry_run=\"false\"}[1h])) > 6",
-        "step": "2m",
-        "titleFormat": "Sync {{name}}",
-        "textFormat": "{{phase}}",
-        "useValueForTime": false
-      },
-      {
-        "name": "Host rebuilds",
-        "datasource": {
-          "type": "victoriametrics-metrics-datasource",
-          "uid": "victoriametrics"
-        },
-        "enable": true,
-        "hide": false,
-        "iconColor": "orange",
-        "expr": "max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)",
-        "step": "5m",
-        "titleFormat": "Rebuild {{host_name}}",
-        "textFormat": "{{revision}}",
-        "useValueForTime": false
-      }
-    ]
-  },
-  "templating": {
-    "list": []
-  },
+  "timezone": "browser",
+  "refresh": "1m",
+  "fiscalYearStartMonth": 0,
+  "liveNow": false,
   "links": [
     {
       "title": "Fleet overview",
@@ -94,30 +58,146 @@
       "tooltip": "Resources, restarts and logs"
     }
   ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "Argo CD syncs",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "purple",
+        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\"}[2m])) > 0 unless on (name) sum by (name) (increase(argocd_app_sync_total{dry_run=\"false\"}[1h])) > 6",
+        "step": "2m",
+        "titleFormat": "Sync {{name}}",
+        "textFormat": "{{phase}}",
+        "useValueForTime": false
+      },
+      {
+        "name": "Host rebuilds",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "orange",
+        "expr": "max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)",
+        "step": "5m",
+        "titleFormat": "Rebuild {{host_name}}",
+        "textFormat": "{{revision}}",
+        "useValueForTime": false
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "user",
+        "label": "User",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "description": "Part of a Discord user id. Empty shows every user.",
+        "hide": 0
+      },
+      {
+        "name": "search",
+        "label": "Search",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "description": "Text that the event lines must contain, for example refused or a channel id.",
+        "hide": 0
+      }
+    ]
+  },
   "panels": [
     {
-      "id": 1,
-      "type": "stat",
-      "title": "Questions (1h)",
+      "type": "row",
+      "title": "Does it answer",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
-        "h": 4,
-        "w": 4,
         "x": 0,
-        "y": 0
+        "y": 0,
+        "w": 24,
+        "h": 1
       },
+      "id": 1
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "Questions asked over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum (increase(claude_bot_questions_total{}[$__range])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "custom": {},
           "decimals": 0,
-          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "color": {
-            "mode": "fixed",
-            "fixedColor": "text"
-          }
+            "mode": "thresholds"
+          },
+          "displayName": "Questions"
         },
         "overrides": []
       },
@@ -129,40 +209,48 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto",
-        "graphMode": "area",
-        "colorMode": "value"
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(increase(claude_bot_questions_total[1h])) or vector(0)",
-          "legendFormat": "asked"
-        }
-      ]
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "id": 2
     },
     {
-      "id": 2,
       "type": "stat",
-      "title": "Answered (1h)",
-      "description": "Blank rather than zero when nothing was asked: a share of no questions is not 0%, it is undefined.",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 0
-      },
+      "title": "",
+      "description": "Share of the questions that got an answer. Empty when nobody asked.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum (increase(claude_bot_questions_total{outcome=\"answered\"}[$__range])) / sum (increase(claude_bot_questions_total{}[$__range]))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
       "fieldConfig": {
         "defaults": {
+          "custom": {},
           "unit": "percentunit",
           "decimals": 0,
-          "min": 0,
-          "max": 1,
-          "noValue": "-",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -179,7 +267,12 @@
                 "value": 0.9
               }
             ]
-          }
+          },
+          "noValue": "No question",
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Answered"
         },
         "overrides": []
       },
@@ -191,36 +284,47 @@
           "fields": "",
           "values": false
         },
+        "colorMode": "value",
         "graphMode": "none",
-        "colorMode": "value"
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(increase(claude_bot_questions_total{outcome=\"answered\"}[1h])) / sum(increase(claude_bot_questions_total[1h]))",
-          "legendFormat": "answered"
-        }
-      ]
+      "gridPos": {
+        "x": 4,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "id": 3
     },
     {
-      "id": 3,
       "type": "stat",
-      "title": "Refused (1h)",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 8,
-        "y": 0
-      },
+      "title": "",
+      "description": "Questions that a rate limit or the concurrency gate turned away.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum (increase(claude_bot_questions_total{outcome=~\"refused.*\"}[$__range])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "custom": {},
           "decimals": 0,
-          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -237,7 +341,11 @@
                 "value": 20
               }
             ]
-          }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Refused"
         },
         "overrides": []
       },
@@ -249,77 +357,129 @@
           "fields": "",
           "values": false
         },
-        "graphMode": "area",
-        "colorMode": "value"
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "id": 4
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "Median time from question to answer.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
       },
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (increase(claude_bot_question_duration_seconds_bucket[$__range])))",
+          "legendFormat": "p50",
           "refId": "A",
-          "expr": "sum(increase(claude_bot_questions_total{outcome=~\"refused.*\"}[1h])) or vector(0)",
-          "legendFormat": "refused"
+          "instant": true,
+          "range": false
         }
-      ]
-    },
-    {
-      "id": 4,
-      "type": "stat",
-      "title": "In flight",
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 120
+              }
+            ]
+          },
+          "noValue": "No question",
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Answer time p50"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
       "gridPos": {
-        "h": 4,
-        "w": 4,
         "x": 12,
-        "y": 0
+        "y": 1,
+        "w": 4,
+        "h": 4
       },
+      "id": 5
+    },
+    {
+      "type": "stat",
+      "title": "In flight and queued",
+      "description": "Questions the model works on, and questions waiting for a free slot.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "graphMode": "area",
-        "colorMode": "value"
       },
       "targets": [
         {
-          "refId": "A",
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
           "expr": "sum(claude_bot_inflight) or vector(0)",
-          "legendFormat": "in flight"
+          "legendFormat": "in flight",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_queue_depth) or vector(0)",
+          "legendFormat": "queued",
+          "refId": "B"
         }
-      ]
-    },
-    {
-      "id": 5,
-      "type": "stat",
-      "title": "Queued",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 16,
-        "y": 0
-      },
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "custom": {},
           "decimals": 0,
-          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -336,6 +496,9 @@
                 "value": 6
               }
             ]
+          },
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
@@ -348,39 +511,46 @@
           "fields": "",
           "values": false
         },
+        "colorMode": "value",
         "graphMode": "area",
-        "colorMode": "value"
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(claude_bot_queue_depth) or vector(0)",
-          "legendFormat": "queued"
-        }
-      ]
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "id": 6
     },
     {
-      "id": 6,
-      "type": "gauge",
-      "title": "Day budget used",
-      "description": "Questions inside the rolling 24 hour window, against RATE_LIMIT_GLOBAL_PER_DAY as the bot reports it.",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 20,
-        "y": 0
-      },
+      "type": "stat",
+      "title": "",
+      "description": "Questions inside the rolling 24 hours against the ceiling that the bot reports (RATE_LIMIT_GLOBAL_PER_DAY).",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_global_budget_used{window=\"day\"}) / sum(claude_bot_global_budget_limit{window=\"day\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
+          "custom": {},
           "unit": "percentunit",
           "decimals": 0,
-          "min": 0,
-          "max": 1,
-          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -397,7 +567,14 @@
                 "value": 0.9
               }
             ]
-          }
+          },
+          "min": 0,
+          "max": 1,
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Day budget used"
         },
         "overrides": []
       },
@@ -409,45 +586,82 @@
           "fields": "",
           "values": false
         },
-        "showThresholdMarkers": true
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(claude_bot_global_budget_used{window=\"day\"}) / sum(claude_bot_global_budget_limit{window=\"day\"})",
-          "legendFormat": "day"
-        }
-      ]
+      "gridPos": {
+        "x": 20,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "id": 7
     },
     {
-      "id": 10,
+      "type": "row",
+      "title": "Questions and limits",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "id": 8
+    },
+    {
       "type": "timeseries",
       "title": "Questions per hour by outcome",
-      "description": "A trailing hour at every point, not a per-scrape rate. The bot answers a handful of questions an hour, and a window that short is empty between them.",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 4
-      },
+      "description": "Questions in the trailing hour at each point.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (outcome) (increase(claude_bot_questions_total{}[1h]))",
+          "legendFormat": "{{outcome}}",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "decimals": 1,
-          "min": 0,
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 25,
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
             "stacking": {
-              "mode": "normal",
+              "mode": "none",
               "group": "A"
             },
-            "showPoints": "never"
+            "axisSoftMin": 0
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No question",
+          "color": {
+            "mode": "palette-classic"
           }
         },
         "overrides": [
@@ -509,90 +723,157 @@
           "sort": "desc"
         }
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (outcome) (increase(claude_bot_questions_total[1h]))",
-          "legendFormat": "{{outcome}}"
-        }
-      ]
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "id": 9
     },
     {
-      "id": 11,
       "type": "timeseries",
-      "title": "Questions per hour by user",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 4
-      },
+      "title": "Refusals per hour by reason",
+      "description": "refused_user_bucket: one person asks too fast. refused_global_hour and refused_global_day: the whole server hit the ceiling. refused_queue: every slot busy and the queue full.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (outcome) (increase(claude_bot_questions_total{outcome=~\"refused.*\"}[1h]))",
+          "legendFormat": "{{outcome}}",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "decimals": 1,
-          "min": 0,
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "fillOpacity": 10,
-            "showPoints": "never"
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "Nothing refused",
+          "color": {
+            "mode": "palette-classic"
           }
         },
         "overrides": []
       },
       "options": {
         "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (user_id) (increase(claude_bot_questions_total[1h]))",
-          "legendFormat": "{{user_id}}"
-        }
-      ]
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "id": 10
     },
     {
-      "id": 20,
       "type": "timeseries",
-      "title": "Global budget: used against the ceiling",
-      "description": "The ceiling is read from the bot, not hardcoded, so a ConfigMap change moves the line.",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
+      "title": "Global budget against the ceiling",
+      "description": "Questions inside the rolling hour and day. The ceiling comes from the bot, so a ConfigMap change moves the line.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_global_budget_used{window=\"hour\"})",
+          "legendFormat": "hour used",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_global_budget_limit{window=\"hour\"})",
+          "legendFormat": "hour ceiling",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_global_budget_used{window=\"day\"})",
+          "legendFormat": "day used",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_global_budget_limit{window=\"day\"})",
+          "legendFormat": "day ceiling",
+          "refId": "D"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "min": 0,
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "showPoints": "never"
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
           }
         },
         "overrides": [
@@ -631,56 +912,791 @@
           "sort": "desc"
         }
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(claude_bot_global_budget_used{window=\"hour\"})",
-          "legendFormat": "hour used"
-        },
-        {
-          "refId": "B",
-          "expr": "sum(claude_bot_global_budget_limit{window=\"hour\"})",
-          "legendFormat": "hour ceiling"
-        },
-        {
-          "refId": "C",
-          "expr": "sum(claude_bot_global_budget_used{window=\"day\"})",
-          "legendFormat": "day used"
-        },
-        {
-          "refId": "D",
-          "expr": "sum(claude_bot_global_budget_limit{window=\"day\"})",
-          "legendFormat": "day ceiling"
-        }
-      ]
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "id": 11
     },
     {
-      "id": 21,
       "type": "timeseries",
-      "title": "Tokens left per user",
-      "description": "Read every export interval, so the refill is a slope rather than a step. A vertical drop is a question; a flat line at the top is a full bucket. A user appears from their first question onward.",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 12
-      },
+      "title": "In flight and queued",
+      "description": "Questions the model works on, and questions waiting for a slot.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_inflight)",
+          "legendFormat": "in flight",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(claude_bot_queue_depth)",
+          "legendFormat": "queued",
+          "refId": "B"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "decimals": 2,
-          "min": 0,
           "custom": {
             "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "fillOpacity": 0,
-            "showPoints": "never"
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
           },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "id": 12
+    },
+    {
+      "type": "row",
+      "title": "How the model works",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 1
+      },
+      "id": 13
+    },
+    {
+      "type": "stat",
+      "title": "Answer time",
+      "description": "Time from question to answer over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (increase(claude_bot_question_duration_seconds_bucket[$__range])))",
+          "legendFormat": "p50",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.9, sum by (le) (increase(claude_bot_question_duration_seconds_bucket[$__range])))",
+          "legendFormat": "p90",
+          "refId": "B",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (increase(claude_bot_question_duration_seconds_bucket[$__range])))",
+          "legendFormat": "p99",
+          "refId": "C",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No question",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 6,
+        "h": 6
+      },
+      "id": 14
+    },
+    {
+      "type": "stat",
+      "title": "Turns per question",
+      "description": "Model turns per question over the selected range. A question that takes more turns used a tool.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (increase(claude_bot_claude_turns_bucket[$__range])))",
+          "legendFormat": "p50",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.9, sum by (le) (increase(claude_bot_claude_turns_bucket[$__range])))",
+          "legendFormat": "p90",
+          "refId": "B",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(1, sum by (le) (increase(claude_bot_claude_turns_bucket[$__range])))",
+          "legendFormat": "max",
+          "refId": "C",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No question",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 23,
+        "w": 6,
+        "h": 6
+      },
+      "id": 15
+    },
+    {
+      "type": "stat",
+      "title": "Tool time p90",
+      "description": "90th percentile duration per Discord tool over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "histogram_quantile(0.9, sum by (le, tool) (increase(claude_bot_tool_duration_seconds_bucket[$__range])))",
+          "legendFormat": "{{tool}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No tool call",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 23,
+        "w": 12,
+        "h": 6
+      },
+      "id": 16
+    },
+    {
+      "type": "timeseries",
+      "title": "Discord tool calls per hour",
+      "description": "Calls of the channel-reading tools. WebSearch and WebFetch run inside the Agent SDK and stay out. A high turn count with no tool call here means the model searched the web.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (tool) (increase(claude_bot_tool_calls_total[1h]))",
+          "legendFormat": "{{tool}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "No tool call",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 29,
+        "w": 12,
+        "h": 8
+      },
+      "id": 17
+    },
+    {
+      "type": "timeseries",
+      "title": "Model tokens per hour",
+      "description": "Tokens per hour by kind. Cache reads dwarf the rest in a long conversation. Input and output count against the subscription.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (kind) (increase(claude_bot_claude_tokens_total[1h]))",
+          "legendFormat": "{{kind}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "0",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 29,
+        "w": 12,
+        "h": 8
+      },
+      "id": 18
+    },
+    {
+      "type": "row",
+      "title": "Who asks",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 37,
+        "w": 24,
+        "h": 1
+      },
+      "id": 19
+    },
+    {
+      "type": "table",
+      "title": "Askers",
+      "description": "Every user and channel with a question over the selected range, from the bot's decision log. Select a user to narrow the dashboard.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "app:claude-bot outcome:* user_id:~\"$user\" | stats by (user_id, channel_id, surface) count() questions, count() if (outcome:=answered) answered, count() if (outcome:~\"^refused\") refused, quantile(0.5, duration_s) p50 | sort by (questions desc) | limit 100",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "user_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "User"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Only ${__data.fields.user_id}",
+                    "url": "/d/claude-bot?var-user=${__data.fields.user_id}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "channel_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Channel"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "surface"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Asked by"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "questions"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Questions"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "answered"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Answered"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "refused"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Refused"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p50"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Answer time p50"
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Questions",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "user_id": 0,
+              "channel_id": 1,
+              "surface": 2,
+              "questions": 3,
+              "answered": 4,
+              "refused": 5,
+              "p50": 6
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 14,
+        "h": 9
+      },
+      "id": 20
+    },
+    {
+      "type": "timeseries",
+      "title": "Tokens left per user",
+      "description": "Rate-limit tokens per user. The bucket refills over time, a drop marks a question. A user appears from the first question on.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "max by (user_id) (claude_bot_user_tokens_remaining{user_id=~\".*$user.*\"})",
+          "legendFormat": "{{user_id}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 2,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -693,176 +1709,9 @@
                 "value": 1
               }
             ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "calcs": [
-            "lastNotNull",
-            "min"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "asc"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "claude_bot_user_tokens_remaining",
-          "legendFormat": "{{user_id}}"
-        }
-      ]
-    },
-    {
-      "id": 30,
-      "type": "stat",
-      "title": "Answer latency",
-      "description": "Over the whole selected range, not per scrape interval. A quantile needs samples in its window, and on a bot answering a few questions an hour a short window is usually empty.",
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 0,
-        "y": 20
-      },
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 1,
-          "noValue": "no questions",
+          },
           "color": {
-            "mode": "fixed",
-            "fixedColor": "text"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "graphMode": "none",
-        "colorMode": "none",
-        "orientation": "horizontal",
-        "justifyMode": "center"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.5, sum by (le) (increase(claude_bot_question_duration_seconds_bucket[$__range])))",
-          "legendFormat": "p50"
-        },
-        {
-          "refId": "B",
-          "expr": "histogram_quantile(0.9, sum by (le) (increase(claude_bot_question_duration_seconds_bucket[$__range])))",
-          "legendFormat": "p90"
-        },
-        {
-          "refId": "C",
-          "expr": "histogram_quantile(0.99, sum by (le) (increase(claude_bot_question_duration_seconds_bucket[$__range])))",
-          "legendFormat": "p99"
-        }
-      ]
-    },
-    {
-      "id": 31,
-      "type": "stat",
-      "title": "Turns per question",
-      "description": "Over the selected range. A question needing more turns is one where the model reached for a tool.",
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 8,
-        "y": 20
-      },
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 1,
-          "noValue": "no questions",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "text"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "graphMode": "none",
-        "colorMode": "none",
-        "orientation": "horizontal",
-        "justifyMode": "center"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.5, sum by (le) (increase(claude_bot_claude_turns_bucket[$__range])))",
-          "legendFormat": "p50"
-        },
-        {
-          "refId": "B",
-          "expr": "histogram_quantile(0.9, sum by (le) (increase(claude_bot_claude_turns_bucket[$__range])))",
-          "legendFormat": "p90"
-        },
-        {
-          "refId": "C",
-          "expr": "histogram_quantile(1, sum by (le) (increase(claude_bot_claude_turns_bucket[$__range])))",
-          "legendFormat": "max"
-        }
-      ]
-    },
-    {
-      "id": 32,
-      "type": "timeseries",
-      "title": "Concurrency and queue",
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 20
-      },
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "min": 0,
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 2,
-            "fillOpacity": 15,
-            "showPoints": "never"
+            "mode": "thresholds"
           }
         },
         "overrides": []
@@ -878,202 +1727,298 @@
           "sort": "desc"
         }
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(claude_bot_inflight)",
-          "legendFormat": "in flight"
-        },
-        {
-          "refId": "B",
-          "expr": "sum(claude_bot_queue_depth)",
-          "legendFormat": "queued"
-        }
-      ]
+      "gridPos": {
+        "x": 14,
+        "y": 38,
+        "w": 10,
+        "h": 9
+      },
+      "id": 21
     },
     {
-      "id": 40,
-      "type": "timeseries",
-      "title": "Discord tool calls per hour",
-      "description": "The five channel-reading tools only. WebSearch and WebFetch run inside the Agent SDK subprocess and are not visible to the bot, so an empty panel next to a high turn count means the model searched the web rather than read the channel.",
+      "type": "row",
+      "title": "Pods",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
-        "h": 8,
-        "w": 8,
         "x": 0,
-        "y": 25
-      },
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 1,
-          "min": 0,
-          "noValue": "no tool calls yet",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 25,
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            },
-            "showPoints": "never"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (tool) (increase(claude_bot_tool_calls_total[1h]))",
-          "legendFormat": "{{tool}}"
-        }
-      ]
-    },
-    {
-      "id": 41,
-      "type": "stat",
-      "title": "Tool latency p90",
-      "description": "Over the selected range, per Discord tool.",
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 25
-      },
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 2,
-          "noValue": "no tool calls yet",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "text"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "graphMode": "none",
-        "colorMode": "none",
-        "orientation": "horizontal"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.9, sum by (le, tool) (increase(claude_bot_tool_duration_seconds_bucket[$__range])))",
-          "legendFormat": "{{tool}}"
-        }
-      ]
-    },
-    {
-      "id": 42,
-      "type": "timeseries",
-      "title": "Model tokens per hour",
-      "description": "Cache reads dwarf the rest on a healthy conversation; input and output are what the subscription is actually spent on.",
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 25
-      },
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "min": 0,
-          "noValue": "0",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 15,
-            "showPoints": "never"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true,
-          "calcs": [
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (kind) (increase(claude_bot_claude_tokens_total[1h]))",
-          "legendFormat": "{{kind}}"
-        }
-      ]
-    },
-    {
-      "id": 50,
-      "type": "timeseries",
-      "title": "Refusals per hour by reason",
-      "description": "user_bucket is one person going too fast. global_hour and global_day are the whole server hitting the spend ceiling. refused_queue is the concurrency gate, not a rate limit. Empty means nothing has ever been refused: a counter that has never fired has no series to draw.",
-      "gridPos": {
-        "h": 7,
+        "y": 47,
         "w": 24,
-        "x": 0,
-        "y": 33
+        "h": 1
       },
+      "id": 22
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU by pod",
+      "description": "CPU cores in use per pod against its limit. At the limit the kernel throttles the pod.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (k8s_namespace_name, k8s_pod_name) (k8s_pod_cpu_usage{k8s_namespace_name=~\"claude-bot\"})",
+          "legendFormat": "{{k8s_pod_name}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (k8s_namespace_name, k8s_pod_name) (k8s_container_cpu_limit{k8s_namespace_name=~\"claude-bot\"})",
+          "legendFormat": "limit {{k8s_pod_name}}",
+          "refId": "B"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "decimals": 1,
-          "min": 0,
-          "noValue": "nothing refused",
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 25,
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
             "stacking": {
-              "mode": "normal",
+              "mode": "none",
               "group": "A"
             },
-            "showPoints": "never"
+            "axisSoftMin": 0
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Workload view of ${__field.labels.k8s_pod_name}",
+              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "Logs of ${__field.labels.k8s_pod_name}",
+              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^limit .*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 48,
+        "w": 8,
+        "h": 7
+      },
+      "id": 23
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory by pod",
+      "description": "Working set per pod against its limit. A container that reaches the limit gets killed.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (k8s_namespace_name, k8s_pod_name) (k8s_pod_memory_working_set_bytes{k8s_namespace_name=~\"claude-bot\"})",
+          "legendFormat": "{{k8s_pod_name}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (k8s_namespace_name, k8s_pod_name) (k8s_container_memory_limit_bytes{k8s_namespace_name=~\"claude-bot\"})",
+          "legendFormat": "limit {{k8s_pod_name}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Workload view of ${__field.labels.k8s_pod_name}",
+              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "Logs of ${__field.labels.k8s_pod_name}",
+              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^limit .*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 48,
+        "w": 8,
+        "h": 7
+      },
+      "id": 24
+    },
+    {
+      "type": "timeseries",
+      "title": "Restarts by container",
+      "description": "Container restarts per interval. A restart of a single-replica service drops every open connection.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (k8s_namespace_name, k8s_pod_name, k8s_container_name) (increase(k8s_container_restarts{k8s_namespace_name=~\"claude-bot\"}[$__interval])) > 0",
+          "legendFormat": "{{k8s_pod_name}} {{k8s_container_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Workload view of ${__field.labels.k8s_pod_name}",
+              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "Logs of ${__field.labels.k8s_pod_name}",
+              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "No restart",
+          "color": {
+            "mode": "palette-classic"
           }
         },
         "overrides": []
@@ -1089,44 +2034,65 @@
           "sort": "desc"
         }
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (outcome) (increase(claude_bot_questions_total{outcome=~\"refused.*\"}[1h]))",
-          "legendFormat": "{{outcome}}"
-        }
-      ]
+      "gridPos": {
+        "x": 16,
+        "y": 48,
+        "w": 8,
+        "h": 7
+      },
+      "id": 25
     },
     {
-      "id": 60,
+      "type": "row",
+      "title": "Lines",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 24,
+        "h": 1
+      },
+      "id": 26
+    },
+    {
       "type": "logs",
       "title": "Bot events",
-      "description": "One record per decision, carrying the user, the outcome and the exact refusal. Narrow with a field, for example: app:claude-bot AND limit_reason:user_bucket",
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 40
-      },
+      "description": "One line per decision with the user, the outcome and the exact refusal, newest first. User and Search narrow it.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
         "uid": "victorialogs"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "app:claude-bot user_id:~\"$user\" _msg:~\"$search\" | copy severity_text as level",
+          "queryType": "instant",
+          "refId": "A",
+          "maxLines": 500
+        }
+      ],
       "options": {
         "showTime": true,
         "showLabels": false,
+        "showCommonLabels": false,
         "wrapLogMessage": true,
-        "sortOrder": "Descending",
-        "enableLogDetails": true
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "enableInfiniteScrolling": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
       },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "app:claude-bot",
-          "queryType": "instant",
-          "maxLines": 100
-        }
-      ]
+      "gridPos": {
+        "x": 0,
+        "y": 56,
+        "w": 24,
+        "h": 12
+      },
+      "id": 27
     }
   ]
 }

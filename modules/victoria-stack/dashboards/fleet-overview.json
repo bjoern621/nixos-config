@@ -244,7 +244,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 140
+                "value": 130
               }
             ]
           },
@@ -277,6 +277,10 @@
                   "mode": "basic",
                   "valueDisplayMode": "text"
                 }
+              },
+              {
+                "id": "custom.width",
+                "value": 150
               },
               {
                 "id": "thresholds",
@@ -331,6 +335,10 @@
                 }
               },
               {
+                "id": "custom.width",
+                "value": 150
+              },
+              {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
@@ -383,6 +391,10 @@
                 }
               },
               {
+                "id": "custom.width",
+                "value": 150
+              },
+              {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
@@ -421,6 +433,10 @@
                 }
               },
               {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
@@ -455,6 +471,10 @@
               {
                 "id": "decimals",
                 "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 100
               }
             ]
           },
@@ -471,6 +491,10 @@
               {
                 "id": "decimals",
                 "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 100
               }
             ]
           },
@@ -574,7 +598,7 @@
         "x": 0,
         "y": 1,
         "w": 24,
-        "h": 7
+        "h": 9
       },
       "id": 2
     },
@@ -649,7 +673,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 8,
+        "y": 10,
         "w": 8,
         "h": 7
       },
@@ -726,7 +750,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 8,
+        "y": 10,
         "w": 8,
         "h": 7
       },
@@ -803,7 +827,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 8,
+        "y": 10,
         "w": 8,
         "h": 7
       },
@@ -816,7 +840,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 15,
+        "y": 17,
         "w": 24,
         "h": 1
       },
@@ -886,7 +910,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 16,
+        "y": 18,
         "w": 6,
         "h": 4
       },
@@ -965,7 +989,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 16,
+        "y": 18,
         "w": 6,
         "h": 4
       },
@@ -1043,7 +1067,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 16,
+        "y": 18,
         "w": 6,
         "h": 4
       },
@@ -1052,7 +1076,7 @@
     {
       "type": "stat",
       "title": "Nix cache",
-      "description": "Garage cluster health. Red means the S3 store lost quorum and nix pulls fail.",
+      "description": "Garage cluster behind the nix cache. degraded: a storage node is down and quorum holds. unavailable: quorum lost and nix pulls fail.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1063,7 +1087,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "min(cluster_healthy{job=\"garage\"})",
+          "expr": "min(cluster_available{job=\"garage\"}) + min(cluster_healthy{job=\"garage\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -1079,8 +1103,12 @@
                 "value": null
               },
               {
-                "color": "green",
+                "color": "orange",
                 "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
               }
             ]
           },
@@ -1096,10 +1124,14 @@
               "type": "value",
               "options": {
                 "0": {
-                  "text": "degraded",
+                  "text": "unavailable",
                   "color": "red"
                 },
                 "1": {
+                  "text": "degraded",
+                  "color": "orange"
+                },
+                "2": {
                   "text": "healthy",
                   "color": "green"
                 }
@@ -1130,7 +1162,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 16,
+        "y": 18,
         "w": 6,
         "h": 4
       },
@@ -1267,7 +1299,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 20,
+        "y": 22,
         "w": 12,
         "h": 8
       },
@@ -1287,7 +1319,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (svc) (label_join(rate(hubble_http_requests_total[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"))",
+          "expr": "sum by (svc) (label_replace(label_join(label_match(rate(hubble_http_requests_total[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"))",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -1299,7 +1331,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum by (svc) (label_join(rate(hubble_http_requests_total{status=~\"5..\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\")) / sum by (svc) (label_join(rate(hubble_http_requests_total[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"))",
+          "expr": "100 * sum by (svc) (label_replace(label_join(label_match(rate(hubble_http_requests_total{status=~\"5..\"}[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{status=~\"5..\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total{status=~\"5..\"}[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total{status=~\"5..\"}[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\")) / sum by (svc) (label_replace(label_join(label_match(rate(hubble_http_requests_total[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_requests_total[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_requests_total[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\"))",
           "legendFormat": "",
           "refId": "B",
           "instant": true,
@@ -1311,7 +1343,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_join(rate(hubble_http_request_duration_seconds_bucket[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\")))",
+          "expr": "histogram_quantile(0.95, sum by (svc, le) (label_replace(label_join(label_match(rate(hubble_http_request_duration_seconds_bucket[$__range]), \"destination_workload\", \".+\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") * on (destination_namespace) group_left (destination_workload) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"workload_from\", \"namespace\") or label_set(label_mismatch(label_match(rate(hubble_http_request_duration_seconds_bucket[$__range]), \"destination_namespace\", \".+\"), \"destination_workload\", \".+\") unless on (destination_namespace) (((count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) * 0 + 1) and on (destination_namespace) (count by (destination_namespace) (count by (destination_namespace, destination_workload) (last_over_time(hubble_http_requests_total{destination_workload!=\"\"}[1d]))) == 1)), \"destination_workload\", \"unattributed\") or label_mismatch(rate(hubble_http_request_duration_seconds_bucket[$__range]), \"destination_namespace\", \".+\"), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"gateway\", \"svc\", \"/\")))",
           "legendFormat": "",
           "refId": "C",
           "instant": true,
@@ -1349,15 +1381,11 @@
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 280
-              },
-              {
                 "id": "links",
                 "value": [
                   {
-                    "title": "Edge traffic for ${__data.fields.Service}",
-                    "url": "/d/edge?var-svc=${__data.fields.Service}&${__url_time_range}",
+                    "title": "Edge traffic for ${__data.fields[\"Service\"]}",
+                    "url": "/d/edge?var-svc=${__data.fields[\"Service\"]}&${__url_time_range}",
                     "targetBlank": false
                   }
                 ]
@@ -1377,6 +1405,10 @@
               {
                 "id": "decimals",
                 "value": 2
+              },
+              {
+                "id": "custom.width",
+                "value": 90
               }
             ]
           },
@@ -1399,6 +1431,10 @@
                 "value": {
                   "type": "color-text"
                 }
+              },
+              {
+                "id": "custom.width",
+                "value": 60
               },
               {
                 "id": "thresholds",
@@ -1445,6 +1481,10 @@
                 "value": {
                   "type": "color-text"
                 }
+              },
+              {
+                "id": "custom.width",
+                "value": 70
               },
               {
                 "id": "thresholds",
@@ -1520,7 +1560,7 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 20,
+        "y": 22,
         "w": 12,
         "h": 8
       },
@@ -1745,7 +1785,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 28,
+        "y": 30,
         "w": 24,
         "h": 7
       },
@@ -1758,7 +1798,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 35,
+        "y": 37,
         "w": 24,
         "h": 1
       },
@@ -1766,7 +1806,7 @@
     },
     {
       "type": "stat",
-      "title": "Nodes ready",
+      "title": "",
       "description": "Kubernetes nodes reporting Ready.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1805,7 +1845,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Nodes ready"
         },
         "overrides": []
       },
@@ -1820,14 +1861,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 0,
-        "y": 36,
+        "y": 38,
         "w": 4,
         "h": 4
       },
@@ -1835,7 +1876,7 @@
     },
     {
       "type": "stat",
-      "title": "Pods down",
+      "title": "",
       "description": "Pods in any phase other than Running or Succeeded.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1882,7 +1923,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Pods down"
         },
         "overrides": []
       },
@@ -1897,14 +1939,14 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 4,
-        "y": 36,
+        "y": 38,
         "w": 4,
         "h": 4
       },
@@ -1912,7 +1954,7 @@
     },
     {
       "type": "stat",
-      "title": "Restarts",
+      "title": "",
       "description": "Container restarts over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1959,7 +2001,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Restarts"
         },
         "overrides": []
       },
@@ -1974,14 +2017,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 8,
-        "y": 36,
+        "y": 38,
         "w": 4,
         "h": 4
       },
@@ -1989,7 +2032,7 @@
     },
     {
       "type": "stat",
-      "title": "Unready",
+      "title": "",
       "description": "Deployments, StatefulSets and DaemonSets with fewer ready pods than desired.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2032,7 +2075,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Unready"
         },
         "overrides": []
       },
@@ -2047,14 +2091,14 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 12,
-        "y": 36,
+        "y": 38,
         "w": 4,
         "h": 4
       },
@@ -2062,7 +2106,7 @@
     },
     {
       "type": "stat",
-      "title": "Out of sync",
+      "title": "",
       "description": "Argo CD applications whose live state differs from git.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2105,7 +2149,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Out of sync"
         },
         "overrides": []
       },
@@ -2120,14 +2165,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 16,
-        "y": 36,
+        "y": 38,
         "w": 4,
         "h": 4
       },
@@ -2135,7 +2180,7 @@
     },
     {
       "type": "stat",
-      "title": "Unhealthy",
+      "title": "",
       "description": "Argo CD applications reporting a health other than Healthy.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2178,7 +2223,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Unhealthy"
         },
         "overrides": []
       },
@@ -2193,14 +2239,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 20,
-        "y": 36,
+        "y": 38,
         "w": 4,
         "h": 4
       },
@@ -2213,7 +2259,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 40,
+        "y": 42,
         "w": 24,
         "h": 1
       },
@@ -2221,7 +2267,7 @@
     },
     {
       "type": "stat",
-      "title": "Syncs",
+      "title": "",
       "description": "Argo CD syncs over the selected range. Every merged commit syncs the applications it touches.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2260,7 +2306,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Syncs"
         },
         "overrides": []
       },
@@ -2275,14 +2322,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 0,
-        "y": 41,
+        "y": 43,
         "w": 4,
         "h": 4
       },
@@ -2290,7 +2337,7 @@
     },
     {
       "type": "stat",
-      "title": "Failed syncs",
+      "title": "",
       "description": "Syncs over the selected range that ended Failed or Error.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2333,7 +2380,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Failed syncs"
         },
         "overrides": []
       },
@@ -2348,14 +2396,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 4,
-        "y": 41,
+        "y": 43,
         "w": 4,
         "h": 4
       },
@@ -2363,7 +2411,7 @@
     },
     {
       "type": "stat",
-      "title": "Host rebuilds",
+      "title": "",
       "description": "NixOS hosts that switched to another nixos-config revision over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2403,7 +2451,8 @@
           "noValue": "0",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Host rebuilds"
         },
         "overrides": []
       },
@@ -2418,14 +2467,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 8,
-        "y": 41,
+        "y": 43,
         "w": 4,
         "h": 4
       },
@@ -2433,7 +2482,7 @@
     },
     {
       "type": "stat",
-      "title": "Policy drops",
+      "title": "",
       "description": "Packets that Cilium policy dropped over the selected range.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2476,7 +2525,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Policy drops"
         },
         "overrides": []
       },
@@ -2491,14 +2541,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 12,
-        "y": 41,
+        "y": 43,
         "w": 4,
         "h": 4
       },
@@ -2506,7 +2556,7 @@
     },
     {
       "type": "stat",
-      "title": "DNS failures",
+      "title": "",
       "description": "Share of cluster DNS answers with SERVFAIL or REFUSED.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2555,7 +2605,8 @@
           "noValue": "0",
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "DNS failures"
         },
         "overrides": []
       },
@@ -2570,14 +2621,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 16,
-        "y": 41,
+        "y": 43,
         "w": 4,
         "h": 4
       },
@@ -2585,7 +2636,7 @@
     },
     {
       "type": "stat",
-      "title": "Flows lost",
+      "title": "",
       "description": "Flows Hubble could not keep or export. Lost flows leave holes in the request and drop logs.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2632,7 +2683,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Flows lost"
         },
         "overrides": []
       },
@@ -2647,14 +2699,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 20,
-        "y": 41,
+        "y": 43,
         "w": 4,
         "h": 4
       },
@@ -2667,7 +2719,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 45,
+        "y": 47,
         "w": 24,
         "h": 1
       },
@@ -2744,7 +2796,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 46,
+        "y": 48,
         "w": 12,
         "h": 8
       },
@@ -2790,7 +2842,7 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 46,
+        "y": 48,
         "w": 12,
         "h": 8
       },
@@ -2803,7 +2855,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 54,
+        "y": 56,
         "w": 24,
         "h": 1
       },
@@ -2872,7 +2924,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 55,
+        "y": 57,
         "w": 6,
         "h": 4
       },
@@ -2945,7 +2997,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 55,
+        "y": 57,
         "w": 6,
         "h": 4
       },
@@ -2953,7 +3005,7 @@
     },
     {
       "type": "stat",
-      "title": "Points lost",
+      "title": "",
       "description": "Points the collectors failed to deliver, per second. Anything above zero leaves gaps in the panels.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -2997,7 +3049,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Points lost"
         },
         "overrides": []
       },
@@ -3012,14 +3065,14 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 12,
-        "y": 55,
+        "y": 57,
         "w": 4,
         "h": 4
       },
@@ -3027,7 +3080,7 @@
     },
     {
       "type": "stat",
-      "title": "Scrape gaps",
+      "title": "",
       "description": "Scraped endpoints that did not answer their last scrape.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -3070,7 +3123,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Scrape gaps"
         },
         "overrides": []
       },
@@ -3085,14 +3139,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 16,
-        "y": 55,
+        "y": 57,
         "w": 4,
         "h": 4
       },
@@ -3100,7 +3154,7 @@
     },
     {
       "type": "stat",
-      "title": "Store free",
+      "title": "",
       "description": "Lowest free disk across the metric, log and trace stores.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -3148,7 +3202,8 @@
           ],
           "color": {
             "mode": "thresholds"
-          }
+          },
+          "displayName": "Store free"
         },
         "overrides": []
       },
@@ -3163,14 +3218,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       },
       "gridPos": {
         "x": 20,
-        "y": 55,
+        "y": 57,
         "w": 4,
         "h": 4
       },
