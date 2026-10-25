@@ -28,7 +28,7 @@
         "enable": true,
         "hide": false,
         "iconColor": "purple",
-        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\"}[2m])) > 0",
+        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\"}[2m])) > 0 unless on (name) sum by (name) (increase(argocd_app_sync_total{dry_run=\"false\"}[1h])) > 6",
         "step": "2m",
         "titleFormat": "Sync {{name}}",
         "textFormat": "{{phase}}",
