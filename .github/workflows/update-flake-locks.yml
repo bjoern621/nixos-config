@@ -150,6 +150,8 @@ jobs:
       # pi-4b-hh lacks RAM for some of them, grafana among them.
       # attic push skips paths cache.nixos.org signs.
       # Failed push leaves merge gate alone: hosts build what cache lacks.
+      # atticd uploads ten chunks per NAR at once, each with its own buffers and zstd encoder.
+      # Seven runners at the default of five NARs each drove it out of memory.
       - name: Push ${{ matrix.attr }} to the system cache
         continue-on-error: true
         env:
@@ -157,7 +159,7 @@ jobs:
           OUT: ${{ steps.build.outputs.out }}
         run: |
           nix run nixpkgs#attic-client -- login hh https://nix-cache.bjoernblessin.de/ "$ATTIC_TOKEN"
-          nix run nixpkgs#attic-client -- push hh:system "$OUT"
+          nix run nixpkgs#attic-client -- push --jobs 2 hh:system "$OUT"
 
   merge:
     needs: [update-locks, build]
