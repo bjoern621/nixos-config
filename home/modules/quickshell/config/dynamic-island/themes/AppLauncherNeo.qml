@@ -353,8 +353,8 @@ Scope {
                                             // Bordered icon tile.
                                             Rectangle {
                                                 id: iconFrame
-                                                width: 28
-                                                height: 28
+                                                width: 32
+                                                height: 32
                                                 radius: 5
                                                 anchors.left: parent.left
                                                 anchors.leftMargin: 10
@@ -366,7 +366,7 @@ Scope {
                                                 ThemeIcon {
                                                     id: icon
                                                     anchors.centerIn: parent
-                                                    size: 18
+                                                    size: 22
                                                     color: theme.ink
                                                     source: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
                                                 }
@@ -377,7 +377,7 @@ Scope {
                                                     text: modelData.app.name && modelData.app.name.length ? modelData.app.name[0].toUpperCase() : "?"
                                                     color: theme.ink
                                                     font.family: theme.font
-                                                    font.pixelSize: 13
+                                                    font.pixelSize: 15
                                                     font.weight: Font.Black
                                                 }
                                             }
