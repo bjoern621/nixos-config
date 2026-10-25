@@ -1021,7 +1021,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats by (client.name, client.network, geo.country_name, geo.city_name) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(backend.service) services, quantile(0.95, duration_ms) p95, max(_time) last | sort by (requests desc) | limit 200",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats by (client.name, client.network, geo.country_name, geo.city_name) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(backend.service) services, quantile(0.95, duration_ms) p95, max(_time) last | math round(last / 1000000) as last | sort by (requests desc) | limit 200",
           "queryType": "stats",
           "refId": "A"
         }
@@ -2633,6 +2633,10 @@
               {
                 "targetField": "duration_ms",
                 "destinationType": "number"
+              },
+              {
+                "targetField": "_time",
+                "destinationType": "time"
               }
             ]
           }

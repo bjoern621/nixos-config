@@ -621,7 +621,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} drop.reason:* k8s.node.name:in($node) (source.namespace:in($namespace) or destination.namespace:in($namespace)) _msg:~\"$search\" | stats by (source.name, destination.name, destination.address, destination.port, destination.domain, network.transport, drop.direction, drop.reason, drop.policy, source.namespace, destination.namespace) count() drops, max(_time) last | sort by (drops desc) | limit 200",
+          "expr": "_stream:{service.name=\"hubble\"} drop.reason:* k8s.node.name:in($node) (source.namespace:in($namespace) or destination.namespace:in($namespace)) _msg:~\"$search\" | stats by (source.name, destination.name, destination.address, destination.port, destination.domain, network.transport, drop.direction, drop.reason, drop.policy, source.namespace, destination.namespace) count() drops, max(_time) last | math round(last / 1000000) as last | sort by (drops desc) | limit 200",
           "queryType": "stats",
           "refId": "A"
         }

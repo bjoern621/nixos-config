@@ -1115,7 +1115,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} edge.event:=response backend.service:in(\"atticd/atticd\", \"garage/garage\") | stats by (client.name, client.network, geo.country_name, backend.service) count() requests, count() if (url.path:~\"^/nar/\") nars, count() if (http.response.status_code:>=400) errors, max(_time) last | sort by (requests desc) | limit 100",
+          "expr": "_stream:{service.name=\"hubble\"} edge.event:=response backend.service:in(\"atticd/atticd\", \"garage/garage\") | stats by (client.name, client.network, geo.country_name, backend.service) count() requests, count() if (url.path:~\"^/nar/\") nars, count() if (http.response.status_code:>=400) errors, max(_time) last | math round(last / 1000000) as last | sort by (requests desc) | limit 100",
           "queryType": "stats",
           "refId": "A"
         }
