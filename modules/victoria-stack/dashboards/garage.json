@@ -1,7 +1,7 @@
 {
   "uid": "garage",
   "title": "Garage and nix cache",
-  "description": "The S3 store behind Attic and the nix cache: cluster quorum, request rate, errors and latency per S3 call, block repair and the requests the Gateways pass to the cache.",
+  "description": "The S3 store behind Attic and the nix cache: cluster quorum, request rate, errors and latency per S3 call, block repair, the requests the Gateways pass to the cache and the clients behind them.",
   "tags": [
     "hh",
     "storage",
@@ -45,6 +45,18 @@
       "icon": "external link",
       "tooltip": "",
       "url": ""
+    },
+    {
+      "title": "Edge traffic for the cache",
+      "type": "link",
+      "url": "/d/edge?var-svc=atticd/atticd&var-svc=garage/garage",
+      "icon": "dashboard",
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "targetBlank": false,
+      "tags": [],
+      "tooltip": "Requests to atticd and Garage with their clients"
     }
   ],
   "annotations": {
@@ -60,6 +72,36 @@
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "name": "Argo CD syncs",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "purple",
+        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\"}[2m])) > 0",
+        "step": "2m",
+        "titleFormat": "Sync {{name}}",
+        "textFormat": "{{phase}}",
+        "useValueForTime": false
+      },
+      {
+        "name": "Host rebuilds",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "orange",
+        "expr": "max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)",
+        "step": "5m",
+        "titleFormat": "Rebuild {{host_name}}",
+        "textFormat": "{{revision}}",
+        "useValueForTime": false
       }
     ]
   },
@@ -1014,6 +1056,13 @@
               }
             ]
           },
+          "links": [
+            {
+              "title": "Edge traffic for ${__field.labels.svc}",
+              "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
           "color": {
             "mode": "palette-classic"
           }
@@ -1038,6 +1087,343 @@
         "h": 8
       },
       "id": 16
+    },
+    {
+      "type": "row",
+      "title": "Who reads the cache",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 24,
+        "h": 1
+      },
+      "id": 17
+    },
+    {
+      "type": "table",
+      "title": "Cache clients",
+      "description": "Clients of atticd and of the Garage S3 endpoint over the selected range, busiest first. A nix client fetching a large closure shows up here with thousands of requests. Select a client for all its requests.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} edge.event:=response backend.service:in(\"atticd/atticd\", \"garage/garage\") | stats by (client.name, client.network, geo.country_name, backend.service) count() requests, count() if (url.path:~\"^/nar/\") nars, count() if (http.response.status_code:>=400) errors, max(_time) last | sort by (requests desc) | limit 100",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client.name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Client"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Requests from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  },
+                  {
+                    "title": "Connections from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client.network"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Network"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "geo.country_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Country"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "backend.service"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Service"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "requests"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Requests"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "nars"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NAR downloads"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "errors"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "4xx and 5xx"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Last request"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "client.name": 0,
+              "client.network": 1,
+              "geo.country_name": 2,
+              "backend.service": 3,
+              "requests": 4,
+              "nars": 5,
+              "errors": 6,
+              "last": 7
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 14,
+        "h": 9
+      },
+      "id": 18
+    },
+    {
+      "type": "timeseries",
+      "title": "Garage readers by namespace",
+      "description": "Requests per second to the Garage S3 endpoint by calling namespace, from Hubble's counters. atticd reads chunks here for every NAR it serves, so its line follows the cache load.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "label_replace(sum by (source_namespace) (rate(hubble_http_requests_total{destination_namespace=\"garage\"}[$__rate_interval])), \"source_namespace\", \"outside the cluster\", \"source_namespace\", \"\")",
+          "legendFormat": "{{source_namespace}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 40,
+        "w": 10,
+        "h": 9
+      },
+      "id": 19
     },
     {
       "type": "logs",
@@ -1072,11 +1458,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 39,
+        "y": 49,
         "w": 12,
         "h": 10
       },
-      "id": 17
+      "id": 20
     },
     {
       "type": "logs",
@@ -1111,11 +1497,11 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 39,
+        "y": 49,
         "w": 12,
         "h": 10
       },
-      "id": 18
+      "id": 21
     }
   ]
 }

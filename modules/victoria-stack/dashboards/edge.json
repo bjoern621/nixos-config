@@ -1,7 +1,7 @@
 {
   "uid": "edge",
   "title": "Edge traffic",
-  "description": "Every request through the Cilium Gateways, counted by Hubble at each node's Envoy: rate, errors and duration per backend and node.",
+  "description": "Who calls which service through the Cilium Gateways, and how it answers. Rate, errors and duration come from Hubble's counters, callers and single requests from the Gateway request log.",
   "tags": [
     "hh",
     "edge",
@@ -45,6 +45,30 @@
       "icon": "external link",
       "tooltip": "",
       "url": ""
+    },
+    {
+      "title": "Network flows",
+      "type": "link",
+      "url": "/d/network-flows",
+      "icon": "dashboard",
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "targetBlank": false,
+      "tags": [],
+      "tooltip": "Raw connections to the hosts, with source location"
+    },
+    {
+      "title": "Cluster network",
+      "type": "link",
+      "url": "/d/cluster-network",
+      "icon": "dashboard",
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "targetBlank": false,
+      "tags": [],
+      "tooltip": "Dropped traffic and cluster DNS"
     }
   ],
   "annotations": {
@@ -60,6 +84,36 @@
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "name": "Argo CD syncs",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "purple",
+        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\"}[2m])) > 0",
+        "step": "2m",
+        "titleFormat": "Sync {{name}}",
+        "textFormat": "{{phase}}",
+        "useValueForTime": false
+      },
+      {
+        "name": "Host rebuilds",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "orange",
+        "expr": "max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)",
+        "step": "5m",
+        "titleFormat": "Rebuild {{host_name}}",
+        "textFormat": "{{revision}}",
+        "useValueForTime": false
       }
     ]
   },
@@ -104,6 +158,110 @@
         "hide": 0,
         "options": [],
         "allValue": ".*"
+      },
+      {
+        "name": "client",
+        "label": "Client",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "description": "Client address or <namespace>/<workload> of a pod, as a regular expression. Empty shows every client.",
+        "hide": 0
+      },
+      {
+        "name": "host",
+        "label": "Host name",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "description": "Requested host name, as a regular expression, for example nix-cache.",
+        "hide": 0
+      },
+      {
+        "name": "path",
+        "label": "Path",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "description": "Requested path, as a regular expression, for example ^/nar/.",
+        "hide": 0
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "custom",
+        "query": "All : .*,2xx : ^2,3xx : ^3,4xx : ^4,5xx : ^5,4xx and 5xx : ^[45]",
+        "multi": false,
+        "includeAll": false,
+        "description": "Status class of the response. Narrows the panels fed by the request log.",
+        "hide": 0,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": ".*"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": ".*"
+          },
+          {
+            "selected": false,
+            "text": "2xx",
+            "value": "^2"
+          },
+          {
+            "selected": false,
+            "text": "3xx",
+            "value": "^3"
+          },
+          {
+            "selected": false,
+            "text": "4xx",
+            "value": "^4"
+          },
+          {
+            "selected": false,
+            "text": "5xx",
+            "value": "^5"
+          },
+          {
+            "selected": false,
+            "text": "4xx and 5xx",
+            "value": "^[45]"
+          }
+        ]
       }
     ]
   },
@@ -124,7 +282,7 @@
     {
       "type": "stat",
       "title": "Requests",
-      "description": "Requests per second for the selection.",
+      "description": "Requests per second for the selected services and nodes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -179,7 +337,7 @@
       "gridPos": {
         "x": 0,
         "y": 1,
-        "w": 5,
+        "w": 4,
         "h": 4
       },
       "id": 2
@@ -249,9 +407,9 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 5,
+        "x": 4,
         "y": 1,
-        "w": 5,
+        "w": 4,
         "h": 4
       },
       "id": 3
@@ -321,83 +479,12 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 10,
+        "x": 8,
         "y": 1,
-        "w": 5,
+        "w": 4,
         "h": 4
       },
       "id": 4
-    },
-    {
-      "type": "stat",
-      "title": "Latency p50",
-      "description": "Median request duration.",
-      "datasource": {
-        "type": "victoriametrics-metrics-datasource",
-        "uid": "victoriametrics"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "victoriametrics-metrics-datasource",
-            "uid": "victoriametrics"
-          },
-          "expr": "histogram_quantile(0.5, sum by (le) (label_match(label_join(rate(hubble_http_request_duration_seconds_bucket{node=~\"$node\"}[$__rate_interval]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\")))",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "s",
-          "decimals": 3,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 0.25
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "gridPos": {
-        "x": 15,
-        "y": 1,
-        "w": 5,
-        "h": 4
-      },
-      "id": 5
     },
     {
       "type": "stat",
@@ -463,7 +550,69 @@
         "showPercentChange": false
       },
       "gridPos": {
-        "x": 20,
+        "x": 12,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "id": 5
+    },
+    {
+      "type": "stat",
+      "title": "Clients",
+      "description": "Different clients in the request log for the whole selection over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats count_uniq(client.name) clients",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 16,
         "y": 1,
         "w": 4,
         "h": 4
@@ -471,9 +620,71 @@
       "id": 6
     },
     {
+      "type": "stat",
+      "title": "Countries",
+      "description": "Countries the internet clients resolve to.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" geo.country_name:* | stats count_uniq(geo.country_name) countries",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "id": 7
+    },
+    {
       "type": "table",
       "title": "Services",
-      "description": "Each service over the selected range. Select a service to narrow the whole dashboard to it.",
+      "description": "Each service over the selected range, from Hubble's counters. Select a service to narrow the whole dashboard to it.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -573,8 +784,8 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Only ${__data.fields.Service}",
-                    "url": "/d/edge?var-svc=${__data.fields.Service}&${__url_time_range}",
+                    "title": "Edge traffic for ${__data.fields[\"Service\"]}",
+                    "url": "/d/edge?var-svc=${__data.fields[\"Service\"]}&${__url_time_range}",
                     "targetBlank": false
                   }
                 ]
@@ -809,11 +1020,11 @@
         "w": 24,
         "h": 8
       },
-      "id": 7
+      "id": 8
     },
     {
       "type": "row",
-      "title": "Per service over time",
+      "title": "Who calls",
       "collapsed": false,
       "panels": [],
       "gridPos": {
@@ -822,7 +1033,1659 @@
         "w": 24,
         "h": 1
       },
-      "id": 8
+      "id": 9
+    },
+    {
+      "type": "table",
+      "title": "Clients",
+      "description": "Every client of the selection, busiest first. A pod appears as <namespace>/<workload>, everything else by address. Select a client to narrow the dashboard to it, or to follow its raw connections.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (client.name, client.network, geo.country_name, geo.city_name) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(backend.service) services, quantile(0.95, duration_ms) p95, max(_time) last | sort by (requests desc) | limit 200",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client.name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Client"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Requests from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  },
+                  {
+                    "title": "Connections from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 260
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client.network"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Network"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "geo.country_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Country"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "geo.city_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "City"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "requests"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Requests"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "errors"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "4xx and 5xx"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "services"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Services"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p95"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "p95"
+              },
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Last request"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "client.name": 0,
+              "client.network": 1,
+              "geo.country_name": 2,
+              "geo.city_name": 3,
+              "requests": 4,
+              "errors": 5,
+              "services": 6,
+              "p95": 7,
+              "last": 8
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 16,
+        "h": 10
+      },
+      "id": 10
+    },
+    {
+      "type": "barchart",
+      "title": "Requests by client network",
+      "description": "Requests from the internet, the house LAN, the tailnet and pods of the cluster.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (client.network) count() requests | sort by (requests desc)",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 1
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "groupWidth": 0.7,
+        "barWidth": 0.9,
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "client.network": 0,
+              "requests": 1
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 14,
+        "w": 8,
+        "h": 10
+      },
+      "id": 11
+    },
+    {
+      "type": "table",
+      "title": "User agents",
+      "description": "Software behind the requests, as the client names itself. Bots, uptime checks and nix clients stand out here.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=request | stats by (user_agent.original) count() requests, count_uniq(client.name) clients | sort by (requests desc) | limit 100",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "user_agent.original"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "User agent"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "requests"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Requests"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "clients"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Clients"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "user_agent.original": 0,
+              "requests": 1,
+              "clients": 2
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 9
+      },
+      "id": 12
+    },
+    {
+      "type": "table",
+      "title": "In-cluster callers",
+      "description": "Pods calling a service through a Gateway, from Hubble's counters. These include requests that the request log leaves out, such as atticd reading cache chunks from Garage.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum by (source_namespace, svc) (label_match(label_join(rate(hubble_http_requests_total{node=~\"$node\",source_namespace!=\"\"}[$__range]), \"svc\", \"/\", \"destination_namespace\", \"destination_workload\"), \"svc\", \"$svc\"))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Caller namespace"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Workloads in ${__data.fields[\"Caller namespace\"]}",
+                    "url": "/d/k8s?var-namespace=${__data.fields[\"Caller namespace\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Service"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Edge traffic for ${__data.fields[\"Service\"]}",
+                    "url": "/d/edge?var-svc=${__data.fields[\"Service\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Requests"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "reqps"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "source_namespace": "Caller namespace",
+              "svc": "Service",
+              "Value": "Requests"
+            }
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Caller namespace|Service|Requests)$"
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 9
+      },
+      "id": 13
+    },
+    {
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "geo.location.lat": 0,
+              "geo.location.lon": 1,
+              "geo.city_name": 2,
+              "geo.country_name": 3,
+              "requests": 4
+            },
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "geo.location.lat",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "geo.location.lon",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "requests",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "geomap",
+      "title": "Where clients come from",
+      "description": "Location of the internet clients, sized by requests. LAN, tailnet and pod clients have no location.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" geo.location.lat:* | stats by (geo.location.lat, geo.location.lon, geo.city_name, geo.country_name) count() requests",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "view": {
+          "id": "zero",
+          "lat": 30,
+          "lon": 10,
+          "zoom": 1.5,
+          "allLayers": true
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": false,
+          "showAttribution": true
+        },
+        "tooltip": {
+          "mode": "details"
+        },
+        "basemap": {
+          "type": "default",
+          "name": "Basemap",
+          "config": {}
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Sources",
+            "location": {
+              "mode": "coords",
+              "latitude": "geo.location.lat",
+              "longitude": "geo.location.lon"
+            },
+            "config": {
+              "showLegend": true,
+              "style": {
+                "size": {
+                  "field": "requests",
+                  "fixed": 5,
+                  "min": 4,
+                  "max": 24
+                },
+                "color": {
+                  "field": "requests"
+                },
+                "opacity": 0.6,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                }
+              }
+            },
+            "tooltip": true
+          }
+        ]
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 12,
+        "h": 10
+      },
+      "id": 14
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests by client network",
+      "description": "Requests per interval from each kind of network.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (client.network) count() requests",
+          "queryType": "statsRange",
+          "refId": "A",
+          "legendFormat": "{{client.network}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisSoftMin": 0
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "internet"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "lan"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tailnet"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cluster"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 12,
+        "h": 10
+      },
+      "id": 15
+    },
+    {
+      "type": "row",
+      "title": "What they ask for",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 24,
+        "h": 1
+      },
+      "id": 16
+    },
+    {
+      "type": "table",
+      "title": "Hosts and paths",
+      "description": "Requested host names and paths, busiest first. Select a path to narrow the dashboard to it.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (server.address, url.path, backend.service) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(client.name) clients, quantile(0.95, duration_ms) p95 | sort by (requests desc) | limit 200",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "server.address"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Host"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url.path"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Path"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Only this path",
+                    "url": "/d/edge?var-path=${__data.fields[\"url.path\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "backend.service"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Service"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Edge traffic for ${__data.fields[\"backend.service\"]}",
+                    "url": "/d/edge?var-svc=${__data.fields[\"backend.service\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "requests"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Requests"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "errors"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "4xx and 5xx"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "clients"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Clients"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p95"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "p95"
+              },
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "server.address": 0,
+              "url.path": 1,
+              "backend.service": 2,
+              "requests": 3,
+              "errors": 4,
+              "clients": 5,
+              "p95": 6
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 24,
+        "h": 10
+      },
+      "id": 17
+    },
+    {
+      "type": "table",
+      "title": "Status codes",
+      "description": "Responses by service and status code.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (backend.service, http.response.status_code) count() responses | sort by (responses desc) | limit 100",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "backend.service"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Service"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Edge traffic for ${__data.fields[\"backend.service\"]}",
+                    "url": "/d/edge?var-svc=${__data.fields[\"backend.service\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "http.response.status_code"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Status"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "responses"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Responses"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Responses",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "backend.service": 0,
+              "http.response.status_code": 1,
+              "responses": 2
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 54,
+        "w": 10,
+        "h": 9
+      },
+      "id": 18
+    },
+    {
+      "type": "table",
+      "title": "Slowest requests",
+      "description": "The slowest single requests of the selection, with the client that sent them.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | sort by (duration_ms desc) | limit 50 | stats by (_time, duration_ms, http.response.status_code, http.request.method, server.address, url.path, client.name, backend.service) count() n",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Time"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "duration_ms"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Duration"
+              },
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "http.response.status_code"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Status"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "http.request.method"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Method"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "server.address"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Host"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url.path"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Path"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client.name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Client"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Requests from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  },
+                  {
+                    "title": "Connections from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "backend.service"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Service"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Edge traffic for ${__data.fields[\"backend.service\"]}",
+                    "url": "/d/edge?var-svc=${__data.fields[\"backend.service\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "n"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Duration",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "_time": 0,
+              "duration_ms": 1,
+              "http.response.status_code": 2,
+              "http.request.method": 3,
+              "server.address": 4,
+              "url.path": 5,
+              "client.name": 6,
+              "backend.service": 7,
+              "n": 8
+            },
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "duration_ms",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 10,
+        "y": 54,
+        "w": 14,
+        "h": 9
+      },
+      "id": 19
+    },
+    {
+      "type": "row",
+      "title": "Per service over time",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 63,
+        "w": 24,
+        "h": 1
+      },
+      "id": 20
     },
     {
       "type": "timeseries",
@@ -868,6 +2731,13 @@
               }
             ]
           },
+          "links": [
+            {
+              "title": "Edge traffic for ${__field.labels.svc}",
+              "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
           "color": {
             "mode": "palette-classic"
           }
@@ -887,11 +2757,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 14,
+        "y": 64,
         "w": 12,
         "h": 8
       },
-      "id": 9
+      "id": 21
     },
     {
       "type": "timeseries",
@@ -937,6 +2807,13 @@
               }
             ]
           },
+          "links": [
+            {
+              "title": "Edge traffic for ${__field.labels.svc}",
+              "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
           "noValue": "No server errors",
           "color": {
             "mode": "palette-classic"
@@ -957,11 +2834,11 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 14,
+        "y": 64,
         "w": 12,
         "h": 8
       },
-      "id": 10
+      "id": 22
     },
     {
       "type": "timeseries",
@@ -1007,6 +2884,13 @@
               }
             ]
           },
+          "links": [
+            {
+              "title": "Edge traffic for ${__field.labels.svc}",
+              "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
           "color": {
             "mode": "palette-classic"
           }
@@ -1026,11 +2910,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 22,
+        "y": 72,
         "w": 12,
         "h": 8
       },
-      "id": 11
+      "id": 23
     },
     {
       "type": "timeseries",
@@ -1076,6 +2960,13 @@
               }
             ]
           },
+          "links": [
+            {
+              "title": "Host detail for ${__field.labels.node}",
+              "url": "/d/host?var-host=${__field.labels.node}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
           "color": {
             "mode": "palette-classic"
           }
@@ -1095,11 +2986,63 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 22,
+        "y": 72,
         "w": 12,
         "h": 8
       },
-      "id": 12
+      "id": 24
+    },
+    {
+      "type": "row",
+      "title": "Requests",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 80,
+        "w": 24,
+        "h": 1
+      },
+      "id": 25
+    },
+    {
+      "type": "logs",
+      "title": "Request log",
+      "description": "One line per answered request: status, method, URL, duration and client, newest first. Every filter above narrows it. Open a line for the backend pod, location and request id.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | copy severity_text as level",
+          "queryType": "instant",
+          "refId": "A",
+          "maxLines": 1000
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "enableInfiniteScrolling": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 81,
+        "w": 24,
+        "h": 14
+      },
+      "id": 26
     },
     {
       "type": "row",
@@ -1108,11 +3051,11 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 30,
+        "y": 95,
         "w": 24,
         "h": 1
       },
-      "id": 13
+      "id": 27
     },
     {
       "type": "table",
@@ -1294,11 +3237,11 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 31,
+        "y": 96,
         "w": 24,
         "h": 7
       },
-      "id": 14
+      "id": 28
     }
   ]
 }

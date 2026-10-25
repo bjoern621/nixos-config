@@ -1,7 +1,7 @@
 {
   "uid": "fleet-overview",
   "title": "Fleet overview",
-  "description": "Start page. Symptoms first: hosts, services, the cluster, then logs and telemetry. Every table row and panel title links to the dashboard that explains it.",
+  "description": "Start page. Symptoms first: hosts, services and their clients, the cluster, changes, then logs and telemetry. Every table row and panel title links to the dashboard that explains it.",
   "tags": [
     "hh",
     "fleet",
@@ -59,6 +59,36 @@
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "name": "Argo CD syncs",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "purple",
+        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\"}[2m])) > 0",
+        "step": "2m",
+        "titleFormat": "Sync {{name}}",
+        "textFormat": "{{phase}}",
+        "useValueForTime": false
+      },
+      {
+        "name": "Host rebuilds",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "victoriametrics"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "orange",
+        "expr": "max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)",
+        "step": "5m",
+        "titleFormat": "Rebuild {{host_name}}",
+        "textFormat": "{{revision}}",
+        "useValueForTime": false
       }
     ]
   },
@@ -1497,17 +1527,242 @@
       "id": 12
     },
     {
+      "type": "table",
+      "title": "Busiest clients",
+      "description": "Clients with the most requests through the Gateways over the selected range. A pod appears as <namespace>/<workload>. Select a client for its requests.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "_stream:{service.name=\"hubble\"} edge.event:=response | stats by (client.name, client.network, geo.country_name) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(backend.service) services | sort by (requests desc) | limit 10",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client.name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Client"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Requests from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  },
+                  {
+                    "title": "Connections from ${__data.fields[\"client.name\"]}",
+                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 260
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client.network"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Network"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "geo.country_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Country"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "requests"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Requests"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "errors"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "4xx and 5xx"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "services"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Services"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "client.name": 0,
+              "client.network": 1,
+              "geo.country_name": 2,
+              "requests": 3,
+              "errors": 4,
+              "services": 5
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 24,
+        "h": 7
+      },
+      "id": 13
+    },
+    {
       "type": "row",
       "title": "Cluster",
       "collapsed": false,
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 28,
+        "y": 35,
         "w": 24,
         "h": 1
       },
-      "id": 13
+      "id": 14
     },
     {
       "type": "stat",
@@ -1572,11 +1827,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 29,
+        "y": 36,
         "w": 4,
         "h": 4
       },
-      "id": 14
+      "id": 15
     },
     {
       "type": "stat",
@@ -1649,11 +1904,11 @@
       },
       "gridPos": {
         "x": 4,
-        "y": 29,
+        "y": 36,
         "w": 4,
         "h": 4
       },
-      "id": 15
+      "id": 16
     },
     {
       "type": "stat",
@@ -1726,11 +1981,11 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 29,
+        "y": 36,
         "w": 4,
         "h": 4
       },
-      "id": 16
+      "id": 17
     },
     {
       "type": "stat",
@@ -1799,11 +2054,11 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 29,
+        "y": 36,
         "w": 4,
         "h": 4
       },
-      "id": 17
+      "id": 18
     },
     {
       "type": "stat",
@@ -1841,6 +2096,13 @@
               }
             ]
           },
+          "links": [
+            {
+              "title": "Deploys",
+              "url": "/d/deploys?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
           "color": {
             "mode": "thresholds"
           }
@@ -1865,11 +2127,11 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 29,
+        "y": 36,
         "w": 4,
         "h": 4
       },
-      "id": 18
+      "id": 19
     },
     {
       "type": "stat",
@@ -1907,6 +2169,13 @@
               }
             ]
           },
+          "links": [
+            {
+              "title": "Deploys",
+              "url": "/d/deploys?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
           "color": {
             "mode": "thresholds"
           }
@@ -1931,11 +2200,465 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 29,
+        "y": 36,
         "w": 4,
         "h": 4
       },
-      "id": 19
+      "id": 20
+    },
+    {
+      "type": "row",
+      "title": "Changes and cluster network",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 24,
+        "h": 1
+      },
+      "id": 21
+    },
+    {
+      "type": "stat",
+      "title": "Syncs",
+      "description": "Argo CD syncs over the selected range. Every merged commit syncs the applications it touches.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(increase(argocd_app_sync_total{dry_run=\"false\"}[$__range])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Deploys",
+              "url": "/d/deploys?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 4,
+        "h": 4
+      },
+      "id": 22
+    },
+    {
+      "type": "stat",
+      "title": "Failed syncs",
+      "description": "Syncs over the selected range that ended Failed or Error.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(increase(argocd_app_sync_total{dry_run=\"false\",phase=~\"Failed|Error\"}[$__range])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Deploys",
+              "url": "/d/deploys?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 41,
+        "w": 4,
+        "h": 4
+      },
+      "id": 23
+    },
+    {
+      "type": "stat",
+      "title": "Host rebuilds",
+      "description": "NixOS hosts that switched to another nixos-config revision over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "count(count by (host_name, revision) (last_over_time(sysconf_installed_commit_time_seconds[$__range]))) - count(count by (host_name) (last_over_time(sysconf_installed_commit_time_seconds[$__range])))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Deploys",
+              "url": "/d/deploys?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 41,
+        "w": 4,
+        "h": 4
+      },
+      "id": 24
+    },
+    {
+      "type": "stat",
+      "title": "Policy drops",
+      "description": "Packets that Cilium policy dropped over the selected range.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(increase(hubble_policy_verdicts_total{action=\"dropped\"}[$__range])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Cluster network",
+              "url": "/d/cluster-network?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 41,
+        "w": 4,
+        "h": 4
+      },
+      "id": 25
+    },
+    {
+      "type": "stat",
+      "title": "DNS failures",
+      "description": "Share of cluster DNS answers with SERVFAIL or REFUSED.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "100 * sum(rate(coredns_dns_responses_total{rcode=~\"SERVFAIL|REFUSED\"}[$__range])) / sum(rate(coredns_dns_responses_total[$__range]))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Cluster network",
+              "url": "/d/cluster-network?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 41,
+        "w": 4,
+        "h": 4
+      },
+      "id": 26
+    },
+    {
+      "type": "stat",
+      "title": "Flows lost",
+      "description": "Flows Hubble could not keep or export. Lost flows leave holes in the request and drop logs.",
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "victoriametrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(increase(hubble_lost_events_total[$__range])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "Cluster network",
+              "url": "/d/cluster-network?${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 41,
+        "w": 4,
+        "h": 4
+      },
+      "id": 27
     },
     {
       "type": "row",
@@ -1944,11 +2667,11 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 33,
+        "y": 45,
         "w": 24,
         "h": 1
       },
-      "id": 20
+      "id": 28
     },
     {
       "type": "timeseries",
@@ -2021,11 +2744,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 34,
+        "y": 46,
         "w": 12,
         "h": 8
       },
-      "id": 21
+      "id": 29
     },
     {
       "type": "logs",
@@ -2067,11 +2790,11 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 34,
+        "y": 46,
         "w": 12,
         "h": 8
       },
-      "id": 22
+      "id": 30
     },
     {
       "type": "row",
@@ -2080,11 +2803,11 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 42,
+        "y": 54,
         "w": 24,
         "h": 1
       },
-      "id": 23
+      "id": 31
     },
     {
       "type": "stat",
@@ -2149,11 +2872,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 43,
+        "y": 55,
         "w": 6,
         "h": 4
       },
-      "id": 24
+      "id": 32
     },
     {
       "type": "stat",
@@ -2222,11 +2945,11 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 43,
+        "y": 55,
         "w": 6,
         "h": 4
       },
-      "id": 25
+      "id": 33
     },
     {
       "type": "stat",
@@ -2296,11 +3019,11 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 43,
+        "y": 55,
         "w": 4,
         "h": 4
       },
-      "id": 26
+      "id": 34
     },
     {
       "type": "stat",
@@ -2369,11 +3092,11 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 43,
+        "y": 55,
         "w": 4,
         "h": 4
       },
-      "id": 27
+      "id": 35
     },
     {
       "type": "stat",
@@ -2447,11 +3170,11 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 43,
+        "y": 55,
         "w": 4,
         "h": 4
       },
-      "id": 28
+      "id": 36
     }
   ]
 }
