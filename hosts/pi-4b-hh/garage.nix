@@ -37,8 +37,11 @@ in
       metadata_dir = "${root}/meta";
       data_dir = "${root}/data";
       db_engine = "lmdb";
-      # A power cut with unsynced LMDB writes can corrupt its free list (deuxfleurs/garage#1484).
-      metadata_fsync = true;
+      # An fsync per metadata write saturates the USB disk and stalls the pings to the peers.
+      # Without it a power cut can corrupt LMDB's free list (deuxfleurs/garage#1484).
+      # The snapshot restores the metadata. The peers hold every block.
+      metadata_fsync = false;
+      metadata_auto_snapshot_interval = "6h";
 
       # Byte-identical to garage-0's garage.toml, or the nodes refuse each other.
       replication_factor = 3;
