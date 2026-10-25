@@ -11,6 +11,8 @@
     ../../modules/admin-ssh-keys.nix
     ../../modules/kitty-terminfo.nix
     ../../modules/cleanup.nix
+    ../../modules/nix-substituter-fallback.nix
+    ../../modules/attic-pull-system.nix
     ../../modules/homelab/ssh-hardening.nix
     ../../modules/tailscale-client.nix
     ../../modules/smokeping.nix

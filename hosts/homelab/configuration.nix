@@ -13,6 +13,8 @@
     ../../modules/admin-ssh-keys.nix
     ../../modules/kitty-terminfo.nix
     ../../modules/cleanup.nix
+    ../../modules/nix-substituter-fallback.nix
+    ../../modules/attic-pull-system.nix
     ../../modules/homelab/vm/hypervisor
     ../../modules/homelab/mounts.nix
     ../../modules/homelab/storage.nix

@@ -1,6 +1,7 @@
 { config, pkgs, ... }:
 
-# Pull + push for the self-hosted Attic cache nix-cache.bjoernblessin.de/system.
+# Push to the self-hosted Attic cache nix-cache.bjoernblessin.de/system.
+# Pulling lives in modules/attic-pull-system.nix, which every host imports.
 # Server + storage live in hh-cluster-infra: atticd on k3s, NAR chunks in Garage
 # S3.
 #
@@ -8,36 +9,14 @@
 # attic cache configure system --public
 # attic cache info system
 #
-# Read is public (anonymous), so pull needs only the URL + cache public key.
-# Push needs a JWT token; watch-store uploads local build outputs as they land,
-# mirroring the old cachix-watch-store. Upstream paths (cache.nixos.org) are
-# filtered out by default, so only own builds go up.
+# Push needs a JWT token; watch-store uploads local build outputs as they land.
+# Upstream paths (cache.nixos.org) are filtered out by default, so only own
+# builds go up.
 #
 # Change the token: sops secrets/attic.yaml
 # Seed existing store once: attic push hh:system $(nix path-info --all)
 
-let
-  cacheHost = "https://nix-cache.bjoernblessin.de/system";
-  # priority=41 pins this behind cache.nixos.org (40) whatever the server's
-  # nix-cache-info reports.
-  # attic push skips paths cache.nixos.org signs.
-  # Asking Attic first would cost one 404 per nixpkgs path.
-  # Fallback order: modules/nix-substituter-fallback.nix.
-  cacheUrl = "${cacheHost}?priority=41";
-  # From `attic cache info system`, set after the cache is created. name:base64.
-  publicKey = "system:CVw1EsxUyFB1VSHALF4GzqhjuRXjwyeyQzFOfXML+ss=";
-in
 {
-  nix.settings = {
-    extra-substituters = [ cacheUrl ];
-    # Both spellings: the daemon matches a URL an untrusted client passes verbatim.
-    extra-trusted-substituters = [
-      cacheUrl
-      cacheHost
-    ];
-    extra-trusted-public-keys = [ publicKey ];
-  };
-
   environment.systemPackages = [ pkgs.attic-client ];
 
   sops.secrets.attic-token.sopsFile = ../secrets/attic.yaml;

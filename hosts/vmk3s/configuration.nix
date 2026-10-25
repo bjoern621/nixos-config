@@ -18,6 +18,8 @@ in
     ../../modules/admin-ssh-keys.nix
     ../../modules/kitty-terminfo.nix
     ../../modules/cleanup.nix
+    ../../modules/nix-substituter-fallback.nix
+    ../../modules/attic-pull-system.nix
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
     ../../modules/vmk3s/travel-vpn.nix

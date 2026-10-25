@@ -18,6 +18,8 @@ in
     ../../modules/server-base.nix
     ../../modules/kitty-terminfo.nix
     ../../modules/cleanup.nix
+    ../../modules/nix-substituter-fallback.nix
+    ../../modules/attic-pull-system.nix
     ../../modules/sops.nix
     ../../modules/scripts
     ../../modules/sysconf-checkout.nix

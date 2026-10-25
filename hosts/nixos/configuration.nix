@@ -48,6 +48,7 @@
     ../../modules/system-packages.nix
     ../../modules/sops.nix
     ../../modules/nix-substituter-fallback.nix
+    ../../modules/attic-pull-system.nix
     ../../modules/attic-push.nix
     ../../modules/attic-pull-screen-sharing.nix
     ../../modules/screen-sharing.nix
