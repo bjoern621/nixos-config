@@ -1699,7 +1699,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_destroy_remote_with_active_rq{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_destroy_remote_with_active_rq_total{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
           "legendFormat": "{{envoy_cluster_name}} closed by backend",
           "refId": "A"
         },
@@ -1708,7 +1708,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq_total{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
           "legendFormat": "{{envoy_cluster_name}} closed by Envoy",
           "refId": "B"
         },
@@ -1717,7 +1717,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_protocol_error{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_cx_protocol_error_total{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\"}[$__rate_interval]))",
           "legendFormat": "{{envoy_cluster_name}} protocol error",
           "refId": "C"
         },
@@ -1726,7 +1726,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_rq_xx{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\", envoy_response_code_class=\"5\"}[$__rate_interval]))",
+          "expr": "sum by (envoy_cluster_name) (rate(envoy_cluster_upstream_rq_xx_total{job=\"cilium-envoy\", envoy_cluster_name=~\"edge/cilium-gateway-hh/(atticd_atticd|garage_garage)_.+\", envoy_response_code_class=\"5\"}[$__rate_interval]))",
           "legendFormat": "{{envoy_cluster_name}} 5xx",
           "refId": "D"
         }
