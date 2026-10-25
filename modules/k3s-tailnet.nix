@@ -50,6 +50,14 @@ in
       wants = [ "tailscaled.service" ];
     };
 
+    # The node collector (hh-cluster-infra) locates Gateway clients with this database,
+    # read through its mount of the host root.
+    # The mode makes a copy: a symlink would point into a store that the container lacks.
+    environment.etc."geoip/city.mmdb" = {
+      source = "${pkgs.callPackage ../pkgs/geoip-city-db.nix { }}/share/geoip/city.mmdb";
+      mode = "0444";
+    };
+
     # containerd reads /opt/cni/bin once k3s runs without flannel.
     # Cilium drops cilium-cni beside loopback, which every sandbox takes.
     systemd.tmpfiles.rules = [
