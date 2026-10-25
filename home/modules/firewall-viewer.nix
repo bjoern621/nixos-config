@@ -53,7 +53,8 @@ in
   xdg.desktopEntries."firewall-view" = {
     name = "Firewall";
     exec = "kitty --title Firewall firewall-view";
-    icon = "security-high";
+    # Papirus also ships security-high as light tray glyph, which Qt picks.
+    icon = "firewall-config";
     type = "Application";
     categories = [
       "Settings"
