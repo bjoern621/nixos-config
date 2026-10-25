@@ -30,6 +30,11 @@
       # Use secretservice credential store with GCM
       # Works with e.g. gnome-keyring
       credential.credentialStore = "secretservice";
+
+      # GCM opens account picker once keyring holds second github.com login,
+      # e.g. `x-access-token` from token-in-URL clone.
+      # Pinned name skips picker.
+      credential."https://github.com".username = "bjoern621";
     };
 
     # Agent worktrees and personal agent notes stay out of every repository.
