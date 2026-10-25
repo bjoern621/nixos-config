@@ -32,6 +32,14 @@
       credential.credentialStore = "secretservice";
     };
 
+    # Agent worktrees and personal agent notes stay out of every repository.
+    ignores = [
+      "**/.claude/settings.local.json"
+      "**/.claude/worktrees/"
+      "**/CLAUDE.md"
+      "**/CLAUDE.local.md"
+    ];
+
     # Author email per forge.
     # No per-repo setup on clone.
     includes =
