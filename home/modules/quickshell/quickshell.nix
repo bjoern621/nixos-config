@@ -129,8 +129,8 @@ in
       ExecStart = "${qsWrapped}/bin/quickshell";
       Restart = "on-failure";
       RestartSec = 1;
-      # Without a platform theme, Qt defaults to hicolor icons.
-      # gtk3 makes Qt read the icon theme from GTK settings (gtk.iconTheme).
+      # Shell draws on light surfaces, apps on dark ones (gtk.iconTheme Papirus-Dark).
+      # QS_ICON_THEME overrides the icon theme that gtk3 reads from GTK settings.
       #
       # Chromium-based tray apps (Discord, Electron) publish their icon only as
       # StatusNotifierItem.IconPixmap and leave IconName unimplemented, so its
@@ -142,6 +142,7 @@ in
       # wholesale; remove this rule when debugging tray property updates.
       Environment = [
         "QT_QPA_PLATFORMTHEME=gtk3"
+        "QS_ICON_THEME=Papirus"
         "QUICKSHELL_EMOJI_DATA=${emojiData}"
         "QUICKSHELL_POWER_ACTIONS=${powerActions}"
         "QUICKSHELL_HAS_BATTERY=${lib.boolToString config.host.battery}"
