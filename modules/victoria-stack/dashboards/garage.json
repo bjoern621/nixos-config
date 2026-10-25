@@ -562,7 +562,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "(max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0))",
+          "expr": "((max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0)))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -627,7 +627,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "(time() + (max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0))) * 1000",
+          "expr": "(time() + ((max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0)))) * 1000",
           "legendFormat": "",
           "refId": "A"
         }
