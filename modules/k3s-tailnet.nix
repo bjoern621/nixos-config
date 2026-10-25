@@ -18,6 +18,8 @@
 
 let
   cfg = config.services.k3s-tailnet;
+  port = toString config.services.tailscale.port;
+  podToNode = "-s 10.42.0.0/16 -m addrtype --dst-type LOCAL -p udp --dport ${port}";
 in
 {
   imports = [ ./tailscale-client.nix ];
@@ -119,13 +121,17 @@ in
       # that WireGuard rides tailscale0 to the same peer: a loop that cuts the pair off
       # until tailscaled gives the endpoint up. No pong, no switch. The pod range comes
       # from k3s. Raw PREROUTING, ahead of nixos-fw's accept for that port.
-      # The rule outlives a reload, hence the check first.
+      # Only packets to the node's own addresses: a pod's tailscaled dials every other
+      # tailnet host on the same port, Garage's peers among them.
+      # Rules outlive a reload, hence the check first. The loop clears the unscoped
+      # form, which dropped those dials as well.
       extraCommands = ''
-        iptables -t raw -C PREROUTING -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP 2>/dev/null \
-          || iptables -t raw -I PREROUTING 1 -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP
+        while iptables -t raw -D PREROUTING -s 10.42.0.0/16 -p udp --dport ${port} -j DROP 2>/dev/null; do :; done
+        iptables -t raw -C PREROUTING ${podToNode} -j DROP 2>/dev/null \
+          || iptables -t raw -I PREROUTING 1 ${podToNode} -j DROP
       '';
       extraStopCommands = ''
-        iptables -t raw -D PREROUTING -s 10.42.0.0/16 -p udp --dport ${toString config.services.tailscale.port} -j DROP 2>/dev/null || true
+        iptables -t raw -D PREROUTING ${podToNode} -j DROP 2>/dev/null || true
       '';
     };
   };
