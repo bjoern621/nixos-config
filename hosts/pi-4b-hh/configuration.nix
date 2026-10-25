@@ -106,8 +106,8 @@
   #      `cryptsetup luksClose backup`
   #   7. Flip `enable = true` and run `sysconf-reload`.
   services.pi-backup.storage = {
-    enable = false;
-    deviceUuid = "00000000-0000-0000-0000-000000000000";
+    enable = true;
+    deviceUuid = "9584a8ef-2233-49d3-a926-23751fd17dd9";
   };
 
   services.pi-backup.jobs = {
