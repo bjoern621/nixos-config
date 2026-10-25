@@ -27,6 +27,8 @@ Rectangle {
 
     readonly property real _handleH: target ? Math.max(minHandle, height * target.visibleArea.heightRatio) : 0
     readonly property real _travel: height - _handleH
+    property real _dragY: 0
+    property real _grabY: 0
 
     visible: target && target.contentHeight > target.height + 1
     width: barWidth
@@ -41,7 +43,9 @@ Rectangle {
         width: parent.width
         radius: parent.radius
         height: track._handleH
-        y: track.target ? track._travel * track.target.visibleArea.yPosition / Math.max(0.0001, 1 - track.target.visibleArea.heightRatio) : 0
+        // ListView with uneven rows re-estimates contentHeight and shifts originY as delegates load.
+        // visibleArea then jumps, so handle follows cursor while dragged.
+        y: dragArea.pressed ? track._dragY : track.target ? track._travel * track.target.visibleArea.yPosition / Math.max(0.0001, 1 - track.target.visibleArea.heightRatio) : 0
         color: dragArea.pressed ? track.handlePressedColor : track.handleColor
         opacity: (dragArea.pressed || (track.target && track.target.moving)) ? track.handleActiveOpacity : track.handleIdleOpacity
 
@@ -50,16 +54,18 @@ Rectangle {
             anchors.fill: parent
             anchors.margins: -4
             cursorShape: Qt.PointingHandCursor
-            drag.target: parent
-            drag.axis: Drag.YAxis
-            drag.minimumY: 0
-            drag.maximumY: track._travel
-            onPositionChanged: {
+            onPressed: mouse => {
+                track._dragY = handle.y;
+                track._grabY = mapToItem(track, 0, mouse.y).y - handle.y;
+            }
+            onPositionChanged: mouse => {
                 if (!pressed || track._travel <= 0 || !track.target)
                     return;
-                const frac = handle.y / track._travel;
+                const top = mapToItem(track, 0, mouse.y).y - track._grabY;
+                track._dragY = Math.max(0, Math.min(track._travel, top));
+                const frac = track._dragY / track._travel;
                 const maxY = Math.max(0, track.target.contentHeight - track.target.height);
-                track.target.contentY = frac * maxY;
+                track.target.contentY = track.target.originY + frac * maxY;
             }
         }
     }
