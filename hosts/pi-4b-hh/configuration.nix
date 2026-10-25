@@ -17,6 +17,7 @@
     ../../modules/tailscale-client.nix
     ../../modules/smokeping.nix
     ../../modules/pi-backup
+    ../../modules/sops.nix
     ../../modules/telemetry-agent.nix
     ../../modules/connection-log.nix
     ../../modules/victoria-stack

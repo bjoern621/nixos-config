@@ -5,6 +5,7 @@
 #   host_netcup_g12 derived from that host's ssh host key, which sops-nix reads directly
 #   host_hetzner_hel1 derived the same way, from the key the installer placed
 #   host_vmk3s      derived from that host's ssh host key as well
+#   host_pi_4b_hh   derived from that host's ssh host key as well
 # New or replaced host: add its public key, then `sops updatekeys secrets/*.yaml`.
 # An ssh-derived recipient comes from `ssh-keyscan -t ed25519 <host> | ssh-to-age`.
 
@@ -15,6 +16,7 @@ keys:
   - &host_netcup_g12 age1gs5ah3yvpysyqt5sjn3wt7at6gkqwuzr8v5ea5680rs9r7y2efwsntr8kx
   - &host_hetzner_hel1 age1czkysnrx6xaqhyv9d70436de0h8a5cuh0f67s4v2kwg8twc77u2svlzke6
   - &host_vmk3s age1y8e4t63gwxfvanxy4la7h3mm4l0n93rwj3vxvr03c79x50ur0pkq4twajn
+  - &host_pi_4b_hh age147ea6ll5jtqtwla993tawf9n4tzdcxqmxxedcm9n3u5yze227yxssp0d94
 
 creation_rules:
   # The k3s join token, which only the agent presents. Listed before the catch-all because
@@ -33,6 +35,14 @@ creation_rules:
       - age:
           - *admin_bjoern
           - *host_vmk3s
+
+  # The Garage RPC secret, which admits a node to the cluster holding the nix cache.
+  # pi-4b-hh runs the one Garage node outside the cluster.
+  - path_regex: secrets/garage\.yaml$
+    key_groups:
+      - age:
+          - *admin_bjoern
+          - *host_pi_4b_hh
 
   - path_regex: secrets/[^/]+\.yaml$
     key_groups:
