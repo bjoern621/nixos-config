@@ -146,7 +146,9 @@ jobs:
       # Path missing upstream builds once here.
       # pi-4b-hh lacks RAM for some of them, grafana among them.
       # attic push skips paths cache.nixos.org signs.
+      # Failed push leaves merge gate alone: hosts build what cache lacks.
       - name: Push ${{ matrix.attr }} to the system cache
+        continue-on-error: true
         env:
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
           OUT: ${{ steps.build.outputs.out }}
