@@ -175,7 +175,7 @@
             "value": ""
           }
         ],
-        "description": "Client address or <namespace>/<workload> of a pod, as a regular expression. Empty shows every client.",
+        "description": "Part of the client address or of a pod's <namespace>/<workload>, for example 134.101. or gitlab-runner. Empty shows every client.",
         "hide": 0
       },
       {
@@ -194,7 +194,7 @@
             "value": ""
           }
         ],
-        "description": "Requested host name, as a regular expression, for example nix-cache.",
+        "description": "Part of the requested host name, for example nix-cache.",
         "hide": 0
       },
       {
@@ -213,55 +213,27 @@
             "value": ""
           }
         ],
-        "description": "Requested path, as a regular expression, for example ^/nar/.",
+        "description": "Part of the requested path, for example /nar/.",
         "hide": 0
       },
       {
         "name": "status",
         "label": "Status",
-        "type": "custom",
-        "query": "All : .*,2xx : ^2,3xx : ^3,4xx : ^4,5xx : ^5,4xx and 5xx : ^[45]",
-        "multi": false,
-        "includeAll": false,
-        "description": "Status class of the response. Narrows the panels fed by the request log.",
-        "hide": 0,
+        "type": "textbox",
+        "query": "",
         "current": {
-          "selected": true,
-          "text": "All",
-          "value": ".*"
+          "text": "",
+          "value": ""
         },
         "options": [
           {
             "selected": true,
-            "text": "All",
-            "value": ".*"
-          },
-          {
-            "selected": false,
-            "text": "2xx",
-            "value": "^2"
-          },
-          {
-            "selected": false,
-            "text": "3xx",
-            "value": "^3"
-          },
-          {
-            "selected": false,
-            "text": "4xx",
-            "value": "^4"
-          },
-          {
-            "selected": false,
-            "text": "5xx",
-            "value": "^5"
-          },
-          {
-            "selected": false,
-            "text": "4xx and 5xx",
-            "value": "^[45]"
+            "text": "",
+            "value": ""
           }
-        ]
+        ],
+        "description": "Status code or its first digits, for example 5 for every server error or 404. Narrows the panels fed by the request log.",
+        "hide": 0
       }
     ]
   },
@@ -571,7 +543,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats count_uniq(client.name) clients",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats count_uniq(client.name) clients",
           "queryType": "stats",
           "refId": "A"
         }
@@ -633,7 +605,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" geo.country_name:* | stats count_uniq(geo.country_name) countries",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" geo.country_name:* | stats count_uniq(geo.country_name) countries",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1049,7 +1021,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (client.name, client.network, geo.country_name, geo.city_name) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(backend.service) services, quantile(0.95, duration_ms) p95, max(_time) last | sort by (requests desc) | limit 200",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats by (client.name, client.network, geo.country_name, geo.city_name) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(backend.service) services, quantile(0.95, duration_ms) p95, max(_time) last | sort by (requests desc) | limit 200",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1325,7 +1297,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (client.network) count() requests | sort by (requests desc)",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats by (client.network) count() requests | sort by (requests desc)",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1765,7 +1737,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" geo.location.lat:* | stats by (geo.location.lat, geo.location.lon, geo.city_name, geo.country_name) count() requests",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" geo.location.lat:* | stats by (geo.location.lat, geo.location.lon, geo.city_name, geo.country_name) count() requests",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1871,7 +1843,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (client.network) count() requests",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats by (client.network) count() requests",
           "queryType": "statsRange",
           "refId": "A",
           "legendFormat": "{{client.network}}"
@@ -2014,7 +1986,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (server.address, url.path, backend.service) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(client.name) clients, quantile(0.95, duration_ms) p95 | sort by (requests desc) | limit 200",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats by (server.address, url.path, backend.service) count() requests, count() if (http.response.status_code:>=400) errors, count_uniq(client.name) clients, quantile(0.95, duration_ms) p95 | sort by (requests desc) | limit 200",
           "queryType": "stats",
           "refId": "A"
         }
@@ -2261,7 +2233,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | stats by (backend.service, http.response.status_code) count() responses | sort by (responses desc) | limit 100",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | stats by (backend.service, http.response.status_code) count() responses | sort by (responses desc) | limit 100",
           "queryType": "stats",
           "refId": "A"
         }
@@ -2412,7 +2384,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | sort by (duration_ms desc) | limit 50 | stats by (_time, duration_ms, http.response.status_code, http.request.method, server.address, url.path, client.name, backend.service) count() n",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | sort by (duration_ms desc) | limit 50 | stats by (_time, duration_ms, http.response.status_code, http.request.method, server.address, url.path, client.name, backend.service) count() n",
           "queryType": "stats",
           "refId": "A"
         }
@@ -3019,7 +2991,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"$status\" | copy severity_text as level",
+          "expr": "_stream:{service.name=\"hubble\"} backend.service:in($svc) k8s.node.name:in($node) client.name:~\"$client\" server.address:~\"$host\" url.path:~\"$path\" edge.event:=response http.response.status_code:~\"^$status\" | copy severity_text as level",
           "queryType": "instant",
           "refId": "A",
           "maxLines": 1000
