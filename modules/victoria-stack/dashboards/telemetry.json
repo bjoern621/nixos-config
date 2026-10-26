@@ -1389,7 +1389,7 @@
     {
       "type": "timeseries",
       "title": "Metric points sent",
-      "description": "Points per second per collector and exporter.",
+      "description": "Points per second per collector and exporter. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1446,6 +1446,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 23,
@@ -1595,7 +1596,7 @@
     {
       "type": "timeseries",
       "title": "Collector CPU throttling",
-      "description": "Share of CPU periods each collector container spent throttled at its limit.",
+      "description": "Share of CPU periods each collector container spent throttled at its limit. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1665,6 +1666,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 12,
         "y": 31,

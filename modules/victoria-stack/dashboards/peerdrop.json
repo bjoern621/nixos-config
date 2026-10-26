@@ -2049,7 +2049,7 @@
     {
       "type": "timeseries",
       "title": "Latency p95 by route",
-      "description": "95th percentile duration per route. The WebSocket (/connect) lasts as long as its tab and stays out.",
+      "description": "95th percentile duration per route. The WebSocket (/connect) lasts as long as its tab and stays out. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2107,6 +2107,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 12,
         "y": 52,
@@ -2269,7 +2270,7 @@
     {
       "type": "timeseries",
       "title": "CPU",
-      "description": "CPU cores in use per pod.",
+      "description": "CPU cores in use per pod. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2280,7 +2281,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (k8s_pod_name) (k8s_pod_cpu_usage{k8s_namespace_name=~\"peerdrop|turn\"})",
+          "expr": "sum by (k8s_pod_name) (avg_over_time(k8s_pod_cpu_usage{k8s_namespace_name=~\"peerdrop|turn\"}[$__interval]))",
           "legendFormat": "{{k8s_pod_name}}",
           "refId": "A"
         }
@@ -2327,6 +2328,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 69,

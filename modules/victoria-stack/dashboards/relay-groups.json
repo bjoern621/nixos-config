@@ -2713,7 +2713,7 @@
     {
       "type": "timeseries",
       "title": "Pod ingress and egress",
-      "description": "Both legs on one axis, so the gap between them shows the fan-out. The kubelet counts bytes at the pod's interface without knowing the stream or the member.",
+      "description": "Both legs on one axis, so the gap between them shows the fan-out. The kubelet counts bytes at the pod's interface without knowing the stream or the member. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2812,6 +2812,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 61,
@@ -2909,7 +2910,7 @@
     {
       "type": "timeseries",
       "title": "CPU against the pod's limits",
-      "description": "The pod's usage against the limits of its containers together. The kubelet reports no usage per container, so this reading cannot name the container that spends it.",
+      "description": "The pod's usage against the limits of its containers together. The kubelet reports no usage per container, so this reading cannot name the container that spends it. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2920,7 +2921,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "max(k8s_pod_cpu_usage{k8s_namespace_name=\"screenshare\"})",
+          "expr": "max(avg_over_time(k8s_pod_cpu_usage{k8s_namespace_name=\"screenshare\"}[$__interval]))",
           "legendFormat": "cores used",
           "refId": "A"
         },
@@ -3013,6 +3014,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 69,

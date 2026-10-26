@@ -1048,7 +1048,7 @@
     {
       "type": "timeseries",
       "title": "RPC errors and timeouts",
-      "description": "Calls to other Garage nodes that failed or timed out, by endpoint and peer. A down node shows up here first.",
+      "description": "Calls to other Garage nodes that failed or timed out, by endpoint and peer. A down node shows up here first. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1115,6 +1115,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 22,
@@ -1235,7 +1236,7 @@
     {
       "type": "timeseries",
       "title": "Resync throughput and errors",
-      "description": "Blocks resynced per second and the failures among them. Failures level with the total mean that no block gets through.",
+      "description": "Blocks resynced per minute and the failures among them. Failures level with the total mean that no block gets through. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1246,7 +1247,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum(rate(block_resync_counter_total{job=\"garage\"}[$__rate_interval]))",
+          "expr": "60 * sum(rate(block_resync_counter_total{job=\"garage\"}[$__rate_interval]))",
           "legendFormat": "resynced",
           "refId": "A"
         },
@@ -1255,7 +1256,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum(rate(block_resync_error_counter_total{job=\"garage\"}[$__rate_interval]))",
+          "expr": "60 * sum(rate(block_resync_error_counter_total{job=\"garage\"}[$__rate_interval]))",
           "legendFormat": "failed",
           "refId": "B"
         }
@@ -1275,7 +1276,7 @@
             },
             "axisSoftMin": 0
           },
-          "unit": "ops",
+          "unit": "opm",
           "decimals": 1,
           "thresholds": {
             "mode": "absolute",
@@ -1319,6 +1320,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 31,
@@ -1330,7 +1332,7 @@
     {
       "type": "timeseries",
       "title": "Peer connection by node",
-      "description": "1 while this node holds a connection to the layout node, 0 while not. A node never seen has no disconnected time.",
+      "description": "Share of time this node held a connection to each layout node, and the longest disconnect within each point. A node never seen has no disconnected time. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1341,7 +1343,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "max by (id) (cluster_layout_node_connected{job=\"garage\"})",
+          "expr": "max by (id) (avg_over_time(cluster_layout_node_connected{job=\"garage\"}[$__interval]))",
           "legendFormat": "{{id}} connected",
           "refId": "A"
         },
@@ -1350,7 +1352,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "max by (id) (cluster_layout_node_disconnected_time{job=\"garage\"}) > 0",
+          "expr": "max by (id) (max_over_time(cluster_layout_node_disconnected_time{job=\"garage\"}[$__interval])) > 0",
           "legendFormat": "{{id}} disconnected for",
           "refId": "B"
         }
@@ -1369,7 +1371,7 @@
               "group": "A"
             }
           },
-          "decimals": 0,
+          "unit": "percentunit",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1380,6 +1382,7 @@
             ]
           },
           "min": 0,
+          "max": 1,
           "color": {
             "mode": "palette-classic"
           }
@@ -1398,6 +1401,10 @@
               {
                 "id": "custom.axisPlacement",
                 "value": "right"
+              },
+              {
+                "id": "max",
+                "value": null
               }
             ]
           }
@@ -1414,6 +1421,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 8,
         "y": 31,
@@ -1425,7 +1433,7 @@
     {
       "type": "timeseries",
       "title": "Ping timeouts by peer",
-      "description": "Pings unanswered for 10 s, from the Garage log. Five in a row drop the connection, and writes to that peer fail until it returns.",
+      "description": "Pings unanswered for 10 s, from the Garage log. Five in a row drop the connection, and writes to that peer fail until it returns. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
         "uid": "victorialogs"
@@ -1485,6 +1493,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 16,
         "y": 31,

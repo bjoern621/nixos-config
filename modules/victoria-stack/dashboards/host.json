@@ -2377,7 +2377,7 @@
     {
       "type": "timeseries",
       "title": "Throughput",
-      "description": "Bits per second per interface. Transmit plots below zero.",
+      "description": "Bits per second per interface. Transmit plots below zero. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2444,6 +2444,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 57,

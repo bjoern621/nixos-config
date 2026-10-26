@@ -1805,7 +1805,7 @@
     {
       "type": "timeseries",
       "title": "CPU by pod",
-      "description": "CPU cores in use per pod against its limit. At the limit the kernel throttles the pod.",
+      "description": "CPU cores in use per pod against its limit. At the limit the kernel throttles the pod. Each point averages 5 minutes.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1816,7 +1816,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (k8s_namespace_name, k8s_pod_name) (k8s_pod_cpu_usage{k8s_namespace_name=~\"claude-bot\"})",
+          "expr": "sum by (k8s_namespace_name, k8s_pod_name) (avg_over_time(k8s_pod_cpu_usage{k8s_namespace_name=~\"claude-bot\"}[$__interval]))",
           "legendFormat": "{{k8s_pod_name}}",
           "refId": "A"
         },
@@ -1900,6 +1900,7 @@
           "sort": "desc"
         }
       },
+      "interval": "5m",
       "gridPos": {
         "x": 0,
         "y": 48,
