@@ -22,6 +22,16 @@ let
       mv ${metadataDir}.partial ${metadataDir}
     fi
   '';
+
+  # Sets the bloated database aside once, so the node syncs a compact one from its peers.
+  # LMDB never shrinks its file, so retries on the slow USB disk grew it far past its rows.
+  # Node key, layout and peer list stay, so the node keeps its place in the cluster.
+  rebuildMetadata = pkgs.writeShellScript "garage-rebuild-metadata" ''
+    set -euo pipefail
+    if [[ -d ${metadataDir}/db.lmdb && ! -e ${metadataDir}/db.lmdb.old ]]; then
+      mv ${metadataDir}/db.lmdb ${metadataDir}/db.lmdb.old
+    fi
+  '';
 in
 {
   assertions = [
@@ -106,7 +116,10 @@ in
       DynamicUser = false;
       User = "garage";
       Group = "garage";
-      ExecStartPre = [ "+${moveMetadata}" ];
+      ExecStartPre = [
+        "+${moveMetadata}"
+        "+${rebuildMetadata}"
+      ];
       # The first start copies the metadata off a slow disk.
       TimeoutStartSec = "30min";
       # The pi runs the observability stack next to it.
