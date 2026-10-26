@@ -1148,7 +1148,7 @@
     {
       "type": "timeseries",
       "title": "CPU by pod",
-      "description": "CPU cores used by the ten busiest pods in the selection. Each point averages 5 minutes.",
+      "description": "CPU cores used by the ten busiest pods in the selection. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1207,7 +1207,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 16,
@@ -1288,7 +1288,7 @@
     {
       "type": "timeseries",
       "title": "CPU throttling by container",
-      "description": "Share of CPU periods each container spent throttled at its limit. Sustained values above 10 % slow the workload. Each point averages 5 minutes.",
+      "description": "Share of CPU periods each container spent throttled at its limit. Sustained values above 10 % slow the workload. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1358,7 +1358,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 24,

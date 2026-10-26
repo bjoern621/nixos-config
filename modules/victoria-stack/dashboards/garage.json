@@ -1048,7 +1048,7 @@
     {
       "type": "timeseries",
       "title": "RPC errors and timeouts",
-      "description": "Calls to other Garage nodes that failed or timed out, by endpoint and peer. A down node shows up here first. Each point averages 5 minutes.",
+      "description": "Calls to other Garage nodes that failed or timed out, by endpoint and peer. A down node shows up here first. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1115,7 +1115,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 22,
@@ -1236,7 +1236,7 @@
     {
       "type": "timeseries",
       "title": "Resync throughput and errors",
-      "description": "Blocks resynced per minute and the failures among them. Failures level with the total mean that no block gets through. Each point averages 5 minutes.",
+      "description": "Blocks resynced per minute and the failures among them. Failures level with the total mean that no block gets through. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1320,7 +1320,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 31,
@@ -1332,7 +1332,7 @@
     {
       "type": "timeseries",
       "title": "Peer connection by node",
-      "description": "Share of time this node held a connection to each layout node, and the longest disconnect within each point. A node never seen has no disconnected time. Each point averages 5 minutes.",
+      "description": "Share of time this node held a connection to each layout node, and the longest disconnect within each point. A node never seen has no disconnected time. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1421,7 +1421,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 8,
         "y": 31,
@@ -1433,7 +1433,7 @@
     {
       "type": "timeseries",
       "title": "Ping timeouts by peer",
-      "description": "Pings unanswered for 10 s, from the Garage log. Five in a row drop the connection, and writes to that peer fail until it returns. Each point averages 5 minutes.",
+      "description": "Pings unanswered for 10 s, from the Garage log. Five in a row drop the connection, and writes to that peer fail until it returns. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
         "uid": "victorialogs"
@@ -1493,7 +1493,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 16,
         "y": 31,

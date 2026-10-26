@@ -1217,7 +1217,7 @@
     {
       "type": "timeseries",
       "title": "Throughput",
-      "description": "Bytes per second per host, interface and direction. Narrow it with the Interface picker. Each point averages 5 minutes.",
+      "description": "Bytes per second per host, interface and direction. Narrow it with the Interface picker. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1282,7 +1282,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 35,
@@ -1469,7 +1469,7 @@
     {
       "type": "timeseries",
       "title": "Busiest pods",
-      "description": "Ten pods moving the most bytes, both directions together. Each point averages 5 minutes.",
+      "description": "Ten pods moving the most bytes, both directions together. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1534,7 +1534,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 54,

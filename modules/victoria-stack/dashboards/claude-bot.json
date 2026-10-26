@@ -1805,7 +1805,7 @@
     {
       "type": "timeseries",
       "title": "CPU by pod",
-      "description": "CPU cores in use per pod against its limit. At the limit the kernel throttles the pod. Each point averages 5 minutes.",
+      "description": "CPU cores in use per pod against its limit. At the limit the kernel throttles the pod. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1900,7 +1900,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 48,

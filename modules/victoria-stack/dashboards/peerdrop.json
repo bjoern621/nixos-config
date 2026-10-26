@@ -2049,7 +2049,7 @@
     {
       "type": "timeseries",
       "title": "Latency p95 by route",
-      "description": "95th percentile duration per route. The WebSocket (/connect) lasts as long as its tab and stays out. Each point averages 5 minutes.",
+      "description": "95th percentile duration per route. The WebSocket (/connect) lasts as long as its tab and stays out. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2107,7 +2107,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 52,
@@ -2270,7 +2270,7 @@
     {
       "type": "timeseries",
       "title": "CPU",
-      "description": "CPU cores in use per pod. Each point averages 5 minutes.",
+      "description": "CPU cores in use per pod. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2328,7 +2328,7 @@
           "sort": "desc"
         }
       },
-      "interval": "5m",
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 69,
