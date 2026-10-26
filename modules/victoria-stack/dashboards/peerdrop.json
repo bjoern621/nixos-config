@@ -204,7 +204,9 @@
           },
           "expr": "max(max_over_time(httpcheck_status{http_url=\"https://peerdrop.de\",http_status_class=\"2xx\"}[5m]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1904,7 +1906,9 @@
           },
           "expr": "(min(certmanager_certificate_expiration_timestamp_seconds{name=\"turn-tls\"}) - time()) / 86400",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2510,7 +2514,9 @@
           },
           "expr": "min(httpcheck_tls_cert_remaining_seconds{http_url=\"https://peerdrop.de\"}) / 86400",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

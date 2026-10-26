@@ -295,7 +295,9 @@
           },
           "expr": "count(max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}) == 2)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -345,7 +347,7 @@
     {
       "type": "stat",
       "title": "",
-      "description": "Pods Pending, Failed or Unknown. Completed jobs excluded.",
+      "description": "Pods outside Running and Succeeded for at least 5 minutes. Brief states stay out, such as a CI pod that fails just before its deletion.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -356,9 +358,11 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "count(max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}) != 2 and max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}) != 3) or vector(0)",
+          "expr": "count(min_over_time(((max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}) != bool 2) * (max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}) != bool 3))[5m:1m]) == 1 and count_over_time(((max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}) != bool 2) * (max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}) != bool 3))[5m:1m]) >= 5) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -429,7 +433,9 @@
           },
           "expr": "sum(increase(k8s_container_restarts{k8s_node_name=~\"$node\",k8s_namespace_name=~\"$namespace\",k8s_pod_name=~\"$pod\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -500,7 +506,9 @@
           },
           "expr": "sum(increase(container_oom_events_total{namespace=~\"$namespace\",pod=~\"$pod\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

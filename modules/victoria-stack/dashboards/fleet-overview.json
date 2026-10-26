@@ -190,7 +190,7 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum by (host_name) (label_copy(last_over_time(system_memory_usage_bytes{state=\"used\"}[5m]), \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(last_over_time(system_memory_usage_bytes{state=~\"used|free|buffered|cached\"}[5m]), \"k8s_node_name\", \"host_name\"))",
+          "expr": "100 * sum by (host_name) (label_copy(system_memory_usage_bytes{state=\"used\"}, \"k8s_node_name\", \"host_name\")) / sum by (host_name) (label_copy(system_memory_usage_bytes{state=~\"used|free|buffered|cached\"}, \"k8s_node_name\", \"host_name\"))",
           "legendFormat": "",
           "refId": "B",
           "instant": true,
@@ -306,7 +306,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "CPU"
+              "options": "CPU busy"
             },
             "properties": [
               {
@@ -410,7 +410,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Disk /"
+              "options": "Root disk"
             },
             "properties": [
               {
@@ -544,7 +544,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Last data"
+              "options": "Metric age"
             },
             "properties": [
               {
@@ -622,13 +622,13 @@
             "indexByName": {},
             "renameByName": {
               "host_name": "Host",
-              "Value #A": "CPU",
+              "Value #A": "CPU busy",
               "Value #B": "Memory",
-              "Value #C": "Disk /",
+              "Value #C": "Root disk",
               "Value #D": "Load per core",
               "Value #E": "Network in",
               "Value #F": "Network out",
-              "Value #G": "Last data"
+              "Value #G": "Metric age"
             }
           }
         },
@@ -636,7 +636,7 @@
           "id": "filterFieldsByName",
           "options": {
             "include": {
-              "pattern": "^(Host|CPU|Memory|Disk /|Load per core|Network in|Network out|Last data)$"
+              "pattern": "^(Host|CPU busy|Memory|Root disk|Load per core|Network in|Network out|Metric age)$"
             }
           }
         }
@@ -728,7 +728,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Memory used by host",
+      "title": "Memory by host",
       "description": "Memory held by processes, without page cache. Cache gives memory back on demand, so only this share counts as pressure.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -805,7 +805,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Root disk used by host",
+      "title": "Root disk by host",
       "description": "Used share of the root filesystem, as df reports it. Root reserve excluded.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
@@ -1136,7 +1136,9 @@
           },
           "expr": "min(cluster_available{job=\"garage\"}) + min(cluster_healthy{job=\"garage\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1867,7 +1869,9 @@
           },
           "expr": "sum(min by (k8s_node_name) (k8s_node_condition_ready))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1924,7 +1928,7 @@
     {
       "type": "stat",
       "title": "",
-      "description": "Pods in any phase other than Running or Succeeded.",
+      "description": "Pods outside Running and Succeeded for at least 5 minutes. Brief states stay out, such as a CI pod that fails just before its deletion.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1935,9 +1939,11 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "count(max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase) != 2 and max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase) != 3) or vector(0)",
+          "expr": "count(min_over_time(((max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{}) != bool 2) * (max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{}) != bool 3))[5m:1m]) == 1 and count_over_time(((max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{}) != bool 2) * (max by (k8s_namespace_name, k8s_pod_name) (k8s_pod_phase{}) != bool 3))[5m:1m]) >= 5) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -1984,7 +1990,7 @@
           "values": false
         },
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "textMode": "value_and_name",
         "orientation": "auto",
@@ -2015,7 +2021,9 @@
           },
           "expr": "sum(increase(k8s_container_restarts[$__range]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2167,7 +2175,9 @@
           },
           "expr": "count(argocd_app_info{sync_status!=\"Synced\"}) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2241,7 +2251,9 @@
           },
           "expr": "count(argocd_app_info{health_status!=\"Healthy\"}) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2328,7 +2340,9 @@
           },
           "expr": "sum(increase(argocd_app_sync_total{dry_run=\"false\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2398,7 +2412,9 @@
           },
           "expr": "sum(increase(argocd_app_sync_total{dry_run=\"false\",phase=~\"Failed|Error\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2472,7 +2488,9 @@
           },
           "expr": "count(count by (host_name, revision) (last_over_time(sysconf_installed_commit_time_seconds[$__range]))) - count(count by (host_name) (last_over_time(sysconf_installed_commit_time_seconds[$__range])))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2543,7 +2561,9 @@
           },
           "expr": "sum(increase(hubble_policy_verdicts_total{action=\"dropped\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2617,7 +2637,9 @@
           },
           "expr": "100 * sum(rate(coredns_dns_responses_total{rcode=~\"SERVFAIL|REFUSED\"}[$__range])) / sum(rate(coredns_dns_responses_total[$__range]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -2697,7 +2719,9 @@
           },
           "expr": "sum(increase(hubble_lost_events_total[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -3141,7 +3165,9 @@
           },
           "expr": "sum(up == bool 0) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -3215,7 +3241,9 @@
           },
           "expr": "min(vm_free_disk_space_bytes or vl_free_disk_space_bytes or vt_free_disk_space_bytes)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

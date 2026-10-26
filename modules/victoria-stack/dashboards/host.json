@@ -278,9 +278,11 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * (1 - sum(rate(system_cpu_time_seconds_total{state=\"idle\", host_name=\"$host\" or state=\"idle\", k8s_node_name=\"$host\"}[$__rate_interval])) / sum(rate(system_cpu_time_seconds_total{host_name=\"$host\" or k8s_node_name=\"$host\"}[$__rate_interval])))",
+          "expr": "100 * (1 - sum (rate(system_cpu_time_seconds_total{state=\"idle\", host_name=\"$host\" or state=\"idle\", k8s_node_name=\"$host\"}[5m])) / sum (rate(system_cpu_time_seconds_total{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m])))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -323,7 +325,7 @@
           "values": false
         },
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "textMode": "value_and_name",
         "orientation": "auto",
@@ -352,9 +354,11 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum(last_over_time(system_cpu_load_average_5m{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m])) / max(last_over_time(system_cpu_logical_count{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m]) or count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\",host_name=\"$host\" or state=\"idle\",k8s_node_name=\"$host\"}[5m]))))",
+          "expr": "sum (last_over_time(system_cpu_load_average_5m{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m])) / max(last_over_time(system_cpu_logical_count{host_name=\"$host\" or k8s_node_name=\"$host\"}[5m]) or count(count by (cpu) (last_over_time(system_cpu_time_seconds_total{state=\"idle\",host_name=\"$host\" or state=\"idle\",k8s_node_name=\"$host\"}[5m]))))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -394,7 +398,7 @@
           "values": false
         },
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "textMode": "value_and_name",
         "orientation": "auto",
@@ -423,9 +427,11 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum(system_memory_usage_bytes{state=\"used\", host_name=\"$host\" or state=\"used\", k8s_node_name=\"$host\"}) / sum(system_memory_usage_bytes{state=~\"used|free|buffered|cached\", host_name=\"$host\" or state=~\"used|free|buffered|cached\", k8s_node_name=\"$host\"})",
+          "expr": "100 * sum (system_memory_usage_bytes{state=\"used\", host_name=\"$host\" or state=\"used\", k8s_node_name=\"$host\"}) / sum (system_memory_usage_bytes{state=~\"used|free|buffered|cached\", host_name=\"$host\" or state=~\"used|free|buffered|cached\", k8s_node_name=\"$host\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -468,7 +474,7 @@
           "values": false
         },
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "textMode": "value_and_name",
         "orientation": "auto",
@@ -497,9 +503,11 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "100 * sum(last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=\"used\", host_name=\"$host\" or mountpoint=\"/\",state=\"used\", k8s_node_name=\"$host\"}[5m])) / sum(last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=~\"used|free\", host_name=\"$host\" or mountpoint=\"/\",state=~\"used|free\", k8s_node_name=\"$host\"}[5m]))",
+          "expr": "100 * sum (last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=\"used\", host_name=\"$host\" or mountpoint=\"/\",state=\"used\", k8s_node_name=\"$host\"}[5m])) / sum (last_over_time(system_filesystem_usage_bytes{mountpoint=\"/\",state=~\"used|free\", host_name=\"$host\" or mountpoint=\"/\",state=~\"used|free\", k8s_node_name=\"$host\"}[5m]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -542,7 +550,7 @@
           "values": false
         },
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "textMode": "value_and_name",
         "orientation": "auto",
@@ -571,9 +579,11 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "time() - max(tlast_over_time(system_memory_usage_bytes{host_name=\"$host\" or k8s_node_name=\"$host\"}[1h]))",
+          "expr": "time() - max (tlast_over_time(system_memory_usage_bytes{host_name=\"$host\" or k8s_node_name=\"$host\"}[1h]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

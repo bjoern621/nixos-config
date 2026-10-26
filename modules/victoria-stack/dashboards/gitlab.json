@@ -260,7 +260,9 @@
           },
           "expr": "max(max_over_time(httpcheck_status{http_url=\"https://gitlab.bjoernblessin.de\",http_status_class=~\"2xx|3xx\"}[5m]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -701,7 +703,9 @@
           },
           "expr": "min(pg_up)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -782,7 +786,9 @@
           },
           "expr": "min(redis_up)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -863,7 +869,9 @@
           },
           "expr": "max(sidekiq_processes_size)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

@@ -386,7 +386,9 @@
           },
           "expr": "sum(up == bool 0) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -525,7 +527,9 @@
           },
           "expr": "min(vm_free_disk_space_bytes or vl_free_disk_space_bytes or vt_free_disk_space_bytes)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

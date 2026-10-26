@@ -193,7 +193,9 @@
           },
           "expr": "min(cluster_available{job=\"garage\"}) + min(cluster_healthy{job=\"garage\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -282,7 +284,9 @@
           },
           "expr": "min(cluster_storage_nodes{job=\"garage\"}) - min(cluster_storage_nodes_ok{job=\"garage\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -353,7 +357,9 @@
           },
           "expr": "min(cluster_partitions_quorum{job=\"garage\"}) / min(cluster_partitions{job=\"garage\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -421,7 +427,9 @@
           },
           "expr": "min(garage_local_disk_avail{job=\"garage\",volume=\"data\"}) or min(garage_local_disk_avail{job=\"garage\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -485,7 +493,9 @@
           },
           "expr": "max(block_resync_errored_blocks{job=\"garage\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -619,7 +629,9 @@
           },
           "expr": "((max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0)))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -684,7 +696,9 @@
           },
           "expr": "(time() + ((max(block_resync_queue_length{job=\"garage\"}) == 0) or (max(block_resync_queue_length{job=\"garage\"}) / (-deriv(max(block_resync_queue_length{job=\"garage\"})[30m]) > 0)))) * 1000",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

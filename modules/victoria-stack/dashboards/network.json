@@ -256,7 +256,9 @@
           },
           "expr": "count(max by (k8s_node_name, target) (label_join(max by (k8s_node_name, probe_protocol, tcpcheck_endpoint) (last_over_time(tcpcheck_status_ratio{k8s_node_name=~\"$node\"}[5m])), \"target\", \" \", \"probe_protocol\", \"tcpcheck_endpoint\") or label_copy(max by (k8s_node_name, http_url) (max_over_time(sum by (k8s_node_name, http_url) (httpcheck_status{k8s_node_name=~\"$node\",http_status_class=~\"2xx|3xx\"})[5m:])), \"http_url\", \"target\")) == 0) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

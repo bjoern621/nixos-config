@@ -236,7 +236,9 @@
           },
           "expr": "max(k8s_deployment_available{k8s_namespace_name=\"screenshare\"})",
           "legendFormat": "available",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -304,7 +306,9 @@
           },
           "expr": "min(up{job=~\"screenshare-.*\"})",
           "legendFormat": "up",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

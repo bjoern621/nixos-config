@@ -213,7 +213,9 @@
           },
           "expr": "count(argocd_app_info{name=~\"$app\"})",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -276,7 +278,9 @@
           },
           "expr": "count(argocd_app_info{name=~\"$app\",sync_status!=\"Synced\"}) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -343,7 +347,9 @@
           },
           "expr": "count(argocd_app_info{name=~\"$app\",health_status!=\"Healthy\"}) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -410,7 +416,9 @@
           },
           "expr": "sum(increase(argocd_app_sync_total{name=~\"$app\",dry_run=\"false\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -473,7 +481,9 @@
           },
           "expr": "sum(increase(argocd_app_sync_total{name=~\"$app\",dry_run=\"false\",phase=~\"Failed|Error\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -540,7 +550,9 @@
           },
           "expr": "count(count by (host_name, revision) (last_over_time(sysconf_installed_commit_time_seconds[$__range]))) - count(count by (host_name) (last_over_time(sysconf_installed_commit_time_seconds[$__range])))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {

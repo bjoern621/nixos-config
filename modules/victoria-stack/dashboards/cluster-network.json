@@ -264,7 +264,9 @@
           },
           "expr": "sum(increase(hubble_policy_verdicts_total{action=\"dropped\",node=~\"$node\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -331,7 +333,9 @@
           },
           "expr": "100 * sum(rate(hubble_policy_verdicts_total{action=\"dropped\",node=~\"$node\"}[$__range])) / sum(rate(hubble_policy_verdicts_total{node=~\"$node\"}[$__range]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -467,7 +471,9 @@
           },
           "expr": "100 * sum(rate(coredns_dns_responses_total{job=\"coredns\",k8s_node_name=~\"$node\",rcode=~\"SERVFAIL|REFUSED\"}[$__range])) / sum(rate(coredns_dns_responses_total{job=\"coredns\",k8s_node_name=~\"$node\"}[$__range]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -540,7 +546,9 @@
           },
           "expr": "histogram_quantile(0.95, sum by (le) (rate(coredns_dns_request_duration_seconds_bucket{job=\"coredns\",k8s_node_name=~\"$node\"}[$__range])))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -612,7 +620,9 @@
           },
           "expr": "sum(increase(hubble_lost_events_total{node=~\"$node\"}[$__range])) or vector(0)",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
