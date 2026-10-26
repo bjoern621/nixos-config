@@ -1,7 +1,7 @@
 {
   "uid": "network-flows",
   "title": "Network flows",
-  "description": "Who connects to what. Host firewalls log the first packet of every inbound connection with its source address, network and location, and the port and service it reached. Select an address anywhere to follow it.",
+  "description": "Who connects to what. Host firewalls log the first packet of every inbound connection with its source address, network and location, and the port and service it reached. Services on the host network, such as coturn and SSH, show up here and nowhere else. Select an address anywhere to follow it.",
   "tags": [
     "hh",
     "network",
@@ -1080,9 +1080,9 @@
       "id": 10
     },
     {
-      "type": "barchart",
+      "type": "table",
       "title": "Sources by country",
-      "description": "Inbound connections and refused attempts per source country.",
+      "description": "Internet sources per country. Many connections from many addresses at one steady rate suggests spoofed traffic.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
         "uid": "victorialogs"
@@ -1093,7 +1093,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "conn.event:* host.name:$host source.network:$network source.address:~\"$ip\" | stats by (geo.country_name) count() connections | sort by (connections desc) | limit 15",
+          "expr": "conn.event:* host.name:$host source.network:$network source.address:~\"$ip\" source.network:=internet | stats by (geo.country_name) count() if (conn.event:=new) connections, count() if (conn.event:=refused) refused, count_uniq(source.address) sources, count_uniq(destination.service) services | sort by (connections desc) | limit 30",
           "queryType": "stats",
           "refId": "A"
         }
@@ -1101,8 +1101,11 @@
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "fillOpacity": 80,
-            "lineWidth": 1
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
           },
           "thresholds": {
             "mode": "absolute",
@@ -1114,27 +1117,105 @@
             ]
           },
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "geo.country_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Country"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "connections"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Connections"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "refused"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Refused"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sources"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Addresses"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "services"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Services"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
       },
       "options": {
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "groupWidth": 0.7,
-        "barWidth": 0.9,
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0,
-        "legend": {
-          "showLegend": false,
-          "displayMode": "list",
-          "placement": "bottom"
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "sortBy": [
+          {
+            "displayName": "Connections",
+            "desc": true
+          }
+        ]
       },
       "transformations": [
         {
@@ -1156,7 +1237,10 @@
             },
             "indexByName": {
               "geo.country_name": 0,
-              "connections": 1
+              "connections": 1,
+              "refused": 2,
+              "sources": 3,
+              "services": 4
             },
             "renameByName": {}
           }
@@ -1171,17 +1255,220 @@
       "id": 11
     },
     {
+      "type": "table",
+      "title": "Busiest source networks",
+      "description": "Internet sources grouped by /24 (IPv6 by address) and the service they reached. A /24 with hundreds of addresses on one UDP service points at a reflection attack aimed at that network.",
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs"
+          },
+          "expr": "conn.event:* host.name:$host source.network:$network source.address:~\"$ip\" source.network:=internet | format if (source.address:~\"^[0-9.]+$\") \"<source.address>\" as v4 | extract if (v4:*) \"<o1>.<o2>.<o3>.\" from v4 | format if (o3:*) \"<o1>.<o2>.<o3>.0/24\" as source.subnet | format if (o3:*) \"<o1>.<o2>.<o3>.\" as source.prefix | format if (source.address:~\":\") \"<source.address>\" as source.subnet | format if (source.address:~\":\") \"<source.address>\" as source.prefix | stats by (source.subnet, source.prefix, geo.country_name, host.name, destination.service) count() connections, count_uniq(source.address) sources | sort by (connections desc) | limit 100",
+          "queryType": "stats",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "source.subnet"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Network"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Follow ${__data.fields[\"source.prefix\"]}",
+                    "url": "/d/network-flows?var-ip=${__data.fields[\"source.prefix\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "source.prefix"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "geo.country_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Country"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "host.name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Host"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "destination.service"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Service"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "connections"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Connections"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sources"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Addresses"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": "",
+          "countRows": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Connections",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "__name__"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "source.subnet": 0,
+              "source.prefix": 1,
+              "geo.country_name": 2,
+              "host.name": 3,
+              "destination.service": 4,
+              "connections": 5,
+              "sources": 6
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 24,
+        "h": 9
+      },
+      "id": 12
+    },
+    {
       "type": "row",
       "title": "Refused by the firewall",
       "collapsed": false,
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 35,
+        "y": 44,
         "w": 24,
         "h": 1
       },
-      "id": 12
+      "id": 13
     },
     {
       "type": "table",
@@ -1359,11 +1646,11 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 36,
+        "y": 45,
         "w": 14,
         "h": 9
       },
-      "id": 13
+      "id": 14
     },
     {
       "type": "barchart",
@@ -1450,11 +1737,11 @@
       ],
       "gridPos": {
         "x": 14,
-        "y": 36,
+        "y": 45,
         "w": 10,
         "h": 9
       },
-      "id": 14
+      "id": 15
     },
     {
       "type": "row",
@@ -1463,11 +1750,11 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 45,
+        "y": 54,
         "w": 24,
         "h": 1
       },
-      "id": 15
+      "id": 16
     },
     {
       "type": "logs",
@@ -1502,11 +1789,11 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 46,
+        "y": 55,
         "w": 24,
         "h": 14
       },
-      "id": 16
+      "id": 17
     }
   ]
 }
