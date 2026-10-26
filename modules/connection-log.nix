@@ -90,6 +90,10 @@ in
       "51820" = "wireguard";
     };
 
+    # Off by default since NixOS 26.05.
+    # Source of every conn.event "refused" line.
+    networking.firewall.logRefusedConnections = true;
+
     # mangle INPUT sees every locally delivered packet before filter INPUT,
     # where tailscale's ts-input accepts tailnet traffic ahead of nixos-fw.
     # addrtype LOCAL keeps broadcast and multicast out.
