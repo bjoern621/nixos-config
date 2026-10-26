@@ -10,6 +10,9 @@ let
   # Neither exists before this host's first `tailscale up`, and an agent pointed at nothing
   # restarts forever, so k3s waits for both.
   joinable = tailnet.vmk3s != null && tailnet.netcup-g12 != null;
+  # STUN Binding and Allocate requests to coturn.
+  # u32 reads the message type, the first two bytes of the UDP payload.
+  stunRequest = ''-p udp --dport 3478 -m u32 --u32 "0>>22&0x3C@8>>16=0x0001:0x0003"'';
 in
 {
   imports = [
@@ -195,4 +198,25 @@ in
   #
   # The coturn entries gate it: host-network traffic gets delivered locally, through INPUT.
   # A port opened on one side alone fails silently, with the client timing out.
+
+  # coturn answers both request types without a login, with replies larger than the request.
+  # A spoofed source turns it into a reflector aimed at whoever owns that address.
+  # The budget caps them per claimed source and in total.
+  # ChannelData, Refresh and every other message on 3478 pass unlimited, relayed transfers included.
+  networking.firewall.extraCommands = ''
+    while iptables -t raw -D PREROUTING ${stunRequest} -j nixos-stun-limit 2>/dev/null; do :; done
+    iptables -t raw -N nixos-stun-limit 2>/dev/null || iptables -t raw -F nixos-stun-limit
+    iptables -t raw -A nixos-stun-limit \
+      -m hashlimit --hashlimit-name stun-src --hashlimit-mode srcip \
+      --hashlimit-above 10/sec --hashlimit-burst 40 -j DROP
+    iptables -t raw -A nixos-stun-limit -m limit --limit 200/sec --limit-burst 400 -j RETURN
+    iptables -t raw -A nixos-stun-limit -j DROP
+    iptables -t raw -A PREROUTING ${stunRequest} -j nixos-stun-limit
+  '';
+
+  networking.firewall.extraStopCommands = ''
+    while iptables -t raw -D PREROUTING ${stunRequest} -j nixos-stun-limit 2>/dev/null; do :; done
+    iptables -t raw -F nixos-stun-limit 2>/dev/null || true
+    iptables -t raw -X nixos-stun-limit 2>/dev/null || true
+  '';
 }
