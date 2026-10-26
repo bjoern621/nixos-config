@@ -29,6 +29,7 @@ in
     ../../modules/k3s-gitlab-registry.nix
     ../../modules/telemetry-agent.nix
     ../../modules/connection-log.nix
+    ../../modules/blocklist.nix
   ];
 
   sysconf.checkout.enable = true;
@@ -147,6 +148,7 @@ in
       "8892" = "moq";
     };
   };
+  services.blocklist.enable = true;
 
   # What this machine exposes for the workloads pinned to it.
   #
@@ -176,23 +178,6 @@ in
     8892 # the MoQ WebTransport session, HTTP/3 on the port the page came from
     3478 # STUN and TURN
   ];
-
-  # STUN spoofed from these networks makes coturn reflect answers at them.
-  # raw PREROUTING drops it before conntrack, coturn and connection log.
-  networking.firewall.extraCommands = ''
-    while iptables -t raw -D PREROUTING -j nixos-stun-block 2>/dev/null; do :; done
-    iptables -t raw -N nixos-stun-block 2>/dev/null || iptables -t raw -F nixos-stun-block
-    for net in 45.137.227.0/24 213.156.101.0/24; do
-      iptables -t raw -A nixos-stun-block -s "$net" -p udp --dport 3478 -j DROP
-    done
-    iptables -t raw -I PREROUTING 1 -j nixos-stun-block
-  '';
-
-  networking.firewall.extraStopCommands = ''
-    while iptables -t raw -D PREROUTING -j nixos-stun-block 2>/dev/null; do :; done
-    iptables -t raw -F nixos-stun-block 2>/dev/null || true
-    iptables -t raw -X nixos-stun-block 2>/dev/null || true
-  '';
 
   # coturn's relay range, one port per allocation: --min-port and --max-port in its Deployment.
   networking.firewall.allowedUDPPortRanges = [

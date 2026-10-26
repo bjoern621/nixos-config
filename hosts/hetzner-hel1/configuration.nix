@@ -28,6 +28,7 @@ in
     ../../modules/k3s-tailnet.nix
     ../../modules/k3s-gitlab-registry.nix
     ../../modules/telemetry-agent.nix
+    ../../modules/blocklist.nix
   ];
 
   sysconf.checkout.enable = true;
@@ -113,6 +114,7 @@ in
     enable = true;
     hostMetrics = false;
   };
+  services.blocklist.enable = true;
 
   # 80 and 443 reach Gateway hetzner through Cilium's datapath ahead of this firewall.
   # Nothing else listens publicly.

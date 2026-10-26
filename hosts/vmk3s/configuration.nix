@@ -26,6 +26,7 @@ in
     ../../modules/sops.nix
     ../../modules/telemetry-agent.nix
     ../../modules/connection-log.nix
+    ../../modules/blocklist.nix
     ../../modules/k3s-tailnet.nix
     ../../modules/k3s-gitlab-registry.nix
     (modulesPath + "/profiles/qemu-guest.nix")
@@ -41,6 +42,7 @@ in
     hostMetrics = false;
   };
   services.connection-log.enable = true;
+  services.blocklist.enable = true;
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
