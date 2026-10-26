@@ -1063,8 +1063,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (rpc_endpoint, to) (rate(rpc_netapp_error_counter_total{job=\"garage\"}[$__rate_interval]))",
-          "legendFormat": "{{rpc_endpoint}} to {{to}} error",
+          "expr": "label_replace(label_replace(label_replace(label_replace(sum by (rpc_endpoint, to) (rate(rpc_netapp_error_counter_total{job=\"garage\"}[$__rate_interval])), \"node\", \"$1\", \"to\", \"(.+)\"), \"node\", \"garage-0 ($1)\", \"to\", \"(29694597768a65e1)\"), \"node\", \"pi-4b-hh ($1)\", \"to\", \"(65517417d23a282d)\"), \"node\", \"rpbpi ($1)\", \"to\", \"(68edbd90fdb50f73)\")",
+          "legendFormat": "{{rpc_endpoint}} to {{node}} error",
           "refId": "A"
         },
         {
@@ -1072,8 +1072,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "sum by (rpc_endpoint, to) (rate(rpc_timeout_counter_total{job=\"garage\"}[$__rate_interval]))",
-          "legendFormat": "{{rpc_endpoint}} to {{to}} timeout",
+          "expr": "label_replace(label_replace(label_replace(label_replace(sum by (rpc_endpoint, to) (rate(rpc_timeout_counter_total{job=\"garage\"}[$__rate_interval])), \"node\", \"$1\", \"to\", \"(.+)\"), \"node\", \"garage-0 ($1)\", \"to\", \"(29694597768a65e1)\"), \"node\", \"pi-4b-hh ($1)\", \"to\", \"(65517417d23a282d)\"), \"node\", \"rpbpi ($1)\", \"to\", \"(68edbd90fdb50f73)\")",
+          "legendFormat": "{{rpc_endpoint}} to {{node}} timeout",
           "refId": "B"
         }
       ],
@@ -1348,8 +1348,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "max by (id) (avg_over_time(cluster_layout_node_connected{job=\"garage\"}[$__interval]))",
-          "legendFormat": "{{id}} connected",
+          "expr": "label_replace(label_replace(label_replace(label_replace(max by (id) (avg_over_time(cluster_layout_node_connected{job=\"garage\"}[$__interval])), \"node\", \"$1\", \"id\", \"(.+)\"), \"node\", \"garage-0 ($1)\", \"id\", \"(29694597768a65e1)\"), \"node\", \"pi-4b-hh ($1)\", \"id\", \"(65517417d23a282d)\"), \"node\", \"rpbpi ($1)\", \"id\", \"(68edbd90fdb50f73)\")",
+          "legendFormat": "{{node}} connected",
           "refId": "A"
         },
         {
@@ -1357,8 +1357,8 @@
             "type": "victoriametrics-metrics-datasource",
             "uid": "victoriametrics"
           },
-          "expr": "max by (id) (max_over_time(cluster_layout_node_disconnected_time{job=\"garage\"}[$__interval])) > 0",
-          "legendFormat": "{{id}} disconnected for",
+          "expr": "label_replace(label_replace(label_replace(label_replace(max by (id) (max_over_time(cluster_layout_node_disconnected_time{job=\"garage\"}[$__interval])) > 0, \"node\", \"$1\", \"id\", \"(.+)\"), \"node\", \"garage-0 ($1)\", \"id\", \"(29694597768a65e1)\"), \"node\", \"pi-4b-hh ($1)\", \"id\", \"(65517417d23a282d)\"), \"node\", \"rpbpi ($1)\", \"id\", \"(68edbd90fdb50f73)\")",
+          "legendFormat": "{{node}} disconnected for",
           "refId": "B"
         }
       ],
@@ -1449,7 +1449,7 @@
             "type": "victoriametrics-logs-datasource",
             "uid": "victorialogs"
           },
-          "expr": "k8s.namespace.name:=garage k8s.container.name:=garage \"Error pinging\" | extract \"Error pinging <peer>: \" | stats by (peer) count() timeouts",
+          "expr": "k8s.namespace.name:=garage k8s.container.name:=garage \"Error pinging\" | extract \"Error pinging <peer>: \" | replace (\"29694597768a65e1\", \"garage-0 (29694597768a65e1)\") at peer | replace (\"65517417d23a282d\", \"pi-4b-hh (65517417d23a282d)\") at peer | replace (\"68edbd90fdb50f73\", \"rpbpi (68edbd90fdb50f73)\") at peer | stats by (peer) count() timeouts",
           "queryType": "statsRange",
           "refId": "A",
           "legendFormat": "{{peer}}"
