@@ -29,7 +29,7 @@ Scope {
     property var imageVersions: ({})
     property var imageDecodeQueue: []
     // Window focused before open. Closing hands focus to the window under the cursor.
-    property string pasteTarget: ""
+    property var pasteTarget: ({})
 
     onClipVisibleChanged: {
         if (clipVisible) {
@@ -141,7 +141,7 @@ Scope {
 
     function toggle() {
         if (!clipVisible) {
-            pasteTarget = WindowFocus.activeAddress();
+            pasteTarget = WindowFocus.activeWindow();
             const s = focusedScreen();
             if (s)
                 clipWindow.screen = s;

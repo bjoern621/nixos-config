@@ -6,7 +6,7 @@ end)
 
 -- Routed via Hyprland's `global` dispatcher to the running quickshell.
 -- ~125ms faster than `qs ipc call` (cold-start avoidance).
--- Selecting an entry copies it and pastes via Ctrl+Shift+V into the window focused before open.
+-- Selecting an entry copies it and pastes into the window focused before open.
 -- `hyprctl dispatch` argument is a Lua expression, not hyprlang words.
 hl.bind("SUPER + V", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.dsp.global("quickshell:clipboard")']]))
 

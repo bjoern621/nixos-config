@@ -30,7 +30,7 @@ Scope {
     property var filteredEmojis: []
     property bool dataLoaded: false
     // Window focused before open. Closing hands focus to the window under the cursor.
-    property string pasteTarget: ""
+    property var pasteTarget: ({})
 
     // Filtering runs in emojiWorker off the UI thread. Only one query is in
     // flight at a time: a request arriving mid-query sets queryPending, and the
@@ -159,7 +159,7 @@ Scope {
 
     function toggle() {
         if (!emojiVisible) {
-            pasteTarget = WindowFocus.activeAddress();
+            pasteTarget = WindowFocus.activeWindow();
             const s = focusedScreen();
             if (s)
                 emojiWindow.screen = s;

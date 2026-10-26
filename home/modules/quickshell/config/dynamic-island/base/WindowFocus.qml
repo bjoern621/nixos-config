@@ -72,20 +72,29 @@ Singleton {
         return true;
     }
 
-    // Address of the focused window in focusAddress() form, "" while none is known.
-    function activeAddress() {
+    // Focused window as { address, appClass }, address in focusAddress() form.
+    // Both "" while none is known.
+    function activeWindow() {
         const t = Hyprland.activeToplevel;
-        return t && t.address ? "0x" + t.address : "";
+        return {
+            address: t && t.address ? "0x" + t.address : "",
+            appClass: t ? (t.wayland?.appId || t.lastIpcObject?.class || "") : ""
+        };
     }
 
-    // Focuses the window, then pastes the clipboard with Ctrl+Shift+V.
+    // Terminals take Ctrl+Shift+V, since Ctrl+V sends ^V to the shell.
+    // Other apps bind Ctrl+Shift+V elsewhere (VS Code: Markdown preview) or not at all (GNOME Text Editor).
+    readonly property var _terminalClass: /^(kitty|foot|footclient|alacritty|com\.mitchellh\.ghostty|org\.wezfurlong\.wezterm|org\.gnome\.console|org\.gnome\.ptyxis|org\.kde\.konsole)$/i
+
+    // Focuses the window from activeWindow(), then pastes the clipboard with that app's chord.
     // hyprctl returns once Hyprland applied the focus,
     // so the keys reach that window and not the one under the cursor.
     // Unknown or closed window: paste goes to the focused one.
-    function pasteInto(address) {
-        const addr = (address ?? "").toString();
+    function pasteInto(target) {
+        const addr = (target?.address ?? "").toString();
         const focus = /^0x[0-9a-fA-F]+$/.test(addr) ? 'hl.dsp.focus({ window = "address:' + addr + '" })' : "hl.dsp.no_op()";
-        Quickshell.execDetached(["sh", "-c", 'hyprctl dispatch "$1" >/dev/null; exec wtype -M ctrl -M shift v -m shift -m ctrl', "paste", focus]);
+        const chord = root._terminalClass.test(target?.appClass ?? "") ? "wtype -M ctrl -M shift v -m shift -m ctrl" : "wtype -M ctrl v -m ctrl";
+        Quickshell.execDetached(["sh", "-c", 'hyprctl dispatch "$1" >/dev/null; exec ' + chord, "paste", focus]);
     }
 
     // Key chord delivered to the app's window. Keyboard focus stays where it is.
