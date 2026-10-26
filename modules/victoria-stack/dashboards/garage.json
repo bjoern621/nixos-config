@@ -23,7 +23,7 @@
     {
       "title": "Fleet overview",
       "type": "link",
-      "url": "/d/fleet-overview",
+      "url": "/d/fleet-overview?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
       "keepTime": true,
       "includeVars": false,
@@ -40,7 +40,7 @@
       ],
       "asDropdown": true,
       "keepTime": true,
-      "includeVars": false,
+      "includeVars": true,
       "targetBlank": false,
       "icon": "external link",
       "tooltip": "",
@@ -49,7 +49,7 @@
     {
       "title": "Edge traffic for the cache",
       "type": "link",
-      "url": "/d/edge?var-svc=atticd/atticd&var-svc=garage/garage",
+      "url": "/d/edge?var-svc=atticd/atticd&var-svc=garage/garage&${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
       "keepTime": true,
       "includeVars": false,
@@ -80,9 +80,9 @@
           "uid": "victoriametrics"
         },
         "enable": true,
-        "hide": false,
+        "hide": true,
         "iconColor": "purple",
-        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\",name!~\".+-mr-[0-9]+\"}[2m])) > 0 unless on (name) sum by (name) (increase(argocd_app_sync_total{dry_run=\"false\"}[1h])) > 6",
+        "expr": "(sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\",name!~\".+-mr-[0-9]+\"}[2m])) > 0 unless on (name) sum by (name) (increase(argocd_app_sync_total{dry_run=\"false\"}[1h])) > 6) and on () vector($syncs) > 0",
         "step": "2m",
         "titleFormat": "Sync {{name}}",
         "textFormat": "{{phase}}",
@@ -95,9 +95,9 @@
           "uid": "victoriametrics"
         },
         "enable": true,
-        "hide": false,
+        "hide": true,
         "iconColor": "orange",
-        "expr": "max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)",
+        "expr": "(max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)) and on () vector($rebuilds) > 0",
         "step": "5m",
         "titleFormat": "Rebuild {{host_name}}",
         "textFormat": "{{revision}}",
@@ -106,7 +106,62 @@
     ]
   },
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "syncs",
+        "label": "Argo CD syncs",
+        "type": "custom",
+        "query": "shown : 1,hidden : 0",
+        "multi": false,
+        "includeAll": false,
+        "description": "Marks each Argo CD sync on the time series.",
+        "hide": 0,
+        "current": {
+          "selected": true,
+          "text": "shown",
+          "value": "1"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "shown",
+            "value": "1"
+          },
+          {
+            "selected": false,
+            "text": "hidden",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "name": "rebuilds",
+        "label": "Host rebuilds",
+        "type": "custom",
+        "query": "shown : 1,hidden : 0",
+        "multi": false,
+        "includeAll": false,
+        "description": "Marks each NixOS rebuild on the time series.",
+        "hide": 0,
+        "current": {
+          "selected": true,
+          "text": "shown",
+          "value": "1"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "shown",
+            "value": "1"
+          },
+          {
+            "selected": false,
+            "text": "hidden",
+            "value": "0"
+          }
+        ]
+      }
+    ]
   },
   "panels": [
     {
@@ -1570,7 +1625,7 @@
           "links": [
             {
               "title": "Edge traffic for ${__field.labels.svc}",
-              "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}",
+              "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1851,12 +1906,12 @@
           "links": [
             {
               "title": "Workload view of ${__field.labels.k8s_pod_name}",
-              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             },
             {
               "title": "Logs of ${__field.labels.k8s_pod_name}",
-              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1955,12 +2010,12 @@
           "links": [
             {
               "title": "Workload view of ${__field.labels.k8s_pod_name}",
-              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "url": "/d/k8s?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             },
             {
               "title": "Logs of ${__field.labels.k8s_pod_name}",
-              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}",
+              "url": "/d/logs?var-namespace=${__field.labels.k8s_namespace_name}&var-pod=${__field.labels.k8s_pod_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2060,12 +2115,12 @@
                 "value": [
                   {
                     "title": "Requests from ${__data.fields[\"client.name\"]}",
-                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   },
                   {
                     "title": "Connections from ${__data.fields[\"client.name\"]}",
-                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
                 ]

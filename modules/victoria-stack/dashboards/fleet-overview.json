@@ -22,7 +22,7 @@
     {
       "title": "Fleet overview",
       "type": "link",
-      "url": "/d/fleet-overview",
+      "url": "/d/fleet-overview?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
       "keepTime": true,
       "includeVars": false,
@@ -39,7 +39,7 @@
       ],
       "asDropdown": true,
       "keepTime": true,
-      "includeVars": false,
+      "includeVars": true,
       "targetBlank": false,
       "icon": "external link",
       "tooltip": "",
@@ -67,9 +67,9 @@
           "uid": "victoriametrics"
         },
         "enable": true,
-        "hide": false,
+        "hide": true,
         "iconColor": "purple",
-        "expr": "sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\",name!~\".+-mr-[0-9]+\"}[2m])) > 0 unless on (name) sum by (name) (increase(argocd_app_sync_total{dry_run=\"false\"}[1h])) > 6",
+        "expr": "(sum by (name, phase) (increase(argocd_app_sync_total{dry_run=\"false\",name!~\".+-mr-[0-9]+\"}[2m])) > 0 unless on (name) sum by (name) (increase(argocd_app_sync_total{dry_run=\"false\"}[1h])) > 6) and on () vector($syncs) > 0",
         "step": "2m",
         "titleFormat": "Sync {{name}}",
         "textFormat": "{{phase}}",
@@ -82,9 +82,9 @@
           "uid": "victoriametrics"
         },
         "enable": true,
-        "hide": false,
+        "hide": true,
         "iconColor": "orange",
-        "expr": "max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)",
+        "expr": "(max by (host_name, revision) (sysconf_installed_commit_time_seconds) unless max by (host_name, revision) (sysconf_installed_commit_time_seconds offset 15m)) and on () vector($rebuilds) > 0",
         "step": "5m",
         "titleFormat": "Rebuild {{host_name}}",
         "textFormat": "{{revision}}",
@@ -93,7 +93,62 @@
     ]
   },
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "syncs",
+        "label": "Argo CD syncs",
+        "type": "custom",
+        "query": "shown : 1,hidden : 0",
+        "multi": false,
+        "includeAll": false,
+        "description": "Marks each Argo CD sync on the time series.",
+        "hide": 0,
+        "current": {
+          "selected": true,
+          "text": "shown",
+          "value": "1"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "shown",
+            "value": "1"
+          },
+          {
+            "selected": false,
+            "text": "hidden",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "name": "rebuilds",
+        "label": "Host rebuilds",
+        "type": "custom",
+        "query": "shown : 1,hidden : 0",
+        "multi": false,
+        "includeAll": false,
+        "description": "Marks each NixOS rebuild on the time series.",
+        "hide": 0,
+        "current": {
+          "selected": true,
+          "text": "shown",
+          "value": "1"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "shown",
+            "value": "1"
+          },
+          {
+            "selected": false,
+            "text": "hidden",
+            "value": "0"
+          }
+        ]
+      }
+    ]
   },
   "panels": [
     {
@@ -237,7 +292,7 @@
                 "value": [
                   {
                     "title": "Host detail for ${__data.fields.host_name}",
-                    "url": "/d/host?var-host=${__data.fields.host_name}&${__url_time_range}",
+                    "url": "/d/host?var-host=${__data.fields.host_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
                 ]
@@ -648,7 +703,7 @@
           "links": [
             {
               "title": "Host detail for ${__field.labels.host_name}",
-              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}",
+              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -725,7 +780,7 @@
           "links": [
             {
               "title": "Host detail for ${__field.labels.host_name}",
-              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}",
+              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -802,7 +857,7 @@
           "links": [
             {
               "title": "Host detail for ${__field.labels.host_name}",
-              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}",
+              "url": "/d/host?var-host=${__field.labels.host_name}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -882,7 +937,7 @@
           "links": [
             {
               "title": "Edge traffic",
-              "url": "/d/edge?${__url_time_range}",
+              "url": "/d/edge?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -960,7 +1015,7 @@
           "links": [
             {
               "title": "Edge traffic",
-              "url": "/d/edge?${__url_time_range}",
+              "url": "/d/edge?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1039,7 +1094,7 @@
           "links": [
             {
               "title": "Edge traffic",
-              "url": "/d/edge?${__url_time_range}",
+              "url": "/d/edge?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1115,7 +1170,7 @@
           "links": [
             {
               "title": "Garage and nix cache",
-              "url": "/d/garage?${__url_time_range}",
+              "url": "/d/garage?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1215,7 +1270,7 @@
           "links": [
             {
               "title": "Edge traffic",
-              "url": "/d/edge?${__url_time_range}",
+              "url": "/d/edge?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1385,7 +1440,7 @@
                 "value": [
                   {
                     "title": "Edge traffic for ${__data.fields[\"Service\"]}",
-                    "url": "/d/edge?var-svc=${__data.fields[\"Service\"]}&${__url_time_range}",
+                    "url": "/d/edge?var-svc=${__data.fields[\"Service\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
                 ]
@@ -1623,12 +1678,12 @@
                 "value": [
                   {
                     "title": "Requests from ${__data.fields[\"client.name\"]}",
-                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "url": "/d/edge?var-client=${__data.fields[\"client.name\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   },
                   {
                     "title": "Connections from ${__data.fields[\"client.name\"]}",
-                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}",
+                    "url": "/d/network-flows?var-ip=${__data.fields[\"client.name\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
                 ]
@@ -1839,7 +1894,7 @@
           "links": [
             {
               "title": "Kubernetes workloads",
-              "url": "/d/k8s?${__url_time_range}",
+              "url": "/d/k8s?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1917,7 +1972,7 @@
           "links": [
             {
               "title": "Kubernetes workloads",
-              "url": "/d/k8s?${__url_time_range}",
+              "url": "/d/k8s?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -1995,7 +2050,7 @@
           "links": [
             {
               "title": "Kubernetes workloads",
-              "url": "/d/k8s?${__url_time_range}",
+              "url": "/d/k8s?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2069,7 +2124,7 @@
           "links": [
             {
               "title": "Kubernetes workloads",
-              "url": "/d/k8s?${__url_time_range}",
+              "url": "/d/k8s?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2143,7 +2198,7 @@
           "links": [
             {
               "title": "Deploys",
-              "url": "/d/deploys?${__url_time_range}",
+              "url": "/d/deploys?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2217,7 +2272,7 @@
           "links": [
             {
               "title": "Deploys",
-              "url": "/d/deploys?${__url_time_range}",
+              "url": "/d/deploys?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2300,7 +2355,7 @@
           "links": [
             {
               "title": "Deploys",
-              "url": "/d/deploys?${__url_time_range}",
+              "url": "/d/deploys?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2374,7 +2429,7 @@
           "links": [
             {
               "title": "Deploys",
-              "url": "/d/deploys?${__url_time_range}",
+              "url": "/d/deploys?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2444,7 +2499,7 @@
           "links": [
             {
               "title": "Deploys",
-              "url": "/d/deploys?${__url_time_range}",
+              "url": "/d/deploys?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2519,7 +2574,7 @@
           "links": [
             {
               "title": "Cluster network",
-              "url": "/d/cluster-network?${__url_time_range}",
+              "url": "/d/cluster-network?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2598,7 +2653,7 @@
           "links": [
             {
               "title": "Cluster network",
-              "url": "/d/cluster-network?${__url_time_range}",
+              "url": "/d/cluster-network?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2677,7 +2732,7 @@
           "links": [
             {
               "title": "Cluster network",
-              "url": "/d/cluster-network?${__url_time_range}",
+              "url": "/d/cluster-network?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2773,7 +2828,7 @@
           "links": [
             {
               "title": "Logs explorer",
-              "url": "/d/logs?var-level=error&${__url_time_range}",
+              "url": "/d/logs?var-level=error&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2836,7 +2891,7 @@
       "links": [
         {
           "title": "Logs explorer",
-          "url": "/d/logs?var-level=error&${__url_time_range}",
+          "url": "/d/logs?var-level=error&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
           "targetBlank": false
         }
       ],
@@ -2896,7 +2951,7 @@
           "links": [
             {
               "title": "Network flows",
-              "url": "/d/network-flows?${__url_time_range}",
+              "url": "/d/network-flows?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -2969,7 +3024,7 @@
           "links": [
             {
               "title": "Network flows",
-              "url": "/d/network-flows?${__url_time_range}",
+              "url": "/d/network-flows?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -3043,7 +3098,7 @@
           "links": [
             {
               "title": "Telemetry pipeline",
-              "url": "/d/telemetry?${__url_time_range}",
+              "url": "/d/telemetry?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -3117,7 +3172,7 @@
           "links": [
             {
               "title": "Telemetry pipeline",
-              "url": "/d/telemetry?${__url_time_range}",
+              "url": "/d/telemetry?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
@@ -3196,7 +3251,7 @@
           "links": [
             {
               "title": "Telemetry pipeline",
-              "url": "/d/telemetry?${__url_time_range}",
+              "url": "/d/telemetry?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
           ],
