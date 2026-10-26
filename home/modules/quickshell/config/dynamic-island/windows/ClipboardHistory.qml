@@ -28,6 +28,8 @@ Scope {
     // Map clipId -> integer version (bumped each decode). Used to bust Image cache.
     property var imageVersions: ({})
     property var imageDecodeQueue: []
+    // Window focused before open. Closing hands focus to the window under the cursor.
+    property string pasteTarget: ""
 
     onClipVisibleChanged: {
         if (clipVisible) {
@@ -139,6 +141,7 @@ Scope {
 
     function toggle() {
         if (!clipVisible) {
+            pasteTarget = WindowFocus.activeAddress();
             const s = focusedScreen();
             if (s)
                 clipWindow.screen = s;
@@ -237,9 +240,7 @@ Scope {
             })
         running: false
 
-        onExited: {
-            Quickshell.execDetached(["wtype", "-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"]);
-        }
+        onExited: WindowFocus.pasteInto(clipScope.pasteTarget)
     }
 
     PanelWindow {

@@ -72,6 +72,22 @@ Singleton {
         return true;
     }
 
+    // Address of the focused window in focusAddress() form, "" while none is known.
+    function activeAddress() {
+        const t = Hyprland.activeToplevel;
+        return t && t.address ? "0x" + t.address : "";
+    }
+
+    // Focuses the window, then pastes the clipboard with Ctrl+Shift+V.
+    // hyprctl returns once Hyprland applied the focus,
+    // so the keys reach that window and not the one under the cursor.
+    // Unknown or closed window: paste goes to the focused one.
+    function pasteInto(address) {
+        const addr = (address ?? "").toString();
+        const focus = /^0x[0-9a-fA-F]+$/.test(addr) ? 'hl.dsp.focus({ window = "address:' + addr + '" })' : "hl.dsp.no_op()";
+        Quickshell.execDetached(["sh", "-c", 'hyprctl dispatch "$1" >/dev/null; exec wtype -M ctrl -M shift v -m shift -m ctrl', "paste", focus]);
+    }
+
     // Key chord delivered to the app's window. Keyboard focus stays where it is.
     // mods: bind syntax ("CTRL", "CTRL SHIFT"). key: xkb keysym name ("s", "Down").
     // Both are shell constants, so nothing user-typed reaches the Lua.

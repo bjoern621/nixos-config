@@ -29,6 +29,8 @@ Scope {
     property var groups: []
     property var filteredEmojis: []
     property bool dataLoaded: false
+    // Window focused before open. Closing hands focus to the window under the cursor.
+    property string pasteTarget: ""
 
     // Filtering runs in emojiWorker off the UI thread. Only one query is in
     // flight at a time: a request arriving mid-query sets queryPending, and the
@@ -157,6 +159,7 @@ Scope {
 
     function toggle() {
         if (!emojiVisible) {
+            pasteTarget = WindowFocus.activeAddress();
             const s = focusedScreen();
             if (s)
                 emojiWindow.screen = s;
@@ -181,21 +184,16 @@ Scope {
     Process {
         id: typeProc
         property string emoji: ""
-        // Copy the emoji to the clipboard, then paste it into the focused client
-        // with Ctrl+Shift+V. The paste is fired from onExited so the copy has
-        // landed and the emoji window has dropped keyboard focus back
-        // to the previous client before the keys are injected. Direct `wtype`
-        // typing of the codepoints is unreliable across apps (synthetic keymap,
-        // ZWJ/skin-tone sequences), so the clipboard route is used instead.
+        // Pastes from onExited, once the copy has landed.
+        // `wtype` typing codepoints breaks across apps (synthetic keymap,
+        // ZWJ/skin-tone sequences), hence the clipboard route.
         command: ["bash", "-c", "printf '%s' \"$EMOJI\" | wl-copy"]
         environment: ({
                 EMOJI: emoji
             })
         running: false
 
-        onExited: {
-            Quickshell.execDetached(["wtype", "-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"]);
-        }
+        onExited: WindowFocus.pasteInto(emojiScope.pasteTarget)
     }
 
     PanelWindow {
