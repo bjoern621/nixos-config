@@ -936,6 +936,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 16,
@@ -1012,6 +1013,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 16,
@@ -1088,6 +1090,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 25,
@@ -1193,6 +1196,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 25,
@@ -1217,7 +1221,7 @@
     {
       "type": "timeseries",
       "title": "Throughput",
-      "description": "Bytes per second per host, interface and direction. Narrow it with the Interface picker. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
+      "description": "Bytes per second per host, interface and direction. Narrow it with the Interface picker.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1369,6 +1373,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 35,
@@ -1445,6 +1450,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 44,
@@ -1469,7 +1475,7 @@
     {
       "type": "timeseries",
       "title": "Busiest pods",
-      "description": "Ten pods moving the most bytes, both directions together. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
+      "description": "Ten pods moving the most bytes, both directions together.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"

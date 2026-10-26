@@ -777,6 +777,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 6,
@@ -847,6 +848,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 6,
@@ -966,6 +968,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 14,
@@ -1044,6 +1047,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 14,
@@ -1368,6 +1372,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 29,
@@ -1438,6 +1443,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 29,
@@ -1781,6 +1787,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 14,
         "y": 38,
@@ -1805,7 +1812,7 @@
     {
       "type": "timeseries",
       "title": "CPU by pod",
-      "description": "CPU cores in use per pod against its limit. At the limit the kernel throttles the pod. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
+      "description": "CPU cores in use per pod against its limit. At the limit the kernel throttles the pod.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2007,6 +2014,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 8,
         "y": 48,
@@ -2089,6 +2097,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 16,
         "y": 48,

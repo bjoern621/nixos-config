@@ -1016,6 +1016,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 17,
@@ -1093,6 +1094,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 17,
@@ -1241,6 +1243,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 25,

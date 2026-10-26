@@ -1059,6 +1059,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 15,
@@ -1129,6 +1130,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 15,
@@ -1202,6 +1204,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 23,
@@ -1345,6 +1348,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 31,
@@ -1421,6 +1425,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 31,
@@ -1490,6 +1495,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 39,
@@ -1560,6 +1566,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 39,
@@ -1584,7 +1591,7 @@
     {
       "type": "timeseries",
       "title": "Flows lost",
-      "description": "Flows lost per interval by where Hubble lost them. A full ring buffer drops the oldest flows first. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
+      "description": "Flows lost per interval by where Hubble lost them. A full ring buffer drops the oldest flows first.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -1714,6 +1721,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 48,

@@ -1172,6 +1172,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 10,
@@ -1287,6 +1288,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 10,
@@ -1358,6 +1360,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 18,
@@ -1438,6 +1441,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 18,
@@ -1945,6 +1949,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 34,
@@ -2514,6 +2519,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 52,
@@ -2619,6 +2625,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 10,
         "y": 52,
@@ -2713,7 +2720,7 @@
     {
       "type": "timeseries",
       "title": "Pod ingress and egress",
-      "description": "Both legs on one axis, so the gap between them shows the fan-out. The kubelet counts bytes at the pod's interface without knowing the stream or the member. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
+      "description": "Both legs on one axis, so the gap between them shows the fan-out. The kubelet counts bytes at the pod's interface without knowing the stream or the member.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -2899,6 +2906,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 61,
@@ -2910,7 +2918,7 @@
     {
       "type": "timeseries",
       "title": "CPU against the pod's limits",
-      "description": "The pod's usage against the limits of its containers together. The kubelet reports no usage per container, so this reading cannot name the container that spends it. Each point averages a 72nd of the time range, such as 5 minutes on 6 hours.",
+      "description": "The pod's usage against the limits of its containers together. The kubelet reports no usage per container, so this reading cannot name the container that spends it.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
@@ -3133,6 +3141,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 12,
         "y": 69,
@@ -3216,6 +3225,7 @@
           "sort": "desc"
         }
       },
+      "maxDataPoints": 72,
       "gridPos": {
         "x": 0,
         "y": 77,
