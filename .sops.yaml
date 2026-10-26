@@ -44,6 +44,16 @@ creation_rules:
           - *admin_bjoern
           - *host_pi_4b_hh
 
+  # Firewall bouncer API keys for the cluster CrowdSec LAPI.
+  # Every listed host decrypts all of them, and sops-nix places only its own.
+  - path_regex: secrets/crowdsec-bouncer\.yaml$
+    key_groups:
+      - age:
+          - *admin_bjoern
+          - *host_netcup_g12
+          - *host_hetzner_hel1
+          - *host_vmk3s
+
   - path_regex: secrets/[^/]+\.yaml$
     key_groups:
       - age:
