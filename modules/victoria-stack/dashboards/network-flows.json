@@ -551,6 +551,11 @@
                     "title": "Requests from ${__data.fields[\"source.address\"]}",
                     "url": "/d/edge?var-client=${__data.fields[\"source.address\"]}&${__url_time_range}",
                     "targetBlank": false
+                  },
+                  {
+                    "title": "Block ${__data.fields[\"source.address\"]} for 24 hours",
+                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.address\"]:percentencode}&duration=24h&reason=Network%20flows",
+                    "targetBlank": false
                   }
                 ]
               }
@@ -1313,6 +1318,11 @@
                     "title": "Follow ${__data.fields[\"source.prefix\"]}",
                     "url": "/d/network-flows?var-ip=${__data.fields[\"source.prefix\"]}&${__url_time_range}",
                     "targetBlank": false
+                  },
+                  {
+                    "title": "Block ${__data.fields[\"source.subnet\"]} for 24 hours",
+                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.subnet\"]:percentencode}&duration=24h&reason=Network%20flows",
+                    "targetBlank": false
                   }
                 ]
               }
@@ -1533,6 +1543,11 @@
                   {
                     "title": "Requests from ${__data.fields[\"source.address\"]}",
                     "url": "/d/edge?var-client=${__data.fields[\"source.address\"]}&${__url_time_range}",
+                    "targetBlank": false
+                  },
+                  {
+                    "title": "Block ${__data.fields[\"source.address\"]} for 24 hours",
+                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.address\"]:percentencode}&duration=24h&reason=Network%20flows",
                     "targetBlank": false
                   }
                 ]
