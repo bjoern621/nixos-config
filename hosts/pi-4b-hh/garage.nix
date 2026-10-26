@@ -4,12 +4,24 @@
 # Same site as garage-0 on vmk3s, which reaches it over a direct LAN path of the tailnet.
 # Joining the layout stays a manual step on garage-0 (argocd/applications/garage/docs.md).
 #
-# Data lives on the LUKS volume of pi-backup, never on the SD card.
-# Without that volume mounted the service does not start.
+# Blocks live on the LUKS volume of pi-backup, metadata on the SD card.
+# LMDB's small random writes saturate the USB disk until the pings to the peers time out.
+# Without the volume mounted the service does not start.
 
 let
   storage = config.services.pi-backup.storage;
   root = "${storage.mountPoint}/garage";
+  metadataDir = "/var/lib/garage/meta";
+
+  # Copies the metadata from the USB volume once, so the node keeps its key and layout.
+  # The copy lands under a temporary name, so an interrupted run starts over without a half database.
+  moveMetadata = pkgs.writeShellScript "garage-move-metadata" ''
+    set -euo pipefail
+    if [[ ! -e ${metadataDir} && -e ${root}/meta/node_key ]]; then
+      ${pkgs.rsync}/bin/rsync -a --exclude snapshots ${root}/meta/ ${metadataDir}.partial/
+      mv ${metadataDir}.partial ${metadataDir}
+    fi
+  '';
 in
 {
   assertions = [
@@ -34,10 +46,12 @@ in
     package = pkgs.garage_2;
     environmentFile = config.sops.templates."garage.env".path;
     settings = {
-      metadata_dir = "${root}/meta";
+      metadata_dir = metadataDir;
+      # A snapshot copies the whole database, which the SD card should not take every 6 hours.
+      metadata_snapshots_dir = "${root}/meta/snapshots";
       data_dir = "${root}/data";
       db_engine = "lmdb";
-      # An fsync per metadata write saturates the USB disk and stalls the pings to the peers.
+      # An fsync per metadata write multiplies the small writes that wear the SD card.
       # Without it a power cut can corrupt LMDB's free list (deuxfleurs/garage#1484).
       # The snapshot restores the metadata. The peers hold every block.
       metadata_fsync = false;
@@ -92,6 +106,9 @@ in
       DynamicUser = false;
       User = "garage";
       Group = "garage";
+      ExecStartPre = [ "+${moveMetadata}" ];
+      # The first start copies the metadata off a slow disk.
+      TimeoutStartSec = "30min";
       # The pi runs the observability stack next to it.
       MemoryMax = "1G";
     };
