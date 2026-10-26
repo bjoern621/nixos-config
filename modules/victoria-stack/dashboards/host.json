@@ -58,7 +58,7 @@
       "tooltip": "Workloads scheduled on this node"
     },
     {
-      "title": "Network flows of $host",
+      "title": "Inbound connections to $host",
       "type": "link",
       "url": "/d/network-flows?var-host=$host&${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -67,7 +67,7 @@
       "asDropdown": false,
       "targetBlank": false,
       "tags": [],
-      "tooltip": "Inbound connections to this host"
+      "tooltip": "Who connects to this host, with source location"
     }
   ],
   "annotations": {
@@ -2853,7 +2853,7 @@
           },
           "links": [
             {
-              "title": "Network flows for $host",
+              "title": "Inbound connections to $host",
               "url": "/d/network-flows?var-host=$host&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }

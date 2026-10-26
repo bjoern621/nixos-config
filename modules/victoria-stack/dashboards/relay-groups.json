@@ -1,7 +1,7 @@
 {
   "uid": "relay-groups",
-  "title": "Services / MirrorMe Insights",
-  "description": "Whether the screenshare relay carries streams and who watches them: streams, groups and members, membership enforcement, then the pod and its node. A panel without data names something that does not exist at the moment, such as no group, no stream or no kick. MirrorMe Logs carries every log line.",
+  "title": "Services / MirrorMe",
+  "description": "Whether the screenshare relay carries streams and who watches them: streams, groups and members, membership enforcement, then the pod and its node. A panel without data names something that does not exist at the moment, such as no group, no stream or no kick. MirrorMe logs carries every log line.",
   "tags": [
     "hh",
     "mirrorme",
@@ -58,7 +58,7 @@
       "tooltip": "Resources, restarts and logs"
     },
     {
-      "title": "Edge traffic for screenshare",
+      "title": "Gateway requests to screenshare",
       "type": "link",
       "url": "/d/edge?var-svc=screenshare/screenshare&${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -70,7 +70,7 @@
       "tooltip": "Requests through the Gateways, with their clients"
     },
     {
-      "title": "MirrorMe Logs",
+      "title": "MirrorMe logs",
       "type": "link",
       "url": "/d/mirrorme-logs?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -3221,7 +3221,7 @@
     {
       "type": "logs",
       "title": "Recent warnings and errors",
-      "description": "The lines behind the bars, newest first. MirrorMe Logs carries the whole stream.",
+      "description": "The lines behind the bars, newest first. MirrorMe logs carries the whole stream.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
         "uid": "victorialogs"

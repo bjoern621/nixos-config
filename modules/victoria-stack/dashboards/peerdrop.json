@@ -58,7 +58,7 @@
       "tooltip": "Resources, restarts and logs"
     },
     {
-      "title": "Edge traffic for peerdrop",
+      "title": "Gateway requests to peerdrop",
       "type": "link",
       "url": "/d/edge?var-svc=peerdrop/peerdrop-frontend&var-svc=peerdrop/peerdrop-backend&${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",

@@ -1,6 +1,6 @@
 {
   "uid": "network-flows",
-  "title": "Network / Network flows",
+  "title": "Network / Inbound connections",
   "description": "Who connects to what. Host firewalls log the first packet of every inbound connection with its source address, network and location, and the port and service it reached. Services on the host network, such as coturn and SSH, show up here and nowhere else. Select an address anywhere to follow it.",
   "tags": [
     "hh",
@@ -47,7 +47,7 @@
       "url": ""
     },
     {
-      "title": "Edge traffic",
+      "title": "Gateway requests",
       "type": "link",
       "url": "/d/edge?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -59,7 +59,7 @@
       "tooltip": "HTTP requests through the Gateways, with their clients"
     },
     {
-      "title": "Cluster network",
+      "title": "In-cluster traffic",
       "type": "link",
       "url": "/d/cluster-network?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -608,7 +608,7 @@
                   },
                   {
                     "title": "Block ${__data.fields[\"source.address\"]} for 24 hours",
-                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.address\"]:percentencode}&duration=24h&reason=Network%20flows",
+                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.address\"]:percentencode}&duration=24h&reason=Inbound%20connections",
                     "targetBlank": false
                   }
                 ]
@@ -1375,7 +1375,7 @@
                   },
                   {
                     "title": "Block ${__data.fields[\"source.subnet\"]} for 24 hours",
-                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.subnet\"]:percentencode}&duration=24h&reason=Network%20flows",
+                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.subnet\"]:percentencode}&duration=24h&reason=Inbound%20connections",
                     "targetBlank": false
                   }
                 ]
@@ -1601,7 +1601,7 @@
                   },
                   {
                     "title": "Block ${__data.fields[\"source.address\"]} for 24 hours",
-                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.address\"]:percentencode}&duration=24h&reason=Network%20flows",
+                    "url": "https://netguard.tailnet.bjoernblessin.de/block?value=${__data.fields[\"source.address\"]:percentencode}&duration=24h&reason=Inbound%20connections",
                     "targetBlank": false
                   }
                 ]

@@ -47,7 +47,7 @@
       "url": ""
     },
     {
-      "title": "Edge traffic for the cache",
+      "title": "Gateway requests to the cache",
       "type": "link",
       "url": "/d/edge?var-svc=atticd/atticd&var-svc=garage/garage&${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -1624,7 +1624,7 @@
           },
           "links": [
             {
-              "title": "Edge traffic for ${__field.labels.svc}",
+              "title": "Gateway requests to ${__field.labels.svc}",
               "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }

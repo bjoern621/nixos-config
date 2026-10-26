@@ -1,6 +1,6 @@
 {
   "uid": "cluster-network",
-  "title": "Network / Cluster network",
+  "title": "Network / In-cluster traffic",
   "description": "Which traffic Cilium drops, and whether cluster DNS answers. Policy verdicts come from Hubble's counters, the single drops from the drop log, DNS from CoreDNS.",
   "tags": [
     "hh",
@@ -47,7 +47,7 @@
       "url": ""
     },
     {
-      "title": "Edge traffic",
+      "title": "Gateway requests",
       "type": "link",
       "url": "/d/edge?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",

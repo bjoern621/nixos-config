@@ -1,6 +1,6 @@
 {
   "uid": "edge",
-  "title": "Network / Edge traffic",
+  "title": "Network / Gateway requests",
   "description": "Who calls which service through the Cilium Gateways, and how it answers. Rate, errors and duration come from Hubble's counters, callers and single requests from the Gateway request log.",
   "tags": [
     "hh",
@@ -47,7 +47,7 @@
       "url": ""
     },
     {
-      "title": "Network flows",
+      "title": "Inbound connections",
       "type": "link",
       "url": "/d/network-flows?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -59,7 +59,7 @@
       "tooltip": "Raw connections to the hosts, with source location"
     },
     {
-      "title": "Cluster network",
+      "title": "In-cluster traffic",
       "type": "link",
       "url": "/d/cluster-network?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -816,7 +816,7 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Edge traffic for ${__data.fields[\"Service\"]}",
+                    "title": "Gateway requests to ${__data.fields[\"Service\"]}",
                     "url": "/d/edge?var-svc=${__data.fields[\"Service\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
@@ -1656,7 +1656,7 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Edge traffic for ${__data.fields[\"Service\"]}",
+                    "title": "Gateway requests to ${__data.fields[\"Service\"]}",
                     "url": "/d/edge?var-svc=${__data.fields[\"Service\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
@@ -2122,7 +2122,7 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Edge traffic for ${__data.fields[\"backend.service\"]}",
+                    "title": "Gateway requests to ${__data.fields[\"backend.service\"]}",
                     "url": "/d/edge?var-svc=${__data.fields[\"backend.service\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
@@ -2335,7 +2335,7 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Edge traffic for ${__data.fields[\"backend.service\"]}",
+                    "title": "Gateway requests to ${__data.fields[\"backend.service\"]}",
                     "url": "/d/edge?var-svc=${__data.fields[\"backend.service\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
@@ -2613,7 +2613,7 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Edge traffic for ${__data.fields[\"backend.service\"]}",
+                    "title": "Gateway requests to ${__data.fields[\"backend.service\"]}",
                     "url": "/d/edge?var-svc=${__data.fields[\"backend.service\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   }
@@ -2769,7 +2769,7 @@
           },
           "links": [
             {
-              "title": "Edge traffic for ${__field.labels.svc}",
+              "title": "Gateway requests to ${__field.labels.svc}",
               "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
@@ -2845,7 +2845,7 @@
           },
           "links": [
             {
-              "title": "Edge traffic for ${__field.labels.svc}",
+              "title": "Gateway requests to ${__field.labels.svc}",
               "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
@@ -2922,7 +2922,7 @@
           },
           "links": [
             {
-              "title": "Edge traffic for ${__field.labels.svc}",
+              "title": "Gateway requests to ${__field.labels.svc}",
               "url": "/d/edge?var-svc=${__field.labels.svc}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }

@@ -671,12 +671,12 @@
           },
           "links": [
             {
-              "title": "Edge traffic",
+              "title": "Gateway requests",
               "url": "/d/edge?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             },
             {
-              "title": "Cluster network",
+              "title": "In-cluster traffic",
               "url": "/d/cluster-network?${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
               "targetBlank": false
             }
@@ -1136,7 +1136,7 @@
     {
       "type": "logs",
       "title": "Gateway and drop flows",
-      "description": "One line per Gateway request, response or dropped packet for the selection, newest first. Edge traffic and Cluster network break them down by client and source.",
+      "description": "One line per Gateway request, response or dropped packet for the selection, newest first. Gateway requests and In-cluster traffic break them down by client and source.",
       "datasource": {
         "type": "victoriametrics-logs-datasource",
         "uid": "victorialogs"

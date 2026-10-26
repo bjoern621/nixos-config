@@ -1,7 +1,7 @@
 {
   "uid": "mirrorme-logs",
-  "title": "Services / MirrorMe Logs",
-  "description": "Every log line that the screenshare pod writes, by container, with the warnings and errors, report intake and the pod's Kubernetes events beside them. Search narrows every line panel. MirrorMe Insights carries the metrics.",
+  "title": "Services / MirrorMe logs",
+  "description": "Every log line that the screenshare pod writes, by container, with the warnings and errors, report intake and the pod's Kubernetes events beside them. Search narrows every line panel. MirrorMe carries the metrics.",
   "tags": [
     "hh",
     "mirrorme",
@@ -59,7 +59,7 @@
       "tooltip": "Resources, restarts and logs"
     },
     {
-      "title": "Edge traffic for screenshare",
+      "title": "Gateway requests to screenshare",
       "type": "link",
       "url": "/d/edge?var-svc=screenshare/screenshare&${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -71,7 +71,7 @@
       "tooltip": "Requests through the Gateways, with their clients"
     },
     {
-      "title": "MirrorMe Insights",
+      "title": "MirrorMe",
       "type": "link",
       "url": "/d/relay-groups?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",

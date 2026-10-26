@@ -58,7 +58,7 @@
       "tooltip": "Argo CD syncs and host rebuilds"
     },
     {
-      "title": "Cluster network",
+      "title": "In-cluster traffic",
       "type": "link",
       "url": "/d/cluster-network?${namespace:queryparam}&${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -70,7 +70,7 @@
       "tooltip": "Dropped traffic of the selected namespaces"
     },
     {
-      "title": "Edge traffic",
+      "title": "Gateway requests",
       "type": "link",
       "url": "/d/edge?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",

@@ -1,6 +1,6 @@
 {
   "uid": "network",
-  "title": "Network / Network paths",
+  "title": "Network / Reachability",
   "description": "Whether the probes on every cluster node reach each target, how long the paths take, and what the hosts move over their interfaces. Every node probes the same targets, so one target slow from one node and fast from the other points at the path.",
   "tags": [
     "hh",
@@ -46,7 +46,7 @@
       "url": ""
     },
     {
-      "title": "Edge traffic",
+      "title": "Gateway requests",
       "type": "link",
       "url": "/d/edge?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -58,7 +58,7 @@
       "tooltip": "Requests through the Gateways, with their clients"
     },
     {
-      "title": "Cluster network",
+      "title": "In-cluster traffic",
       "type": "link",
       "url": "/d/cluster-network?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -70,7 +70,7 @@
       "tooltip": "Dropped traffic and cluster DNS"
     },
     {
-      "title": "Network flows",
+      "title": "Inbound connections",
       "type": "link",
       "url": "/d/network-flows?${syncs:queryparam}&${rebuilds:queryparam}",
       "icon": "dashboard",
@@ -79,7 +79,7 @@
       "asDropdown": false,
       "targetBlank": false,
       "tags": [],
-      "tooltip": "Inbound connections to the hosts"
+      "tooltip": "Raw connections to the hosts, with source location"
     }
   ],
   "annotations": {
