@@ -1,6 +1,6 @@
 {
   "uid": "deploys",
-  "title": "Deploys",
+  "title": "Fleet / Deploys",
   "description": "What changed, and whether it landed. Argo CD syncs every application from git; the hosts rebuild from nixos-config. A step in any other dashboard lines up with the marks drawn here.",
   "tags": [
     "hh",

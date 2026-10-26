@@ -1,6 +1,6 @@
 {
   "uid": "mirrorme-logs",
-  "title": "MirrorMe Logs",
+  "title": "Services / MirrorMe Logs",
   "description": "Every log line that the screenshare pod writes, by container, with the warnings and errors, report intake and the pod's Kubernetes events beside them. Search narrows every line panel. MirrorMe Insights carries the metrics.",
   "tags": [
     "hh",

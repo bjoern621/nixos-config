@@ -1,6 +1,6 @@
 {
   "uid": "relay-groups",
-  "title": "MirrorMe Insights",
+  "title": "Services / MirrorMe Insights",
   "description": "Whether the screenshare relay carries streams and who watches them: streams, groups and members, membership enforcement, then the pod and its node. A panel without data names something that does not exist at the moment, such as no group, no stream or no kick. MirrorMe Logs carries every log line.",
   "tags": [
     "hh",

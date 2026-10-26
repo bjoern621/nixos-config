@@ -1,6 +1,6 @@
 {
   "uid": "logs",
-  "title": "Logs explorer",
+  "title": "Observability / Logs explorer",
   "description": "Every log line from host journals, Kubernetes pods and the Hubble flow logs. Narrow by source, level and text. Recurring messages are grouped with their numbers masked, so a new kind of failure stands out.",
   "tags": [
     "hh",

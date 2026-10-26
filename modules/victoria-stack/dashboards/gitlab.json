@@ -1,6 +1,6 @@
 {
   "uid": "gitlab",
-  "title": "GitLab",
+  "title": "Services / GitLab",
   "description": "Whether GitLab answers, then where its time goes: Rails and Puma, Sidekiq, Git and the bundled datastores. Callers come from the Rails request log, CI job pods from the kubelet.",
   "tags": [
     "hh",

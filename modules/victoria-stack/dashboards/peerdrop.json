@@ -1,6 +1,6 @@
 {
   "uid": "peerdrop",
-  "title": "PeerDrop",
+  "title": "Services / PeerDrop",
   "description": "Whether PeerDrop works for the people using it: the site, clients online, connections between peers and their route, transfers, the TURN relay, then the backend and its pods. Connection and transfer counts come from the browsers. One peer reports each connection, the sender reports each file.",
   "tags": [
     "hh",

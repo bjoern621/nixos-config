@@ -1,6 +1,6 @@
 {
   "uid": "cluster-network",
-  "title": "Cluster network",
+  "title": "Network / Cluster network",
   "description": "Which traffic Cilium drops, and whether cluster DNS answers. Policy verdicts come from Hubble's counters, the single drops from the drop log, DNS from CoreDNS.",
   "tags": [
     "hh",

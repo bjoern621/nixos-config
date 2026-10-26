@@ -1,6 +1,6 @@
 {
   "uid": "claude-bot",
-  "title": "Claude Bot",
+  "title": "Services / Claude Bot",
   "description": "Whether the Discord bot answers the questions it gets, what limits it, who asks, and one log line per decision. Counts over the selected range, since the bot answers a handful of questions an hour.",
   "tags": [
     "hh",

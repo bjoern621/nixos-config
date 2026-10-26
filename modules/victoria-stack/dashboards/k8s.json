@@ -1,6 +1,6 @@
 {
   "uid": "k8s",
-  "title": "Kubernetes workloads",
+  "title": "Fleet / Kubernetes workloads",
   "description": "Pods by health, resource use against their requests and limits, CPU throttling, events and logs. Narrow by node, namespace and pod; every pod links to its logs.",
   "tags": [
     "hh",

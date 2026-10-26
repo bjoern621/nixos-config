@@ -1,6 +1,6 @@
 {
   "uid": "network-flows",
-  "title": "Network flows",
+  "title": "Network / Network flows",
   "description": "Who connects to what. Host firewalls log the first packet of every inbound connection with its source address, network and location, and the port and service it reached. Services on the host network, such as coturn and SSH, show up here and nowhere else. Select an address anywhere to follow it.",
   "tags": [
     "hh",

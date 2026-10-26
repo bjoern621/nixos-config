@@ -1,6 +1,6 @@
 {
   "uid": "garage",
-  "title": "Garage and nix cache",
+  "title": "Services / Garage and nix cache",
   "description": "The S3 store behind Attic and the nix cache: cluster quorum, request rate, errors and latency per S3 call, block repair, the requests the Gateways pass to the cache and the clients behind them.",
   "tags": [
     "hh",

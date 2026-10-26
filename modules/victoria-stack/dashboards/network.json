@@ -1,6 +1,6 @@
 {
   "uid": "network",
-  "title": "Network",
+  "title": "Network / Network paths",
   "description": "Whether the probes on every cluster node reach each target, how long the paths take, and what the hosts move over their interfaces. Every node probes the same targets, so one target slow from one node and fast from the other points at the path.",
   "tags": [
     "hh",

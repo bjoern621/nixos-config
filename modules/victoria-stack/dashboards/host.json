@@ -1,6 +1,6 @@
 {
   "uid": "host",
-  "title": "Host detail",
+  "title": "Fleet / Host detail",
   "description": "One machine through the USE method: utilization, saturation and errors for CPU, memory, disk and network, drive health, its virtual machines, then its journal and the connections it accepted.",
   "tags": [
     "hh",

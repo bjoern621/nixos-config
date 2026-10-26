@@ -1,6 +1,6 @@
 {
   "uid": "telemetry",
-  "title": "Telemetry pipeline",
+  "title": "Observability / Telemetry pipeline",
   "description": "Whether the data behind every other dashboard is complete. Collectors receive, process and export; stores ingest and keep. A failed export here means a gap there.",
   "tags": [
     "hh",

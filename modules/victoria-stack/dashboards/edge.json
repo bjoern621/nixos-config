@@ -1,6 +1,6 @@
 {
   "uid": "edge",
-  "title": "Edge traffic",
+  "title": "Network / Edge traffic",
   "description": "Who calls which service through the Cilium Gateways, and how it answers. Rate, errors and duration come from Hubble's counters, callers and single requests from the Gateway request log.",
   "tags": [
     "hh",
