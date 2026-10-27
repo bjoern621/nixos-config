@@ -29,6 +29,7 @@ let
     "dood.li"
     "dood.watch"
     "medium.com"
+    "archive.ph"
   ];
 
   # dnsDomainIs covers subdomains, bare host == covers apex.
