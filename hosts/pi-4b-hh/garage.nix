@@ -13,24 +13,12 @@ let
   root = "${storage.mountPoint}/garage";
   metadataDir = "/var/lib/garage/meta";
 
-  # Copies the metadata from the USB volume once, so the node keeps its key and layout.
-  # The copy lands under a temporary name, so an interrupted run starts over without a half database.
-  moveMetadata = pkgs.writeShellScript "garage-move-metadata" ''
+  # Deletes what moving the metadata to the SD card and rebuilding it left behind.
+  # Snapshots stay on the USB volume, where Garage keeps writing them.
+  cleanMetadata = pkgs.writeShellScript "garage-clean-metadata" ''
     set -euo pipefail
-    if [[ ! -e ${metadataDir} && -e ${root}/meta/node_key ]]; then
-      ${pkgs.rsync}/bin/rsync -a --exclude snapshots ${root}/meta/ ${metadataDir}.partial/
-      mv ${metadataDir}.partial ${metadataDir}
-    fi
-  '';
-
-  # Sets the bloated database aside once, so the node syncs a compact one from its peers.
-  # LMDB never shrinks its file, so retries on the slow USB disk grew it far past its rows.
-  # Node key, layout and peer list stay, so the node keeps its place in the cluster.
-  rebuildMetadata = pkgs.writeShellScript "garage-rebuild-metadata" ''
-    set -euo pipefail
-    if [[ -d ${metadataDir}/db.lmdb && ! -e ${metadataDir}/db.lmdb.old ]]; then
-      mv ${metadataDir}/db.lmdb ${metadataDir}/db.lmdb.old
-    fi
+    ${pkgs.coreutils}/bin/rm -rf ${metadataDir}/db.lmdb.old
+    ${pkgs.findutils}/bin/find ${root}/meta -mindepth 1 -maxdepth 1 ! -name snapshots -exec ${pkgs.coreutils}/bin/rm -rf {} +
   '';
 in
 {
@@ -116,12 +104,7 @@ in
       DynamicUser = false;
       User = "garage";
       Group = "garage";
-      ExecStartPre = [
-        "+${moveMetadata}"
-        "+${rebuildMetadata}"
-      ];
-      # The first start copies the metadata off a slow disk.
-      TimeoutStartSec = "30min";
+      ExecStartPre = [ "+${cleanMetadata}" ];
       # The pi runs the observability stack next to it.
       MemoryMax = "1G";
     };
