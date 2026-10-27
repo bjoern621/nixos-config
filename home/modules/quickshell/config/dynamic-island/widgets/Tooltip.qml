@@ -61,6 +61,69 @@ Scope {
             tooltipWindow.visible = true;
     }
 
+    // Callers hide the bubble by clearing text or anchorItem.
+    // Content and position hold their last shown values through the hide animation.
+    // Live values would shrink the bubble empty and drop it to the top-left corner.
+    // delayed: `when` and `value` both track text and anchorItem.
+    // Only the settled pair tells a hide from a change.
+    property string shownText: ""
+    property string shownSubtitle: ""
+
+    Binding {
+        target: root
+        property: "shownText"
+        value: root.text
+        when: root.shouldShow
+        delayed: true
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: root
+        property: "shownSubtitle"
+        value: root.subtitle
+        when: root.shouldShow
+        delayed: true
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: reveal
+        property: "x"
+        value: root.anchoredX()
+        when: root.shouldShow
+        delayed: true
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: reveal
+        property: "y"
+        value: root.anchoredY()
+        when: root.shouldShow
+        delayed: true
+        restoreMode: Binding.RestoreNone
+    }
+
+    function anchoredX() {
+        if (!root.anchorItem)
+            return 0;
+        const _ = root.recalcKey;
+        const p = root.anchorItem.mapToItem(null, root.anchorItem.width / 2, 0);
+        const min = Spacing.spacing8;
+        const max = tooltipWindow.width - reveal.width - Spacing.spacing8;
+        return Math.max(min, Math.min(max, p.x + root.anchorDx - reveal.width / 2));
+    }
+
+    function anchoredY() {
+        if (!root.anchorItem)
+            return 0;
+        const _ = root.recalcKey;
+        if (root.placeBelow) {
+            const b = root.anchorItem.mapToItem(null, 0, root.anchorItem.height);
+            return b.y + root.anchorDy + root.verticalSpacing;
+        }
+        const p = root.anchorItem.mapToItem(null, 0, 0);
+        return p.y + root.anchorDy - reveal.height - root.verticalSpacing;
+    }
+
     PanelWindow {
         id: tooltipWindow
         visible: false
@@ -99,27 +162,6 @@ Scope {
             width: implicitWidth
             height: implicitHeight
 
-            x: {
-                if (!root.anchorItem)
-                    return 0;
-                const _ = root.recalcKey;
-                const p = root.anchorItem.mapToItem(null, root.anchorItem.width / 2, 0);
-                const min = Spacing.spacing8;
-                const max = tooltipWindow.width - reveal.width - Spacing.spacing8;
-                return Math.max(min, Math.min(max, p.x + root.anchorDx - reveal.width / 2));
-            }
-            y: {
-                if (!root.anchorItem)
-                    return 0;
-                const _ = root.recalcKey;
-                if (root.placeBelow) {
-                    const b = root.anchorItem.mapToItem(null, 0, root.anchorItem.height);
-                    return b.y + root.anchorDy + root.verticalSpacing;
-                }
-                const p = root.anchorItem.mapToItem(null, 0, 0);
-                return p.y + root.anchorDy - reveal.height - root.verticalSpacing;
-            }
-
             Rectangle {
                 id: bubble
                 anchors.fill: parent
@@ -140,7 +182,7 @@ Scope {
 
                     Label {
                         id: titleLabel
-                        text: root.text
+                        text: root.shownText
                         textFormat: root.textFormat
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
@@ -149,8 +191,8 @@ Scope {
 
                     Label {
                         id: subLabel
-                        visible: root.subtitle !== ""
-                        text: root.subtitle
+                        visible: root.shownSubtitle !== ""
+                        text: root.shownSubtitle
                         textFormat: root.textFormat
                         font.weight: Font.Normal
                         font.pixelSize: Typography.fontSize12
