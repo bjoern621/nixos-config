@@ -28,6 +28,7 @@ let
     "voe.sx"
     "dood.li"
     "dood.watch"
+    "medium.com"
   ];
 
   # dnsDomainIs covers subdomains, bare host == covers apex.
