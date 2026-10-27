@@ -12,14 +12,6 @@ let
   storage = config.services.pi-backup.storage;
   root = "${storage.mountPoint}/garage";
   metadataDir = "/var/lib/garage/meta";
-
-  # Deletes what moving the metadata to the SD card and rebuilding it left behind.
-  # Snapshots stay on the USB volume, where Garage keeps writing them.
-  cleanMetadata = pkgs.writeShellScript "garage-clean-metadata" ''
-    set -euo pipefail
-    ${pkgs.coreutils}/bin/rm -rf ${metadataDir}/db.lmdb.old
-    ${pkgs.findutils}/bin/find ${root}/meta -mindepth 1 -maxdepth 1 ! -name snapshots -exec ${pkgs.coreutils}/bin/rm -rf {} +
-  '';
 in
 {
   assertions = [
@@ -104,7 +96,6 @@ in
       DynamicUser = false;
       User = "garage";
       Group = "garage";
-      ExecStartPre = [ "+${cleanMetadata}" ];
       # The pi runs the observability stack next to it.
       MemoryMax = "1G";
     };
