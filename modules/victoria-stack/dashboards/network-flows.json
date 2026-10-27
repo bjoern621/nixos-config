@@ -597,12 +597,12 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Follow ${__data.fields[\"source.address\"]}",
+                    "title": "Connections from ${__data.fields[\"source.address\"]}",
                     "url": "/d/network-flows?var-ip=${__data.fields[\"source.address\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   },
                   {
-                    "title": "Requests from ${__data.fields[\"source.address\"]}",
+                    "title": "Gateway requests from ${__data.fields[\"source.address\"]}",
                     "url": "/d/edge?var-client=${__data.fields[\"source.address\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   },
@@ -1371,7 +1371,7 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Follow ${__data.fields[\"source.prefix\"]}",
+                    "title": "Connections from ${__data.fields[\"source.prefix\"]}",
                     "url": "/d/network-flows?var-ip=${__data.fields[\"source.prefix\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   },
@@ -1592,12 +1592,12 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Follow ${__data.fields[\"source.address\"]}",
+                    "title": "Connections from ${__data.fields[\"source.address\"]}",
                     "url": "/d/network-flows?var-ip=${__data.fields[\"source.address\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   },
                   {
-                    "title": "Requests from ${__data.fields[\"source.address\"]}",
+                    "title": "Gateway requests from ${__data.fields[\"source.address\"]}",
                     "url": "/d/edge?var-client=${__data.fields[\"source.address\"]}&${__url_time_range}&${syncs:queryparam}&${rebuilds:queryparam}",
                     "targetBlank": false
                   },
