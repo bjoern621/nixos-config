@@ -8,6 +8,7 @@
 # Listed sites reachable in Chrome only through CyberGhost.
 # Chrome PAC policy sends listed domains to local tinyproxy.
 # Own always-on OpenVPN tunnel (tun-proxy) carries tinyproxy traffic alone, nothing else routes through it.
+# Tunnel keeps working while another VPN holds the default route: its packets go out the physical uplink.
 # uid rule sends tinyproxy to table 1000: default via tun-proxy, unreachable fallback below it.
 # Tunnel down: fallback answers ENETUNREACH, Chrome errors instantly, no DIRECT fallback.
 # Firewall confines tinyproxy egress to tun-proxy as second layer.
@@ -21,6 +22,11 @@ let
   routeTable = "1000";
   # Evaluated before Tailscale's rules (5210 to 5270): exit node never carries proxy traffic.
   rulePriority = "5000";
+  # Tunnel's own packets to the CyberGhost server, pinned to the physical uplink.
+  # Another VPN's default route in main would otherwise carry them, and CyberGhost drops VPN-in-VPN.
+  tunnelMark = "512";
+  uplinkTable = "1001";
+  uplinkRulePriority = "4990";
   remoteHost = "87-1-de.cg-dialup.net";
   remotePort = 443;
 
@@ -86,6 +92,21 @@ let
     restartUnits = [ "openvpn-cyberghost-proxy.service" ];
   };
   secretPath = name: config.sops.secrets."cyberghost-proxy-${name}".path;
+
+  # Copies main's IPv4 defaults minus tunnel devices into uplinkTable.
+  # No uplink left: table stays empty, marked packets fall through to main.
+  syncUplinkTable = pkgs.writeShellScript "vpn-proxy-sync-uplink" ''
+    PATH=${
+      lib.makeBinPath [
+        pkgs.iproute2
+        pkgs.gnugrep
+      ]
+    }
+    ip -4 route flush table ${uplinkTable} 2>/dev/null || true
+    ip -4 route show default | grep -Ev ' dev (tun|tailscale|wg)| linkdown' | while read -r route; do
+      ip -4 route replace $route table ${uplinkTable}
+    done
+  '';
 in
 {
   services.tinyproxy = {
@@ -131,6 +152,7 @@ in
       ping-restart 30
       explicit-exit-notify 2
       route-noexec
+      mark ${tunnelMark}
       ca ${secretPath "ca"}
       cert ${secretPath "cert"}
       key ${secretPath "key"}
@@ -139,9 +161,20 @@ in
     authUserPass = secretPath "auth";
     up = "ip route replace default dev ${tunDev} table ${routeTable}";
   };
-  systemd.services.openvpn-cyberghost-proxy.serviceConfig.RestartSec = "5s";
+  systemd.services.openvpn-cyberghost-proxy = {
+    after = [ "vpn-proxy-routing.service" ];
+    serviceConfig.RestartSec = "5s";
+  };
 
   networking.networkmanager.unmanaged = [ "interface-name:${tunDev}" ];
+
+  # Uplink changes (Wi-Fi, dock, DHCP renew, VPN up or down) re-sync uplinkTable.
+  networking.networkmanager.dispatcherScripts = [
+    {
+      type = "basic";
+      source = syncUplinkTable;
+    }
+  ];
 
   # Rule and fallback stay while tunnel down: kill switch.
   # tinyproxy requires this unit. Failed setup leaves proxy down, Chrome erroring.
@@ -164,12 +197,17 @@ in
         ip $fam rule add priority ${rulePriority} uidrange "$uid-$uid" lookup ${routeTable}
         ip $fam route replace unreachable default metric 4096 table ${routeTable}
       done
+      ip -4 rule del priority ${uplinkRulePriority} 2>/dev/null || true
+      ip -4 rule add priority ${uplinkRulePriority} fwmark ${tunnelMark} lookup ${uplinkTable}
+      ${syncUplinkTable}
     '';
     preStop = ''
       for fam in -4 -6; do
         ip $fam rule del priority ${rulePriority} 2>/dev/null || true
         ip $fam route del unreachable default metric 4096 table ${routeTable} 2>/dev/null || true
       done
+      ip -4 rule del priority ${uplinkRulePriority} 2>/dev/null || true
+      ip -4 route flush table ${uplinkTable} 2>/dev/null || true
     '';
   };
   systemd.services.tinyproxy = {
