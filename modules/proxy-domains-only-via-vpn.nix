@@ -1,14 +1,29 @@
-{ pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 # Listed sites reachable in Chrome only through CyberGhost.
 # Chrome PAC policy sends listed domains to local tinyproxy.
-# Firewall confines tinyproxy uid egress to tun*, everything else rejected.
-# VPN down: kernel rejects upstream connect, Chrome errors instantly, no DIRECT fallback.
-# Domain names still resolve via normal DNS when VPN down; connections never leak.
+# Own always-on OpenVPN tunnel (tun-proxy) carries tinyproxy traffic alone, nothing else routes through it.
+# uid rule sends tinyproxy to table 1000: default via tun-proxy, unreachable fallback below it.
+# Tunnel down: fallback answers ENETUNREACH, Chrome errors instantly, no DIRECT fallback.
+# Firewall confines tinyproxy egress to tun-proxy as second layer.
+# Domain names still resolve via normal DNS. Connections never leak.
 # Chrome policy lives here, not google-chrome.nix: PAC and proxy are one concern.
+# Change tunnel credentials: sops secrets/cyberghost-proxy.yaml
 
 let
   port = 13128;
+  tunDev = "tun-proxy";
+  routeTable = "1000";
+  # Evaluated before Tailscale's rules (5210 to 5270): exit node never carries proxy traffic.
+  rulePriority = "5000";
+  remoteHost = "87-1-de.cg-dialup.net";
+  remotePort = 443;
+
   vpnDomains = [
     "topstreamfilm.live"
     "moflix-stream.xyz"
@@ -58,6 +73,13 @@ let
         b64=$(base64 -w0 < "$pacPath")
         printf '{"ProxySettings":{"ProxyMode":"pac_script","ProxyPacUrl":"data:application/x-ns-proxy-autoconfig;base64,%s","ProxyPacMandatory":true}}' "$b64" > "$out"
       '';
+
+  secret = key: {
+    sopsFile = ../secrets/cyberghost-proxy.yaml;
+    inherit key;
+    restartUnits = [ "openvpn-cyberghost-proxy.service" ];
+  };
+  secretPath = name: config.sops.secrets."cyberghost-proxy-${name}".path;
 in
 {
   services.tinyproxy = {
@@ -72,7 +94,82 @@ in
     };
   };
 
-  # tun* matches the NM OpenVPN devices alone; Tailscale sits on tailscale0.
+  sops.secrets = lib.listToAttrs (
+    map (k: lib.nameValuePair "cyberghost-proxy-${k}" (secret k)) [
+      "ca"
+      "cert"
+      "key"
+      "auth"
+    ]
+  );
+
+  # route-noexec drops pushed redirect-gateway: main table stays untouched.
+  # persist-tun keeps tun-proxy and its route through reconnects, packets die in the tunnel meanwhile.
+  # IPv6 stays on the unreachable fallback: CyberGhost tunnels IPv4 only.
+  services.openvpn.servers.cyberghost-proxy = {
+    config = ''
+      client
+      dev ${tunDev}
+      dev-type tun
+      proto udp
+      remote ${remoteHost} ${toString remotePort}
+      resolv-retry infinite
+      nobind
+      persist-key
+      persist-tun
+      auth SHA256
+      data-ciphers AES-256-GCM:AES-128-GCM:AES-256-CBC
+      data-ciphers-fallback AES-256-CBC
+      remote-cert-tls server
+      ping 5
+      ping-restart 30
+      route-noexec
+      ca ${secretPath "ca"}
+      cert ${secretPath "cert"}
+      key ${secretPath "key"}
+      auth-nocache
+    '';
+    authUserPass = secretPath "auth";
+    up = "ip route replace default dev ${tunDev} table ${routeTable}";
+  };
+  systemd.services.openvpn-cyberghost-proxy.serviceConfig.RestartSec = "5s";
+
+  networking.networkmanager.unmanaged = [ "interface-name:${tunDev}" ];
+
+  # Rule and fallback stay while tunnel down: kill switch.
+  # tinyproxy requires this unit. Failed setup leaves proxy down, Chrome erroring.
+  systemd.services.vpn-proxy-routing = {
+    description = "Route tinyproxy traffic into the proxy VPN table";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "tinyproxy.service" ];
+    path = [
+      pkgs.iproute2
+      pkgs.coreutils
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      uid=$(id -u tinyproxy)
+      for fam in -4 -6; do
+        ip $fam rule del priority ${rulePriority} 2>/dev/null || true
+        ip $fam rule add priority ${rulePriority} uidrange "$uid-$uid" lookup ${routeTable}
+        ip $fam route replace unreachable default metric 4096 table ${routeTable}
+      done
+    '';
+    preStop = ''
+      for fam in -4 -6; do
+        ip $fam rule del priority ${rulePriority} 2>/dev/null || true
+        ip $fam route del unreachable default metric 4096 table ${routeTable} 2>/dev/null || true
+      done
+    '';
+  };
+  systemd.services.tinyproxy = {
+    requires = [ "vpn-proxy-routing.service" ];
+    after = [ "vpn-proxy-routing.service" ];
+  };
+
   # lo carries the 127.0.0.1 listener side.
   # Port 53 passes on any interface: the resolver moves with tailscaled and wg-quick,
   # and the chain confines connections, never lookups.
@@ -85,7 +182,7 @@ in
       ip46tables -A vpn-proxy-out -o lo -j ACCEPT
       ip46tables -A vpn-proxy-out -p udp --dport 53 -j ACCEPT
       ip46tables -A vpn-proxy-out -p tcp --dport 53 -j ACCEPT
-      ip46tables -A vpn-proxy-out -o tun+ -j ACCEPT
+      ip46tables -A vpn-proxy-out -o ${tunDev} -j ACCEPT
       ip46tables -A vpn-proxy-out -p tcp -j REJECT --reject-with tcp-reset
       ip46tables -A vpn-proxy-out -j REJECT
       ip46tables -D OUTPUT -m owner --uid-owner tinyproxy -j vpn-proxy-out 2>/dev/null || true
