@@ -16,7 +16,8 @@
 # Chrome policy lives here, not google-chrome.nix: PAC and proxy are one concern.
 # Change tunnel credentials: sops secrets/cyberghost-proxy.yaml
 #
-# Unpacked extension in ./extension: page explaining proxy errors, Medium paywall redirect to archive.today.
+# Unpacked extension in ./extension: per-tab proxy badge, page explaining proxy errors,
+# Medium paywall redirect to archive.today.
 # Loaded once by hand: chrome://extensions, Developer mode on, Load unpacked, /etc/vpn-proxy-extension.
 # Chrome resolves symlinks in the loaded path, so that directory stays real.
 # Files inside stay symlinks into the store and follow every rebuild after a Chrome restart.
@@ -82,6 +83,12 @@ let
         return "PROXY 127.0.0.1:${toString port}";
       return "DIRECT";
     }
+  '';
+
+  # Extension's copy of the PAC host test, so its badge and the proxy agree.
+  vpnHostsJs = pkgs.writeText "vpn-hosts.js" ''
+    const dnsDomainIs = (host, domain) => host.endsWith(domain);
+    const isVpnHost = (host) => ${hostMatch};
   '';
 
   # Chrome cannot fetch file:// PAC. As flag it silently falls back DIRECT.
@@ -253,6 +260,7 @@ in
 
   environment.etc = {
     "opt/chrome/policies/managed/vpn-proxy.json".source = chromePolicy;
+    "vpn-proxy-extension/vpn-hosts.js".source = vpnHostsJs;
   }
   // lib.listToAttrs (
     map (

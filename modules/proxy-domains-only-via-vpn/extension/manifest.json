@@ -4,6 +4,9 @@
   "version": "1.0",
   "description": "Explains sites that the VPN proxy cannot reach. Opens member-only Medium stories on archive.today.",
   "permissions": ["webNavigation"],
+  "action": {
+    "default_title": "VPN proxy: not used for this site"
+  },
   "background": {
     "service_worker": "background.js"
   },
