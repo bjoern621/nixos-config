@@ -5,7 +5,6 @@
     ./hardware-configuration.nix
     ../../modules/hyprland.nix
     ../../modules/google-chrome.nix
-    ../../modules/chrome-helper/chrome-helper.nix
     ../../modules/pipewire.nix
     ../../modules/scripts/default.nix
     ../../modules/keyring.nix
@@ -24,7 +23,7 @@
     ../../modules/wireguard.nix
     ../../modules/dns.nix
     ../../modules/networkmanager-openvpn.nix
-    ../../modules/proxy-domains-only-via-vpn.nix
+    ../../modules/proxy-domains-only-via-vpn/proxy-domains-only-via-vpn.nix
     ../../modules/vpn-ipv6-leak-block.nix
     ../../modules/captive-portal.nix
     ../../modules/quickshell.nix

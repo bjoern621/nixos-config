@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Browser helper (nixos-config)",
+  "name": "VPN proxy helper (nixos-config)",
   "version": "1.0",
-  "description": "Opens member-only Medium stories on archive.today and explains pages that the VPN proxy cannot reach.",
+  "description": "Explains sites that the VPN proxy cannot reach. Opens member-only Medium stories on archive.today.",
   "permissions": ["webNavigation"],
   "background": {
     "service_worker": "background.js"

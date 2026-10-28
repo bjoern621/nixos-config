@@ -15,8 +15,14 @@
 # Domain names still resolve via normal DNS. Connections never leak.
 # Chrome policy lives here, not google-chrome.nix: PAC and proxy are one concern.
 # Change tunnel credentials: sops secrets/cyberghost-proxy.yaml
+#
+# Unpacked extension in ./extension: page explaining proxy errors, Medium paywall redirect to archive.today.
+# Loaded once by hand: chrome://extensions, Developer mode on, Load unpacked, /etc/vpn-proxy-extension.
+# Chrome resolves symlinks in the loaded path, so that directory stays real.
+# Files inside stay symlinks into the store and follow every rebuild after a Chrome restart.
 
 let
+  extensionFiles = builtins.attrNames (builtins.readDir ./extension);
   port = 13128;
   tunDev = "tun-proxy";
   routeTable = "1000";
@@ -87,7 +93,7 @@ let
       '';
 
   secret = key: {
-    sopsFile = ../secrets/cyberghost-proxy.yaml;
+    sopsFile = ../../secrets/cyberghost-proxy.yaml;
     inherit key;
     restartUnits = [ "openvpn-cyberghost-proxy.service" ];
   };
@@ -239,5 +245,12 @@ in
     '';
   };
 
-  environment.etc."opt/chrome/policies/managed/vpn-proxy.json".source = chromePolicy;
+  environment.etc = {
+    "opt/chrome/policies/managed/vpn-proxy.json".source = chromePolicy;
+  }
+  // lib.listToAttrs (
+    map (
+      f: lib.nameValuePair "vpn-proxy-extension/${f}" { source = ./extension + "/${f}"; }
+    ) extensionFiles
+  );
 }
