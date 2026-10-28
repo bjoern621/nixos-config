@@ -20,7 +20,8 @@
 # Medium paywall redirect to archive.today.
 # Loaded once by hand: chrome://extensions, Developer mode on, Load unpacked, /etc/vpn-proxy-extension.
 # Chrome resolves symlinks in the loaded path, so that directory stays real.
-# Files inside stay symlinks into the store and follow every rebuild after a Chrome restart.
+# Files get copied, not symlinked: Chrome skips a content script that links outside the extension directory.
+# Each rebuild rewrites them. Chrome picks them up on extension reload or restart.
 
 let
   extensionFiles = builtins.attrNames (builtins.readDir ./extension);
@@ -90,6 +91,10 @@ let
     const dnsDomainIs = (host, domain) => host.endsWith(domain);
     const isVpnHost = (host) => ${hostMatch};
   '';
+
+  extensionSources = lib.genAttrs extensionFiles (f: ./extension + "/${f}") // {
+    "vpn-hosts.js" = vpnHostsJs;
+  };
 
   # Chrome cannot fetch file:// PAC. As flag it silently falls back DIRECT.
   # As policy with ProxyPacMandatory it blocks all browsing. data: is the only local carrier.
@@ -260,11 +265,12 @@ in
 
   environment.etc = {
     "opt/chrome/policies/managed/vpn-proxy.json".source = chromePolicy;
-    "vpn-proxy-extension/vpn-hosts.js".source = vpnHostsJs;
   }
-  // lib.listToAttrs (
-    map (
-      f: lib.nameValuePair "vpn-proxy-extension/${f}" { source = ./extension + "/${f}"; }
-    ) extensionFiles
-  );
+  // lib.mapAttrs' (
+    f: source:
+    lib.nameValuePair "vpn-proxy-extension/${f}" {
+      inherit source;
+      mode = "0444";
+    }
+  ) extensionSources;
 }
