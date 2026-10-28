@@ -131,7 +131,7 @@ in
   );
 
   # route-noexec drops pushed redirect-gateway: main table stays untouched.
-  # persist-tun keeps tun-proxy and its route through reconnects, packets die in the tunnel meanwhile.
+  # No persist-tun: reconnect drops tun-proxy and its route, requests fail fast on the fallback meanwhile.
   # IPv6 stays on the unreachable fallback: CyberGhost tunnels IPv4 only.
   services.openvpn.servers.cyberghost-proxy = {
     config = ''
@@ -143,7 +143,6 @@ in
       resolv-retry infinite
       nobind
       persist-key
-      persist-tun
       auth SHA256
       data-ciphers AES-256-GCM:AES-128-GCM:AES-256-CBC
       data-ciphers-fallback AES-256-CBC
