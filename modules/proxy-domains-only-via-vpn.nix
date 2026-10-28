@@ -123,6 +123,7 @@ in
       remote-cert-tls server
       ping 5
       ping-restart 30
+      explicit-exit-notify 2
       route-noexec
       ca ${secretPath "ca"}
       cert ${secretPath "cert"}
