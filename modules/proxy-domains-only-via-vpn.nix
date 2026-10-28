@@ -43,8 +43,14 @@ let
     "voe.sx"
     "dood.li"
     "dood.watch"
-    "medium.com"
+    # archive.today redirects to any of its mirrors.
+    "archive.today"
     "archive.ph"
+    "archive.is"
+    "archive.li"
+    "archive.vn"
+    "archive.md"
+    "archive.fo"
   ];
 
   # dnsDomainIs covers subdomains, bare host == covers apex.
