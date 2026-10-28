@@ -43,7 +43,7 @@ async function diagnose() {
   if (await tunnelCarriesTraffic()) {
     report(`The tunnel works. ${host} itself is not answering. Try again later.`);
   } else {
-    report("The tunnel is down. Restart it:", "sudo systemctl restart openvpn-cyberghost-proxy");
+    report("The tunnel is down. Restart it:", "sudo systemctl restart openvpn-vpn-proxy");
   }
 }
 

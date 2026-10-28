@@ -36,8 +36,13 @@ let
   remoteHost = "87-1-de.cg-dialup.net";
   remotePort = 443;
 
+  # Second-level names matched under any single-label TLD, with subdomains.
+  # For sites that hop between TLDs.
+  vpnNamesAnyTld = [
+    "topstreamfilm"
+  ];
+
   vpnDomains = [
-    "topstreamfilm.live"
     "moflix-stream.xyz"
     "streamtape.com"
     "vidoza.net"
@@ -66,9 +71,10 @@ let
   ];
 
   # dnsDomainIs covers subdomains, bare host == covers apex.
-  hostMatch = lib.concatMapStringsSep " || " (
-    d: ''host == "${d}" || dnsDomainIs(host, ".${d}")''
-  ) vpnDomains;
+  hostMatch = lib.concatStringsSep " || " (
+    map (d: ''host == "${d}" || dnsDomainIs(host, ".${d}")'') vpnDomains
+    ++ map (n: ''/(^|\.)${n}\.[a-z]+$/.test(host)'') vpnNamesAnyTld
+  );
 
   pac = ''
     function FindProxyForURL(url, host) {
@@ -95,7 +101,7 @@ let
   secret = key: {
     sopsFile = ../../secrets/cyberghost-proxy.yaml;
     inherit key;
-    restartUnits = [ "openvpn-cyberghost-proxy.service" ];
+    restartUnits = [ "openvpn-vpn-proxy.service" ];
   };
   secretPath = name: config.sops.secrets."cyberghost-proxy-${name}".path;
 
@@ -139,7 +145,7 @@ in
   # route-noexec drops pushed redirect-gateway: main table stays untouched.
   # No persist-tun: reconnect drops tun-proxy and its route, requests fail fast on the fallback meanwhile.
   # IPv6 stays on the unreachable fallback: CyberGhost tunnels IPv4 only.
-  services.openvpn.servers.cyberghost-proxy = {
+  services.openvpn.servers.vpn-proxy = {
     config = ''
       client
       dev ${tunDev}
@@ -166,7 +172,7 @@ in
     authUserPass = secretPath "auth";
     up = "ip route replace default dev ${tunDev} table ${routeTable}";
   };
-  systemd.services.openvpn-cyberghost-proxy = {
+  systemd.services.openvpn-vpn-proxy = {
     after = [ "vpn-proxy-routing.service" ];
     serviceConfig.RestartSec = "5s";
   };
