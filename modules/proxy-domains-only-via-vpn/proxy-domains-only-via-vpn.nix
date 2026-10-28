@@ -42,26 +42,21 @@ let
   # For sites that hop between TLDs.
   vpnNamesAnyTld = [
     "topstreamfilm"
+    "streamtape"
+    "filemoon"
+    "mixdrop"
+    "supervideo"
+    "vidmoly"
+    "dood"
   ];
 
   vpnDomains = [
     "moflix-stream.xyz"
-    "streamtape.com"
     "vidoza.net"
-    "filemoon.sx"
-    "filemoon.to"
-    "mixdrop.co"
-    "mixdrop.ag"
-    "supervideo.cc"
-    "supervideo.tv"
-    "vidmoly.to"
-    "vidmoly.me"
     "luluvdo.com"
     "lulustream.com"
     "firestream.to"
     "voe.sx"
-    "dood.li"
-    "dood.watch"
     # archive.today redirects to any of its mirrors.
     "archive.today"
     "archive.ph"
