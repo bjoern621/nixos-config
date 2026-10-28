@@ -3,7 +3,7 @@
   "name": "VPN proxy helper (nixos-config)",
   "version": "1.0",
   "description": "Explains sites that the VPN proxy cannot reach. Opens member-only Medium stories on archive.today.",
-  "permissions": ["webNavigation"],
+  "permissions": ["webNavigation", "tabs"],
   "action": {
     "default_title": "VPN proxy: not used for this site"
   },

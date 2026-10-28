@@ -11,11 +11,12 @@ const PROXY_ERRORS = new Set([
 const PROXY_DOWN_PAGE = chrome.runtime.getURL("proxy-down.html");
 
 const STATES = {
-  direct: { text: "", color: "#5f5f5f", title: "VPN proxy: not used for this site" },
+  direct: { text: "OFF", color: "#5f5f5f", title: "VPN proxy: not used for this site" },
   relaying: { text: "VPN", color: "#2e7d32", title: "VPN proxy: this site loads through the tunnel" },
   failed: { text: "X", color: "#c62828", title: "VPN proxy: this site could not load through the tunnel" },
 };
 
+// Without tabId, sets the default for tabs that carry no state of their own.
 function showState(tabId, name) {
   const { text, color, title } = STATES[name];
   chrome.action.setBadgeText({ tabId, text });
@@ -28,13 +29,26 @@ function hostOf(url) {
 }
 
 // A loaded page on a listed host came through the proxy: PAC is mandatory, no DIRECT fallback.
+function stateForUrl(url) {
+  if (url.startsWith(PROXY_DOWN_PAGE)) return "failed";
+  return isVpnHost(hostOf(url)) ? "relaying" : "direct";
+}
+
+// Tabs opened before the extension loaded never fire onCommitted for it.
+// Runs on load and browser start only: a service worker restart would overwrite failed states.
+async function showStateForOpenTabs() {
+  showState(undefined, "direct");
+  for (const tab of await chrome.tabs.query({})) {
+    if (tab.url) showState(tab.id, stateForUrl(tab.url));
+  }
+}
+
+chrome.runtime.onInstalled.addListener(showStateForOpenTabs);
+chrome.runtime.onStartup.addListener(showStateForOpenTabs);
+
 chrome.webNavigation.onCommitted.addListener(({ tabId, frameId, url }) => {
   if (frameId !== 0) return;
-  if (url.startsWith(PROXY_DOWN_PAGE)) {
-    showState(tabId, "failed");
-    return;
-  }
-  showState(tabId, isVpnHost(hostOf(url)) ? "relaying" : "direct");
+  showState(tabId, stateForUrl(url));
 });
 
 chrome.webNavigation.onErrorOccurred.addListener(({ tabId, frameId, url, error }) => {
