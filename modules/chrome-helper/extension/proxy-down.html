@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Not reachable through the VPN</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fffdf5;
+        --fg: #1b1b1b;
+        --muted: #5f5f5f;
+        --border: #1b1b1b;
+        --code-bg: #f0ece0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1b1b1b;
+          --fg: #f2f0e8;
+          --muted: #a8a59c;
+          --border: #f2f0e8;
+          --code-bg: #2c2b28;
+        }
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        color: var(--fg);
+        font: 16px/1.5 system-ui, sans-serif;
+      }
+      main {
+        max-width: 560px;
+        margin: 16px;
+        padding: 24px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 22px;
+      }
+      p {
+        margin: 0 0 12px;
+      }
+      code {
+        display: block;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: var(--code-bg);
+        font: 14px ui-monospace, monospace;
+        overflow-wrap: anywhere;
+      }
+      button {
+        margin-top: 12px;
+        padding: 8px 16px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--fg);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .detail {
+        margin: 16px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      [hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Not reachable through the VPN</h1>
+      <p><strong id="host"></strong> loads only through the CyberGhost proxy tunnel. The request could not get through.</p>
+      <p id="status">Checking the tunnel…</p>
+      <code id="command" hidden></code>
+      <button id="retry" type="button">Try again</button>
+      <p class="detail">Chrome reported <span id="error"></span>.</p>
+    </main>
+    <script src="proxy-down.js"></script>
+  </body>
+</html>

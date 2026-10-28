@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ../../modules/hyprland.nix
     ../../modules/google-chrome.nix
+    ../../modules/chrome-helper/chrome-helper.nix
     ../../modules/pipewire.nix
     ../../modules/scripts/default.nix
     ../../modules/keyring.nix
