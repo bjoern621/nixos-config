@@ -14,8 +14,9 @@ let watchedUrl = "";
 let deadline = 0;
 let checkPending = false;
 
+// Medium joins the paywall words with non-breaking spaces; \s covers them.
 function isPaywalled() {
-  const text = document.body?.innerText.toLowerCase() ?? "";
+  const text = (document.body?.innerText ?? "").replace(/\s+/g, " ").toLowerCase();
   return PAYWALL_PHRASES.some((phrase) => text.includes(phrase));
 }
 
