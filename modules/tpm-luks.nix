@@ -21,8 +21,6 @@ in
   };
 
   config = lib.mkIf (cfg.devices != [ ]) {
-    boot.initrd.systemd.enable = true;
-
     boot.initrd.luks.devices = lib.genAttrs cfg.devices (name: {
       # The machine's hardware-configuration.nix names the partition by uuid at normal priority.
       # The partlabel keeps the eval alive where the committed placeholder stands in.
