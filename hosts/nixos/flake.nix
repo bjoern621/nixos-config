@@ -111,28 +111,8 @@
       nixosConfigurations.nixos = mkSystem [ ];
 
       # What CI builds.
-      # modules/howdy.nix pins opencv4Full to an enableVtk = false override,
-      # a path no substituter carries and that compiles for around an hour on a runner.
-      #
-      # Three references reach that path, and all three have to go.
-      # display-manager.nix and quickshell-lock.nix interpolate services.howdy.package
-      # into their PAM stacks whether or not the service is on,
-      # so the stub package keeps those strings resolvable.
-      # linux-enable-ir-emitter links opencv on its own account.
-      #
-      # The workarounds in modules/howdy.nix therefore go unchecked here.
-      nixosConfigurations.nixos-ci = mkSystem [
-        # The machine's hardware-configuration.nix reaches the repo only on the machine
-        # (the committed file is a placeholder), so a runner needs the stub.
-        ../../modules/ci-hardware-stub.nix
-        (
-          { lib, pkgs, ... }:
-          {
-            services.howdy.enable = lib.mkForce false;
-            services.howdy.package = lib.mkForce pkgs.emptyDirectory;
-            services.linux-enable-ir-emitter.enable = lib.mkForce false;
-          }
-        )
-      ];
+      # The machine's hardware-configuration.nix reaches the repo only on the machine
+      # (the committed file is a placeholder), so a runner needs the stub.
+      nixosConfigurations.nixos-ci = mkSystem [ ../../modules/ci-hardware-stub.nix ];
     };
 }
