@@ -18,6 +18,7 @@
     ../../modules/task-manager.nix
     ../../modules/fancy-boot/fancy-boot.nix
     ../../modules/file-manager.nix
+    ./ci-runner.nix
     ../../modules/printing.nix
     ../../modules/scanning.nix
     ../../modules/cleanup.nix
