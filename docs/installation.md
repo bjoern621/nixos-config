@@ -422,11 +422,8 @@ The client key comes from `secrets/wireguard-client.yaml`, so [sops secrets](#so
 
 Module: `modules/networkmanager-openvpn.nix`.
 
-**After the first boot:** import the CyberGhost profile:
-
-```bash
-nmcli connection import type openvpn file <profile>.ovpn
-```
+Nothing to do by hand.
+The CyberGhost profiles come from `secrets/cyberghost.yaml`, so [sops secrets](#sops-secrets) must be set up.
 
 ### eduroam
 
