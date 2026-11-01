@@ -1,4 +1,4 @@
--- Floating windows open at 50% monitor width, 60% height (monitor-local).
+-- Floating windows open at 60% monitor width, 70% height (monitor-local).
 -- Windows tagged own-size keep their app-specific size (rules.40-mozza-mail).
 -- Window rule cannot do this: size is static, evaluated at open before float
 -- effects of other rules land, so match={float=true} never fires.
