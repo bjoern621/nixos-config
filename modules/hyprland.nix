@@ -19,7 +19,7 @@ in
     xwayland.enable = true;
 
     # Patch exposes client min_size/max_size to Lua for floating-size.lua.
-    # Patched build misses hyprland.cachix; CI pushes it to own cache.
+    # Patched build misses hyprland.cachix: compiles locally after each Hyprland bump.
     package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland.overrideAttrs (old: {
       patches = (old.patches or [ ]) ++ [ ./hyprland-lua-window-size-limits.patch ];
     });
