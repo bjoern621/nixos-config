@@ -24,8 +24,6 @@ Singleton {
     property string searchText: ""
     property var indexedApps: []
     property var filteredApps: []
-    // Desktop entries changed while open. Rebuild waits for next open.
-    property bool appsStale: false
 
     // Loaded launcher view (classic or neo, never both). Its LauncherSelection
     // owns the selection, so keyboard/mouse precedence matches the clipboard and
@@ -40,10 +38,6 @@ Singleton {
 
     onLauncherVisibleChanged: {
         if (launcherVisible) {
-            if (appsStale) {
-                appsStale = false;
-                rebuildAppList();
-            }
             searchText = "";
             updateFilter();
         }
@@ -66,15 +60,28 @@ Singleton {
     }
 
     function updateFilter() {
-        const query = searchText.toLowerCase();
-        if (query === "") {
-            filteredApps = indexedApps.slice(0, maxResults).map(e => ({
+        filteredApps = matchApps(searchText.toLowerCase());
+        resetSelection();
+    }
+
+    // Selecting row 0 scrolls the view to the top, so a rescan keeps the selected entry.
+    // Matched by id: a rescan replaces some DesktopEntry objects.
+    function refreshResults() {
+        const previousIndex = activeIndex;
+        const selectedId = selectedApp ? selectedApp.id : "";
+        filteredApps = matchApps(searchText.toLowerCase());
+        if (!selectionView || !selectionView.keyboardNav)
+            return;
+        const index = filteredApps.findIndex(e => e.app.id === selectedId);
+        selectionView.keyboardSelect(index >= 0 ? index : previousIndex);
+    }
+
+    function matchApps(query) {
+        if (query === "")
+            return indexedApps.slice(0, maxResults).map(e => ({
                         app: e.app,
                         query: ""
                     }));
-            resetSelection();
-            return;
-        }
 
         const weights = fieldWeights;
         const scored = [];
@@ -104,11 +111,10 @@ Singleton {
                 app: scored[i].app,
                 query: query
             };
-        filteredApps = out;
-        resetSelection();
+        return out;
     }
 
-    // Every rebuild lands on the first result. Keystroke-driven, so the keyboard
+    // Every filter change lands on the first result. Keystroke-driven, so the keyboard
     // takes the selection back from any hover.
     function resetSelection() {
         if (selectionView)
@@ -147,15 +153,14 @@ Singleton {
 
     property Connections _deConn: Connections {
         target: DesktopEntries
-        // Reassigning filteredApps resets the view to the top.
         // Rescans fire on any desktop file write (Claude Code rewrites its URL handler on every start).
+        // Rebuild cannot wait for next open: rescan destroys replaced DesktopEntry objects, which render as blank rows.
         function onApplicationsChanged() {
-            if (controller.launcherVisible) {
-                controller.appsStale = true;
-                return;
-            }
             controller.rebuildAppList();
-            controller.updateFilter();
+            if (controller.launcherVisible)
+                controller.refreshResults();
+            else
+                controller.updateFilter();
         }
     }
 
