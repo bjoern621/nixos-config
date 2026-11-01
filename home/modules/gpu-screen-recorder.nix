@@ -52,12 +52,19 @@ let
     };
   };
 
-  notifySaved = pkgs.writeShellScript "gpu-screen-recorder-notify-saved" ''
-    ${lib.getExe pkgs.libnotify} --app-name="GPU Screen Recorder" "Clip gespeichert" "$(basename "$(dirname "$1")")/$(basename "$1")"
-  '';
+  # gsr names replays by the second, with no option for the name.
+  # Each recorder saves into own hidden folder.
+  # Save script moves clip up into replayDir with monitor suffix.
+  moveSaved =
+    name:
+    pkgs.writeShellScript "gpu-screen-recorder-saved-${name}" ''
+      set -euo pipefail
+      file=$(basename "$1")
+      target=${lib.escapeShellArg replayDir}/"''${file%.*}_${name}.''${file##*.}"
+      mv "$1" "$target"
+      ${lib.getExe pkgs.libnotify} --app-name="GPU Screen Recorder" "Clip gespeichert" "$(basename "$target")"
+    '';
 
-  # gsr names replays by the second.
-  # Own folder per monitor keeps simultaneous saves apart.
   startReplay =
     name:
     {
@@ -67,7 +74,7 @@ let
       audioTracks,
     }:
     let
-      outputDir = "${replayDir}/${name}";
+      outputDir = "${replayDir}/.${name}";
       # AV1 looks sharper than h264 at same bitrate.
       # Stock Windows and older phones cannot decode it.
       # Full range keeps all 256 levels.
@@ -106,7 +113,7 @@ let
         "-o"
         outputDir
         "-sc"
-        "${notifySaved}"
+        "${moveSaved name}"
         "-v"
         "no"
       ];
