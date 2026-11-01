@@ -24,14 +24,20 @@ let
     fi
     mkdir -p ${lib.escapeShellArg replayDir}
 
-    # h264: every player and Discord embed decodes it.
+    # AV1 looks sharper than h264 at same bitrate.
+    # Stock Windows and older phones cannot decode it.
+    # Full range keeps all 256 levels.
+    # Players ignoring range flag crush blacks.
+    # -tune works on NVIDIA only. Monitor hangs off RTX 5080.
     # CBR caps buffer at bitrate times duration: 20 Mbps over 1800 s holds about 4.5 GB of RAM.
     # Game, voice chat and mic share one track, since most players play only the first.
     exec ${lib.getExe pkgs.gpu-screen-recorder} \
       -w "$output" \
       -f 60 \
       -c mp4 \
-      -k h264 \
+      -k av1 \
+      -cr full \
+      -tune quality \
       -bm cbr \
       -q 20000 \
       -a "default_output|default_input" \
