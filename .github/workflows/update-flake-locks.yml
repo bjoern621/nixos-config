@@ -150,14 +150,30 @@ jobs:
       # Failed push leaves merge gate alone: hosts build what cache lacks.
       # atticd uploads ten chunks per NAR at once, each with its own buffers and zstd encoder.
       # Seven runners at the default of five NARs each drove it out of memory.
+      # One connect timeout or 504 on any path fails whole push.
+      # Retry re-uploads only paths still missing from cache.
       - name: Push ${{ matrix.attr }} to the system cache
         continue-on-error: true
         env:
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
           OUT: ${{ steps.build.outputs.out }}
+          PUSH_ATTEMPTS: 5
+          FIRST_RETRY_DELAY_SECONDS: 30
         run: |
           nix run nixpkgs#attic-client -- login hh https://nix-cache.bjoernblessin.de/ "$ATTIC_TOKEN"
-          nix run nixpkgs#attic-client -- push --jobs 2 hh:system "$OUT"
+          delay=$FIRST_RETRY_DELAY_SECONDS
+          for attempt in $(seq "$PUSH_ATTEMPTS"); do
+            if nix run nixpkgs#attic-client -- push --jobs 2 hh:system "$OUT"; then
+              exit 0
+            fi
+            if [ "$attempt" -lt "$PUSH_ATTEMPTS" ]; then
+              echo "Push attempt $attempt of $PUSH_ATTEMPTS failed, retrying in ${delay}s"
+              sleep "$delay"
+              delay=$((delay * 2))
+            fi
+          done
+          echo "Push failed after $PUSH_ATTEMPTS attempts"
+          exit 1
 
   merge:
     needs: [update-locks, build]
