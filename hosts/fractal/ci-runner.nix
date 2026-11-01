@@ -16,9 +16,27 @@ let
     ];
     text = builtins.readFile ./ci-runners.sh;
   };
+  # The window stays open: `down` waits for running jobs and prints its progress.
+  ciRunnersToggle = pkgs.makeDesktopItem {
+    name = "ci-runners-toggle";
+    desktopName = "CI-Runner umschalten";
+    comment = "Leiht fractal der pidgemail-Gruppe als GitLab-Runner oder holt ihn zurück";
+    exec = "kitty --hold --title CI-Runner ci-runners toggle";
+    icon = "gitlab";
+    categories = [ "Development" ];
+    keywords = [
+      "ci"
+      "gitlab"
+      "runner"
+      "pidgemail"
+    ];
+  };
 in
 {
-  environment.systemPackages = [ ciRunners ];
+  environment.systemPackages = [
+    ciRunners
+    ciRunnersToggle
+  ];
 
   # Every job slot mounts this at /cache. Nothing caps its size, so the timer below prunes it.
   systemd.tmpfiles.rules = [ "d ${cacheDir} 0755 root root -" ];

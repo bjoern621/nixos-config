@@ -3,6 +3,7 @@
 #   ci-runners down    pause runner, let running jobs finish, stop everything
 #   ci-runners down --now   same, aborting running jobs
 #   ci-runners status
+#   ci-runners toggle  down while the runner container runs, up otherwise
 # ci-runner.nix installs this as `ci-runners` and sets up the host side. Nothing starts at boot.
 
 GITLAB_URL="https://gitlab.bjoernblessin.de"
@@ -157,12 +158,21 @@ status() {
   fi
 }
 
+toggle() {
+  if [[ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null)" == true ]]; then
+    down
+  else
+    up
+  fi
+}
+
 case "${1:-}" in
   up) up ;;
   down) down "${2:-}" ;;
   status) status ;;
+  toggle) toggle ;;
   *)
-    echo "Usage: ci-runners up | down [--now] | status" >&2
+    echo "Usage: ci-runners up | down [--now] | status | toggle" >&2
     exit 1
     ;;
 esac
