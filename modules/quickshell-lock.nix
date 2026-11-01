@@ -29,7 +29,8 @@ let
   pamUnix = "${pkgs.linux-pam}/lib/security/pam_unix.so";
   pamExec = "${pkgs.linux-pam}/lib/security/pam_exec.so";
   pamPermit = "${pkgs.linux-pam}/lib/security/pam_permit.so";
-  pamHowdy = "${config.services.howdy.package}/lib/security/pam_howdy.so";
+  # Without howdy, rule 3 skips onto rule 7 and face path fails.
+  howdyAuthRule = lib.optionalString config.services.howdy.enable "auth  [success=done default=ignore]  ${config.services.howdy.package}/lib/security/pam_howdy.so";
   pamU2f = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
   u2fAuthfile = config.security.pam.u2f.settings.authfile;
 in
@@ -78,8 +79,8 @@ in
     auth  [success=2 default=ignore]  ${pamExec} quiet expose_authtok ${isPasswordEmpty}
     auth  [success=done default=die]  ${pamUnix} try_first_pass
     auth  [success=done default=die]  ${pamU2f} authfile=${u2fAuthfile} cue
-    auth  [success=done default=ignore]  ${pamHowdy}
-    auth  required                    ${pamUnix} try_first_pass
+    ${howdyAuthRule}
+    auth  required                   ${pamUnix} try_first_pass
 
     account  required  ${pamPermit}
   '';

@@ -106,7 +106,8 @@ let
 
   pamUnix = "${pkgs.linux-pam}/lib/security/pam_unix.so";
   pamExec = "${pkgs.linux-pam}/lib/security/pam_exec.so";
-  pamHowdy = "${config.services.howdy.package}/lib/security/pam_howdy.so";
+  # Without howdy, face path skips onto pam_unix backstop and fails.
+  howdyAuthRule = lib.optionalString config.services.howdy.enable "auth  [success=done default=ignore]  ${config.services.howdy.package}/lib/security/pam_howdy.so";
   pamGnomeKeyring = "${pkgs.gnome-keyring}/lib/security/pam_gnome_keyring.so";
   pamU2f = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
   u2fAuthfile = config.security.pam.u2f.settings.authfile;
@@ -176,8 +177,8 @@ in
     auth  optional                    ${pamGnomeKeyring}
     auth  [success=done default=die]  ${pamUnix} try_first_pass
     auth  [success=done default=die]  ${pamU2f} authfile=${u2fAuthfile} cue
-    auth  [success=done default=ignore]  ${pamHowdy}
-    auth  required                    ${pamUnix} try_first_pass
+    ${howdyAuthRule}
+    auth  required                   ${pamUnix} try_first_pass
 
     account   include   login
     password  substack  login

@@ -83,10 +83,6 @@
   };
   services.displayManager.defaultSession = "hyprland-uwsm";
 
-  # display-manager.nix interpolates the howdy package into the greeter PAM stack
-  # whether or not the service runs; the stub keeps the IR-camera stack out of the closure.
-  services.howdy.package = pkgs.emptyDirectory;
-
   networking.networkmanager.enable = true;
 
   time.timeZone = "Europe/Berlin";
