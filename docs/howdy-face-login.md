@@ -8,10 +8,9 @@ Module config: [modules/howdy.nix](../modules/howdy.nix). PAM wiring:
 
 ### 1. Calibrate the IR emitter
 
-The IR LED is a separate USB device that needs a UVC control packet to turn
-on. `linux-enable-ir-emitter` is enabled at
-[modules/howdy.nix:34](../modules/howdy.nix#L34) and replays the saved
-packet on each boot. The packet is found interactively, once:
+The IR LED sits on its own USB device and turns on only after a UVC control packet.
+`linux-enable-ir-emitter`, enabled in [modules/howdy.nix](../modules/howdy.nix), replays the saved packet on each boot.
+Finding the packet takes one interactive run:
 
 ```sh
 sudo -E linux-enable-ir-emitter configure -m
