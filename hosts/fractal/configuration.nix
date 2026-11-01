@@ -6,6 +6,7 @@
     ../../modules/hyprland.nix
     ../../modules/nvidia.nix
     ../../modules/gaming.nix
+    ../../modules/gpu-screen-recorder.nix
     ../../modules/sleep-off.nix
     ../../modules/reboot-to-windows.nix
     ../../modules/google-chrome.nix
