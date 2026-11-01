@@ -20,7 +20,38 @@ let
       systemctl reboot
     '';
   };
+  # Launcher has no terminal for password prompt; `-n` fails instead of waiting on one.
+  rebootToWindowsEntry = pkgs.makeDesktopItem {
+    name = "reboot-to-windows";
+    desktopName = "In Windows neu starten";
+    comment = "Startet einmal Windows, danach wieder NixOS";
+    exec = "sudo -n reboot-to-windows";
+    icon = "distributor-logo-windows";
+    categories = [ "System" ];
+    keywords = [
+      "windows"
+      "reboot"
+      "neustart"
+      "dualboot"
+    ];
+  };
 in
 {
-  environment.systemPackages = [ rebootToWindows ];
+  environment.systemPackages = [
+    rebootToWindows
+    rebootToWindowsEntry
+  ];
+
+  # Writing BootNext needs root.
+  security.sudo.extraRules = [
+    {
+      users = [ "bjoern" ];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/reboot-to-windows";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
 }
