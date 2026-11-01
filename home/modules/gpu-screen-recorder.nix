@@ -70,7 +70,26 @@ in
       "AudioVideo"
       "Video"
     ];
-    settings.Keywords = "shadowplay;replay;clip;aufnahme;speichern";
+    settings.Keywords = lib.concatStringsSep ";" [
+      "shadowplay"
+      "instant replay"
+      "replay"
+      "clip"
+      "save"
+      "record"
+      "recording"
+      "capture"
+      "highlight"
+      "video"
+      "gpu screen recorder"
+      "speichern"
+      "sichern"
+      "aufnahme"
+      "aufnehmen"
+      "mitschnitt"
+      "bildschirmaufnahme"
+      "wiederholung"
+    ];
   };
 
   wayland.windowManager.hyprland.extraLuaFiles."gpu-screen-recorder".content = ./gpu-screen-recorder.lua;
