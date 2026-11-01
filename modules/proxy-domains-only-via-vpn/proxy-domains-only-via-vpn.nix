@@ -37,6 +37,7 @@ let
   uplinkRulePriority = "4990";
   remoteHost = "87-1-de.cg-dialup.net";
   remotePort = 443;
+  streamAggregators = import ./stream-aggregators.nix;
 
   # Second-level names matched under any single-label TLD, with subdomains.
   # For sites that hop between TLDs.
@@ -48,7 +49,8 @@ let
     "supervideo"
     "vidmoly"
     "dood"
-  ];
+  ]
+  ++ streamAggregators.namesAnyTld;
 
   vpnDomains = [
     "moflix-stream.xyz"
@@ -66,7 +68,8 @@ let
     "archive.vn"
     "archive.md"
     "archive.fo"
-  ];
+  ]
+  ++ streamAggregators.domains;
 
   # dnsDomainIs covers subdomains, bare host == covers apex.
   hostMatch = lib.concatStringsSep " || " (
