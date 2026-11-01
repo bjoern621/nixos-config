@@ -490,10 +490,10 @@ function parseTailscale(text) {
     }
 }
 
-// `systemctl show -p LoadState -p ActiveState --value wg-quick-wg-wstunnel.service`,
+// `systemctl show -p LoadState -p ActiveState --value <unit>` for a tunnel unit,
 // two lines in that order. LoadState "loaded" means this host carries the unit, so a
 // row shows; "not-found" (other hosts) hides it. ActiveState "active" means up.
-function parseWgWstunnel(text) {
+function parseUnitState(text) {
     const lines = text.trim().split("\n");
     return {
         available: (lines[0] || "").trim() === "loaded",

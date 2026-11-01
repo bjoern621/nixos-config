@@ -74,6 +74,11 @@ Singleton {
     property bool wgWstunnelAvailable: false
     property bool wgWstunnelUp: false
 
+    // Always-on CyberGhost tunnel carrying only tinyproxy's traffic, an OpenVPN
+    // unit NM leaves unmanaged. Read and toggled like the wstunnel unit.
+    property bool vpnProxyAvailable: false
+    property bool vpnProxyUp: false
+
     // NM-managed VPN/WireGuard profiles plus the two tun tunnels NM cannot toggle.
     // Each synthetic row carries a flag so VpnRow routes its toggle through the
     // matching CLI rather than `nmcli connection up/down`.
@@ -96,6 +101,15 @@ Singleton {
                 active: wgWstunnelUp,
                 wgWstunnel: true
             });
+        if (vpnProxyAvailable)
+            list.push({
+                name: "CyberGhost Proxy",
+                uuid: "vpn-proxy",
+                kind: "OpenVPN",
+                transport: "UDP",
+                active: vpnProxyUp,
+                vpnProxy: true
+            });
         return list;
     }
     readonly property string activeSsid: {
@@ -113,10 +127,10 @@ Singleton {
                 return true;
         return false;
     }
-    // Tailscale stays up around the clock, so the bar glyph keys on the other tunnels.
+    // Tailscale and the proxy tunnel stay up around the clock, so the bar glyph keys on the other tunnels.
     readonly property bool tunnelBesidesTailscaleActive: {
         for (let i = 0; i < vpnConnections.length; i++)
-            if (vpnConnections[i].active && !vpnConnections[i].tailscale)
+            if (vpnConnections[i].active && !vpnConnections[i].tailscale && !vpnConnections[i].vpnProxy)
                 return true;
         return false;
     }
@@ -238,6 +252,7 @@ Singleton {
         deviceProc.running = true;
         tailscaleProc.running = true;
         wgWstunnelProc.running = true;
+        vpnProxyProc.running = true;
     }
 
     function _rebuildWifi() {
@@ -361,9 +376,22 @@ Singleton {
         stdout: StdioCollector {
             id: wgWstunnelOut
             onStreamFinished: {
-                const s = NetworkUtils.parseWgWstunnel(wgWstunnelOut.text);
+                const s = NetworkUtils.parseUnitState(wgWstunnelOut.text);
                 root.wgWstunnelAvailable = s.available;
                 root.wgWstunnelUp = s.up;
+            }
+        }
+    }
+
+    Process {
+        id: vpnProxyProc
+        command: ["systemctl", "show", "-p", "LoadState", "-p", "ActiveState", "--value", "openvpn-vpn-proxy.service"]
+        stdout: StdioCollector {
+            id: vpnProxyOut
+            onStreamFinished: {
+                const s = NetworkUtils.parseUnitState(vpnProxyOut.text);
+                root.vpnProxyAvailable = s.available;
+                root.vpnProxyUp = s.up;
             }
         }
     }
@@ -541,6 +569,10 @@ Singleton {
     // carrier. busyKey "vpn:wg-wstunnel" matches the synthetic row's uuid.
     function setWgWstunnel(on) {
         _startAction(["wg-wstunnel", on ? "up" : "down"], "vpn:wg-wstunnel");
+    }
+    // busyKey "vpn:vpn-proxy" matches the synthetic row's uuid.
+    function setVpnProxy(on) {
+        _startAction(["vpn-proxy", on ? "up" : "down"], "vpn:vpn-proxy");
     }
 
     function _statusForCode(code) {

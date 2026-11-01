@@ -186,6 +186,17 @@ in
 
   networking.networkmanager.unmanaged = [ "interface-name:${tunDev}" ];
 
+  # Network menu toggles the tunnel as the user; scope the toggle to this one unit and operator.
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (action.id == "org.freedesktop.systemd1.manage-units" &&
+          action.lookup("unit") == "openvpn-vpn-proxy.service" &&
+          subject.user == "bjoern") {
+        return polkit.Result.YES;
+      }
+    });
+  '';
+
   # Uplink changes (Wi-Fi, dock, DHCP renew, VPN up or down) re-sync uplinkTable.
   networking.networkmanager.dispatcherScripts = [
     {

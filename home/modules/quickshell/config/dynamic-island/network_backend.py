@@ -160,6 +160,19 @@ def cmd_wg_wstunnel(argv: list[str]) -> int:
     return 0
 
 
+def cmd_vpn_proxy(argv: list[str]) -> int:
+    # vpn-proxy <up|down>
+    # OpenVPN unit NetworkManager leaves unmanaged. A polkit rule
+    # (modules/proxy-domains-only-via-vpn) lets the user start/stop it without sudo.
+    direction = argv[0]
+    action = "start" if direction == "up" else "stop"
+    _status("VPN_UP" if direction == "up" else "VPN_DOWN")
+    code, output = _run(["systemctl", action, "openvpn-vpn-proxy.service"])
+    _echo(output)
+    _connect_result(code, output)
+    return 0
+
+
 def cmd_radio(argv: list[str]) -> int:
     # radio wifi <on|off>
     code, output = _run(["nmcli", "radio", "wifi", argv[1]])
@@ -203,6 +216,7 @@ _COMMANDS = {
     "vpn": cmd_vpn,
     "tailscale": cmd_tailscale,
     "wg-wstunnel": cmd_wg_wstunnel,
+    "vpn-proxy": cmd_vpn_proxy,
     "radio": cmd_radio,
     "airplane": cmd_airplane,
     "modify": cmd_modify,
