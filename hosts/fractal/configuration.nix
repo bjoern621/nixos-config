@@ -21,6 +21,7 @@
     ../../modules/boot-recovery.nix
     ../../modules/file-manager.nix
     ./ci-runner.nix
+    ./usb4-dock-boot.nix
     ../../modules/printing.nix
     ../../modules/scanning.nix
     ../../modules/cleanup.nix
