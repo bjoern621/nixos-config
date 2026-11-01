@@ -5,7 +5,7 @@
     ./hardware-configuration.nix
     ../../modules/hyprland.nix
     ../../modules/google-chrome.nix
-    ../../modules/pipewire.nix
+    ../../modules/pipewire
     ../../modules/scripts/default.nix
     ../../modules/keyring.nix
     ../../modules/evolution-data-server.nix

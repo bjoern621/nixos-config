@@ -55,37 +55,19 @@
       };
     };
 
-    # Disable GPU HDMI/DP audio controllers. Monitor audio unused.
-    # Laptop (nixos) matched by PCI address, fractal by product name.
-    # PCI address differs per host. Product name does not.
-    # `matches` entries OR together.
-    wireplumber.extraConfig."52-disable-gpu-hdmi-audio" = {
-      "monitor.alsa.rules" = [
-        {
-          matches = [
-            { "device.name" = "alsa_card.pci-0000_c3_00.1"; }
-            { "device.product.name" = "Radeon High Definition Audio Controller"; }
-          ];
-          actions.update-props = {
-            "device.disabled" = true;
-          };
-        }
-      ];
-    };
+    wireplumber.extraScripts."device/skip-hidden-display-profile.lua" =
+      builtins.readFile ./skip-hidden-display-profile.lua;
 
-    # Fractal NVidia HDMI 0 (hdmi-stereo) feeds LG TV.
-    # Pinned profile keeps ULTRAGEAR outputs on same controller hidden.
-    wireplumber.extraConfig."53-nvidia-hdmi-tv" = {
-      "monitor.alsa.rules" = [
+    # Component loads only when a profile requires it.
+    wireplumber.extraConfig."52-skip-hidden-display-profile" = {
+      "wireplumber.components" = [
         {
-          matches = [
-            { "device.product.name" = "GB203 High Definition Audio Controller"; }
-          ];
-          actions.update-props = {
-            "device.profile" = "output:hdmi-stereo";
-          };
+          name = "device/skip-hidden-display-profile.lua";
+          type = "script/lua";
+          provides = "custom.device.skip-hidden-display-profile";
         }
       ];
+      "wireplumber.profiles".main."custom.device.skip-hidden-display-profile" = "required";
     };
   };
 }

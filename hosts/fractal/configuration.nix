@@ -9,7 +9,7 @@
     ../../modules/sleep-off.nix
     ../../modules/reboot-to-windows.nix
     ../../modules/google-chrome.nix
-    ../../modules/pipewire.nix
+    ../../modules/pipewire
     ../../modules/scripts/default.nix
     ../../modules/keyring.nix
     ../../modules/evolution-data-server.nix
