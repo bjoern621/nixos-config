@@ -18,7 +18,11 @@ in
     enable = true;
     xwayland.enable = true;
 
-    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    # Patch exposes client min_size/max_size to Lua for floating-size.lua.
+    # Patched build misses hyprland.cachix; CI pushes it to own cache.
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ./hyprland-lua-window-size-limits.patch ];
+    });
     portalPackage =
       inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
 

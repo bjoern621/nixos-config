@@ -1,0 +1,22 @@
+diff --git a/src/config/lua/objects/LuaWindow.cpp b/src/config/lua/objects/LuaWindow.cpp
+index 09f75762..ca133d64 100644
+--- a/src/config/lua/objects/LuaWindow.cpp
++++ b/src/config/lua/objects/LuaWindow.cpp
+@@ -93,6 +93,17 @@ static int windowIndex(lua_State* L) {
+         lua_setfield(L, -2, "x");
+         lua_pushinteger(L, sc<int>(w->size(Desktop::View::IGeometric::GEOMETRIC_GOAL).y));
+         lua_setfield(L, -2, "y");
++    } else if (key == "min_size" || key == "max_size") {
++        const auto limit = key == "min_size" ? w->minSize() : w->maxSize();
++        if (!limit)
++            lua_pushnil(L);
++        else {
++            lua_newtable(L);
++            lua_pushnumber(L, limit->x);
++            lua_setfield(L, -2, "x");
++            lua_pushnumber(L, limit->y);
++            lua_setfield(L, -2, "y");
++        }
+     } else if (key == "workspace") {
+         if (w->m_workspace)
+             Objects::CLuaWorkspace::push(L, w->m_workspace);
