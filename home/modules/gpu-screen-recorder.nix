@@ -11,24 +11,6 @@ let
   monitor = "LG Electronics LG ULTRAGEAR 308MAPN9YD64";
   replayDir = "${config.xdg.userDirs.videos}/Replays";
 
-  saveReplayEntry =
-    {
-      name,
-      comment,
-      signal,
-    }:
-    {
-      inherit name comment;
-      exec = "systemctl --user kill --kill-whom=main --signal=${signal} gpu-screen-recorder-replay.service";
-      icon = "com.dec05eba.gpu_screen_recorder";
-      type = "Application";
-      categories = [
-        "AudioVideo"
-        "Video"
-      ];
-      settings.Keywords = "shadowplay;replay;clip;aufnahme;speichern";
-    };
-
   notifySaved = pkgs.writeShellScript "gpu-screen-recorder-notify-saved" ''
     ${lib.getExe pkgs.libnotify} --app-name="GPU Screen Recorder" "Clip gespeichert" "$(basename "$1")"
   '';
@@ -78,17 +60,17 @@ in
     Install.WantedBy = [ "graphical-session.target" ];
   };
 
-  xdg.desktopEntries = {
-    "gpu-screen-recorder-save-replay" = saveReplayEntry {
-      name = "Replay speichern";
-      comment = "Speichert die letzten 30 Minuten (ALT+F10)";
-      signal = "SIGUSR1";
-    };
-    "gpu-screen-recorder-save-last-minute" = saveReplayEntry {
-      name = "Letzte Minute speichern";
-      comment = "Speichert die letzten 60 Sekunden (ALT+SHIFT+F10)";
-      signal = "SIGRTMIN+3";
-    };
+  xdg.desktopEntries."gpu-screen-recorder-save-replay" = {
+    name = "Replay speichern";
+    comment = "Speichert die letzten 30 Minuten (ALT+F10)";
+    exec = "systemctl --user kill --kill-whom=main --signal=SIGUSR1 gpu-screen-recorder-replay.service";
+    icon = "com.dec05eba.gpu_screen_recorder";
+    type = "Application";
+    categories = [
+      "AudioVideo"
+      "Video"
+    ];
+    settings.Keywords = "shadowplay;replay;clip;aufnahme;speichern";
   };
 
   wayland.windowManager.hyprland.extraLuaFiles."gpu-screen-recorder".content = ./gpu-screen-recorder.lua;
