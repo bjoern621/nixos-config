@@ -425,6 +425,24 @@ Module: `modules/networkmanager-openvpn.nix`.
 Nothing to do by hand.
 The CyberGhost profiles come from `secrets/cyberghost.yaml`, so [sops secrets](#sops-secrets) must be set up.
 
+### Proxy-only domains in Chrome
+
+Module: `modules/proxy-domains-only-via-vpn/proxy-domains-only-via-vpn.nix`.
+Needs [sops secrets](#sops-secrets), since the tunnel credentials live in `secrets/cyberghost-proxy.yaml`.
+
+The build sets up the tunnel and the Chrome proxy policy.
+The helper extension needs loading by hand, since Chrome loads an unpacked extension from the extensions page alone.
+The extension shows per tab whether the proxy carries the site, explains proxy errors and opens member-only Medium stories on archive.today.
+
+**After the first boot:** load the extension in Chrome:
+
+1. Open `chrome://extensions` and turn on **Developer mode**.
+2. Click **Load unpacked**, press Ctrl+L in the file dialog and open `/etc/vpn-proxy-extension`.
+3. Pin **VPN proxy helper (nixos-config)** to the toolbar to keep its badge in view.
+
+Every rebuild rewrites the files in `/etc/vpn-proxy-extension`.
+Chrome picks them up on the extension's reload button in `chrome://extensions` or at the next restart.
+
 ### eduroam
 
 Module: `modules/eduroam.nix`.
