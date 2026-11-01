@@ -57,6 +57,7 @@ let
     "lulustream.com"
     "firestream.to"
     "voe.sx"
+    "fmhy.net"
     # archive.today redirects to any of its mirrors.
     "archive.today"
     "archive.ph"
