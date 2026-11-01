@@ -9,14 +9,38 @@
 let
   replayDir = "${config.xdg.userDirs.videos}/Replays";
 
+  # PipeWire application.name of each app with its own track, matched case-insensitively.
+  # Discord voice streams carry WEBRTC VoiceEngine.
+  apps = {
+    discord = [
+      "Discord"
+      "WEBRTC VoiceEngine"
+    ];
+    spotify = [ "Spotify" ];
+    chrome = [ "Google Chrome" ];
+  };
+  appTrack = names: lib.concatMapStringsSep "|" (name: "app:${name}") names;
+  # Games report a name each.
+  # Game track takes every app left out of apps.
+  gameTrack = lib.concatMapStringsSep "|" (name: "app-inverse:${name}") (
+    lib.flatten (lib.attrValues apps)
+  );
+
   # monitor matches EDID description, which survives cable moving to another port.
   replays = {
     gaming = {
       monitor = "LG Electronics LG ULTRAGEAR 308MAVD9YD63";
       fps = 60;
       bitrateKbps = 40000;
-      # Game, voice chat and mic share one track, since most players play only the first.
-      audio = "default_output|default_input";
+      # One track per entry.
+      # Players and Discord embeds play only the first.
+      # First track mixes everything.
+      audioTracks = [
+        "default_output|default_input"
+        gameTrack
+      ]
+      ++ map appTrack (lib.attrValues apps)
+      ++ [ "default_input" ];
     };
     # Lower fps and bitrate leave RAM for the game.
     # Gaming clip already carries all audio.
@@ -24,7 +48,7 @@ let
       monitor = "LG Electronics LG ULTRAGEAR 308MAPN9YD64";
       fps = 30;
       bitrateKbps = 15000;
-      audio = null;
+      audioTracks = [ ];
     };
   };
 
@@ -40,7 +64,7 @@ let
       monitor,
       fps,
       bitrateKbps,
-      audio,
+      audioTracks,
     }:
     let
       outputDir = "${replayDir}/${name}";
@@ -66,9 +90,11 @@ let
         "-q"
         (toString bitrateKbps)
       ]
-      ++ lib.optionals (audio != null) [
+      ++ lib.concatMap (track: [
         "-a"
-        audio
+        track
+      ]) audioTracks
+      ++ lib.optionals (audioTracks != [ ]) [
         "-ac"
         "aac"
       ]
