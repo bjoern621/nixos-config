@@ -12,8 +12,8 @@ const PROXY_DOWN_PAGE = chrome.runtime.getURL("proxy-down.html");
 
 const STATES = {
   direct: { text: "OFF", color: "#5f5f5f", title: "VPN proxy: not used for this site" },
-  relaying: { text: "VPN", color: "#2e7d32", title: "VPN proxy: this site loads through the tunnel" },
-  failed: { text: "X", color: "#c62828", title: "VPN proxy: this site could not load through the tunnel" },
+  relaying: { text: "VPN", color: "#2e7d32", title: "VPN proxy: this site loads through CyberGhost" },
+  failed: { text: "X", color: "#c62828", title: "VPN proxy: this site could not load through CyberGhost" },
 };
 
 // Without tabId, sets the default for tabs that carry no state of their own.

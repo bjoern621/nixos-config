@@ -46,6 +46,8 @@ let
       remote = server.remote;
       port = 443;
       proto-tcp = if server.tcp then "yes" else "no";
+      # Kill switch and VPN proxy module match this name.
+      dev = "tun-cyberghost";
       dev-type = "tun";
       auth = "SHA256";
       data-ciphers = "AES-256-GCM:AES-128-GCM:AES-256-CBC";

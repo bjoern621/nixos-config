@@ -428,9 +428,9 @@ The CyberGhost profiles come from `secrets/cyberghost.yaml`, so [sops secrets](#
 ### Proxy-only domains in Chrome
 
 Module: `modules/proxy-domains-only-via-vpn/proxy-domains-only-via-vpn.nix`.
-Needs [sops secrets](#sops-secrets), since the tunnel credentials live in `secrets/cyberghost-proxy.yaml`.
+Needs [OpenVPN](#openvpn): listed sites load only while one of its CyberGhost profiles is connected.
 
-The build sets up the tunnel and the Chrome proxy policy.
+The build sets up the local proxy and the Chrome proxy policy.
 The helper extension needs loading by hand, since Chrome loads an unpacked extension from the extensions page alone.
 The extension shows per tab whether the proxy carries the site, explains proxy errors and opens member-only Medium stories on archive.today.
 

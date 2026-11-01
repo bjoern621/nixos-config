@@ -1,6 +1,6 @@
 // Listed sites that the probe fetches through the proxy, the first one unlike the failed host.
-// Any response proves the tunnel carries traffic.
-const PROBE_HOSTS = ["archive.ph", "streamtape.com"];
+// Any response proves the VPN carries traffic.
+const PROBE_HOSTS = ["fmhy.net", "streamtape.com"];
 const PROBE_TIMEOUT_MS = 8000;
 
 const params = new URLSearchParams(location.search);
@@ -21,7 +21,7 @@ function report(text, fix) {
   command.hidden = !fix;
 }
 
-async function tunnelCarriesTraffic() {
+async function vpnCarriesTraffic() {
   const probe = PROBE_HOSTS.find((h) => !host.endsWith(h));
   try {
     await fetch(`https://${probe}/favicon.ico`, {
@@ -40,10 +40,10 @@ async function diagnose() {
     report("The local proxy (tinyproxy) is not running. Start it:", "sudo systemctl start tinyproxy");
     return;
   }
-  if (await tunnelCarriesTraffic()) {
-    report(`The tunnel works. ${host} itself is not answering. Try again later.`);
+  if (await vpnCarriesTraffic()) {
+    report(`The VPN works. ${host} itself is not answering. Try again later.`);
   } else {
-    report("The tunnel is down. Restart it:", "sudo systemctl restart openvpn-vpn-proxy");
+    report("No CyberGhost VPN is connected. Connect one in the network menu, then try again.");
   }
 }
 
