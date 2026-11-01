@@ -152,6 +152,8 @@ jobs:
       # Seven runners at the default of five NARs each drove it out of memory.
       # One connect timeout or 504 on any path fails whole push.
       # Retry re-uploads only paths still missing from cache.
+      # attic-client from host's nixpkgs pin: build left its glibc and libs in store.
+      # Registry nixpkgs pulls foreign closure, from system cache first by priority.
       - name: Push ${{ matrix.attr }} to the system cache
         continue-on-error: true
         env:
@@ -160,10 +162,10 @@ jobs:
           PUSH_ATTEMPTS: 5
           FIRST_RETRY_DELAY_SECONDS: 30
         run: |
-          nix run nixpkgs#attic-client -- login hh https://nix-cache.bjoernblessin.de/ "$ATTIC_TOKEN"
+          nix run --inputs-from "./hosts/${{ matrix.dir }}" nixpkgs#attic-client -- login hh https://nix-cache.bjoernblessin.de/ "$ATTIC_TOKEN"
           delay=$FIRST_RETRY_DELAY_SECONDS
           for attempt in $(seq "$PUSH_ATTEMPTS"); do
-            if nix run nixpkgs#attic-client -- push --jobs 2 hh:system "$OUT"; then
+            if nix run --inputs-from "./hosts/${{ matrix.dir }}" nixpkgs#attic-client -- push --jobs 2 hh:system "$OUT"; then
               exit 0
             fi
             if [ "$attempt" -lt "$PUSH_ATTEMPTS" ]; then
