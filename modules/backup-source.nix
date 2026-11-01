@@ -82,7 +82,7 @@ in
     fileSystems = mountUnits;
 
     users.users.root.openssh.authorizedKeys.keys = map (
-      k: ''command="${pkgs.rsync}/bin/rrsync -ro ${cfg.chrootRoot}",restrict ${k.key} ${k.name}''
+      k: ''command="${pkgs.rrsync}/bin/rrsync -ro ${cfg.chrootRoot}",restrict ${k.key} ${k.name}''
     ) cfg.authorizedKeys;
   };
 }
