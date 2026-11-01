@@ -1,6 +1,6 @@
 { lib, ... }:
 
-# Host side of ~/ci-runners, which runs the GitLab runner container itself.
+# Host side of ~/Desktop/ci-runners, which runs the GitLab runner container itself.
 # Everything here stays inert until `ci-runners up`.
 {
   services.openssh = {
