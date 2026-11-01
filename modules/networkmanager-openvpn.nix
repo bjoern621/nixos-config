@@ -35,7 +35,8 @@ let
 
   profile = country: server: {
     connection = {
-      id = server.name;
+      # Network menu reads transport off this suffix.
+      id = "${server.name} ${if server.tcp then "TCP" else "UDP"}";
       type = "vpn";
       autoconnect = false;
     };
