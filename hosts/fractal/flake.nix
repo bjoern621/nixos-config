@@ -90,7 +90,6 @@
             imports = [
               ../../home/bjoern.nix
               ../../home/modules/gaming.nix
-              ../../home/modules/gpu-screen-recorder.nix
             ];
 
             # Switches declared in home/host.nix. No lock and no sleep on a desk at home;
