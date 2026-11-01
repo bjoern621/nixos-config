@@ -29,7 +29,6 @@
     ./modules/ksystemlog.nix
     ./modules/wdisplays.nix
     ./modules/quickshell/quickshell.nix
-    ./modules/paintdotnet.nix
     ./modules/shell.nix
     ./modules/yazi/yazi.nix
     ./modules/nix-index.nix

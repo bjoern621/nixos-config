@@ -462,10 +462,3 @@ quickshell-spotify auth
 ```
 
 Both land in the keyring, so set up [keyring auto-unlock](#keyring-auto-unlock-without-a-typed-password) first on hosts that need it.
-
-### Paint.NET
-
-Module: `home/modules/paintdotnet.nix` (all desktop hosts).
-
-**After the first boot:** launch WinBoat and finish its Windows installation wizard.
-Inside the VM, install Paint.NET from <https://getpaint.net> and add it as a seamless app through WinBoat's app integration.
