@@ -61,6 +61,7 @@
 
   # Root LUKS mapper name, read off hardware-configuration.nix (docs/installation.md).
   boot.initrd.luks.tpm2Unlock.devices = [ "cryptroot" ];
+  boot.recovery.emergencyShadowFile = "/etc/nixos/initrd-shadow";
 
   # LUKS volume on second disk, created by hand (docs/installation.md)
   # with partlabel `games`. The key file lives on the encrypted root,
