@@ -1,8 +1,43 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 
-# Host side of ~/Desktop/ci-runners, which runs the GitLab runner container itself.
+# Lends fractal to the pidgemail GitLab group as CI runner through `ci-runners`.
 # Everything here stays inert until `ci-runners up`.
+let
+  cacheDir = "/var/lib/gitlab-runner-fractal/cache";
+  ciRunners = pkgs.writeShellApplication {
+    name = "ci-runners";
+    # docker comes from the system, since it has to match the daemon.
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.findutils
+      pkgs.glab
+      pkgs.gnugrep
+      pkgs.gnused
+    ];
+    text = builtins.readFile ./ci-runners.sh;
+  };
+in
 {
+  environment.systemPackages = [ ciRunners ];
+
+  # Every job slot mounts this at /cache. Nothing caps its size, so the timer below prunes it.
+  systemd.tmpfiles.rules = [ "d ${cacheDir} 0755 root root -" ];
+  systemd.services.gitlab-ci-cache-prune = {
+    description = "Drop CI cache archives no job has read for 14 days";
+    serviceConfig.Type = "oneshot";
+    script = ''
+      ${pkgs.findutils}/bin/find ${cacheDir} -type f -atime +14 -delete
+      ${pkgs.findutils}/bin/find ${cacheDir} -mindepth 1 -type d -empty -delete
+    '';
+  };
+  systemd.timers.gitlab-ci-cache-prune = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+    };
+  };
+
   services.openssh = {
     enable = true;
     ports = [ 22 ];
