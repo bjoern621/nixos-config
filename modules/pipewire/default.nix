@@ -59,15 +59,16 @@
       builtins.readFile ./skip-hidden-display-profile.lua;
 
     # Component loads only when a profile requires it.
+    # `hooks.*` name makes stock components.rules load it before device events start.
     wireplumber.extraConfig."52-skip-hidden-display-profile" = {
       "wireplumber.components" = [
         {
           name = "device/skip-hidden-display-profile.lua";
           type = "script/lua";
-          provides = "custom.device.skip-hidden-display-profile";
+          provides = "hooks.device.profile.skip-hidden-display";
         }
       ];
-      "wireplumber.profiles".main."custom.device.skip-hidden-display-profile" = "required";
+      "wireplumber.profiles".main."hooks.device.profile.skip-hidden-display" = "required";
     };
   };
 }
