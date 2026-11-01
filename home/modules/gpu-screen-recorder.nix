@@ -53,8 +53,10 @@ let
   };
 
   # gsr names replays by the second, with no option for the name.
-  # Each recorder saves into own hidden folder.
-  # Save script moves clip up into replayDir with monitor suffix.
+  # Each recorder saves into own cache folder.
+  # Save script moves clip into replayDir with monitor suffix.
+  # Cache and replayDir share a filesystem.
+  # mv renames without copying.
   moveSaved =
     name:
     pkgs.writeShellScript "gpu-screen-recorder-saved-${name}" ''
@@ -74,7 +76,7 @@ let
       audioTracks,
     }:
     let
-      outputDir = "${replayDir}/.${name}";
+      outputDir = "${config.xdg.cacheHome}/gpu-screen-recorder/${name}";
       # AV1 looks sharper than h264 at same bitrate.
       # Stock Windows and older phones cannot decode it.
       # Full range keeps all 256 levels.
