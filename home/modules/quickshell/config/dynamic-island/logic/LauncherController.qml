@@ -24,6 +24,8 @@ Singleton {
     property string searchText: ""
     property var indexedApps: []
     property var filteredApps: []
+    // Desktop entries changed while open. Rebuild waits for next open.
+    property bool appsStale: false
 
     // Loaded launcher view (classic or neo, never both). Its LauncherSelection
     // owns the selection, so keyboard/mouse precedence matches the clipboard and
@@ -38,6 +40,10 @@ Singleton {
 
     onLauncherVisibleChanged: {
         if (launcherVisible) {
+            if (appsStale) {
+                appsStale = false;
+                rebuildAppList();
+            }
             searchText = "";
             updateFilter();
         }
@@ -141,7 +147,13 @@ Singleton {
 
     property Connections _deConn: Connections {
         target: DesktopEntries
+        // Reassigning filteredApps resets the view to the top.
+        // Rescans fire on any desktop file write (Claude Code rewrites its URL handler on every start).
         function onApplicationsChanged() {
+            if (controller.launcherVisible) {
+                controller.appsStale = true;
+                return;
+            }
             controller.rebuildAppList();
             controller.updateFilter();
         }
