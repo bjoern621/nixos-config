@@ -74,14 +74,14 @@ Singleton {
     property bool wgWstunnelAvailable: false
     property bool wgWstunnelUp: false
 
-    // Always-on CyberGhost tunnel carrying only tinyproxy's traffic, an OpenVPN
-    // unit NM leaves unmanaged. Read and toggled like the wstunnel unit.
-    property bool vpnProxyAvailable: false
-    property bool vpnProxyUp: false
+    // CyberGhost kill switch, armed while its unit is active. Read and toggled like the
+    // wstunnel unit. No tunnel of its own, so the VPN indicators skip it.
+    property bool killSwitchAvailable: false
+    property bool killSwitchArmed: false
 
-    // NM-managed VPN/WireGuard profiles plus the two tun tunnels NM cannot toggle.
-    // Each synthetic row carries a flag so VpnRow routes its toggle through the
-    // matching CLI rather than `nmcli connection up/down`.
+    // NM-managed VPN/WireGuard profiles plus the tunnels NM cannot toggle and the
+    // kill switch. Each synthetic row carries a flag so VpnRow routes its toggle
+    // through the matching CLI rather than `nmcli connection up/down`.
     readonly property var vpnConnections: {
         const list = _nmVpns.slice();
         if (tailscaleAvailable)
@@ -101,14 +101,13 @@ Singleton {
                 active: wgWstunnelUp,
                 wgWstunnel: true
             });
-        if (vpnProxyAvailable)
+        if (killSwitchAvailable)
             list.push({
-                name: "CyberGhost Proxy",
-                uuid: "vpn-proxy",
-                kind: "OpenVPN",
-                transport: "UDP",
-                active: vpnProxyUp,
-                vpnProxy: true
+                name: "Kill-Switch",
+                uuid: "kill-switch",
+                kind: "Nur über CyberGhost",
+                active: killSwitchArmed,
+                killSwitch: true
             });
         return list;
     }
@@ -123,14 +122,14 @@ Singleton {
     readonly property string radioMode: airplaneMode ? "airplane" : (wifiEnabled ? "on" : "off")
     readonly property bool vpnActive: {
         for (let i = 0; i < vpnConnections.length; i++)
-            if (vpnConnections[i].active)
+            if (vpnConnections[i].active && !vpnConnections[i].killSwitch)
                 return true;
         return false;
     }
-    // Tailscale and the proxy tunnel stay up around the clock, so the bar glyph keys on the other tunnels.
+    // Tailscale stays up around the clock, so the bar glyph keys on the other tunnels.
     readonly property bool tunnelBesidesTailscaleActive: {
         for (let i = 0; i < vpnConnections.length; i++)
-            if (vpnConnections[i].active && !vpnConnections[i].tailscale && !vpnConnections[i].vpnProxy)
+            if (vpnConnections[i].active && !vpnConnections[i].tailscale && !vpnConnections[i].killSwitch)
                 return true;
         return false;
     }
@@ -252,7 +251,7 @@ Singleton {
         deviceProc.running = true;
         tailscaleProc.running = true;
         wgWstunnelProc.running = true;
-        vpnProxyProc.running = true;
+        killSwitchProc.running = true;
     }
 
     function _rebuildWifi() {
@@ -384,14 +383,14 @@ Singleton {
     }
 
     Process {
-        id: vpnProxyProc
-        command: ["systemctl", "show", "-p", "LoadState", "-p", "ActiveState", "--value", "openvpn-vpn-proxy.service"]
+        id: killSwitchProc
+        command: ["systemctl", "show", "-p", "LoadState", "-p", "ActiveState", "--value", "cyberghost-kill-switch.service"]
         stdout: StdioCollector {
-            id: vpnProxyOut
+            id: killSwitchOut
             onStreamFinished: {
-                const s = NetworkUtils.parseUnitState(vpnProxyOut.text);
-                root.vpnProxyAvailable = s.available;
-                root.vpnProxyUp = s.up;
+                const s = NetworkUtils.parseUnitState(killSwitchOut.text);
+                root.killSwitchAvailable = s.available;
+                root.killSwitchArmed = s.up;
             }
         }
     }
@@ -570,9 +569,9 @@ Singleton {
     function setWgWstunnel(on) {
         _startAction(["wg-wstunnel", on ? "up" : "down"], "vpn:wg-wstunnel");
     }
-    // busyKey "vpn:vpn-proxy" matches the synthetic row's uuid.
-    function setVpnProxy(on) {
-        _startAction(["vpn-proxy", on ? "up" : "down"], "vpn:vpn-proxy");
+    // busyKey "vpn:kill-switch" matches the synthetic row's uuid.
+    function setKillSwitch(on) {
+        _startAction(["kill-switch", on ? "up" : "down"], "vpn:kill-switch");
     }
 
     function _statusForCode(code) {

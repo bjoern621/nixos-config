@@ -23,6 +23,7 @@
     ../../modules/wireguard.nix
     ../../modules/dns.nix
     ../../modules/networkmanager-openvpn.nix
+    ../../modules/cyberghost-kill-switch/cyberghost-kill-switch.nix
     ../../modules/proxy-domains-only-via-vpn/proxy-domains-only-via-vpn.nix
     ../../modules/vpn-ipv6-leak-block.nix
     ../../modules/captive-portal.nix

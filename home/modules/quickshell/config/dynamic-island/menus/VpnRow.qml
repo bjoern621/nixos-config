@@ -5,7 +5,7 @@ import "../"
 import "../base"
 
 // VPN/WireGuard/tunnel row: one switch per tunnel. NM profiles go through nmcli
-// con up/down; Tailscale, WireGuard-over-wstunnel and the proxy tunnel each carry a
+// con up/down; Tailscale, WireGuard-over-wstunnel and the kill switch each carry a
 // flag routing to their own toggle.
 Item {
     id: root
@@ -57,8 +57,8 @@ Item {
                 NetworkService.setTailscale(!root.vpn.active);
             else if (root.vpn.wgWstunnel)
                 NetworkService.setWgWstunnel(!root.vpn.active);
-            else if (root.vpn.vpnProxy)
-                NetworkService.setVpnProxy(!root.vpn.active);
+            else if (root.vpn.killSwitch)
+                NetworkService.setKillSwitch(!root.vpn.active);
             else if (root.vpn.active)
                 NetworkService.vpnDown(root.vpn.uuid);
             else

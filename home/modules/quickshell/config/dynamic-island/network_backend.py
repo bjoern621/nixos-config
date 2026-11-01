@@ -160,14 +160,14 @@ def cmd_wg_wstunnel(argv: list[str]) -> int:
     return 0
 
 
-def cmd_vpn_proxy(argv: list[str]) -> int:
-    # vpn-proxy <up|down>
-    # OpenVPN unit NetworkManager leaves unmanaged. A polkit rule
-    # (modules/proxy-domains-only-via-vpn) lets the user start/stop it without sudo.
+def cmd_kill_switch(argv: list[str]) -> int:
+    # kill-switch <up|down>
+    # Arms or releases the CyberGhost kill switch. A polkit rule
+    # (modules/cyberghost-kill-switch) lets the user start/stop it without sudo.
     direction = argv[0]
     action = "start" if direction == "up" else "stop"
     _status("VPN_UP" if direction == "up" else "VPN_DOWN")
-    code, output = _run(["systemctl", action, "openvpn-vpn-proxy.service"])
+    code, output = _run(["systemctl", action, "cyberghost-kill-switch.service"])
     _echo(output)
     _connect_result(code, output)
     return 0
@@ -216,7 +216,7 @@ _COMMANDS = {
     "vpn": cmd_vpn,
     "tailscale": cmd_tailscale,
     "wg-wstunnel": cmd_wg_wstunnel,
-    "vpn-proxy": cmd_vpn_proxy,
+    "kill-switch": cmd_kill_switch,
     "radio": cmd_radio,
     "airplane": cmd_airplane,
     "modify": cmd_modify,
