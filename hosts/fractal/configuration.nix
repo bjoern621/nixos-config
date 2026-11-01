@@ -18,6 +18,7 @@
     ../../modules/rmv-xterm.nix
     ../../modules/task-manager.nix
     ../../modules/fancy-boot/fancy-boot.nix
+    ../../modules/boot-recovery.nix
     ../../modules/file-manager.nix
     ./ci-runner.nix
     ../../modules/printing.nix

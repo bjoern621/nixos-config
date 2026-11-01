@@ -14,6 +14,7 @@
     ../../modules/task-manager.nix
     ../../modules/power-management.nix
     ../../modules/fancy-boot/fancy-boot.nix
+    ../../modules/boot-recovery.nix
     ../../modules/file-manager.nix
     ../../modules/printing.nix
     ../../modules/scanning.nix
