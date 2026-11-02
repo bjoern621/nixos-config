@@ -448,15 +448,13 @@ Chrome picks them up on the extension's reload button in `chrome://extensions` o
 Module: `modules/vpn-kill-switch/vpn-kill-switch.nix`.
 
 Nothing to do by hand.
-Connecting a CyberGhost profile, a WireGuard profile or WireGuard over wstunnel arms the kill switch.
+Connecting any NetworkManager VPN or WireGuard profile, or WireGuard over wstunnel, arms the kill switch.
 While armed, it blocks the programs of logged-in users from reaching the internet outside the VPN.
+Traffic passes through the interface of whichever VPN is connected, so a new profile needs no edit.
 Disconnecting the VPN releases it.
 Switching to another VPN in the network menu keeps it armed, since the menu runs one VPN at a time.
 A connection that drops on its own leaves it armed and shows a notification.
 The **Kill-Switch** row in the network menu releases it by hand.
-
-A WireGuard profile passes the kill switch only through an interface named in `tunnelDevices`.
-NetworkManager names the interface after the imported file, so a file named `wg-<name>.conf` passes without an edit.
 
 ### eduroam
 

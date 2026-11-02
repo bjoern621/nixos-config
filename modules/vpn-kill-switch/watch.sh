@@ -1,7 +1,7 @@
-# Arms kill switch when NM VPN or WireGuard connection comes up.
+# Keeps TUNNEL_CHAIN in step with NM VPN and WireGuard connections.
+# Arms kill switch when one comes up.
 # Deliberate disconnect starts RELEASE_UNIT.
 # Any other drop cancels pending release, keeps kill switch armed and notifies.
-# Needs UNIT and RELEASE_UNIT in environment.
 
 # NMActiveConnectionState and NMActiveConnectionStateReason values.
 # Plugin VPNs and device connections like WireGuard report both alike.
@@ -32,6 +32,8 @@ while IFS=: read -r type path; do
   types[$path]=$type
 done < <(nmcli -t -f TYPE,ACTIVE-PATH connection show --active)
 
+sync_tunnels
+
 # Watcher restarted while tunnel up: no ACTIVATED event follows.
 if tunnel_up; then
   systemctl start "$UNIT"
@@ -49,6 +51,7 @@ busctl monitor --system --json=short \
     fi
     [[ $type == vpn || $type == wireguard ]] || continue
 
+    sync_tunnels || true
     if ((state == ACTIVATED)); then
       systemctl start "$UNIT" || true
     elif ((state == DEACTIVATED)) && armed; then
