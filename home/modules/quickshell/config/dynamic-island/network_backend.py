@@ -27,6 +27,12 @@ CMD_TIMEOUT = 45
 CODE_TIMEOUT = 124
 CODE_MISSING = 127
 
+# Full tunnels: NM connection types plus the wg-quick unit NetworkManager cannot host.
+# Tailscale stays outside, since it reaches the tailnet alone.
+TUNNEL_TYPES = ("vpn", "wireguard")
+WSTUNNEL = "wg-wstunnel"
+WSTUNNEL_UNIT = "wg-quick-wg-wstunnel.service"
+
 
 def _run(cmd: list[str]) -> tuple[int, str]:
     try:
@@ -154,7 +160,49 @@ def cmd_wg_wstunnel(argv: list[str]) -> int:
     direction = argv[0]
     action = "start" if direction == "up" else "stop"
     _status("VPN_UP" if direction == "up" else "VPN_DOWN")
-    code, output = _run(["systemctl", action, "wg-quick-wg-wstunnel.service"])
+    code, output = _run(["systemctl", action, WSTUNNEL_UNIT])
+    _echo(output)
+    _connect_result(code, output)
+    return 0
+
+
+# NM uuids of active full tunnels, plus WSTUNNEL while its unit runs.
+def _active_tunnels() -> list[str]:
+    tunnels = []
+    _code, output = _run(["nmcli", "-t", "-f", "UUID,TYPE", "connection", "show", "--active"])
+    for line in output.splitlines():
+        uuid, _, kind = line.partition(":")
+        if kind in TUNNEL_TYPES:
+            tunnels.append(uuid)
+    _code, output = _run(["systemctl", "is-active", WSTUNNEL_UNIT])
+    if output in ("active", "activating"):
+        tunnels.append(WSTUNNEL)
+    return tunnels
+
+
+def _set_tunnel(tunnel: str, up: bool) -> tuple[int, str]:
+    if tunnel == WSTUNNEL:
+        return _run(["systemctl", "start" if up else "stop", WSTUNNEL_UNIT])
+    return _run(["nmcli", "connection", "up" if up else "down", tunnel])
+
+
+def cmd_tunnel_up(argv: list[str]) -> int:
+    # tunnel-up <uuid|wg-wstunnel>
+    # One full tunnel at a time. The others go down first, so the new one dials
+    # out over the bare uplink. A tunnel dialed through another one breaks once
+    # that one closes. The kill switch (modules/vpn-kill-switch) stays armed
+    # across the gap.
+    target = argv[0]
+    _status("VPN_UP")
+    for tunnel in _active_tunnels():
+        if tunnel == target:
+            continue
+        code, output = _set_tunnel(tunnel, False)
+        _echo(output)
+        if code != 0:
+            _result("FAIL")
+            return 0
+    code, output = _set_tunnel(target, True)
     _echo(output)
     _connect_result(code, output)
     return 0
@@ -162,12 +210,12 @@ def cmd_wg_wstunnel(argv: list[str]) -> int:
 
 def cmd_kill_switch(argv: list[str]) -> int:
     # kill-switch <up|down>
-    # Arms or releases the CyberGhost kill switch. A polkit rule
-    # (modules/cyberghost-kill-switch) lets the user start/stop it without sudo.
+    # Arms or releases the VPN kill switch. A polkit rule
+    # (modules/vpn-kill-switch) lets the user start/stop it without sudo.
     direction = argv[0]
     action = "start" if direction == "up" else "stop"
     _status("VPN_UP" if direction == "up" else "VPN_DOWN")
-    code, output = _run(["systemctl", action, "cyberghost-kill-switch.service"])
+    code, output = _run(["systemctl", action, "vpn-kill-switch.service"])
     _echo(output)
     _connect_result(code, output)
     return 0
@@ -216,6 +264,7 @@ _COMMANDS = {
     "vpn": cmd_vpn,
     "tailscale": cmd_tailscale,
     "wg-wstunnel": cmd_wg_wstunnel,
+    "tunnel-up": cmd_tunnel_up,
     "kill-switch": cmd_kill_switch,
     "radio": cmd_radio,
     "airplane": cmd_airplane,

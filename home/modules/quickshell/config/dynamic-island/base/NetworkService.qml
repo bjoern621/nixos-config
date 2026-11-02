@@ -74,7 +74,7 @@ Singleton {
     property bool wgWstunnelAvailable: false
     property bool wgWstunnelUp: false
 
-    // CyberGhost kill switch, armed while its unit is active. Read and toggled like the
+    // VPN kill switch, armed while its unit is active. Read and toggled like the
     // wstunnel unit. No tunnel of its own, so the VPN indicators skip it.
     property bool killSwitchAvailable: false
     property bool killSwitchArmed: false
@@ -105,7 +105,7 @@ Singleton {
             list.push({
                 name: "Kill-Switch",
                 uuid: "kill-switch",
-                kind: "Nur über CyberGhost",
+                kind: "Nur über VPN",
                 active: killSwitchArmed,
                 killSwitch: true
             });
@@ -384,7 +384,7 @@ Singleton {
 
     Process {
         id: killSwitchProc
-        command: ["systemctl", "show", "-p", "LoadState", "-p", "ActiveState", "--value", "cyberghost-kill-switch.service"]
+        command: ["systemctl", "show", "-p", "LoadState", "-p", "ActiveState", "--value", "vpn-kill-switch.service"]
         stdout: StdioCollector {
             id: killSwitchOut
             onStreamFinished: {
@@ -553,8 +553,9 @@ Singleton {
     function wiredDisconnect(device) {
         _startAction(["device", "disconnect", device], "eth:" + device);
     }
+    // Takes every other full tunnel down first. Tailscale stays as it is.
     function vpnUp(uuid) {
-        _startAction(["vpn", "up", uuid], "vpn:" + uuid);
+        _startAction(["tunnel-up", uuid], "vpn:" + uuid);
     }
     function vpnDown(uuid) {
         _startAction(["vpn", "down", uuid], "vpn:" + uuid);
@@ -565,9 +566,13 @@ Singleton {
         _startAction(["tailscale", on ? "up" : "down"], "vpn:tailscale");
     }
     // Toggles the wg-quick unit through systemctl start/stop, which pulls the wstunnel
-    // carrier. busyKey "vpn:wg-wstunnel" matches the synthetic row's uuid.
+    // carrier. Up takes every other full tunnel down first, like vpnUp.
+    // busyKey "vpn:wg-wstunnel" matches the synthetic row's uuid.
     function setWgWstunnel(on) {
-        _startAction(["wg-wstunnel", on ? "up" : "down"], "vpn:wg-wstunnel");
+        if (on)
+            _startAction(["tunnel-up", "wg-wstunnel"], "vpn:wg-wstunnel");
+        else
+            _startAction(["wg-wstunnel", "down"], "vpn:wg-wstunnel");
     }
     // busyKey "vpn:kill-switch" matches the synthetic row's uuid.
     function setKillSwitch(on) {

@@ -9,7 +9,7 @@
 # Firewall lets tinyproxy out through tun-cyberghost alone.
 # VPN down: connect gets TCP reset, Chrome errors instantly, no DIRECT fallback.
 # VPN up: default route carries all traffic, embeds and links of listed sites included.
-# cyberghost-kill-switch.nix keeps that traffic in after unexpected drop.
+# vpn-kill-switch.nix keeps that traffic in after unexpected drop.
 # Domain names still resolve via normal DNS. Connections never leak.
 # Chrome policy lives here, not google-chrome.nix: PAC and proxy are one concern.
 #
