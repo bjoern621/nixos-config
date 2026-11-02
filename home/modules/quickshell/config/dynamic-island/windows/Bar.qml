@@ -446,6 +446,8 @@ Variants {
                     id: networkView
                     width: parent ? parent.width : 0
                     height: implicitHeight
+                    // Same budget as calendarView.
+                    maxHeight: root.screen.height - 48
                 }
             }
 
