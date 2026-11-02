@@ -84,14 +84,6 @@ Singleton {
     // through the matching CLI rather than `nmcli connection up/down`.
     readonly property var vpnConnections: {
         const list = _nmVpns.slice();
-        if (tailscaleAvailable)
-            list.push({
-                name: "Tailscale",
-                uuid: "tailscale",
-                kind: "Tailscale",
-                active: tailscaleUp,
-                tailscale: true
-            });
         if (wgWstunnelAvailable)
             list.push({
                 name: "Hamburg wstunnel",
@@ -101,11 +93,19 @@ Singleton {
                 active: wgWstunnelUp,
                 wgWstunnel: true
             });
+        if (tailscaleAvailable)
+            list.push({
+                name: "Tailscale",
+                uuid: "tailscale",
+                kind: "Tailscale",
+                active: tailscaleUp,
+                tailscale: true
+            });
         if (killSwitchAvailable)
             list.push({
                 name: "Kill-Switch",
                 uuid: "kill-switch",
-                kind: "Nur über VPN",
+                kind: "Sperrt Internet ohne VPN",
                 active: killSwitchArmed,
                 killSwitch: true
             });
