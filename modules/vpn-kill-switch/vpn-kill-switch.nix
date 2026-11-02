@@ -8,6 +8,7 @@
 # Blocks login users' traffic outside VPN tunnels while armed.
 # Any VPN tunnel up arms it: every NM vpn or wireguard connection, WireGuard over wstunnel.
 # Traffic passes through interface of each up tunnel, tracked in tunnelChain.
+# NM dispatcher records NM tunnel interfaces in stateDir, wstunnel unit hooks add its own.
 # Deliberate disconnect releases it, unless another tunnel comes up within releaseGraceSeconds.
 # Network menu switches tunnels by taking old one down first, so kill switch holds across switch.
 # Other drops (timeout, suspend, NM restart) keep it until reconnect or release in network menu.
@@ -27,6 +28,7 @@ let
   releaseUnit = "${unit}-release";
   chain = "vpn-kill-switch";
   tunnelChain = "vpn-kill-switch-tunnels";
+  stateDir = "/run/${unit}";
   jump = "OUTPUT -m owner --uid-owner 1000-60000 -j ${chain}";
   firewall = config.networking.firewall.package;
 
@@ -37,7 +39,8 @@ let
     WSTUNNEL_UNIT=${wstunnelUnit}
     WSTUNNEL_INTERFACE=${wstunnelInterface}
     TUNNEL_CHAIN=${tunnelChain}
-    LOCK_FILE=/run/${unit}.lock
+    STATE_DIR=${stateDir}
+    LOCK_FILE=${stateDir}.lock
     RELEASE_GRACE_SECONDS=${toString releaseGraceSeconds}
   '';
 
@@ -65,6 +68,7 @@ let
   ];
   release = script "vpn-kill-switch-release" ./release.sh [ pkgs.coreutils ];
   sync = script "vpn-kill-switch-sync" ./sync.sh [ ];
+  dispatcher = script "vpn-kill-switch-dispatcher" ./dispatcher.sh [ pkgs.coreutils ];
 in
 {
   # Chains always exist. Jump present only while armed, re-added after firewall reload.
@@ -95,6 +99,15 @@ in
       ip46tables -X ${tunnelChain} 2>/dev/null || true
     '';
   };
+
+  systemd.tmpfiles.rules = [ "d ${stateDir} 0755 root root -" ];
+
+  networking.networkmanager.dispatcherScripts = [
+    {
+      type = "basic";
+      source = lib.getExe dispatcher;
+    }
+  ];
 
   systemd.services.${unit} = {
     description = "Block login users' traffic outside VPN tunnels";

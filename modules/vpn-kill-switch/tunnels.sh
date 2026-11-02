@@ -12,12 +12,15 @@ armed() {
 }
 
 # Interface of each up tunnel, one per line.
-# A VPN plugin connection reports its tun device as IP-IFACE, not the uplink.
+# dispatcher.sh records them in STATE_DIR, one file per connection uuid.
+# Files of connections no longer active get skipped, e.g. after NetworkManager crashed.
 tunnel_interfaces() {
-  local uuid type
-  nmcli -t -f UUID,TYPE connection show --active | while IFS=: read -r uuid type; do
-    if [[ $type == vpn || $type == wireguard ]]; then
-      nmcli -g GENERAL.IP-IFACE connection show --active "$uuid" || true
+  local active file
+  active=$(nmcli -t -f UUID connection show --active || true)
+  for file in "$STATE_DIR"/*; do
+    [[ -f $file ]] || continue
+    if grep -qxF "$(basename "$file")" <<<"$active"; then
+      cat "$file"
     fi
   done
   case $(systemctl is-active "$WSTUNNEL_UNIT" || true) in
@@ -26,7 +29,7 @@ tunnel_interfaces() {
 }
 
 # Rewrites TUNNEL_CHAIN to accept exactly the up tunnel interfaces.
-# Lock keeps watcher, wstunnel hooks and firewall reload from interleaving rewrites.
+# Lock keeps dispatcher, wstunnel hooks and firewall reload from interleaving rewrites.
 sync_tunnels() (
   flock 9
   local interfaces interface ipt
