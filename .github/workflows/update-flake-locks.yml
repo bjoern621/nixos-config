@@ -34,7 +34,6 @@ jobs:
     outputs:
       pr-number: ${{ steps.cpr.outputs.pull-request-number }}
       pr-sha: ${{ steps.cpr.outputs.pull-request-head-sha }}
-      pr-operation: ${{ steps.cpr.outputs.pull-request-operation }}
     steps:
       - uses: actions/checkout@v4
 
@@ -70,7 +69,9 @@ jobs:
   build:
     needs: update-locks
     # always(): a skipped update-locks would skip this job too, build_main included.
-    if: always() && (inputs.build_main || needs.update-locks.outputs.pr-operation == 'created' || needs.update-locks.outputs.pr-operation == 'updated')
+    # A pull request whose pins did not change builds too:
+    # that retries its failed hosts, and create-pull-request has reset its BROKEN title.
+    if: always() && (inputs.build_main || needs.update-locks.outputs.pr-number != '')
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -195,7 +196,7 @@ jobs:
   merge:
     needs: [update-locks, build]
     # !cancelled(): a failed host must not stop the passing ones from landing.
-    if: ${{ !cancelled() && (needs.update-locks.outputs.pr-operation == 'created' || needs.update-locks.outputs.pr-operation == 'updated') }}
+    if: ${{ !cancelled() && needs.update-locks.outputs.pr-number != '' }}
     runs-on: ubuntu-latest
     steps:
       # Full history: land-built-hosts.sh diffs the pull request against origin/main.
