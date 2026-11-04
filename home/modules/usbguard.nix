@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
 
 # User-session half of USB device authorization. System half: modules/usbguard.nix.
 #
@@ -108,7 +103,7 @@ let
     }
   '';
 in
-lib.mkIf config.host.usbguard {
+{
   # Also puts the command on the lock process PATH, which is where the QML hook
   # resolves it from.
   home.packages = [ sessionPolicy ];

@@ -2,8 +2,8 @@ pragma Singleton
 
 import Quickshell
 
-// Hardware switches from host flake, set via env by quickshell.nix.
-// Unset env reads as laptop.
+// Hardware facts set via env by Home Manager modules a host imports.
+// Unset env reads as absent.
 Singleton {
-    readonly property bool hasBattery: Quickshell.env("QUICKSHELL_HAS_BATTERY") !== "false"
+    readonly property bool hasBattery: Quickshell.env("QUICKSHELL_HAS_BATTERY") === "true"
 }

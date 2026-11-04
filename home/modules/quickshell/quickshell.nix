@@ -10,17 +10,6 @@
 let
   qs = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
-  # Read by PowerController.qml; an action missing here never reaches the menu.
-  powerActions = lib.concatStringsSep "," (
-    [
-      "shutdown"
-      "reboot"
-    ]
-    ++ lib.optional config.host.sessionLock "lock"
-    ++ [ "logout" ]
-    ++ lib.optional config.host.hibernate "hibernate"
-  );
-
   # keyring + secretstorage: Spotify API.
   # pygobject3: calendar_events.py, against the typelibs in giDeps below.
   qsPython = pkgs.python3.withPackages (ps: [
@@ -67,18 +56,6 @@ let
     exec ${qsPython}/bin/python3 "$HOME/.config/quickshell/spotify_api.py" "$@"
   '';
 
-  lockShell = "${config.home.homeDirectory}/.config/quickshell-lock/shell.qml";
-
-  # Session-lock trigger. Engages the lock on the resident quickshell-lock
-  # instance (systemd user service below) over IPC, rather than spawning a fresh
-  # Quickshell. The resident instance is already Wayland-connected, so locking is
-  # an instant state flip; cold-spawning during the suspend/hibernate window used
-  # to race the freeze and die on resume. Idempotent: the IPC handler ignores a
-  # lock call when already locked, so repeated lock-session signals do not stack.
-  quickshellLock = pkgs.writeShellScriptBin "quickshell-lock" ''
-    exec ${qsWrapped}/bin/quickshell ipc -p "${lockShell}" call lock lock
-  '';
-
   # Emoji dataset for the EmojiPicker (Super+.). Built from Unicode's
   # emoji-test.txt + CLDR annotations (en + de) at home-manager rebuild,
   # so updating nixpkgs auto-bumps the dataset.
@@ -101,22 +78,26 @@ in
   # NOTE: This module is paired with modules/quickshell.nix
   # which contains system-level dependencies like UPower.
 
+  imports = [ ./options.nix ];
+
+  quickshell.package = qsWrapped;
+
+  # Read by PowerController.qml; an action missing here never reaches the menu.
+  quickshell.powerActions = [
+    "shutdown"
+    "reboot"
+    "logout"
+  ];
+
   home.packages = [
     qsWrapped # quickshell + private PATH/fonts (imagemagick, python3+keyring, font-awesome, inter)
     spotifyCli # quickshell-spotify: user-facing CLI for setup/auth/clear
-  ]
-  ++ lib.optional config.host.sessionLock quickshellLock; # quickshell-lock: launches the session lock (config/lock)
+  ];
 
   # Link quickshell config to ~/.config/quickshell via an out-of-store symlink
   # so that Quickshell's hot reload can detect file changes directly in the repo.
   xdg.configFile."quickshell".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/nixos-config/home/modules/quickshell/config/dynamic-island";
-
-  # Separate config tree for the session lock, so it runs as its own Quickshell
-  # process (launched by quickshell-lock) instead of inside the bar instance.
-  xdg.configFile."quickshell-lock" = lib.mkIf config.host.sessionLock {
-    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/nixos-config/home/modules/quickshell/config/lock";
-  };
 
   # Autostart quickshell as a systemd user service (UWSM-managed session)
   systemd.user.services.quickshell = {
@@ -144,35 +125,9 @@ in
         "QT_QPA_PLATFORMTHEME=gtk3"
         "QS_ICON_THEME=Papirus-Fallback"
         "QUICKSHELL_EMOJI_DATA=${emojiData}"
-        "QUICKSHELL_POWER_ACTIONS=${powerActions}"
-        "QUICKSHELL_HAS_BATTERY=${lib.boolToString config.host.battery}"
+        "QUICKSHELL_POWER_ACTIONS=${lib.concatStringsSep "," config.quickshell.powerActions}"
         "QT_LOGGING_RULES=quickshell.dbus.properties.warning=false"
       ];
-    };
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
-  };
-
-  # Resident session-lock instance. Runs the lock config (config/lock) as its own
-  # long-lived Quickshell process, separate from the bar so a bar reload or crash
-  # cannot affect the lock and vice versa. It sits idle (locked = false, no
-  # surfaces) until the quickshell-lock command flips it via IPC.
-  #
-  # Restart=on-failure recovers an idle crash so the lock is always available. A
-  # crash while locked is held by the compositor (the session stays locked, as
-  # with any session-lock client), so a restart cannot bypass it.
-  systemd.user.services.quickshell-lock = lib.mkIf config.host.sessionLock {
-    Unit = {
-      Description = "Quickshell session lock (resident)";
-      PartOf = [ "graphical-session.target" ];
-      After = [ "graphical-session.target" ];
-    };
-    Service = {
-      ExecStart = "${qsWrapped}/bin/quickshell -p ${lockShell}";
-      Restart = "on-failure";
-      RestartSec = 1;
-      Environment = [ "QT_QPA_PLATFORMTHEME=gtk3" ];
     };
     Install = {
       WantedBy = [ "graphical-session.target" ];

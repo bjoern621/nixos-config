@@ -86,25 +86,7 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.backupFileExtension = "backup";
-          home-manager.users.bjoern = {
-            imports = [
-              ../../home/bjoern.nix
-              ../../home/modules/gaming.nix
-              ../../home/modules/gpu-screen-recorder.nix
-            ];
-
-            # Switches declared in home/host.nix. No lock and no sleep on a desk at home;
-            # the USBGuard daemon stays off this host; the monitors run at scale 1;
-            # a desktop has no battery; VSCode stays closed until opened and workspace 2 tiles like any other.
-            host = {
-              sessionLock = false;
-              hibernate = false;
-              usbguard = false;
-              hidpi = false;
-              battery = false;
-              vscodeAutostart = false;
-            };
-          };
+          home-manager.users.bjoern = import ./home.nix;
           home-manager.extraSpecialArgs = { inherit inputs customLib; };
         }
       ];

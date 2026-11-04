@@ -7,7 +7,6 @@
 
 {
   imports = [
-    ./host.nix
     ./modules/spotify.nix
     ./modules/discord.nix
     ./modules/networkmanager.nix
@@ -42,7 +41,6 @@
     ./modules/scanning.nix
     ./modules/firewall-viewer.nix
     ./modules/screen-sharing.nix
-    ./modules/usbguard.nix
     ./modules/handy.nix
     ./modules/gnome-text-editor/gnome-text-editor.nix
   ];

@@ -89,12 +89,7 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.backupFileExtension = "backup";
-          home-manager.users.bjoern = {
-            imports = [
-              ../../home/bjoern.nix
-              ../../home/modules/dbeaver.nix
-            ];
-          };
+          home-manager.users.bjoern = import ./home.nix;
           home-manager.extraSpecialArgs = { inherit inputs customLib; };
         }
       ];

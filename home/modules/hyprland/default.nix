@@ -29,13 +29,11 @@
     ./settings/default.nix
     ./mouse-accel.nix
     ./screenshot.nix
-    ./exclusive-workspace.nix
     ./smart-gaps.nix
     ./floating-size.nix
     ./wallpaper-chooser.nix
     ./theme-switcher.nix
     ./hdr-toggle.nix
-    ./hypridle.nix
   ];
 
   # Auto-start Hyprland uwsm after login

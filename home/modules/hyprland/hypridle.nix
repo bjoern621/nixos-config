@@ -1,16 +1,14 @@
-{ config, ... }:
-
 {
   # Lock the session before the machine sleeps (suspend/hibernate), so resume
   # requires a password. logind triggers hibernate on lid close
   # (HandleLidSwitch=hibernate in modules/hibernate.nix); hypridle hooks the
   # pre-sleep signal and engages the resident Quickshell session lock
-  # (config/lock, run as the quickshell-lock service from quickshell.nix).
+  # (config/lock, run as the quickshell-lock service from quickshell/session-lock.nix).
   #
   # No DPMS commands here on purpose: `dpms off` is a known Hyprland crash
   # trigger on AMD GPUs, and this machine is AMD.
   services.hypridle = {
-    enable = config.host.sessionLock;
+    enable = true;
     settings.general = {
       # Manual lock path: loginctl lock-session (Super+L) emits the Lock signal,
       # which hypridle turns into quickshell-lock. quickshell-lock is an IPC call

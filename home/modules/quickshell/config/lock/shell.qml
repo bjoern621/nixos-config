@@ -3,7 +3,7 @@ import Quickshell.Wayland
 import Quickshell.Io
 
 // Session lock entry point. Runs as a resident process (systemd user service
-// quickshell-lock, see quickshell.nix), started at login and kept alive across
+// quickshell-lock, see session-lock.nix), started at login and kept alive across
 // lock cycles. It sits idle with locked = false, which creates no lock surfaces
 // and therefore no Wayland layer surfaces. Locking is a state flip driven over
 // IPC by the `quickshell-lock` command.

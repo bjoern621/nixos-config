@@ -1,9 +1,13 @@
-{ config, lib, ... }:
-
 {
-  # Workspace 2 reserved for VSCode only where VSCode autostarts there.
-  wayland.windowManager.hyprland.extraLuaFiles."rules.10-exclusive-workspace" =
-    lib.mkIf config.host.vscodeAutostart {
-      content = ./exclusive-workspace.lua;
-    };
+  # XDG autostart for same reason as autostart.nix.
+  xdg.configFile."autostart/code.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Visual Studio Code
+    Exec=uwsm app -- code.desktop
+  '';
+
+  # Workspace 2 reserved for VSCode.
+  wayland.windowManager.hyprland.extraLuaFiles."rules.10-exclusive-workspace".content =
+    ./exclusive-workspace.lua;
 }

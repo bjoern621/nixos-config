@@ -29,7 +29,8 @@ List the modules the host imports, from any checkout or on GitHub:
 grep -o 'modules/[^ ]*\.nix' hosts/<host>/configuration.nix
 ```
 
-Desktop hosts also get the Home Manager modules in `home/bjoern.nix`; their sections say so.
+Desktop hosts also get the Home Manager modules in `hosts/<host>/home.nix` and `home/bjoern.nix`.
+Their sections say so.
 
 Read the [module sections](#module-sections) for every module on that list before starting.
 Some of them need work before the installer boots, such as the firmware settings for Secure Boot.

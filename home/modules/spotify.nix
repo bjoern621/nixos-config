@@ -6,11 +6,13 @@
 }:
 
 {
-  home.packages = [
-    # Spotify has a min width of 800px. On the laptop (eDP-1, scale 2) each
-    # tiled half is 724 logical px wide. Scale 0.905 * 800 = 724,
-    # so Spotify fits side-by-side with Discord.
-    #
+  options.spotify.commandLineArgs = lib.mkOption {
+    type = lib.types.str;
+    default = "";
+    description = "Flags passed to Spotify at launch.";
+  };
+
+  config.home.packages = [
     # Version pin: Spotify 1.2.86 (Chrome/144 CEF) renders blurry text under
     # XWayland at scale 2. 1.2.84 is the last crisp release. Pin src/version
     # here so `sysconf-update` can't pull 1.2.86 back in. Remove the pin once a
@@ -23,9 +25,9 @@
       };
       postInstall =
         (old.postInstall or "")
-        + lib.optionalString config.host.hidpi ''
+        + lib.optionalString (config.spotify.commandLineArgs != "") ''
           wrapProgram $out/bin/spotify \
-            --add-flags "--force-device-scale-factor=0.905"
+            --add-flags "${config.spotify.commandLineArgs}"
         '';
     }))
   ];

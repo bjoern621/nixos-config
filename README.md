@@ -169,11 +169,13 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │   │   ├── flake.nix
 │   │   ├── flake.lock
 │   │   ├── configuration.nix
+│   │   ├── home.nix                # Home Manager modules of this host
 │   │   └── hardware-configuration.nix
 │   ├── fractal/                    # Gaming desktop, full input set
 │   │   ├── flake.nix
 │   │   ├── flake.lock
 │   │   ├── configuration.nix
+│   │   ├── home.nix                # Home Manager modules of this host
 │   │   └── hardware-configuration.nix
 │   ├── homelab/                    # Server, nixpkgs + home-manager only
 │   │   ├── flake.nix
@@ -192,8 +194,7 @@ desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
 │       └── hardware-configuration.nix
 ├── modules/                        # Shared system-level modules
 ├── home/                           # Shared Home Manager configs
-│   ├── bjoern.nix                  # User config for the desktop hosts
-│   ├── host.nix                    # Switches a desktop host flips on it
+│   ├── bjoern.nix                  # User config shared by the desktop hosts
 │   ├── ops.nix                     # User config for the server hosts
 │   └── modules/
 └── README.md
