@@ -1,10 +1,12 @@
 name: Update flake locks (stable)
 
 # Pins each host flake.lock to github input revisions at least DELAY_DAYS old,
-# opens a PR, and merges the pins of every host in the build matrix that builds against them.
-# A host with a failed build keeps its old pin and the run stays red.
-# The next run offers that host the update again.
-# The merge lands the new pins on main, and each host picks them up on its next sysconf-auto-pull.
+# opens a PR, and lands the pins of every host in the build matrix that builds against them.
+# With every host built, the PR merges.
+# With a failed host, the other pins go straight to main and the run stays red.
+# The PR stays open with the failed hosts, marked BROKEN with a link to the run,
+# and the next run updates the same branch and retries.
+# Landing puts the new pins on main, and each host picks them up on its next sysconf-auto-pull.
 # The hosts never compute their own revisions,
 # so this is the single place updates enter the system.
 
@@ -192,11 +194,11 @@ jobs:
 
   merge:
     needs: [update-locks, build]
-    # !cancelled(): a failed host must not skip the merge of the passing ones.
+    # !cancelled(): a failed host must not stop the passing ones from landing.
     if: ${{ !cancelled() && (needs.update-locks.outputs.pr-operation == 'created' || needs.update-locks.outputs.pr-operation == 'updated') }}
     runs-on: ubuntu-latest
     steps:
-      # Full history: the hold-back script diffs the pull request against origin/main.
+      # Full history: land-built-hosts.sh diffs the pull request against origin/main.
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.update-locks.outputs.pr-sha }}
@@ -208,14 +210,11 @@ jobs:
           path: built
           merge-multiple: true
 
-      - name: Hold back hosts without a passing build
-        id: hold-back
-        run: bash .github/scripts/hold-back-unbuilt-hosts.sh built
-
       # Merges without waiting on branch protection checks,
       # which the build job above has already stood in for.
-      - name: Merge pull request
-        if: steps.hold-back.outputs.has-changes == 'true'
+      - name: Land the hosts that built
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh pr merge --merge -R "${{ github.repository }}" "${{ needs.update-locks.outputs.pr-number }}"
+          PR_NUMBER: ${{ needs.update-locks.outputs.pr-number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/land-built-hosts.sh built
