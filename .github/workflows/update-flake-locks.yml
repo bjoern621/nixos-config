@@ -1,8 +1,9 @@
 name: Update flake locks (stable)
 
 # Pins each host flake.lock to github input revisions at least DELAY_DAYS old,
-# opens a PR, and merges it once every host in the build matrix builds against the new pins.
-# A failed build leaves the PR open, and the next run updates the same branch and retries.
+# opens a PR, and merges the pins of every host in the build matrix that builds against them.
+# A host with a failed build keeps its old pin and the run stays red.
+# The next run offers that host the update again.
 # The merge lands the new pins on main, and each host picks them up on its next sysconf-auto-pull.
 # The hosts never compute their own revisions,
 # so this is the single place updates enter the system.
@@ -143,6 +144,18 @@ jobs:
             "./hosts/${{ matrix.dir }}#nixosConfigurations.${{ matrix.attr }}.config.system.build.toplevel")
           echo "out=$out" >> "$GITHUB_OUTPUT"
 
+      # Matrix jobs share no outputs, so the merge job reads one artifact per passing host.
+      - name: Record ${{ matrix.dir }} as built
+        env:
+          OUT: ${{ steps.build.outputs.out }}
+        run: echo "$OUT" > "$RUNNER_TEMP/${{ matrix.dir }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: built-${{ matrix.dir }}
+          path: ${{ runner.temp }}/${{ matrix.dir }}
+          retention-days: 1
+
       # Hosts pull from system cache (modules/attic-pull-system.nix).
       # Path missing upstream builds once here.
       # pi-4b-hh lacks RAM for some of them, grafana among them.
@@ -179,11 +192,30 @@ jobs:
 
   merge:
     needs: [update-locks, build]
+    # !cancelled(): a failed host must not skip the merge of the passing ones.
+    if: ${{ !cancelled() && (needs.update-locks.outputs.pr-operation == 'created' || needs.update-locks.outputs.pr-operation == 'updated') }}
     runs-on: ubuntu-latest
     steps:
+      # Full history: the hold-back script diffs the pull request against origin/main.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.update-locks.outputs.pr-sha }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: built-*
+          path: built
+          merge-multiple: true
+
+      - name: Hold back hosts without a passing build
+        id: hold-back
+        run: bash .github/scripts/hold-back-unbuilt-hosts.sh built
+
       # Merges without waiting on branch protection checks,
       # which the build job above has already stood in for.
       - name: Merge pull request
+        if: steps.hold-back.outputs.has-changes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh pr merge --merge -R "${{ github.repository }}" "${{ needs.update-locks.outputs.pr-number }}"
