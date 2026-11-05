@@ -1384,7 +1384,7 @@
     {
       "type": "timeseries",
       "title": "Model tokens per hour",
-      "description": "Tokens per hour by kind. Cache reads dwarf the rest in a long conversation. Input and output count against the subscription.",
+      "description": "Tokens per hour by kind. Cache reads dwarf the rest in a long conversation. Each kind bills at its own API rate.",
       "datasource": {
         "type": "victoriametrics-metrics-datasource",
         "uid": "victoriametrics"
