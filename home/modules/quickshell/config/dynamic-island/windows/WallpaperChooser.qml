@@ -315,7 +315,9 @@ Scope {
 
                     // Fractional while gliding, so every card rides the lens between two selections.
                     property real scrollPos: chooserScope.scrollTarget
+                    // open() moves the selection before chooserVisible, so the strip arrives in place.
                     SquishBehavior on scrollPos {
+                        enabled: chooserScope.chooserVisible
                         duration: 250
                     }
 
