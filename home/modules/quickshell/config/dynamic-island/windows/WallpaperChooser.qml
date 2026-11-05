@@ -13,6 +13,8 @@ Scope {
     property int previousWorkspaceId: -1
     property url originalWallpaper: ""
     property int currentIndex: 0
+    // Wheel delta short of a full notch (120), since touchpads send a notch in small parts.
+    property real pendingWheelDelta: 0
     // currentIndex plus whole laps of the ring, so the strip crosses the list's seam the short way.
     property int scrollTarget: 0
     property var wallpaperList: []
@@ -159,6 +161,14 @@ Scope {
             previewCard(wrapIndex(chooserScope.currentIndex + step));
     }
 
+    function scrollWheel(angleDeltaY) {
+        pendingWheelDelta += angleDeltaY;
+        const notches = Math.trunc(pendingWheelDelta / 120);
+        pendingWheelDelta -= notches * 120;
+        if (notches !== 0)
+            navigate(-notches);
+    }
+
     function moveSelection(idx) {
         chooserScope.scrollTarget += ringDistance(idx - chooserScope.scrollTarget);
         chooserScope.currentIndex = idx;
@@ -295,6 +305,11 @@ Scope {
             Keys.onReturnPressed: chooserScope.apply()
             Keys.onLeftPressed: chooserScope.navigate(-1)
             Keys.onRightPressed: chooserScope.navigate(1)
+
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => chooserScope.scrollWheel(event.angleDelta.y)
+            }
 
             // Absorb background clicks so they don't pass through the layer surface
             MouseArea {
