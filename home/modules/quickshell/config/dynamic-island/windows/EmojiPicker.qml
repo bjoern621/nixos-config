@@ -222,7 +222,7 @@ Scope {
             anchors.fill: parent
             showing: emojiScope.emojiVisible
             searchText: emojiScope.searchText
-            placeholder: "Emoji suchen..."
+            placeholder: "Emoji oder Zeichen suchen..."
             // Extra gutter width so all gridCols columns survive next to the bar.
             panelWidth: emojiScope.cellSize * emojiScope.gridCols + 2 * Spacing.spacing12 + Spacing.scrollGutter
             contentMaxHeight: emojiScope.maxContentHeight
@@ -271,6 +271,7 @@ Scope {
                         Text {
                             anchors.centerIn: parent
                             text: modelData.c
+                            color: Colors.textColor
                             font.pixelSize: Typography.fontSize24
                         }
 
@@ -342,6 +343,7 @@ Scope {
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData.icon
+                                color: Colors.textColor
                                 font.pixelSize: Typography.fontSize20
                                 opacity: catCell.active ? 1.0 : 0.7
                             }

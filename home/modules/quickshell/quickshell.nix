@@ -57,8 +57,8 @@ let
   '';
 
   # Emoji dataset for the EmojiPicker (Super+.). Built from Unicode's
-  # emoji-test.txt + CLDR annotations (en + de) at home-manager rebuild,
-  # so updating nixpkgs auto-bumps the dataset.
+  # emoji-test.txt + UnicodeData.txt + Blocks.txt + CLDR annotations (en + de)
+  # at home-manager rebuild, so updating nixpkgs auto-bumps the dataset.
   emojiData =
     pkgs.runCommand "quickshell-emoji-data.json"
       {
@@ -67,6 +67,8 @@ let
       ''
         python3 ${./gen-emoji.py} \
           ${pkgs.unicode-emoji}/share/unicode/emoji/emoji-test.txt \
+          ${pkgs.unicode-character-database}/share/unicode/UnicodeData.txt \
+          ${pkgs.unicode-character-database}/share/unicode/Blocks.txt \
           ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/en.xml \
           ${pkgs.cldr-annotations}/share/unicode/cldr/common/annotations/de.xml \
           > $out
