@@ -13,11 +13,21 @@ Scope {
     property int previousWorkspaceId: -1
     property url originalWallpaper: ""
     property int currentIndex: 0
+    // currentIndex plus whole laps of the ring, so the strip crosses the list's seam the short way.
+    property int scrollTarget: 0
     property var wallpaperList: []
 
-    readonly property int cardWidth: 200
-    readonly property int cardHeight: 130
-    readonly property int cardSpacing: Spacing.spacing12
+    readonly property real cardHeightRatio: 0.41
+    readonly property real cardAspect: 0.365
+    // chooserWindow.height holds a placeholder while unmapped.
+    readonly property int cardHeight: Math.round((chooserWindow.screen?.height ?? chooserWindow.height) * cardHeightRatio)
+    readonly property int cardWidth: Math.round(cardHeight * cardAspect)
+    // Sized for the tallest screen, so moving the chooser between monitors decodes nothing again.
+    // Floor applies while Quickshell.screens is empty: sourceSize 0 decodes the originals at full size.
+    readonly property int thumbnailHeight: Math.round(Quickshell.screens.reduce((tallest, s) => Math.max(tallest, s.height), 1080) * cardHeightRatio)
+    readonly property int cardSpacing: Spacing.spacing8
+    // Distance from center, in cards, at which a card drops to half size.
+    readonly property real lensFalloff: 5.5
 
     function focusedScreen() {
         const mon = Hyprland.focusedMonitor;
@@ -29,6 +39,33 @@ Scope {
             }
         }
         return null;
+    }
+
+    function wrapIndex(i) {
+        const n = wallpaperList.length;
+        return ((i % n) + n) % n;
+    }
+
+    // Shortest signed way around the ring.
+    function ringDistance(dist) {
+        const n = wallpaperList.length;
+        return wrapIndex(dist + n / 2) - n / 2;
+    }
+
+    // Scale of a card `dist` cards away from center, 1 at center.
+    function lensScale(dist) {
+        return 1 / (1 + (dist / lensFalloff) * (dist / lensFalloff));
+    }
+
+    // Integral of lensScale, so the gaps between cards shrink with the cards.
+    // Pixels from center to the card's center.
+    function lensOffset(dist) {
+        return (cardWidth + cardSpacing) * lensFalloff * Math.atan(dist / lensFalloff);
+    }
+
+    function wallpaperName(path) {
+        const parts = path.split("/");
+        return parts[parts.length - 1].replace(/\.[^.]+$/, "");
     }
 
     function open() {
@@ -43,7 +80,7 @@ Scope {
         const currentPath = Globals.wallpaperPath.toString().replace("file://", "");
         for (let i = 0; i < wallpaperList.length; i++) {
             if (wallpaperList[i] === currentPath) {
-                currentIndex = i;
+                moveSelection(i);
                 break;
             }
         }
@@ -83,20 +120,20 @@ Scope {
         }
     }
 
-    function navigateLeft() {
-        if (chooserScope.currentIndex > 0)
-            previewCard(chooserScope.currentIndex - 1);
+    function navigate(step) {
+        if (chooserScope.wallpaperList.length > 0)
+            previewCard(wrapIndex(chooserScope.currentIndex + step));
     }
 
-    function navigateRight() {
-        if (chooserScope.currentIndex < chooserScope.wallpaperList.length - 1)
-            previewCard(chooserScope.currentIndex + 1);
+    function moveSelection(idx) {
+        chooserScope.scrollTarget += ringDistance(idx - chooserScope.scrollTarget);
+        chooserScope.currentIndex = idx;
     }
 
     function previewCard(idx) {
         if (idx < 0 || idx >= chooserScope.wallpaperList.length)
             return;
-        chooserScope.currentIndex = idx;
+        moveSelection(idx);
 
         const path = chooserScope.wallpaperList[idx];
 
@@ -191,224 +228,148 @@ Scope {
 
             Keys.onEscapePressed: chooserScope.cancel()
             Keys.onReturnPressed: chooserScope.apply()
-            Keys.onLeftPressed: chooserScope.navigateLeft()
-            Keys.onRightPressed: chooserScope.navigateRight()
+            Keys.onLeftPressed: chooserScope.navigate(-1)
+            Keys.onRightPressed: chooserScope.navigate(1)
 
             // Absorb background clicks so they don't pass through the layer surface
             MouseArea {
                 anchors.fill: parent
             }
 
-            // Bottom-anchored carousel
+            // Lens strip over the middle of the screen
             PopReveal {
                 id: carouselReveal
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: Spacing.spacing40
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: carouselWrapper.width
-                height: carouselWrapper.height
+                anchors.fill: parent
                 showing: chooserScope.chooserVisible
-                transformOriginValue: Item.Bottom
+                transformOriginValue: Item.Center
                 slideOffset: -Spacing.spacing16
 
                 Item {
-                    id: carouselWrapper
-                    width: carouselContent.width
-                    height: carouselContent.height
+                    id: strip
+                    anchors.fill: parent
 
-                    // Absorb clicks so they don't reach the background dismiss TapHandler
-                    MouseArea {
-                        anchors.fill: parent
+                    // Fractional while gliding, so every card rides the lens between two selections.
+                    property real scrollPos: chooserScope.scrollTarget
+                    SquishBehavior on scrollPos {
+                        duration: 250
                     }
 
-                    Column {
-                        id: carouselContent
-                        spacing: Spacing.spacing16
+                    Repeater {
+                        model: chooserScope.wallpaperList
 
-                        // Carousel row
                         Item {
-                            id: carouselViewport
-                            width: Math.min(fullArea.width - 2 * Spacing.spacing40, (chooserScope.cardWidth + chooserScope.cardSpacing) * 7)
-                            height: chooserScope.cardHeight + 60 // extra space for arc drop + label
-                            clip: true
+                            id: card
+                            required property int index
+                            required property var modelData
 
-                            Item {
-                                id: carouselRow
-                                // Center the current card in the viewport
-                                x: (carouselViewport.width / 2) - (chooserScope.currentIndex * (chooserScope.cardWidth + chooserScope.cardSpacing)) - (chooserScope.cardWidth / 2)
-                                y: 0
-                                width: chooserScope.wallpaperList.length * (chooserScope.cardWidth + chooserScope.cardSpacing)
-                                height: parent.height
+                            readonly property real distFromCenter: chooserScope.ringDistance(index - strip.scrollPos)
+                            readonly property real centerOffset: chooserScope.lensOffset(distFromCenter)
+                            readonly property real lensScale: chooserScope.lensScale(distFromCenter)
+                            readonly property bool isSelected: index === chooserScope.currentIndex
 
-                                Behavior on x {
-                                    NumberAnimation {
-                                        duration: 250
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
+                            x: (strip.width - width) / 2 + centerOffset
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: chooserScope.cardWidth
+                            height: chooserScope.cardHeight
+                            scale: lensScale
 
-                                Repeater {
-                                    model: chooserScope.wallpaperList
+                            // Fades across the last card width before the screen edge.
+                            opacity: Math.max(0, Math.min(1, (strip.width / 2 - Math.abs(centerOffset)) / (width * lensScale)))
+                            visible: opacity > 0
 
-                                    Item {
-                                        id: card
-                                        required property int index
-                                        required property var modelData
+                            Rectangle {
+                                id: cardBg
+                                anchors.fill: parent
+                                color: Colors.pillBackground
+                                // Neo: visible ink border, thick accent when selected.
+                                border.width: card.isSelected ? (Shape.usesBlur ? 2 : Shape.borderWidth) : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
+                                border.color: card.isSelected ? Colors.accentColor : cardMouse.containsMouse ? Colors.pillBorder : (Shape.usesBlur ? Qt.rgba(1, 1, 1, 0.1) : Colors.pillBorder)
 
-                                        property real distFromCenter: index - chooserScope.currentIndex
-                                        property bool isSelected: index === chooserScope.currentIndex
+                                scale: cardMouse.pressed ? 0.97 : 1.0
+                                SquishBehavior on scale {}
 
-                                        // Arc: parabolic vertical drop at edges
-                                        property real arcY: distFromCenter * distFromCenter * 6
+                                Image {
+                                    anchors.fill: parent
+                                    anchors.margins: cardBg.border.width
+                                    source: "file://" + card.modelData
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                    sourceSize: Qt.size(chooserScope.thumbnailHeight * chooserScope.cardAspect, chooserScope.thumbnailHeight)
 
-                                        // Slight rotation toward center
-                                        property real arcRotation: distFromCenter * -2.5
-
-                                        // Scale: center is largest
-                                        property real cardScale: {
-                                            const base = Math.max(0.7, 1.0 - Math.abs(distFromCenter) * 0.06);
-                                            return cardMouse.pressed ? base * 0.95 : base;
-                                        }
-
-                                        // Opacity: edges fade
-                                        property real cardOpacity: Math.max(0.3, 1.0 - Math.abs(distFromCenter) * 0.12)
-
-                                        x: index * (chooserScope.cardWidth + chooserScope.cardSpacing)
-                                        y: arcY
-                                        width: chooserScope.cardWidth
-                                        height: chooserScope.cardHeight + 28 // thumbnail + label
-
-                                        scale: cardScale
-                                        opacity: cardOpacity
-                                        z: 100 - Math.abs(distFromCenter)
-
-                                        transform: Rotation {
-                                            angle: card.arcRotation
-                                            origin.x: card.width / 2
-                                            origin.y: card.height
-                                        }
-
-                                        Behavior on y {
-                                            NumberAnimation {
-                                                duration: 250
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        Behavior on opacity {
-                                            NumberAnimation {
-                                                duration: 200
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        SquishBehavior on scale {}
-
-                                        // Card visual
-                                        Rectangle {
-                                            id: cardBg
-                                            anchors.top: parent.top
-                                            width: chooserScope.cardWidth
-                                            height: chooserScope.cardHeight
-                                            radius: Spacing.spacing8
-                                            color: Colors.pillBackground
-                                            // Neo: visible ink border, thick accent when selected.
-                                            border.width: card.isSelected ? (Shape.usesBlur ? 2 : Shape.borderWidth) : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
-                                            border.color: card.isSelected ? Colors.accentColor : cardMouse.containsMouse ? Colors.pillBorder : (Shape.usesBlur ? Qt.rgba(1, 1, 1, 0.1) : Colors.pillBorder)
-
-                                            Rectangle {
-                                                anchors.fill: parent
-                                                anchors.margins: cardBg.border.width
-                                                radius: cardBg.radius - cardBg.border.width
-                                                color: "transparent"
-                                                clip: true
-                                                layer.enabled: true
-
-                                                Image {
-                                                    anchors.fill: parent
-                                                    source: "file://" + modelData
-                                                    fillMode: Image.PreserveAspectCrop
-                                                    asynchronous: true
-                                                    sourceSize: Qt.size(chooserScope.cardWidth * 2, chooserScope.cardHeight * 2)
-
-                                                    opacity: status === Image.Ready ? 1 : 0
-                                                    Behavior on opacity {
-                                                        NumberAnimation {
-                                                            duration: 200
-                                                            easing.type: Easing.OutCubic
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        // Wallpaper name label
-                                        Text {
-                                            anchors.top: cardBg.bottom
-                                            anchors.topMargin: Spacing.spacing4
-                                            anchors.horizontalCenter: cardBg.horizontalCenter
-                                            width: chooserScope.cardWidth - Spacing.spacing8
-                                            text: {
-                                                const parts = modelData.split("/");
-                                                const filename = parts[parts.length - 1];
-                                                return filename.replace(/\.[^.]+$/, "");
-                                            }
-                                            font.family: Typography.fontFamily
-                                            font.pixelSize: Typography.fontSize12
-                                            font.weight: card.isSelected ? Font.Bold : Font.Normal
-                                            color: card.isSelected ? Colors.textColor : Colors.textColorMuted
-                                            horizontalAlignment: Text.AlignHCenter
-                                            elide: Text.ElideRight
-                                        }
-
-                                        MouseArea {
-                                            id: cardMouse
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: chooserScope.previewCard(card.index)
+                                    opacity: status === Image.Ready ? 1 : 0
+                                    Behavior on opacity {
+                                        NumberAnimation {
+                                            duration: 200
+                                            easing.type: Easing.OutCubic
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        // Button row
-                        Row {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: Spacing.spacing12
-
-                            // Wallpaper hinzufügen (open folder)
-                            StaticButton {
-                                width: 190 + Shape.buttonShadowOffset
-                                height: 36 + Shape.buttonShadowOffset
-                                centered: true
-                                fontPixelSize: Typography.fontSize14
-                                label: "Hintergrund hinzufügen"
-                                onClicked: {
-                                    chooserScope.cancel();
-                                    openFolderProc.running = true;
-                                }
-                            }
-
-                            // Abbrechen (Cancel)
-                            StaticButton {
-                                width: 140 + Shape.buttonShadowOffset
-                                height: 36 + Shape.buttonShadowOffset
-                                centered: true
-                                fontPixelSize: Typography.fontSize14
-                                label: "Abbrechen"
-                                onClicked: chooserScope.cancel()
-                            }
-
-                            // Anwenden (Apply)
-                            StaticButton {
-                                width: 140 + Shape.buttonShadowOffset
-                                height: 36 + Shape.buttonShadowOffset
-                                centered: true
-                                fontPixelSize: Typography.fontSize14
-                                label: "Anwenden"
-                                onClicked: chooserScope.apply()
+                            MouseArea {
+                                id: cardMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: chooserScope.previewCard(card.index)
                             }
                         }
+                    }
+                }
+
+                // Wallpaper name label
+                Text {
+                    anchors.top: parent.verticalCenter
+                    anchors.topMargin: chooserScope.cardHeight / 2 + Spacing.spacing16
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: chooserScope.cardWidth * 3
+                    text: chooserScope.wallpaperName(chooserScope.wallpaperList[chooserScope.currentIndex] ?? "")
+                    font.family: Typography.fontFamily
+                    font.pixelSize: Typography.fontSize14
+                    font.weight: Font.Bold
+                    color: Colors.textColor
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                }
+
+                // Button row
+                Row {
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: Spacing.spacing40
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: Spacing.spacing12
+
+                    // Wallpaper hinzufügen (open folder)
+                    StaticButton {
+                        width: 190 + Shape.buttonShadowOffset
+                        height: 36 + Shape.buttonShadowOffset
+                        centered: true
+                        fontPixelSize: Typography.fontSize14
+                        label: "Hintergrund hinzufügen"
+                        onClicked: {
+                            chooserScope.cancel();
+                            openFolderProc.running = true;
+                        }
+                    }
+
+                    // Abbrechen (Cancel)
+                    StaticButton {
+                        width: 140 + Shape.buttonShadowOffset
+                        height: 36 + Shape.buttonShadowOffset
+                        centered: true
+                        fontPixelSize: Typography.fontSize14
+                        label: "Abbrechen"
+                        onClicked: chooserScope.cancel()
+                    }
+
+                    // Anwenden (Apply)
+                    StaticButton {
+                        width: 140 + Shape.buttonShadowOffset
+                        height: 36 + Shape.buttonShadowOffset
+                        centered: true
+                        fontPixelSize: Typography.fontSize14
+                        label: "Anwenden"
+                        onClicked: chooserScope.apply()
                     }
                 }
             }
