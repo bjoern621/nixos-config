@@ -338,14 +338,14 @@ Scope {
                                             required property var modelData
                                             required property int index
                                             readonly property bool active: LauncherController.activeIndex === index
-                                            readonly property bool lit: active || hov.hovered || tap.pressed
+                                            readonly property bool lit: active || tap.pressed
                                             width: resultsList.width
                                             height: launcherScope.rowHeight
 
                                             Rectangle {
                                                 anchors.fill: parent
                                                 radius: 4
-                                                color: tap.pressed ? theme.selPressed : del.active ? theme.selAccent : hov.hovered ? Colors.hoverItemHovered : "transparent"
+                                                color: tap.pressed ? theme.selPressed : del.active ? theme.selAccent : "transparent"
                                                 border.width: del.lit ? 2 : 0
                                                 border.color: theme.ink
                                             }
@@ -412,7 +412,6 @@ Scope {
                                             }
 
                                             HoverHandler {
-                                                id: hov
                                                 cursorShape: Qt.PointingHandCursor
                                             }
 
