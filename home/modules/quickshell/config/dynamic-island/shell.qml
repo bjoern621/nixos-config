@@ -53,6 +53,7 @@ ShellRoot {
     EmojiPicker {}
     WindowSwitcher {}
     WallpaperChooser {}
+    WallpaperPreview {}
     ThemeSwitcher {}
     NotificationToast {}
     NotificationCenter {}

@@ -66,7 +66,7 @@ Geometry is logical (compositor) pixels in the global layout, the same space `hy
 | `quickshell-launcher` | AppLauncher |
 | `quickshell-clipboard` | ClipboardHistory |
 | `quickshell-emoji` | EmojiPicker |
-| `quickshell-noblur` | ScreenCorners, WallpaperChooser |
+| `quickshell-noblur` | ScreenCorners, WallpaperChooser, WallpaperPreview |
 
 Several windows share the `quickshell` namespace, so a namespace match alone does not pick one out.
 They are told apart by geometry and by which are mapped: a bar menu is a content-sized box that exists only while open, the Bar is a full-width strip one pixel tall until hovered.

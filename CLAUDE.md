@@ -350,7 +350,7 @@ PanelWindow {
 | Namespace              | Windows                        | Rules live in            |
 | ---------------------- | ------------------------------ | ------------------------ |
 | `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay, LoadingOverlay, Tooltip | `quickshell/layerrules.lua` |
-| `quickshell-noblur`    | ScreenCorners, WallpaperChooser | (none; opts out of blur) |
+| `quickshell-noblur`    | ScreenCorners, WallpaperChooser, WallpaperPreview | (none; opts out of blur) |
 | `quickshell-launcher`  | AppLauncher                    | `hyprland/app-launcher.lua` |
 | `quickshell-clipboard` | ClipboardHistory               | `hyprland/clipboard-history.lua` |
 | `quickshell-emoji`     | EmojiPicker                    | `hyprland/emoji-picker.lua` |

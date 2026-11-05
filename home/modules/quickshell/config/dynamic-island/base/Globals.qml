@@ -57,6 +57,10 @@ QtObject {
     // Fallback until a wallpaper is picked.
     // See WallpaperPersist.qml, WallpaperAccent.qml, WallpaperChooser.qml.
     property url wallpaperPath: "file:///home/bjoern/.local/share/wallpapers/Mist.jpg"
+    // Chooser sets it while open, so WallpaperBackend leaves hyprpaper alone.
+    property bool wallpaperPreviewing: false
+    // Wallpaper that hyprpaper shows. WallpaperBackend writes it after each swap.
+    property url wallpaperApplied: ""
     readonly property color defaultAccentColor: "#ffffff"
     property color accentColor: defaultAccentColor
 }

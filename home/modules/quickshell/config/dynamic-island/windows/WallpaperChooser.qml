@@ -87,6 +87,7 @@ Scope {
             return;
         previousWorkspaceId = mon.activeWorkspace.id;
         originalWallpaper = Globals.wallpaperPath;
+        Globals.wallpaperPreviewing = true;
 
         // Find current wallpaper index
         const currentPath = Globals.wallpaperPath.toString().replace("file://", "");
@@ -113,7 +114,7 @@ Scope {
 
         WallpaperPersist.save(path);
 
-        // Wallpaper is already showing via hyprpaper preview, just close.
+        // WallpaperPreview already shows it. close() hands it to hyprpaper.
         close();
     }
 
@@ -125,6 +126,7 @@ Scope {
 
     function close() {
         chooserScope.chooserVisible = false;
+        Globals.wallpaperPreviewing = false;
         // Switch back to previous workspace
         if (chooserScope.previousWorkspaceId > 0) {
             workspaceProc.command = ["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + previousWorkspaceId + " })"];
@@ -149,12 +151,11 @@ Scope {
 
         const path = chooserScope.wallpaperList[idx];
 
-        // Setting the global triggers WallpaperBackend to apply it
+        // Setting the global triggers WallpaperPreview and WallpaperAccent
         Globals.wallpaperPath = "file://" + path;
     }
 
     function restoreWallpaper() {
-        // Restoring the global triggers WallpaperBackend to apply it
         Globals.wallpaperPath = originalWallpaper;
     }
 
