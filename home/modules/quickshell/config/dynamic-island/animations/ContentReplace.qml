@@ -87,12 +87,6 @@ Item {
     // swallow the next transition.
     property bool _seeded: false
 
-    // Re-arms the seed path, so the next contentKey lands without the swap.
-    // For a consumer whose content arrives under a reveal of its own.
-    function skipNextSwap() {
-        root._seeded = false;
-    }
-
     onContentKeyChanged: {
         replaceAnim.stop();
         contentArea.opacity = 1;

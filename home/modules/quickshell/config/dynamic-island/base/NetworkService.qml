@@ -133,12 +133,6 @@ Singleton {
                 return true;
         return false;
     }
-    readonly property string activeVpnName: {
-        for (let i = 0; i < vpnConnections.length; i++)
-            if (vpnConnections[i].active)
-                return vpnConnections[i].name;
-        return "";
-    }
 
     // Bar-icon shape selector.
     readonly property string iconMode: {
@@ -668,10 +662,6 @@ Singleton {
         utilProc.running = true;
     }
 
-    function toggleWifi() {
-        root.wifiEnabled = !root.wifiEnabled; // optimistic; monitor corrects
-        _runUtil(["radio", "wifi", root.wifiEnabled ? "on" : "off"]);
-    }
     function setAirplane(on) {
         root.airplaneMode = on;
         if (on)

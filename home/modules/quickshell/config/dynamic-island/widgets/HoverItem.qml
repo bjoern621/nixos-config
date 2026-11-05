@@ -91,14 +91,6 @@ Item {
         anchors.centerIn: parent
         width: Math.max(0, root.width - Spacing.spacing12)
         height: parent.height
-
-        // DEBUG
-        // Rectangle {
-        //     anchors.fill: parent
-        //     color: "transparent"
-        //     border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-        //     border.color: "blue"
-        // }
     }
 
     HoverHandler {

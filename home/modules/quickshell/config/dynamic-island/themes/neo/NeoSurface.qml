@@ -24,7 +24,6 @@ Item {
 
     // Hard offset shadow: solid, no blur, down-right.
     Rectangle {
-        visible: root.shadowOffset > 0
         x: root.shadowOffset
         y: root.shadowOffset
         width: root.contentWidth
