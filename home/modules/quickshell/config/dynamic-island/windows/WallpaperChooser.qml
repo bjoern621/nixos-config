@@ -31,6 +31,7 @@ Scope {
     // Floor applies while Quickshell.screens is empty: sourceSize 0 decodes the originals at full size.
     readonly property int thumbnailHeight: Math.round(Quickshell.screens.reduce((tallest, s) => Math.max(tallest, s.height), 1080) * cardHeightRatio)
     readonly property int cardSpacing: Spacing.spacing8
+    readonly property int selectedCardOutlineWidth: 5
     // Gray at which dark and light text reach equal contrast (WCAG luminance 0.179, gamma-encoded).
     readonly property real labelBackdropThreshold: 0.46
     // Distance from center, in cards, at which the lens flattens out.
@@ -335,7 +336,7 @@ Scope {
                                 id: cardBg
                                 anchors.fill: parent
                                 color: Colors.pillBackground
-                                border.width: card.isSelected ? (Shape.usesBlur ? 2 : Shape.borderWidth) : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
+                                border.width: card.isSelected ? chooserScope.selectedCardOutlineWidth : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
                                 border.color: cardMouse.containsMouse ? Qt.lighter(card.accent, 1.25) : card.accent
 
                                 scale: cardMouse.pressed ? 0.97 : 1.0
