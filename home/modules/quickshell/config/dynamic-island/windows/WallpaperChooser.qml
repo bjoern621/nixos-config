@@ -19,6 +19,8 @@ Scope {
     // Maps a wallpaper path to its accent color, as far as resolved.
     property var wallpaperAccents: ({})
     property int nextAccentIndex: 0
+    // Maps a wallpaper path to the mean gray behind the name label, 0..1.
+    property var labelBackdrops: ({})
 
     readonly property real cardHeightRatio: 0.41
     readonly property real cardAspect: 0.365
@@ -29,6 +31,8 @@ Scope {
     // Floor applies while Quickshell.screens is empty: sourceSize 0 decodes the originals at full size.
     readonly property int thumbnailHeight: Math.round(Quickshell.screens.reduce((tallest, s) => Math.max(tallest, s.height), 1080) * cardHeightRatio)
     readonly property int cardSpacing: Spacing.spacing8
+    // Gray at which dark and light text reach equal contrast (WCAG luminance 0.179, gamma-encoded).
+    readonly property real labelBackdropThreshold: 0.46
     // Distance from center, in cards, at which a card drops to half size.
     readonly property real lensFalloff: 5.5
 
@@ -169,7 +173,25 @@ Scope {
         onExited: {
             chooserScope.wallpaperListChanged();
             chooserScope.resolveNextAccent();
+            labelBackdropProc.running = true;
         }
+    }
+
+    Process {
+        id: labelBackdropProc
+
+        property var backdrops: ({})
+
+        // jpeg:size decodes the originals at a fraction of their size.
+        // Crop on the 64x36 downscale covers the band under the center card.
+        command: ["bash", "-c", "for f; do echo \"$(magick -define jpeg:size=256x144 \"$f\" -resize 64x36! -crop 8x3+28+25 +repage -colorspace Gray -resize 1x1! -format '%[fx:mean]' info:) $f\"; done", "bash"].concat(chooserScope.wallpaperList)
+        stdout: SplitParser {
+            onRead: data => {
+                const separator = data.indexOf(" ");
+                labelBackdropProc.backdrops[data.substring(separator + 1)] = parseFloat(data);
+            }
+        }
+        onExited: chooserScope.labelBackdrops = backdrops
     }
 
     WallpaperAccentResolver {
@@ -351,7 +373,12 @@ Scope {
                     font.family: Typography.fontFamily
                     font.pixelSize: Typography.fontSize14
                     font.weight: Font.Bold
-                    color: Colors.textColor
+                    color: {
+                        const backdrop = chooserScope.labelBackdrops[chooserScope.wallpaperList[chooserScope.currentIndex]];
+                        if (backdrop === undefined)
+                            return Colors.textColor;
+                        return backdrop > chooserScope.labelBackdropThreshold ? NeoTokens.ink : NeoTokens.paper;
+                    }
                     horizontalAlignment: Text.AlignHCenter
                     elide: Text.ElideRight
                 }
