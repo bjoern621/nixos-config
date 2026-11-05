@@ -328,15 +328,11 @@ Scope {
                             width: Math.round(exactLeft + chooserScope.cardWidth * lensScale) - x
                             height: 2 * Math.round(chooserScope.cardHeight * lensScale / 2)
 
-                            // Fades across the last card width before the screen edge.
-                            opacity: Math.max(0, Math.min(1, (strip.width / 2 - Math.abs(centerOffset)) / width))
-                            visible: opacity > 0
-
                             Rectangle {
                                 id: cardBg
                                 anchors.fill: parent
                                 color: Colors.pillBackground
-                                border.width: card.isSelected ? chooserScope.selectedCardOutlineWidth : Shape.thinBorderWidth
+                                border.width: card.isSelected ? chooserScope.selectedCardOutlineWidth : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
                                 border.color: cardMouse.containsMouse ? Qt.lighter(card.accent, 1.25) : card.accent
 
                                 scale: cardMouse.pressed ? 0.97 : 1.0
