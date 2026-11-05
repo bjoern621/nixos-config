@@ -30,7 +30,8 @@ Scope {
     // Sized for the tallest screen, so moving the chooser between monitors decodes nothing again.
     // Floor applies while Quickshell.screens is empty: sourceSize 0 decodes the originals at full size.
     readonly property int thumbnailHeight: Math.round(Quickshell.screens.reduce((tallest, s) => Math.max(tallest, s.height), 1080) * cardHeightRatio)
-    readonly property int cardSpacing: Spacing.spacing8
+    readonly property int centerCardSpacing: Spacing.spacing16
+    readonly property int edgeCardSpacing: Spacing.spacing4
     readonly property int selectedCardOutlineWidth: 5
     // Gray at which dark and light text reach equal contrast (WCAG luminance 0.179, gamma-encoded).
     readonly property real labelBackdropThreshold: 0.46
@@ -62,19 +63,31 @@ Scope {
         return wrapIndex(dist + n / 2) - n / 2;
     }
 
-    // Raised cosine: scale of a card `dist` cards away from center, 1 at center.
-    function lensScale(dist) {
+    // Raised cosine: 1 at center, 0 from lensReach outwards.
+    function lensBell(dist) {
         const progress = Math.min(Math.abs(dist) / lensReach, 1);
-        return lensFloor + (1 - lensFloor) * (1 + Math.cos(Math.PI * progress)) / 2;
+        return (1 + Math.cos(Math.PI * progress)) / 2;
+    }
+
+    // Integral of lensBell from center to `dist`, which must not be negative.
+    function lensBellIntegral(dist) {
+        const inside = Math.min(dist, lensReach);
+        return inside / 2 + lensReach / (2 * Math.PI) * Math.sin(Math.PI * inside / lensReach);
+    }
+
+    // Scale of a card `dist` cards away from center, 1 at center.
+    function lensScale(dist) {
+        return lensFloor + (1 - lensFloor) * lensBell(dist);
     }
 
     // Pixels from center to the card's center.
-    // Integral of lensScale over the card widths, so the gap stays cardSpacing at any scale.
+    // Integrates the card width and the gap, which both follow lensBell.
     function lensOffset(dist) {
-        const inside = Math.min(Math.abs(dist), lensReach);
-        const insideWidths = (1 + lensFloor) / 2 * inside + (1 - lensFloor) / 2 * lensReach / Math.PI * Math.sin(Math.PI * inside / lensReach);
-        const outsideWidths = lensFloor * (Math.abs(dist) - inside);
-        return Math.sign(dist) * (cardWidth * (insideWidths + outsideWidths) + cardSpacing * Math.abs(dist));
+        const away = Math.abs(dist);
+        const bell = lensBellIntegral(away);
+        const widths = cardWidth * (lensFloor * away + (1 - lensFloor) * bell);
+        const gaps = edgeCardSpacing * away + (centerCardSpacing - edgeCardSpacing) * bell;
+        return Math.sign(dist) * (widths + gaps);
     }
 
     function resolveNextAccent() {
