@@ -33,8 +33,10 @@ Scope {
     readonly property int cardSpacing: Spacing.spacing8
     // Gray at which dark and light text reach equal contrast (WCAG luminance 0.179, gamma-encoded).
     readonly property real labelBackdropThreshold: 0.46
-    // Distance from center, in cards, at which a card drops to half size.
-    readonly property real lensFalloff: 5.5
+    // Distance from center, in cards, at which the lens flattens out.
+    readonly property real lensReach: 8
+    // Scale of every card past lensReach.
+    readonly property real lensFloor: 0.4
 
     function focusedScreen() {
         const mon = Hyprland.focusedMonitor;
@@ -59,15 +61,19 @@ Scope {
         return wrapIndex(dist + n / 2) - n / 2;
     }
 
-    // Scale of a card `dist` cards away from center, 1 at center.
+    // Raised cosine: scale of a card `dist` cards away from center, 1 at center.
     function lensScale(dist) {
-        return 1 / (1 + (dist / lensFalloff) * (dist / lensFalloff));
+        const progress = Math.min(Math.abs(dist) / lensReach, 1);
+        return lensFloor + (1 - lensFloor) * (1 + Math.cos(Math.PI * progress)) / 2;
     }
 
-    // Integral of lensScale, so the gaps between cards shrink with the cards.
     // Pixels from center to the card's center.
+    // Integral of lensScale over the card widths, so the gap stays cardSpacing at any scale.
     function lensOffset(dist) {
-        return (cardWidth + cardSpacing) * lensFalloff * Math.atan(dist / lensFalloff);
+        const inside = Math.min(Math.abs(dist), lensReach);
+        const insideWidths = (1 + lensFloor) / 2 * inside + (1 - lensFloor) / 2 * lensReach / Math.PI * Math.sin(Math.PI * inside / lensReach);
+        const outsideWidths = lensFloor * (Math.abs(dist) - inside);
+        return Math.sign(dist) * (cardWidth * (insideWidths + outsideWidths) + cardSpacing * Math.abs(dist));
     }
 
     function resolveNextAccent() {
