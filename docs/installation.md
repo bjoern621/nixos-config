@@ -7,7 +7,7 @@ The remote servers and the Pi never boot an installer and have their own guides:
 
 | Host | Route |
 | --- | --- |
-| `pi-4b-hh` | Flashed SD card image, see [Raspberry Pi SD Card Hosts](../README.md#raspberry-pi-sd-card-hosts). |
+| `pi-4b-hh` | Flashed SD card image, see [Raspberry Pi SD card hosts](raspberry-pi-sd-card.md). |
 | `hetzner-hel1`, `netcup-g12` | Cloud install over the network, see [Installing a cloud host](k3s-cluster.md#installing-a-cloud-host). |
 
 ## Before you start
@@ -372,8 +372,28 @@ system.hibernate = {
 };
 ```
 
-**After the first boot:** read the device and offset, fill them in and rebuild.
-[Boot hangs on "waiting for device"](../README.md#boot-hangs-on-waiting-for-device-after-install) in the README has the commands.
+**After the first boot:** read the device and offset:
+
+```bash
+# UUID of the filesystem holding the swap file (the decrypted LUKS volume on LUKS setups)
+sudo blkid $(df /swapfile | tail -1 | awk '{print $1}') | grep -o 'UUID="[^"]*"' | cut -d'"' -f2
+
+# Resume offset
+sudo filefrag -v /swapfile | awk 'NR==4 { print $4 }' | tr -d '.'
+```
+
+Fill them in and rebuild with `sysconf-reload`:
+
+```nix
+system.hibernate.swapFile = {
+  resumeDevice = "/dev/disk/by-uuid/<UUID>";
+  resumeOffset = <offset>;
+};
+```
+
+**If the boot stalls at `waiting for device /dev/disk/by-uuid/...`:** `resumeDevice` and `resumeOffset` likely hold another machine's values.
+Boot an earlier generation, set `system.hibernate.enable = false` in `hosts/$HOST/configuration.nix` and rebuild.
+Then run **Before the first build** and **After the first boot** again.
 
 ### Tailscale
 

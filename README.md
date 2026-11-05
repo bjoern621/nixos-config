@@ -4,198 +4,118 @@
 
 # NixOS Configuration
 
-Personal NixOS daily driver configuration featuring Hyprland, Home Manager, and Waybar.
+This repository configures my machines with NixOS and Home Manager: a Hyprland laptop as daily driver, a gaming desktop and a small fleet of servers.
+Every host tracks `nixos-unstable` and builds from its own flake under `hosts/`.
 
-Each host chip above shows the installed revision, colored by how far the host lags `origin/main` measured against its own sync schedule.
-The revision is exported by `modules/sysconf-revision.nix`; the fleet badge endpoint rendering the chips lives in `hh-cluster-infra` (status-proxy application).
+## What it sets up
+
+- Hyprland desktop, configured in Lua, with a Quickshell bar, launcher, notifications and lock screen
+- Secure Boot through Lanzaboote and TPM unlock of the encrypted root
+- Face login through Howdy and FIDO2 security keys
+- USB device control through USBGuard
+- Hibernate on lid close
+- k3s cluster across a home VM and cloud servers, joined over Tailscale
+- Binary cache on a self-hosted Attic server
+- Secrets in sops-encrypted files, with a committed template for each
+- Scheduled pull of `origin/main` on every host, followed by a rebuild
+- Scheduled GitHub Actions workflow that pins aged flake inputs, builds the hosts and merges the pins that pass
+
+## Hosts
+
+| Host | Machine | Install route |
+| --- | --- | --- |
+| `nixos` | Laptop, daily driver | [NixOS installer](docs/installation.md) |
+| `fractal` | Gaming desktop, CI runner | [NixOS installer](docs/installation.md) |
+| `homelab` | Home server, hosts `vmk3s` as a libvirt guest | [NixOS installer](docs/installation.md) |
+| `vmk3s` | k3s server | [NixOS installer](docs/installation.md) |
+| `netcup-g12` | k3s agent, netcup VPS | [Cloud install](docs/k3s-cluster.md#installing-a-cloud-host) |
+| `hetzner-hel1` | k3s agent, Hetzner Cloud VM | [Cloud install](docs/k3s-cluster.md#installing-a-cloud-host) |
+| `pi-4b-hh` | Raspberry Pi 4, backup target | [SD card image](docs/raspberry-pi-sd-card.md) |
+
+The host badges at the top show the revision installed on each host, colored by how far the host lags `origin/main` measured against its own sync schedule.
+The fleet badge endpoint behind them lives in `hh-cluster-infra` (status-proxy application).
 
 ## Installation
 
-[docs/installation.md](docs/installation.md) walks through installing any host: the general steps every host takes, then one section per module that needs work by hand.
-It recommends the graphical NixOS installer over the minimal one.
+Follow [docs/installation.md](docs/installation.md), which covers the steps that every host takes and the work by hand that each module needs.
+Desktop hosts and hosts with secrets need keys kept outside this repository.
+
+## Usage
+
+```bash
+sysconf-reload                # Rebuild the host named in /etc/hostname
+sysconf-reload homelab        # Rebuild the named host
+sysconf-update                # Update this host's flake inputs, then rebuild
+sysconf-pull                  # Fast-forward to origin, then rebuild. Aborts on local commits.
+sysconf-pull --hard           # Reset to origin, discarding local commits and changes, then rebuild
+sysconf-help                  # List every sysconf command
+```
+
+### Deploy to another machine
+
+`--remote` turns a bare NixOS machine into one of these hosts.
+The system builds on this machine and activates on the target over ssh:
+
+```bash
+sysconf-reload netcup-g12 --remote root@203.0.113.9
+```
+
+The command must name both the host and the address.
+An alias in `~/.ssh/config` shortens the address, as in `--remote netcup-g12`.
+The target must hold `/etc/nixos/hardware-configuration.nix`, which the script copies from there before the build.
+
+A host that enables `sysconf.checkout` clones the repository on that first activation and can run `sysconf-reload` on its own afterwards.
 
 ## Hardware configuration
 
 > [!CAUTION]
 > A machine's real `hardware-configuration.nix` never goes into git.
-> Git carries a placeholder at `hosts/<host>/hardware-configuration.nix`, and the placeholder stays.
+> Git carries a placeholder at `hosts/<host>/hardware-configuration.nix`.
+> The placeholder stays.
 
 Each machine keeps its real file at `/etc/nixos/hardware-configuration.nix`.
-`sysconf-reload` copies it over the placeholder before every build, and `skip-worktree` keeps the copy out of `git status` and out of commits.
-A `--remote` deploy copies the target's file over ssh instead and puts the previous file back when it exits.
+`sysconf-reload` copies it over the placeholder before every build.
+`skip-worktree` keeps the copy out of `git status` and out of commits.
+A `--remote` deploy copies the target's file over ssh and restores the previous file on exit.
 
-A machine without the file, such as one installed from an image, gets it once, as root:
+A machine without the file, such as one installed from an image, must generate it once as root:
 
 ```bash
 nixos-generate-config --show-hardware-config > /etc/nixos/hardware-configuration.nix
 ```
 
-CI builds each host's `-ci` attribute, which layers `modules/ci-hardware-stub.nix` over the placeholder.
+CI builds each host's `-ci` attribute, which layers a hardware stub over the placeholder.
 
-## Raspberry Pi SD Card Hosts
+## Project structure
 
-Hosts that target Raspberry Pi hardware (e.g. `pi-4b-hh`) are provisioned by flashing a pre-built SD card image rather than running the NixOS installer. The image is built from the host's flake and boots directly into the configured system.
-
-> [!IMPORTANT]
-> Building requires aarch64 emulation on the build machine. The `nixos` host has `boot.binfmt.emulatedSystems = [ "aarch64-linux" ]` configured for this. If the `nixos` host has not been rebuilt since that option was added, do so before building.
-
-### Build the image
-
-Run from any machine with the repo checked out:
-
-```bash
-nix build /path/to/hosts/<host>#sdImage
-```
-
-This produces a `result` symlink pointing to a compressed `.img.zst` file.
-
-### Flash
-
-**Using Raspberry Pi Imager:**
-
-1. Decompress the image to a temporary file:
-    ```bash
-    zstdcat result/sd-image/*.img.zst > /tmp/<host>.img
-    ```
-2. Open Raspberry Pi Imager, select **Use custom**, and pick `/tmp/<host>.img`.
-
-**Using `dd` directly:**
-
-```bash
-# Verify the SD card device first
-lsblk
-
-zstdcat result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
-```
-
-### First boot
-
-Insert the card and power on the Pi. The system boots directly into the NixOS configuration with no manual installation steps. Default credentials: user `ops`, password `1234` - change the password after first login.
-
-On first boot, a systemd service (`sysconf-checkout`) clones the repository automatically, to the path that host sets as `sysconf.configPath` (requires internet access). Once it completes and the machine holds `/etc/nixos/hardware-configuration.nix` (see [Hardware configuration](#hardware-configuration)), `sysconf-pull` and `sysconf-reload` are ready to use. Check its status with:
-
-```bash
-systemctl status sysconf-checkout
-```
-
-## Troubleshooting
-
-### Boot hangs on "waiting for device" after install
-
-If the system stalls at boot with a message like `waiting for device /dev/disk/by-uuid/...`, the hibernate resume device is probably misconfigured. The swap file's backing partition UUID and resume offset in the host configuration still point to the old/default values and need to be updated to match this machine.
-
-**Quick fix**: temporarily disable hibernate to get the system booting:
-
-In `hosts/$HOST/configuration.nix`, set `system.hibernate.enable = false`, then rebuild.
-
-**Long-term fix**: the swap file must exist before its resume offset can be read, so this requires two rebuilds.
-
-*Phase 1*: enable hibernate with only `size` set (no `resumeDevice`/`resumeOffset`) so the swap file gets created, then rebuild:
-
-```nix
-system.hibernate = {
-  enable = true;
-  swapFile.size = 32; # GB, should be >= RAM
-};
-```
-
-```bash
-sysconf-reload
-```
-
-*Phase 2*: read the UUID and offset, fill them in, then rebuild again:
-
-```bash
-# UUID of the filesystem containing the swap file (the decrypted LUKS volume on LUKS setups)
-sudo blkid $(df /swapfile | tail -1 | awk '{print $1}') | grep -o 'UUID="[^"]*"' | cut -d'"' -f2
-
-# Resume offset
-sudo filefrag -v /swapfile | awk 'NR==4 { print $4 }' | tr -d '.'
-```
-
-```nix
-system.hibernate.swapFile = {
-  resumeDevice = "/dev/disk/by-uuid/<UUID>";
-  resumeOffset = <offset>;
-};
-```
-
-```bash
-sysconf-reload
-```
-
-## Usage
-
-### Rebuild System
-
-```bash
-sysconf-reload                # auto-detect host from /etc/hostname
-sysconf-reload homelab        # explicit host override
-```
-
-A host is also installed onto another machine, which is how a bare NixOS server becomes one
-of these hosts. The closure is built here and activated there over ssh; the machine clones
-the repository itself on that first activation, so it can run `sysconf-reload` on its own
-afterwards.
-
-```bash
-sysconf-reload netcup-g12 --remote root@203.0.113.9   # any reachable NixOS machine
-```
-
-The target needs `/etc/nixos/hardware-configuration.nix`, which the script copies from there before the build.
-
-The address is required. One command that reads two different targets depending on what was
-typed is one whose target has to be worked out rather than read, and where a machine lives is
-ssh's to know: an alias in `~/.ssh/config` is the short form, so `--remote netcup-g12` works.
-
-### Update Flake Inputs
-
-```bash
-sysconf-update         # update flake inputs to latest revisions, then rebuild
-```
-
-## Project Structure
-
-Each host has its own flake under `hosts/<host>/` with an independent `flake.lock`,
-so the server hosts only pull `nixpkgs` and `home-manager` instead of the full
-desktop input set. The top-level `flake.nix` exposes only the repo dev shell.
+Each host has its own flake and `flake.lock`, so a server pulls only the inputs that it uses.
+The top-level `flake.nix` exposes the repo dev shell alone.
 
 ```
 .
 ├── flake.nix                       # Repo dev shell (`nix develop`)
 ├── flake.lock
 ├── hosts/
-│   ├── nixos/                      # Daily driver, full input set
-│   │   ├── flake.nix
-│   │   ├── flake.lock
-│   │   ├── configuration.nix
-│   │   ├── home.nix                # Home Manager modules of this host
-│   │   └── hardware-configuration.nix
-│   ├── fractal/                    # Gaming desktop, full input set
-│   │   ├── flake.nix
-│   │   ├── flake.lock
-│   │   ├── configuration.nix
-│   │   ├── home.nix                # Home Manager modules of this host
-│   │   └── hardware-configuration.nix
-│   ├── homelab/                    # Server, nixpkgs + home-manager only
-│   │   ├── flake.nix
-│   │   ├── flake.lock
-│   │   ├── configuration.nix
-│   │   └── hardware-configuration.nix
-│   ├── vmk3s/                      # Server, nixpkgs + home-manager only
-│   │   ├── flake.nix
-│   │   ├── flake.lock
-│   │   ├── configuration.nix
-│   │   └── hardware-configuration.nix
-│   └── pi-4b-hh/                   # Raspberry Pi 4, SD card image
-│       ├── flake.nix               # exposes packages.<system>.sdImage
+│   └── <host>/
+│       ├── flake.nix               # Inputs and system outputs of this host
 │       ├── flake.lock
 │       ├── configuration.nix
+│       ├── home.nix                # Home Manager modules, desktop hosts
 │       └── hardware-configuration.nix
 ├── modules/                        # Shared system-level modules
 ├── home/                           # Shared Home Manager configs
 │   ├── bjoern.nix                  # User config shared by the desktop hosts
 │   ├── ops.nix                     # User config for the server hosts
 │   └── modules/
-└── README.md
+├── lib/                            # Shared Nix helpers
+├── pkgs/                           # Custom packages
+├── secrets/                        # sops-encrypted values and their templates
+└── docs/                           # Setup guides and feature notes
 ```
+
+## Further reading
+
+- [k3s cluster nodes](docs/k3s-cluster.md)
+- [Howdy face login](docs/howdy-face-login.md)
+- [Keyring auto-unlock](docs/keyring-auto-unlock.md)
+- [Contributing guidelines](CONTRIBUTING.md)
