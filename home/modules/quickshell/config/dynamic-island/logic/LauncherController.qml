@@ -8,11 +8,8 @@ import QtQuick
 import "../"
 import "../lib/fzf.js" as FzfLib
 
-// Shared app-launcher behavior, preferring the neo launcher's logic.
-// Both launcher views (classic AppLauncher, neo AppLauncherNeo) bind to this;
-// the view holds only layout + rendering. Singleton so the GlobalShortcut and
-// IpcHandler have exactly one owner regardless of which view is loaded.
-// resultCount + activeIndex are exposed for the neo readout; classic ignores them.
+// App-launcher behavior. AppLauncherNeo binds to this and holds only
+// layout + rendering. Singleton so GlobalShortcut and IpcHandler have one owner.
 Singleton {
     id: controller
 
@@ -25,14 +22,11 @@ Singleton {
     property var indexedApps: []
     property var filteredApps: []
 
-    // Loaded launcher view (classic or neo, never both). Its LauncherSelection
+    // Launcher view. Its LauncherSelection
     // owns the selection, so keyboard/mouse precedence matches the clipboard and
     // emoji overlays: last input wins.
     property var selectionView: null
     readonly property int activeIndex: selectionView ? selectionView.effectiveIndex : 0
-
-    // Neo readout data. Classic does not display these.
-    readonly property int resultCount: filteredApps.length
 
     readonly property var selectedApp: (filteredApps.length > 0 && activeIndex >= 0 && activeIndex < filteredApps.length) ? filteredApps[activeIndex].app : null
 

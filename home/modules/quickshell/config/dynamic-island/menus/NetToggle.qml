@@ -3,7 +3,7 @@ import "../"
 import "../base"
 import "../animations"
 
-// Neo switch: ink-bordered track, square knob that slides. Accent when on.
+// Switch: ink-bordered track, square knob that slides. Accent when on.
 // busy swaps the knob for a spinner (an in-flight radio/vpn toggle).
 Item {
     id: root

@@ -2,7 +2,7 @@ import QtQuick
 import "../"
 import "../base"
 
-// Theme-aware calendar grid. One view: neo/classic differ only in tokens and Card,
+// Calendar grid,
 // not layout, so a split view would duplicate the whole grid. Logic in the controller.
 Item {
     id: root
@@ -66,8 +66,8 @@ Item {
     // Month grid spans the full content; weather band matches it.
     readonly property int gridWidth: 4 * monthWidth + 3 * monthHorizontalGap
 
-    // Card paper holds the content; shadowOffset is extra gutter for the neo shadow
-    // (classic shadowOffset=0). implicitSize carries it so Bar sizes the menu to fit.
+    // Card paper holds the content; shadowOffset is extra gutter for the shadow.
+    // implicitSize carries it so Bar sizes the menu to fit.
     readonly property int contentWidth: gridWidth + 2 * contentPadding
     implicitWidth: contentWidth + Shape.shadowOffset
     implicitHeight: _heightFor(dayCellSize)

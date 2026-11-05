@@ -140,7 +140,7 @@ Interactive items should change both **background** and **border** on hover. The
 
 ### Border Radius
 
-- For pills and circles, prefer the **calculated** approach: `radius: height / 2` (not a hardcoded value).
+- Pills and buttons take `Shape.pillRadius`. A circle takes the **calculated** `radius: height / 2`.
 - For rounded rectangles (menu items, panels), use spacing constants: `Spacing.spacing4` or `Spacing.spacing8`.
 - When nesting rounded containers (inner + outer border), adjust the inner radius to account for the spacing/thickness between them so the corner curvature looks uniform (e.g. `outerRadius - borderWidth`).
 
@@ -327,7 +327,7 @@ Verify with: `hyprctl layers | grep quickshell`
 
 | Type                       | Pattern                                                                     | Example                                     |
 | -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------- |
-| Toggled overlay (IPC/flag) | `visible: <flag> \|\| !hideComplete`; `PopReveal` `onHidden` sets `hideComplete` | AppLauncher, ClipboardHistory, EmojiPicker, WindowSwitcher |
+| Toggled overlay (IPC/flag) | `visible: <flag> \|\| !hideComplete`; `PopReveal` `onHidden` sets `hideComplete` | AppLauncherNeo, ClipboardHistory, EmojiPicker, WindowSwitcher |
 | Transient OSD              | `visible: false` default, set `true` before `show()`, `false` on `onHidden` | VolumeOsd, BrightnessOsd                    |
 | Notification-driven        | `visible: <model>.count > 0`                                                | NotificationToast                           |
 | Hover-triggered            | Keep mapped, **shrink** `implicitHeight` when idle                          | Bar (1000px idle-collapses to `0`, which the surface clamps to a 1px trigger strip) |
@@ -351,7 +351,7 @@ PanelWindow {
 | ---------------------- | ------------------------------ | ------------------------ |
 | `quickshell` (default) | Bar, PowerCorner, NotificationCenter/Toast, OSDs, ModalOverlay, LoadingOverlay, Tooltip | `quickshell/layerrules.lua` |
 | `quickshell-noblur`    | ScreenCorners, WallpaperChooser, WallpaperPreview | (none; opts out of blur) |
-| `quickshell-launcher`  | AppLauncher                    | `hyprland/app-launcher.lua` |
+| `quickshell-launcher`  | AppLauncherNeo                 | `hyprland/app-launcher.lua` |
 | `quickshell-clipboard` | ClipboardHistory               | `hyprland/clipboard-history.lua` |
 | `quickshell-emoji`     | EmojiPicker                    | `hyprland/emoji-picker.lua` |
 
@@ -361,7 +361,7 @@ PanelWindow {
 
 The app launcher, clipboard history and emoji picker are one kind of thing: a centered, keyboard-driven overlay with a search field over a scrollable result view. They behave identically, and a change to one belongs in the shared piece so the other two get it. A behavioural difference between them is a bug unless the file says why.
 
-The app launcher renders two design variants (`AppLauncher` classic, `AppLauncherNeo`). Both follow every rule below; only their chrome differs.
+`AppLauncherNeo` draws its own chrome and follows every rule below.
 
 **Surface.** Card-sized, never fullscreen. The window sets no `anchors`, so the compositor centers it, and takes its size from the panel:
 
@@ -401,6 +401,6 @@ The handle is a sibling and not a child because a Flickable reparents its childr
 
 **Selection.** `LauncherSelection`, reached through the view's `keyboardSelect()`, `reset()` and `effectiveIndex`. Consumers never write `currentIndex` or `hoveredIndex` directly: last input wins, and the distinction between a keystroke claiming the selection and the cursor claiming it lives in one place. Use `reset()` rather than `keyboardSelect(0)` when the model is replaced wholesale, since it also drops the stale hover and re-arms the gate that stops a view mapping under a stationary cursor from claiming the selection.
 
-The launcher additionally registers its view as `LauncherController.selectionView`, so the singleton reads `effectiveIndex` back and drives `keyboardSelect()` regardless of which design variant is loaded. Both variants register, and clear the registration on destruction only if it still points at them, since on a theme switch the replacement view may register first. The clipboard and emoji picker own their state in their own `Scope` and call the view directly.
+The launcher additionally registers its view as `LauncherController.selectionView`, so the singleton reads `effectiveIndex` back and drives `keyboardSelect()`. The clipboard and emoji picker own their state in their own `Scope` and call the view directly.
 
 **Tooltips.** An overlay anchoring a `Tooltip` passes `anchorWindow`, since `mapToItem(null, …)` is window-relative and the tooltip lives on its own fullscreen surface. Omitting it places the bubble as if the card sat at the top-left of the screen.

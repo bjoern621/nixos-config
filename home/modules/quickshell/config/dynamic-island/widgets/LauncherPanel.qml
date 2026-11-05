@@ -3,10 +3,10 @@ import "../"
 import "../base"
 
 // Inner chrome for keyboard-driven launcher overlays
-// (AppLauncher, ClipboardHistory, EmojiPicker).
+// (ClipboardHistory, EmojiPicker).
 //
 // The hosting PanelWindow stays in the parent file: PanelWindow cannot be a QML component root.
-// The three overlays share one window shape. The rules it enforces (card-sized
+// The overlays share one window shape. The rules it enforces (card-sized
 // surface, fixed height, dismissal, scrolling, selection) are in the
 // "Launcher Overlays" section of the repo CLAUDE.md.
 //
@@ -46,8 +46,6 @@ Item {
     property string searchText: ""
     property string placeholder: "Suchen..."
     property int panelWidth: 500
-    property int searchBarHeight: 40
-    property bool searchAccent: true
     property bool emptyVisible: false
     property string emptyText: "Keine Ergebnisse"
 
@@ -61,11 +59,10 @@ Item {
     // leaves transparent slack instead of resizing the layer per keystroke.
     property int contentMaxHeight: 0
 
-    readonly property bool neo: !Shape.usesBlur
-    // Neo header matches AppLauncherNeo: 50px flush, ink divider beneath.
-    readonly property int neoHeaderHeight: 50
+    // Header matches AppLauncherNeo: 50px flush, ink divider beneath.
+    readonly property int headerHeight: 50
     // Y distance from panel top to the content column (header block above it).
-    readonly property int headerBlock: neo ? (neoHeaderHeight + Shape.borderWidth + Spacing.spacing8) : (Spacing.spacing12 + searchBarHeight + Spacing.spacing8)
+    readonly property int headerBlock: headerHeight + Shape.borderWidth + Spacing.spacing8
 
     // Panel hugs its content; the surface holds the upper bound.
     // Live height wins over a too-small contentMaxHeight, so a stale bound
@@ -74,7 +71,7 @@ Item {
     readonly property int panelMaxHeight: headerBlock + Math.max(contentMaxHeight, contentColumn.implicitHeight) + Spacing.spacing12
 
     // Layer surface size. Host binds implicitWidth/implicitHeight to these.
-    // Neo offsets panel and shadow by half the shadow distance each, so the
+    // Offsets panel and shadow by half the shadow distance each, so the
     // pair spans one shadow distance more than the panel itself.
     readonly property int surfaceWidth: panelWidth + Shape.shadowOffset
     readonly property int surfaceHeight: panelMaxHeight + Shape.shadowOffset
@@ -142,10 +139,9 @@ Item {
         }
         onHidden: root._hideComplete = true
 
-        // Neo hard offset shadow: solid, no blur, down-right. Classic: shadowOffset 0, hidden.
+        // Hard offset shadow: solid, no blur, down-right.
         // Panel and shadow each shift by half the offset so the pair stays centered.
         Rectangle {
-            visible: Shape.shadowOffset > 0
             width: panel.width
             height: panel.height
             radius: panel.radius
@@ -163,9 +159,9 @@ Item {
             anchors.horizontalCenterOffset: -Shape.shadowOffset / 2
             anchors.verticalCenterOffset: -Shape.shadowOffset / 2
 
-            radius: Shape.usesBlur ? Spacing.spacing12 : Shape.cardRadius
+            radius: Shape.cardRadius
             color: Colors.pillBackground
-            border.width: Shape.usesBlur ? 1 : Shape.borderWidth
+            border.width: Shape.borderWidth
             border.color: Colors.pillBorder
 
             // Click-eater: absorbs clicks on panel padding,
@@ -175,26 +171,20 @@ Item {
                 anchors.fill: parent
             }
 
-            // Header. Classic: rounded box inset 12px.
-            // Neo: flush full-width 50px header, followed by the flush ink divider.
+            // Flush full-width header, followed by flush ink divider.
             LauncherSearchBar {
                 id: searchBar
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.topMargin: root.neo ? 0 : Spacing.spacing12
-                anchors.leftMargin: root.neo ? 0 : Spacing.spacing12
-                anchors.rightMargin: root.neo ? 0 : Spacing.spacing12
-                height: root.neo ? root.neoHeaderHeight : root.searchBarHeight
+                height: root.headerHeight
                 text: root.searchText
                 placeholder: root.placeholder
-                accent: root.searchAccent
             }
 
-            // Neo: full-bleed ink divider under the header (app-launcher style).
+            // Full-bleed ink divider under the header (app-launcher style).
             Rectangle {
                 id: headerDivider
-                visible: root.neo
                 anchors.top: searchBar.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -204,7 +194,7 @@ Item {
 
             Column {
                 id: contentColumn
-                anchors.top: root.neo ? headerDivider.bottom : searchBar.bottom
+                anchors.top: headerDivider.bottom
                 anchors.topMargin: Spacing.spacing8
                 anchors.left: parent.left
                 anchors.right: parent.right

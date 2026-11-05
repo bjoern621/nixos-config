@@ -1,9 +1,8 @@
 import QtQuick
 import ".."
 
-// Theme-aware panel. Classic: glass fill + hairline border, no shadow.
-// Neo: cream fill + ink border + hard offset shadow.
-// Size the Card; the neo shadow is drawn inside the bottom-right, so the fill
+// Panel: cream fill + ink border + hard offset shadow.
+// Size the Card; shadow is drawn inside the bottom-right, so the fill
 // occupies width/height minus shadowOffset. Children fill the paper.
 Item {
     id: root
@@ -19,7 +18,6 @@ Item {
     readonly property real paperHeight: height - _off
 
     Rectangle {
-        visible: root._off > 0
         x: root._off
         y: root._off
         width: root.paperWidth

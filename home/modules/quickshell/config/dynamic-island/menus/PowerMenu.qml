@@ -1,8 +1,8 @@
 import QtQuick
 import "../"
 
-// Thin shell: instantiate the controller once (state survives theme switches),
-// load the theme-appropriate view, propagate its implicit size to the wrapper.
+// Thin shell: instantiate controller once, load the view,
+// propagate its implicit size to the wrapper.
 Item {
     id: root
 

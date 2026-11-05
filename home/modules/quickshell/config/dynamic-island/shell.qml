@@ -36,18 +36,9 @@ ShellRoot {
     }
     ModalOverlay {}
 
-    // App launcher renders one design variant, chosen by Globals.designTheme.
-    // Both views are pure presentation bound to LauncherController; the shortcut
-    // and all logic live in the always-loaded controller, so swapping views no
-    // longer double-registers the "launcher" handler.
-    LazyLoader {
-        active: Globals.designTheme !== "neo"
-        AppLauncher {}
-    }
-    LazyLoader {
-        active: Globals.designTheme === "neo"
-        AppLauncherNeo {}
-    }
+    // Pure presentation bound to LauncherController.
+    // Shortcut and all logic live in always-loaded controller.
+    AppLauncherNeo {}
 
     ClipboardHistory {}
     EmojiPicker {}

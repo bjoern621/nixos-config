@@ -5,7 +5,7 @@ import "../base"
 // One day of the month grid: number, today fill, selection, event dots.
 //
 // Selection takes the reverse of today's fill.
-// In neo the accent is today's fill,
+// Accent is today's fill,
 // so an accent mark on a selected day reads as a faded today.
 // Today selected keeps its own fill and takes an inset ring, both facts holding at once.
 Item {
@@ -27,20 +27,16 @@ Item {
     readonly property bool hovered: cellMouse.containsMouse && root.isValidDay
     // Selected on any day but today, where the fill flips and the number goes with it.
     readonly property bool reversed: root.isSelected && !root.isToday
-    readonly property int cornerRadius: Shape.usesBlur ? height / 2 : NeoTokens.pillRadius
-    // Neo outlines every mark in ink; classic leaves the dot flat.
-    readonly property int dotBorder: Shape.usesBlur ? 0 : 1
+    // Every mark outlined in ink.
+    readonly property int dotBorder: 1
     // Cell holds a two-digit number, so a dot stays a marker rather than a shape.
     // Border eats a pixel per side, so the dot grows by it and keeps its colour core.
     readonly property int dotSize: Math.max(3, Math.round(cellSize / 7)) + 2 * root.dotBorder
 
-    // Neo: today = launcher selected row (accent + ink border).
-    // Classic: today = round, vibrant red; hover round too.
+    // Today = launcher selected row (accent + ink border).
     LauncherDelegateBg {
         active: root.isToday
         hovered: root.hovered
-        cornerRadius: root.cornerRadius
-        activeColor: Shape.usesBlur ? Colors.calendarToday : Colors.selectedBackground
     }
 
     // Opaque, so it covers the hover fill underneath.
@@ -48,7 +44,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         visible: root.reversed
-        radius: root.cornerRadius
+        radius: Shape.pillRadius
         color: root.hovered ? Colors.calendarSelectedHovered : Colors.calendarSelected
     }
 
@@ -58,7 +54,7 @@ Item {
         anchors.margins: 1
         visible: root.isSelected && root.isToday
         color: "transparent"
-        radius: Math.max(0, root.cornerRadius - 1)
+        radius: Math.max(0, Shape.pillRadius - 1)
         border.width: 2
         border.color: Colors.calendarSelected
     }

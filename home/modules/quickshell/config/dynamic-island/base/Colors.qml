@@ -1,39 +1,34 @@
 pragma Singleton
 import QtQuick
 
-// Theme-aware color facade.
-// Property names are stable; values resolve from the active token table so every
-// `Colors.*` reference tracks Globals.designTheme with no per-call-site change.
+// Color facade over NeoTokens.
 QtObject {
-    readonly property var _t: Globals.designTheme === "neo" ? NeoTokens : ClassicTokens
-
     // Text colors
-    readonly property color textColor: _t.textColor
-    readonly property color textColorMuted: _t.textColorMuted
-    readonly property color placeholder: _t.placeholder
+    readonly property color textColor: NeoTokens.textColor
+    readonly property color textColorMuted: NeoTokens.textColorMuted
+    readonly property color placeholder: NeoTokens.placeholder
 
     // Background colors
-    readonly property color pillBackground: _t.pillBackground
-    readonly property color pillBorder: _t.pillBorder
-    readonly property color separatorColor: _t.separatorColor
-    readonly property color hoverItemHovered: _t.hoverItemHovered
-    readonly property color hoverItemPressed: _t.hoverItemPressed
-    readonly property color selectedBackground: _t.selectedBackground
-    readonly property color selectedPressed: _t.selectedPressed
+    readonly property color pillBackground: NeoTokens.pillBackground
+    readonly property color pillBorder: NeoTokens.pillBorder
+    readonly property color separatorColor: NeoTokens.separatorColor
+    readonly property color hoverItemHovered: NeoTokens.hoverItemHovered
+    readonly property color hoverItemPressed: NeoTokens.hoverItemPressed
+    readonly property color selectedBackground: NeoTokens.selectedBackground
+    readonly property color selectedPressed: NeoTokens.selectedPressed
 
     // Accent / progress colors
-    readonly property color calendarToday: _t.calendarToday
-    readonly property color calendarSelected: _t.calendarSelected
-    readonly property color calendarSelectedText: _t.calendarSelectedText
-    readonly property color calendarSelectedHovered: _t.calendarSelectedHovered
-    readonly property color accentColor: _t.accentColor
-    readonly property color progressBackground: _t.progressBackground
-    readonly property color progressMuted: _t.progressMuted
+    readonly property color calendarSelected: NeoTokens.calendarSelected
+    readonly property color calendarSelectedText: NeoTokens.calendarSelectedText
+    readonly property color calendarSelectedHovered: NeoTokens.calendarSelectedHovered
+    readonly property color accentColor: NeoTokens.accentColor
+    readonly property color progressBackground: NeoTokens.progressBackground
+    readonly property color progressMuted: NeoTokens.progressMuted
 
     // Battery warning colors
-    readonly property color batteryWarning: _t.batteryWarning
-    readonly property color batteryCritical: _t.batteryCritical
+    readonly property color batteryWarning: NeoTokens.batteryWarning
+    readonly property color batteryCritical: NeoTokens.batteryCritical
 
     // Weather timeline "now" tick
-    readonly property color nowMarker: _t.nowMarker
+    readonly property color nowMarker: NeoTokens.nowMarker
 }

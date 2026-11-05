@@ -177,7 +177,6 @@ Item {
                 active: root.svc.relocating
                 hovered: cityButton.hovered
                 pressed: cityButton.pressed
-                cornerRadius: Shape.pill(height)
             }
 
             Text {
@@ -190,10 +189,10 @@ Item {
                 horizontalAlignment: Text.AlignRight
                 text: root.svc.relocating ? "Suche …" : root.svc.city
                 font { family: Typography.fontFamily; pixelSize: Typography.fontSize14; weight: Typography.weightBold }
-                // Neo's lit face is opaque cream, so the label inks up under it.
+                // Lit face is opaque cream, so the label inks up under it.
                 // Unlit, the sky shows through and the label takes the scene's white
                 // ink and outline, like the temperature and the sunrise readout.
-                readonly property bool onPaper: !Shape.usesBlur && cityBg.lit
+                readonly property bool onPaper: cityBg.lit
                 color: onPaper ? Colors.textColor : "white"
                 style: onPaper ? Text.Normal : Text.Outline
                 styleColor: NeoTokens.ink
@@ -386,7 +385,7 @@ Item {
             color: Colors.textColor
             Rectangle {
                 width: 10; height: 10
-                radius: Shape.usesBlur ? 5 : 2
+                radius: 2
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 color: Colors.pillBackground
@@ -419,7 +418,7 @@ Item {
         x: Math.max(0, Math.min(root.width - width, root.scrubPos * ribbon.width - width / 2))
         width: scrubText.implicitWidth + Spacing.spacing8 * 2
         height: scrubText.implicitHeight + Spacing.spacing4 * 2
-        radius: Shape.usesBlur ? height / 2 : Shape.cardRadius
+        radius: Shape.cardRadius
         color: Colors.pillBackground
         border.width: Shape.borderWidth
         border.color: Colors.pillBorder

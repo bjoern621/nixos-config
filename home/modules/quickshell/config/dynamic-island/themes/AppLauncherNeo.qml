@@ -316,12 +316,8 @@ Scope {
                                         rowStride: launcherScope.rowHeight + spacing
 
                                         // Selection lives here; the controller reads it back as activeIndex.
-                                        // Guarded clear: on a theme switch the replacement view may register first.
                                         Component.onCompleted: LauncherController.selectionView = resultsList
-                                        Component.onDestruction: {
-                                            if (LauncherController.selectionView === resultsList)
-                                                LauncherController.selectionView = null;
-                                        }
+                                        Component.onDestruction: LauncherController.selectionView = null
 
                                         Connections {
                                             target: LauncherController

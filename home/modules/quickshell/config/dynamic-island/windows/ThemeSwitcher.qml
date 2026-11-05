@@ -6,24 +6,18 @@ import Quickshell.Wayland._WlrLayerShell
 import QtQuick
 import "../"
 
-// Design picker. Toggles Globals.designTheme between the classic and neo shells.
+// Design picker over Globals.designTheme.
 // Wallpaper-chooser shaped: full-screen dim, bottom card row, live preview,
 // Apply persists, Cancel restores. Opened via `qs ipc call theme toggle`.
-// Only the app launcher reacts to the choice now; other windows follow later.
 Scope {
     id: switcherScope
 
     property bool switcherVisible: false
-    property string originalTheme: "classic"
+    property string originalTheme: "neo"
     property int currentIndex: 0
 
     // key drives Globals.designTheme; the mini-preview is a hand-drawn mock.
     readonly property var options: [
-        {
-            key: "classic",
-            label: "Klassisch",
-            hint: "Transparente Pillen, weiche Kanten"
-        },
         {
             key: "neo",
             label: "Neobrutalismus",
@@ -48,7 +42,7 @@ Scope {
         switcherVisible = true;
     }
 
-    // Live preview: the launcher variant swaps immediately on selection.
+    // Live preview: selection writes Globals.designTheme.
     function previewOption(idx) {
         if (idx < 0 || idx >= options.length)
             return;
@@ -151,13 +145,10 @@ Scope {
                         anchors.fill: parent
                     }
 
-                    // Neo needs a cream panel so ink text is readable on the dim.
-                    // Classic stays transparent: content floats on the dim as before.
+                    // Cream panel keeps ink text readable on the dim.
                     Card {
                         id: panel
                         readonly property int pad: Spacing.spacing24
-                        fill: Shape.usesBlur ? "transparent" : Colors.pillBackground
-                        borderColor: Shape.usesBlur ? "transparent" : Colors.pillBorder
                         width: contentCol.implicitWidth + 2 * pad + Shape.shadowOffset
                         height: contentCol.implicitHeight + 2 * pad + Shape.shadowOffset
 
@@ -216,44 +207,8 @@ Scope {
                                             color: cardMouse.pressed ? Colors.hoverItemPressed : cardMouse.containsMouse ? Colors.hoverItemHovered : "transparent"
                                         }
 
-                                        // --- Classic mock: translucent dark launcher ---
-                                        Rectangle {
-                                            visible: card.modelData.key === "classic"
-                                            anchors.centerIn: parent
-                                            width: parent.width - Spacing.spacing40
-                                            height: parent.height - Spacing.spacing40
-                                            radius: Spacing.spacing12
-                                            color: Qt.rgba(0.1, 0.1, 0.12, 0.85)
-                                            border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
-                                            border.color: Qt.rgba(1, 1, 1, 0.18)
-
-                                            Column {
-                                                anchors.fill: parent
-                                                anchors.margins: Spacing.spacing12
-                                                spacing: Spacing.spacing8
-
-                                                Rectangle {
-                                                    width: parent.width
-                                                    height: 18
-                                                    radius: 9
-                                                    color: Qt.rgba(1, 1, 1, 0.08)
-                                                }
-                                                Repeater {
-                                                    model: 3
-                                                    Rectangle {
-                                                        required property int index
-                                                        width: parent.width
-                                                        height: 22
-                                                        radius: Spacing.spacing8
-                                                        color: index === 0 ? Colors.accentColor : Qt.rgba(1, 1, 1, 0.06)
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        // --- Neo mock: cream paper, black border, offset shadow ---
+                                        // --- Mock: cream paper, black border, offset shadow ---
                                         Item {
-                                            visible: card.modelData.key === "neo"
                                             anchors.centerIn: parent
                                             width: parent.width - Spacing.spacing40
                                             height: parent.height - Spacing.spacing40

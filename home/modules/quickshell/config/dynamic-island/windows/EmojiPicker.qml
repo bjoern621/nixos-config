@@ -19,8 +19,8 @@ Scope {
     readonly property int categorySize: 36
 
     // Content column at its tallest: full grid, then the category strip below
-    // it, plus the neo divider between them. Sizes the layer surface.
-    readonly property int maxContentHeight: cellSize * gridRows + Spacing.spacing8 + categorySize + (Shape.usesBlur ? 0 : Shape.borderWidth + Spacing.spacing8)
+    // it, plus the divider between them. Sizes the layer surface.
+    readonly property int maxContentHeight: cellSize * gridRows + Spacing.spacing8 + categorySize + Shape.borderWidth + Spacing.spacing8
 
     property bool emojiVisible: false
     property string searchText: ""
@@ -309,10 +309,10 @@ Scope {
                     }
                 }
 
-                // Neo: full-bleed ink divider above the category strip (app-launcher style).
+                // Full-bleed ink divider above the category strip (app-launcher style).
                 // Tracks the strip's visibility; bleeds past the 12px panel margins.
                 Rectangle {
-                    visible: !Shape.usesBlur && emojiScope.searchText === "" && emojiScope.groups.length > 0
+                    visible: emojiScope.searchText === "" && emojiScope.groups.length > 0
                     x: -Spacing.spacing12
                     width: parent.width + 2 * Spacing.spacing12
                     height: Shape.borderWidth

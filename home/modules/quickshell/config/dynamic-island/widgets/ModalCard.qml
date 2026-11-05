@@ -19,9 +19,8 @@ Item {
     implicitWidth: 340
     implicitHeight: panel.implicitHeight
 
-    // Neo hard offset shadow behind the panel. No-op in classic (offset 0).
+    // Hard offset shadow behind the panel.
     Rectangle {
-        visible: !Shape.usesBlur
         x: Shape.shadowOffset
         y: Shape.shadowOffset
         width: panel.width
@@ -37,7 +36,7 @@ Item {
 
         radius: Shape.cardRadius
         color: Colors.pillBackground
-        border.width: Shape.usesBlur ? 1 : Shape.borderWidth
+        border.width: Shape.borderWidth
         border.color: Colors.pillBorder
     }
 

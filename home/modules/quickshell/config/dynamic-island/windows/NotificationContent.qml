@@ -110,7 +110,7 @@ Item {
                     scale: actionTap.pressed ? 0.85 : 1.0
                     SquishBehavior on scale {}
 
-                    // Action button bg. Classic round pill, neo cream hover + accent press.
+                    // Action button bg. Cream hover + accent press.
                     ButtonBg {
                         hovered: actionHover.hovered
                         pressed: actionTap.pressed

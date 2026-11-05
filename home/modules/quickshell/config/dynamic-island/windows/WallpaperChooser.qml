@@ -336,7 +336,7 @@ Scope {
                                 id: cardBg
                                 anchors.fill: parent
                                 color: Colors.pillBackground
-                                border.width: card.isSelected ? chooserScope.selectedCardOutlineWidth : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
+                                border.width: card.isSelected ? chooserScope.selectedCardOutlineWidth : Shape.thinBorderWidth
                                 border.color: cardMouse.containsMouse ? Qt.lighter(card.accent, 1.25) : card.accent
 
                                 scale: cardMouse.pressed ? 0.97 : 1.0

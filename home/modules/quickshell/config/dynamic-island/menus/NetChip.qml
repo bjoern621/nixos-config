@@ -4,7 +4,7 @@ import "../base"
 import "../animations"
 
 // Small labeled press-button for row-detail actions and the menu footer.
-// Neo: ink-bordered block, accent when active, danger for destructive actions.
+// Ink-bordered block, accent when active, danger for destructive actions.
 Item {
     id: root
 
@@ -24,7 +24,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Shape.pill(height)
+        radius: Shape.pillRadius
         color: tap.pressed ? Qt.darker(root._accent, 1.12) : root.active ? root._accent : hover.hovered ? Colors.hoverItemHovered : Colors.pillBackground
         border.width: Shape.thinBorderWidth
         border.color: root.danger ? Colors.batteryCritical : Colors.pillBorder

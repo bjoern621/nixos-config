@@ -17,7 +17,7 @@ Item {
     scale: tapHandler.pressed ? 0.85 : 1.0
     SquishBehavior on scale {}
 
-    // Button bg: cream hover, 2px ink border when lit, radius 5 (neo).
+    // Button bg: cream hover, 2px ink border when lit, radius 5.
     // Squish scale carries press feedback.
     ButtonBg {
         hovered: hoverHandler.hovered

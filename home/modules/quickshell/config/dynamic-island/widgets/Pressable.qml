@@ -3,8 +3,8 @@ import ".."
 
 // Interaction behavior, no look.
 // Wraps content, exposes hovered/pressed, emits clicked(), applies the squish
-// press-scale. Callers provide the visual; both classic and neo buttons compose
-// this so the click/press logic is written once.
+// press-scale. Callers provide the visual; buttons compose this so the
+// click/press logic is written once.
 // Size it explicitly; content fills it.
 Item {
     id: root

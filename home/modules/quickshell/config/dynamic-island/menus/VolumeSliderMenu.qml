@@ -35,8 +35,8 @@ Item {
 
     readonly property int contentPadding: Spacing.spacing12
 
-    // Neo card draws its offset shadow inside the bottom-right gutter.
-    // Pad size by shadowOffset so paper stays 300 wide, content unchanged (0 in classic).
+    // Card draws its offset shadow inside the bottom-right gutter.
+    // Pad size by shadowOffset so paper stays 300 wide, content unchanged.
     implicitWidth: 300 + Shape.shadowOffset
     implicitHeight: mainLayout.height + 2 * contentPadding + Shape.shadowOffset
 

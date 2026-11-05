@@ -41,19 +41,17 @@ QtObject {
     }
 
     // Sole holder of launcher state.
-    // AppLauncher binds to it, never mirrors it.
+    // LauncherController binds to it, never mirrors it.
     // launcherScreenName is "" while the launcher is closed.
     property bool launcherVisible: false
     property string launcherScreenName: ""
 
     property bool doNotDisturb: false
 
-    // Design theme: which visual language the shell renders.
-    // "classic" = translucent pill UI; "neo" = neobrutalist.
+    // Design theme. Names a folder under themes/.
     // ThemeSwitcher writes it, ThemePersist restores it.
-    // Token facades (Colors/Shape/Typography) resolve their values from it;
-    // ThemedLoader swaps a feature's per-theme view on it.
-    property string designTheme: "classic"
+    // ThemedLoader picks a feature's view from it.
+    property string designTheme: "neo"
     // Fallback until a wallpaper is picked.
     // See WallpaperPersist.qml, WallpaperAccent.qml, WallpaperChooser.qml.
     property url wallpaperPath: "file:///home/bjoern/.local/share/wallpapers/Mist.jpg"

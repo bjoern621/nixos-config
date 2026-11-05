@@ -13,7 +13,7 @@ Singleton {
     id: root
 
     // Allowed themes. Unknown persisted value falls back to the default.
-    readonly property var known: ["classic", "neo"]
+    readonly property var known: ["neo"]
 
     function save(theme) {
         if (known.indexOf(theme) < 0)

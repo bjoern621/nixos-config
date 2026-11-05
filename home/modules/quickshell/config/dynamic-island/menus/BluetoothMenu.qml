@@ -7,7 +7,7 @@ import "../animations"
 
 // Bluetooth dropdown: power, paired devices with connect/battery/detail, plus
 // scan / discovered devices / discoverable. Binds the BluetoothService singleton;
-// the view holds only rename-entry and expand state. Facade-adaptive, neo-tuned.
+// the view holds only rename-entry and expand state. Facade-adaptive.
 Item {
     id: root
 
@@ -159,7 +159,7 @@ Item {
                         Rectangle {
                             width: parent.width - saveChip.width - cancelChip.width - 2 * parent.spacing
                             height: 32
-                            radius: Shape.pill(height)
+                            radius: Shape.pillRadius
                             color: Colors.pillBackground
                             border.width: Shape.thinBorderWidth
                             border.color: Colors.accentColor

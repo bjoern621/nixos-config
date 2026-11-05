@@ -98,7 +98,7 @@ Each container opts in differently:
   carries a `StepWheel`, so nothing is added.
 - A bare `Flickable` or `ListView` without that behavior: add a `StepWheel` child
   whose `target` is the view and whose `rowStride` is the row height, as
-  `AppLauncher` and `NotificationList` do.
+  `AppLauncherNeo` and `NotificationList` do.
 
 ## Styling
 

@@ -72,8 +72,7 @@ Scope {
                         return 5000;
                     }
 
-                    // Card body plus the neo shadow gutter below/right.
-                    // Classic shadowOffset=0, so height matches the body exactly.
+                    // Card body plus the shadow gutter below/right.
                     readonly property real cardBodyHeight: cardContent.implicitHeight + Spacing.spacing12 * 2
                     readonly property real fullHeight: cardBodyHeight + Shape.shadowOffset
 
@@ -107,7 +106,7 @@ Scope {
                         height: toastDelegate.fullHeight
                         onHidden: collapseAnim.start()
 
-                        // Theme-aware card: classic glass, neo cream + ink + offset shadow.
+                        // Cream + ink + offset shadow.
                         Card {
                             id: card
                             width: toastScope.cardWidth

@@ -69,7 +69,7 @@ Variants {
                 id: panelHover
             }
 
-            // Theme-aware panel: classic glass, neo cream + ink + offset shadow.
+            // Cream + ink + offset shadow.
             // Card draws the shadow inside, so the paper occupies width/height minus
             // shadowOffset; content lives on the paper.
             Card {
@@ -117,7 +117,7 @@ Variants {
                         scale: dndTap.pressed ? 0.85 : 1.0
                         SquishBehavior on scale {}
 
-                        // DND toggle bg. On-state (active) = blue accent, neo cream hover.
+                        // DND toggle bg. On-state (active) = blue accent, cream hover.
                         ButtonBg {
                             active: controller.dnd
                             hovered: dndHover.hovered
@@ -203,7 +203,7 @@ Variants {
                         scale: clearTap.pressed ? 0.85 : 1.0
                         SquishBehavior on scale {}
 
-                        // Clear button bg. Classic round pill, neo cream hover + accent press.
+                        // Clear button bg. Cream hover + accent press.
                         ButtonBg {
                             hovered: clearHover.hovered
                             pressed: clearTap.pressed

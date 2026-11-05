@@ -10,9 +10,8 @@ QtObject {
     readonly property int fontSize24: 24
     readonly property int fontSize32: 32
 
-    // Theme-aware weights: neo runs heavier than classic across the board.
-    readonly property var _t: Globals.designTheme === "neo" ? NeoTokens : ClassicTokens
-    readonly property int weightNormal: _t.weightNormal
-    readonly property int weightBold: _t.weightBold
-    readonly property int weightHeavy: _t.weightHeavy
+    // Heavier than Font.* names suggest, across the board.
+    readonly property int weightNormal: NeoTokens.weightNormal
+    readonly property int weightBold: NeoTokens.weightBold
+    readonly property int weightHeavy: NeoTokens.weightHeavy
 }

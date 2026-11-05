@@ -169,7 +169,7 @@ Scope {
                 implicitHeight: col.implicitHeight + Spacing.spacing8 * 2
                 radius: Spacing.spacing8
                 color: Colors.pillBackground
-                border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
+                border.width: Shape.thinBorderWidth
                 border.color: Colors.pillBorder
 
                 Column {

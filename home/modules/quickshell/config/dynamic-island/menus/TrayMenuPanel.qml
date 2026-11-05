@@ -27,7 +27,7 @@ Rectangle {
 
     radius: Shape.cardRadius
     color: Colors.pillBackground
-    border.width: Shape.usesBlur ? 1 : Shape.borderWidth
+    border.width: Shape.borderWidth
     border.color: Colors.pillBorder
 
     HoverHandler {

@@ -7,7 +7,7 @@ import "../animations"
 
 // Network dropdown: wifi list, ethernet, VPN, plus scan / airplane /
 // settings. Binds to the NetworkService singleton; the view holds only the
-// password-entry and expand state. Facade-adaptive, tuned for the neo theme.
+// password-entry and expand state. Facade-adaptive.
 Item {
     id: root
 
@@ -229,7 +229,7 @@ Item {
                                 id: pwField
                                 width: parent.width - connectChip.width - cancelChip.width - 2 * parent.spacing
                                 height: 32
-                                radius: Shape.pill(height)
+                                radius: Shape.pillRadius
                                 color: Colors.pillBackground
                                 border.width: Shape.thinBorderWidth
                                 border.color: Colors.accentColor

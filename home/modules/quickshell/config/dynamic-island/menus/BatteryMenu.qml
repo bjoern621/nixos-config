@@ -1,14 +1,14 @@
 import QtQuick
 import "../"
 
-// Battery detail menu. Theme-aware: Card gives neo offset shadow + ink border.
+// Battery detail menu. Card gives offset shadow + ink border.
 // Pure display; all reads/formatting live in BatteryController.
 Item {
     id: root
 
     readonly property int contentPadding: Spacing.spacing12
 
-    // Grow by shadowOffset: Card draws neo shadow inside bottom-right (0 in classic).
+    // Grow by shadowOffset: Card draws shadow inside bottom-right.
     implicitWidth: 200 + Shape.shadowOffset
     implicitHeight: layout.height + 2 * contentPadding + Shape.shadowOffset
 

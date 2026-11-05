@@ -16,7 +16,7 @@ Item {
 
     readonly property int contentPadding: Spacing.spacing12
 
-    // Content + neo shadow gutter (shadowOffset 0 in classic).
+    // Content + shadow gutter.
     implicitWidth: 280 + Shape.shadowOffset
     implicitHeight: menuLayout.height + 2 * contentPadding + Shape.shadowOffset
 
@@ -28,7 +28,7 @@ Item {
         viewVisible: root.visible
     }
 
-    // Neo card: cream fill + ink border + offset shadow. Classic: glass + hairline.
+    // Card: cream fill + ink border + offset shadow.
     Card {
         anchors.fill: parent
         visible: controller.hasPlayer
@@ -319,7 +319,7 @@ Item {
                         controller.prefetchQueue();
                 }
 
-                // Queue-toggle button bg. Classic round pill, neo cream hover + accent press.
+                // Queue-toggle button bg. Cream hover + accent press.
                 ButtonBg {
                     hovered: queueToggle.hovered
                     pressed: queueToggle.pressed
@@ -397,7 +397,7 @@ Item {
                                     Rectangle {
                                         width: parent.width * 0.65
                                         height: Typography.fontSize14
-                                        radius: Shape.pill(height)
+                                        radius: Shape.pillRadius
                                         color: Colors.progressBackground
                                         opacity: skeletonPulse.pulseOpacity
                                     }
@@ -405,7 +405,7 @@ Item {
                                     Rectangle {
                                         width: parent.width * 0.4
                                         height: Typography.fontSize12
-                                        radius: Shape.pill(height)
+                                        radius: Shape.pillRadius
                                         color: Colors.progressBackground
                                         opacity: skeletonPulse.pulseOpacity
                                     }
@@ -569,7 +569,7 @@ Item {
                                         visible: trackDelegate.isCurrent
                                         width: controller.isPlaying ? 26 : 20
                                         height: controller.isPlaying ? 18 : 20
-                                        radius: controller.isPlaying ? Spacing.spacing4 : Shape.pill(height)
+                                        radius: controller.isPlaying ? Spacing.spacing4 : Shape.pillRadius
                                         color: Qt.rgba(0, 0, 0, 0.35)
                                         anchors.centerIn: parent
 

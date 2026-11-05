@@ -102,7 +102,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 height: 18
                 width: battLabel.implicitWidth + Spacing.spacing8
-                radius: Shape.pill(height)
+                radius: Shape.pillRadius
                 color: root.battery < 20 ? Colors.batteryCritical : root.battery < 40 ? Colors.batteryWarning : Colors.pillBackground
                 border.width: Shape.thinBorderWidth
                 border.color: Colors.pillBorder
@@ -201,7 +201,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - battPct.width - parent.spacing
                     height: 14
-                    radius: Shape.pill(height)
+                    radius: Shape.pillRadius
                     color: Colors.progressBackground
                     border.width: Shape.thinBorderWidth
                     border.color: Colors.pillBorder

@@ -23,8 +23,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         // A calendar naming no colour still marks its row.
         color: CalendarService.calendarColor(root.entry.calendar) || Colors.accentColor
-        // Neo outlines every mark in ink; classic leaves the dot flat.
-        border.width: Shape.usesBlur ? 0 : 1
+        // Every mark outlined in ink.
+        border.width: 1
         border.color: Colors.pillBorder
     }
 

@@ -76,14 +76,13 @@ PanelWindow {
 
         onHidden: root.visible = false
 
-        // Neo hard offset shadow behind the pill. No-op in classic (offset 0).
+        // Hard offset shadow behind the pill.
         Rectangle {
-            visible: !Shape.usesBlur
             x: Shape.shadowOffset
             y: Shape.shadowOffset
             width: parent.width
             height: parent.height
-            radius: Shape.pill(height)
+            radius: Shape.pillRadius
             color: NeoTokens.ink
         }
 

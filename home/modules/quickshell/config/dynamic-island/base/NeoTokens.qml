@@ -3,27 +3,26 @@ import QtQuick
 
 // Neobrutalist token table: opaque cream paper, ink borders, hard offset shadow.
 // Lifted from the launcher's inline `theme` object.
-// Selection/accent pulls the wallpaper accent (Globals.accentColor); everything
-// else is fixed cream/ink. Semantic battery colors stay shared with classic.
+// Selection/accent pulls the wallpaper accent (Globals.accentColor).
+// Everything else is fixed cream/ink.
 QtObject {
     readonly property color paper: "#fffdf5"
     readonly property color ink: "#111111"
     readonly property color hoverPaper: "#f0eede"
 
-    // Color (mapped onto the classic token names the facade exposes)
+    // Color
     readonly property color textColor: ink
     readonly property color textColorMuted: "#3a382f"
     readonly property color pillBackground: paper
     readonly property color pillBorder: ink
     readonly property color separatorColor: ink
-    // Hover feedback: faint accent wash over paper (parallels classic's accent tint).
+    // Hover feedback: faint accent wash over paper.
     // Opaque result: Qt.tint composites over the opaque paper base, no alpha.
     readonly property color hoverItemHovered: Qt.tint(paper, Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.18))
     readonly property color hoverItemPressed: Qt.tint(paper, Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.30))
     // Selected/active item background: solid accent, like the launcher selection.
     readonly property color selectedBackground: accentColor
     readonly property color selectedPressed: accentPressed
-    readonly property color calendarToday: accentColor
     // Selected day, reversed against today so neither reads as the other.
     readonly property color calendarSelected: ink
     readonly property color calendarSelectedText: paper
@@ -33,7 +32,7 @@ QtObject {
     readonly property color progressMuted: "#7a7768"
     readonly property color batteryWarning: "#fed330"
     readonly property color batteryCritical: "#fc5c65"
-    // "Now" tick on the weather timeline. Same red in both themes (semantic, like battery).
+    // "Now" tick on the weather timeline. Semantic, like battery.
     readonly property color nowMarker: "#f01e2c"
 
     // Selection pills darken the accent on press.
@@ -41,7 +40,6 @@ QtObject {
     readonly property color placeholder: "#7a7768"
 
     // Shape
-    readonly property bool usesBlur: false
     readonly property int borderWidth: 3
     readonly property int thinBorderWidth: 2
     readonly property int cardRadius: 6

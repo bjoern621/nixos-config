@@ -32,9 +32,9 @@ Rectangle {
 
     implicitHeight: contentRow.implicitHeight + 2 * root.marginTopBottom
 
-    radius: Shape.pill(root.implicitHeight)
+    radius: Shape.pillRadius
     color: Colors.pillBackground
-    border.width: Shape.usesBlur ? 1 : Shape.thinBorderWidth
+    border.width: Shape.thinBorderWidth
     border.color: Colors.pillBorder
 
     Row {
@@ -111,7 +111,7 @@ Rectangle {
                 Rectangle {
                     width: Math.max(0, (parent.width - root.barGap) * root.value / 100)
                     height: root.barHeight
-                    radius: Shape.pill(height)
+                    radius: Shape.pillRadius
                     color: root.fillColor
 
                     Behavior on width {
@@ -125,7 +125,7 @@ Rectangle {
                 Rectangle {
                     width: Math.max(0, (parent.width - root.barGap) * (100 - root.value) / 100)
                     height: root.barHeight
-                    radius: Shape.pill(height)
+                    radius: Shape.pillRadius
                     color: Colors.progressBackground
 
                     Behavior on width {

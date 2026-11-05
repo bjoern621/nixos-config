@@ -3,7 +3,7 @@ import "../"
 import "../base"
 import "../animations"
 
-// Neo three-position segment: off | on | airplane. Accent knob slides to the
+// Three-position segment: off | on | airplane. Accent knob slides to the
 // active cell; ink glyph on the active cell, muted on the others. Replaces the
 // old wifi on/off NetToggle and folds airplane mode into the same control.
 Item {
@@ -25,7 +25,7 @@ Item {
     Rectangle {
         id: track
         anchors.fill: parent
-        radius: Shape.pill(height)
+        radius: Shape.pillRadius
         color: Colors.progressBackground
         border.width: Shape.thinBorderWidth
         border.color: Colors.pillBorder
@@ -37,7 +37,7 @@ Item {
         height: parent.height - 2 * root._inset
         y: root._inset
         x: root._inset + root._index * root._segW
-        radius: Math.max(2, Shape.pill(height) - root._inset)
+        radius: Math.max(2, Shape.pillRadius - root._inset)
         // Darker accent while the active cell is hovered: distinct on-hover.
         color: root._hoveredIndex === root._index ? Colors.selectedPressed : Colors.selectedBackground
         border.width: Shape.thinBorderWidth

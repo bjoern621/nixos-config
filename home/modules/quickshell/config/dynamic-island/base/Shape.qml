@@ -1,24 +1,16 @@
 pragma Singleton
 import QtQuick
 
-// Theme-aware structural tokens the flat classic palette never carried.
+// Structural tokens.
 // borderWidth: main card/panel border. thinBorderWidth: inner tiles, scroll handles.
-// shadowOffset: hard offset-shadow distance (0 = no shadow, classic).
+// shadowOffset: hard offset-shadow distance.
 // buttonShadowOffset: lighter shadow for buttons, so they sit shallower than their card.
-// usesBlur: whether surfaces sit on a blurred layer.
+// pillRadius: sharp pill/button corner, never fully rounded.
 QtObject {
-    readonly property var _t: Globals.designTheme === "neo" ? NeoTokens : ClassicTokens
-
-    readonly property bool usesBlur: _t.usesBlur
-    readonly property int borderWidth: _t.borderWidth
-    readonly property int thinBorderWidth: _t.thinBorderWidth
-    readonly property int cardRadius: _t.cardRadius
-    readonly property int shadowOffset: _t.shadowOffset
-    readonly property int buttonShadowOffset: _t.buttonShadowOffset
-
-    // Pill/button corner radius for a given element size.
-    // Classic: dim/2 (fully rounded). Neo: small fixed radius (sharp neobrutalist).
-    function pill(dim) {
-        return _t.usesBlur ? dim / 2 : _t.pillRadius;
-    }
+    readonly property int borderWidth: NeoTokens.borderWidth
+    readonly property int thinBorderWidth: NeoTokens.thinBorderWidth
+    readonly property int cardRadius: NeoTokens.cardRadius
+    readonly property int shadowOffset: NeoTokens.shadowOffset
+    readonly property int buttonShadowOffset: NeoTokens.buttonShadowOffset
+    readonly property int pillRadius: NeoTokens.pillRadius
 }
