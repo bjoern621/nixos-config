@@ -16,6 +16,9 @@ Scope {
     // currentIndex plus whole laps of the ring, so the strip crosses the list's seam the short way.
     property int scrollTarget: 0
     property var wallpaperList: []
+    // Maps a wallpaper path to its accent color, as far as resolved.
+    property var wallpaperAccents: ({})
+    property int nextAccentIndex: 0
 
     readonly property real cardHeightRatio: 0.41
     readonly property real cardAspect: 0.365
@@ -26,6 +29,8 @@ Scope {
     // Floor applies while Quickshell.screens is empty: sourceSize 0 decodes the originals at full size.
     readonly property int thumbnailHeight: Math.round(Quickshell.screens.reduce((tallest, s) => Math.max(tallest, s.height), 1080) * cardHeightRatio)
     readonly property int cardSpacing: Spacing.spacing8
+    readonly property int cardOutlineWidth: 3
+    readonly property int selectedCardOutlineWidth: 5
     // Distance from center, in cards, at which a card drops to half size.
     readonly property real lensFalloff: 5.5
 
@@ -61,6 +66,11 @@ Scope {
     // Pixels from center to the card's center.
     function lensOffset(dist) {
         return (cardWidth + cardSpacing) * lensFalloff * Math.atan(dist / lensFalloff);
+    }
+
+    function resolveNextAccent() {
+        if (nextAccentIndex < wallpaperList.length)
+            accentResolver.resolve(wallpaperList[nextAccentIndex++]);
     }
 
     function wallpaperName(path) {
@@ -158,7 +168,21 @@ Scope {
                     chooserScope.wallpaperList.push(line);
             }
         }
-        onExited: chooserScope.wallpaperListChanged()
+        onExited: {
+            chooserScope.wallpaperListChanged();
+            chooserScope.resolveNextAccent();
+        }
+    }
+
+    WallpaperAccentResolver {
+        id: accentResolver
+        onFinished: (path, color) => {
+            if (color.length > 0)
+                chooserScope.wallpaperAccents = Object.assign({}, chooserScope.wallpaperAccents, {
+                    [path]: color
+                });
+            Qt.callLater(chooserScope.resolveNextAccent);
+        }
     }
 
     Process {
@@ -265,25 +289,27 @@ Scope {
                             readonly property real distFromCenter: chooserScope.ringDistance(index - strip.scrollPos)
                             readonly property real centerOffset: chooserScope.lensOffset(distFromCenter)
                             readonly property real lensScale: chooserScope.lensScale(distFromCenter)
+                            readonly property real exactLeft: strip.width / 2 + centerOffset - chooserScope.cardWidth * lensScale / 2
                             readonly property bool isSelected: index === chooserScope.currentIndex
+                            readonly property color accent: chooserScope.wallpaperAccents[modelData] ?? Colors.accentColor
 
-                            x: (strip.width - width) / 2 + centerOffset
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: chooserScope.cardWidth
-                            height: chooserScope.cardHeight
-                            scale: lensScale
+                            // Whole pixels instead of a scale transform.
+                            // A fractional scale rounds the outline to different widths per side.
+                            x: Math.round(exactLeft)
+                            y: Math.round((strip.height - height) / 2)
+                            width: Math.round(exactLeft + chooserScope.cardWidth * lensScale) - x
+                            height: 2 * Math.round(chooserScope.cardHeight * lensScale / 2)
 
                             // Fades across the last card width before the screen edge.
-                            opacity: Math.max(0, Math.min(1, (strip.width / 2 - Math.abs(centerOffset)) / (width * lensScale)))
+                            opacity: Math.max(0, Math.min(1, (strip.width / 2 - Math.abs(centerOffset)) / width))
                             visible: opacity > 0
 
                             Rectangle {
                                 id: cardBg
                                 anchors.fill: parent
                                 color: Colors.pillBackground
-                                // Neo: visible ink border, thick accent when selected.
-                                border.width: card.isSelected ? (Shape.usesBlur ? 2 : Shape.borderWidth) : (Shape.usesBlur ? 1 : Shape.thinBorderWidth)
-                                border.color: card.isSelected ? Colors.accentColor : cardMouse.containsMouse ? Colors.pillBorder : (Shape.usesBlur ? Qt.rgba(1, 1, 1, 0.1) : Colors.pillBorder)
+                                border.width: card.isSelected ? chooserScope.selectedCardOutlineWidth : chooserScope.cardOutlineWidth
+                                border.color: cardMouse.containsMouse ? Qt.lighter(card.accent, 1.25) : card.accent
 
                                 scale: cardMouse.pressed ? 0.97 : 1.0
                                 SquishBehavior on scale {}
