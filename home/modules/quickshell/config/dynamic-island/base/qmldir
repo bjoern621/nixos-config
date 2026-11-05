@@ -20,6 +20,7 @@ singleton NowPlayingModel 1.0 NowPlayingModel.qml
 SpotifyFetch 1.0 SpotifyFetch.qml
 WallpaperBackend 1.0 WallpaperBackend.qml
 WallpaperAccent 1.0 WallpaperAccent.qml
+WallpaperAccentResolver 1.0 WallpaperAccentResolver.qml
 TintedIcon 1.0 TintedIcon.qml
 Label 1.0 Label.qml
 singleton ThemePersist 1.0 ThemePersist.qml

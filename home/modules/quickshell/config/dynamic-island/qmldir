@@ -22,6 +22,7 @@ singleton WeatherService 1.0 base/WeatherService.qml
 singleton CalendarService 1.0 base/CalendarService.qml
 singleton NowPlayingModel 1.0 base/NowPlayingModel.qml
 WallpaperAccent 1.0 base/WallpaperAccent.qml
+WallpaperAccentResolver 1.0 base/WallpaperAccentResolver.qml
 WallpaperBackend 1.0 base/WallpaperBackend.qml
 Label 1.0 base/Label.qml
 TintedIcon 1.0 base/TintedIcon.qml
