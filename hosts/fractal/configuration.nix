@@ -111,8 +111,6 @@
 
   sysconf.user = "bjoern";
 
-  environment.sessionVariables.MIRRORME_TRAY = "0";
-
   users.users.bjoern = {
     isNormalUser = true;
     description = "Björn";

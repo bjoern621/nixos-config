@@ -8,4 +8,7 @@
 
   # Adds the mirrorme group to the user so that the user can use the ffmpeg wrapper.
   users.users.bjoern.extraGroups = [ "mirrorme" ];
+
+  # Keeps the icon out of the system tray whatever the in-app switch holds, so closing the window ends the app.
+  environment.sessionVariables.MIRRORME_TRAY = "0";
 }
