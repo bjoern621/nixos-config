@@ -46,6 +46,7 @@ Desktop hosts and hosts with secrets need keys kept outside this repository.
 sysconf-reload                # Rebuild the host named in /etc/hostname
 sysconf-reload homelab        # Rebuild the named host
 sysconf-update                # Update this host's flake inputs, then rebuild
+sysconf-update nixpkgs        # Update the named inputs alone, then rebuild. Tab completes input names.
 sysconf-pull                  # Fast-forward to origin, then rebuild. Aborts on local commits.
 sysconf-pull --hard           # Reset to origin, discarding local commits and changes, then rebuild
 sysconf-help                  # List every sysconf command
