@@ -5,7 +5,6 @@
   home.packages = with pkgs; [
     bottles
     heroic
-    lutris
     prismlauncher
   ];
 }
