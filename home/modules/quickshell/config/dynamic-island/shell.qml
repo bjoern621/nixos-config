@@ -22,6 +22,7 @@ ShellRoot {
     // Always-loaded launcher behavior + sole owner of the launcher GlobalShortcut.
     property var _launcherController: LauncherController
 
+    MonitorWorkspaceSync {}
     WallpaperBackend {}
     WallpaperAccent {}
     ScreenCorners {}

@@ -136,6 +136,7 @@ NowPlayingController 1.0 logic/NowPlayingController.qml
 VolumeMenuController 1.0 logic/VolumeMenuController.qml
 ToastController 1.0 logic/ToastController.qml
 NotificationCenterController 1.0 logic/NotificationCenterController.qml
+MonitorWorkspaceSync 1.0 logic/MonitorWorkspaceSync.qml
 
 # Theme primitives. Views are loaded by url via ThemedLoader, not registered here.
 NeoSurface 1.0 themes/neo/NeoSurface.qml
