@@ -118,7 +118,6 @@ in
     libvirt
     qemu_kvm
     virt-manager
-    guestfs-tools
     cloud-utils
     bridge-utils
   ];
