@@ -54,7 +54,7 @@
     # No nixpkgs.follows: the release workflow builds mirrorme against the revision
     # the flake pins itself, and the screen-sharing Attic cache serves that build
     # (modules/attic-pull-screen-sharing.nix).
-    screen-sharing.url = "github:bjoern621/screen-sharing";
+    mirrorme.url = "github:bjoern621/MirrorMe";
   };
 
   outputs =

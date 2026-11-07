@@ -57,7 +57,7 @@
     # Following this host's nixpkgs reaches a derivation nobody has built,
     # and the gst_all_1 overlay the package carries then rebuilds
     # the GStreamer world on every pin change.
-    screen-sharing.url = "github:bjoern621/screen-sharing";
+    mirrorme.url = "github:bjoern621/MirrorMe";
   };
 
   outputs =

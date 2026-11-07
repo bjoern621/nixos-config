@@ -1,4 +1,4 @@
-# Read-only substituter for the screen-sharing Attic cache. The screen-sharing
+# Read-only substituter for the screen-sharing Attic cache. The MirrorMe
 # repo's release workflow is the only pusher; this host only pulls.
 #
 # Push credentials for "system" (this machine's own cache) live in

@@ -53,7 +53,7 @@
     ../../modules/attic-pull-system.nix
     ../../modules/attic-push.nix
     ../../modules/attic-pull-screen-sharing.nix
-    ../../modules/screen-sharing.nix
+    ../../modules/mirrorme.nix
     ../../modules/eduroam.nix
   ];
 

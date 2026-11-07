@@ -1,7 +1,7 @@
 { inputs, ... }:
 
 {
-  imports = [ inputs.screen-sharing.nixosModules.mirrorme ];
+  imports = [ inputs.mirrorme.nixosModules.mirrorme ];
 
   # Enables the ffmpeg wrapper that has CAP_SYS_ADMIN to allow capturing the screen without root privileges.
   programs.mirrorme.kmsgrab.enable = true;

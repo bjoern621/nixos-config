@@ -40,7 +40,7 @@
     ./modules/direnv.nix
     ./modules/scanning.nix
     ./modules/firewall-viewer.nix
-    ./modules/screen-sharing.nix
+    ./modules/mirrorme.nix
     ./modules/handy.nix
     ./modules/gnome-text-editor/gnome-text-editor.nix
   ];
