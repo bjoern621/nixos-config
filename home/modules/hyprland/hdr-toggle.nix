@@ -23,6 +23,8 @@ in
 {
   home.packages = [ hdr-toggle ];
 
+  wayland.windowManager.hyprland.extraLuaFiles."hdr-toggle".content = ./hdr-toggle.lua;
+
   xdg.desktopEntries."hdr-toggle" = {
     name = "HDR umschalten";
     exec = "hdr-toggle";
