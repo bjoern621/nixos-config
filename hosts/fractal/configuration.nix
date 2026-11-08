@@ -157,7 +157,6 @@
   services.sysconf-auto-pull = {
     enable = true;
     user = "bjoern";
-    schedule = "Mon 03:00";
   };
   services.sysconf-revision.enable = true;
 

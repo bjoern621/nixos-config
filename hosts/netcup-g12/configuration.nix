@@ -40,7 +40,6 @@ in
   services.sysconf-auto-pull = {
     enable = true;
     user = "root";
-    schedule = "daily";
   };
   services.sysconf-revision.enable = true;
 

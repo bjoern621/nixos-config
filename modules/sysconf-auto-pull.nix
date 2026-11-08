@@ -20,12 +20,6 @@ in
         passwordless nixos-rebuild via services.sysconf-sudo.
       '';
     };
-
-    schedule = lib.mkOption {
-      type = lib.types.str;
-      default = "daily";
-      description = "systemd OnCalendar schedule for the sync.";
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -54,7 +48,7 @@ in
       description = "Timer for periodic sysconf-pull sync";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = cfg.schedule;
+        OnCalendar = "daily";
         Persistent = true;
         RandomizedDelaySec = "30m";
       };

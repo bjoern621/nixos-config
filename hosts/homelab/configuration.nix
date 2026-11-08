@@ -44,7 +44,6 @@
   services.sysconf-auto-pull = {
     enable = true;
     user = "ops";
-    schedule = "daily";
   };
   services.sysconf-revision.enable = true;
 
