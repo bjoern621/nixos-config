@@ -1,0 +1,37 @@
+name: Notify on failure
+
+# Posts a failed or timed-out run of the workflows below to Discord.
+# Webhook URL comes from the DISCORD_WEBHOOK_URL repository secret.
+# A new workflow must join the list to report its failures.
+
+on:
+  workflow_run:
+    workflows:
+      - "Update flake locks (stable)"
+      - "Export host closure"
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  discord:
+    if: contains(fromJSON('["failure", "timed_out"]'), github.event.workflow_run.conclusion)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          WORKFLOW: ${{ github.event.workflow_run.name }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          COMMIT_MESSAGE: ${{ github.event.workflow_run.head_commit.message }}
+        run: |
+          jq -n \
+            --arg title "$WORKFLOW: $CONCLUSION" \
+            --arg url "$RUN_URL" \
+            --arg desc "\`$BRANCH\` at \`${SHA:0:7}\`: ${COMMIT_MESSAGE%%$'\n'*}" \
+            '{embeds: [{title: $title, url: $url, description: $desc, color: 15158332}]}' \
+            | curl --fail-with-body --silent --show-error \
+                --header 'Content-Type: application/json' --data @- "$DISCORD_WEBHOOK_URL"
