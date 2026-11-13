@@ -1,5 +1,5 @@
 # Lends this host to the pidgemail GitLab group as CI runner, plus LAN SSH.
-#   ci-runners up      start sshd, unpause runner, start runner container
+#   ci-runners up      start sshd and CI Docker daemon, unpause runner, start runner container
 #   ci-runners down    pause runner, let running jobs finish, stop everything
 #   ci-runners down --now   same, aborting running jobs
 #   ci-runners status
@@ -15,6 +15,8 @@ STATE_DIR="$HOME/.local/share/gitlab-runner-fractal"
 # Created and pruned by ci-runner.nix.
 CACHE_DIR=/var/lib/gitlab-runner-fractal/cache
 SYSTEMCTL=/run/current-system/sw/bin/systemctl
+# CI daemon from ci-runner.nix, in a network namespace of its own.
+export DOCKER_HOST=unix:///run/docker-ci.sock
 # Matches the runner's job timeout.
 DRAIN_TIMEOUT_S=3600
 
@@ -71,7 +73,6 @@ log_format = "json"
   [runners.docker]
     image = "alpine:3.23"
     privileged = false
-    cgroup_parent = "gitlab-ci.slice"
     # Rootless BuildKit unshares namespaces, which Docker's default seccomp profile blocks.
     security_opt = ["seccomp=unconfined", "apparmor=unconfined"]
     memory = "8g"
@@ -99,6 +100,7 @@ remove_job_containers() {
 up() {
   sudo -n "$SYSTEMCTL" start sshd.service
   log "sshd listening on port 22 (LAN only)"
+  sudo -n "$SYSTEMCTL" start docker-ci.service
 
   runner_exists || register_runner
   write_config
@@ -107,13 +109,13 @@ up() {
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
   docker run -d -q --name "$CONTAINER" --restart no \
     -v "$STATE_DIR:/etc/gitlab-runner" \
-    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /run/docker-ci.sock:/var/run/docker.sock \
     "$RUNNER_IMAGE" >/dev/null
   log "Runner $(runner_id) up"
 }
 
 running_jobs() {
-  docker ps -q --filter label=com.gitlab.gitlab-runner.managed=true | wc -l
+  docker ps -q --filter label=com.gitlab.gitlab-runner.managed=true 2>/dev/null | wc -l
 }
 
 # SIGQUIT makes gitlab-runner take no new jobs and exit once running ones finish.
@@ -140,6 +142,9 @@ down() {
   remove_job_containers
   log "Runner $(runner_id) paused and stopped"
 
+  sudo -n "$SYSTEMCTL" stop docker-ci.service
+  log "CI Docker daemon stopped"
+
   sudo -n "$SYSTEMCTL" stop sshd.service
   log "sshd stopped"
 }
@@ -148,6 +153,7 @@ status() {
   local id runner container
   container=$(docker inspect -f '{{.State.Status}}' "$CONTAINER" 2>/dev/null) || container=absent
   echo "sshd:      $($SYSTEMCTL is-active sshd.service || true)"
+  echo "docker-ci: $($SYSTEMCTL is-active docker-ci.service || true)"
   echo "container: $container"
   echo "jobs:      $(running_jobs) containers"
   id=$(runner_id)

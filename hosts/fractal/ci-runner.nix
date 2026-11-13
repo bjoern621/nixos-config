@@ -1,9 +1,26 @@
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 # Lends fractal to the pidgemail GitLab group as CI runner through `ci-runners`.
 # Everything here stays inert until `ci-runners up`.
 let
   cacheDir = "/var/lib/gitlab-runner-fractal/cache";
+  netns = "docker-ci";
+  netnsPath = "/run/netns/${netns}";
+  ciDaemonConfig = (pkgs.formats.json { }).generate "docker-ci-daemon.json" (
+    config.virtualisation.docker.daemon.settings
+    // {
+      hosts = [ "unix:///run/docker-ci.sock" ];
+      data-root = "/var/lib/docker-ci";
+      exec-root = "/run/docker-ci";
+      pidfile = "/run/docker-ci.pid";
+      cgroup-parent = "gitlab-ci.slice";
+    }
+  );
   ciRunners = pkgs.writeShellApplication {
     name = "ci-runners";
     # docker comes from the system, since it has to match the daemon.
@@ -80,17 +97,76 @@ in
       commands =
         map
           (action: {
-            command = "/run/current-system/sw/bin/systemctl ${action} sshd.service";
+            command = "/run/current-system/sw/bin/systemctl ${action}";
             options = [ "NOPASSWD" ];
           })
           [
-            "start"
-            "stop"
+            "start sshd.service"
+            "stop sshd.service"
+            "start docker-ci.service"
+            "stop docker-ci.service"
           ];
     }
   ];
 
-  # Job containers land here via runner `cgroup_parent`.
+  # CI Docker daemon in network namespace of its own.
+  # Each container adds veth plus IPv6 link-local address to daemon's namespace.
+  # In root namespace, Chrome aborts requests in flight with ERR_NETWORK_CHANGED on every such change.
+  # pasta carries egress over host sockets: root namespace sees no link or address of CI.
+  systemd.services.docker-ci-netns = {
+    description = "Network namespace of the CI Docker daemon";
+    partOf = [ "docker-ci.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      # Clears a namespace that a crash left behind.
+      ExecStartPre = "-${pkgs.iproute2}/bin/ip netns delete ${netns}";
+      ExecStart = "${pkgs.iproute2}/bin/ip netns add ${netns}";
+      ExecStop = "${pkgs.iproute2}/bin/ip netns delete ${netns}";
+    };
+  };
+  systemd.services.docker-ci-pasta = {
+    description = "Internet access for the CI Docker daemon's network namespace";
+    bindsTo = [ "docker-ci-netns.service" ];
+    after = [ "docker-ci-netns.service" ];
+    partOf = [ "docker-ci.service" ];
+    serviceConfig = {
+      Slice = "gitlab-ci.slice";
+      Restart = "on-failure";
+      # No port forwarding either way.
+      # Without --no-map-gw, a job reaches the host's loopback services through the gateway address.
+      ExecStart = "${pkgs.passt}/bin/pasta --foreground --quiet --config-net --no-map-gw -t none -u none -T none -U none --netns ${netnsPath}";
+    };
+  };
+  systemd.services.docker-ci = {
+    description = "Docker daemon for CI jobs";
+    requires = [
+      "docker-ci-netns.service"
+      "docker-ci-pasta.service"
+    ];
+    after = [
+      "docker-ci-netns.service"
+      "docker-ci-pasta.service"
+    ];
+    inherit (config.systemd.services.docker) path;
+    # Mirrors docker.service from the Docker package.
+    serviceConfig = {
+      Type = "notify";
+      ExecStart = "${config.virtualisation.docker.package}/bin/dockerd --config-file=${ciDaemonConfig}";
+      ExecReload = "${pkgs.procps}/bin/kill -s HUP $MAINPID";
+      NetworkNamespacePath = netnsPath;
+      Slice = "gitlab-ci.slice";
+      Restart = "on-failure";
+      LimitNPROC = "infinity";
+      LimitCORE = "infinity";
+      TasksMax = "infinity";
+      Delegate = true;
+      KillMode = "process";
+      OOMScoreAdjust = -500;
+    };
+  };
+
+  # Holds the CI daemon, its egress and, through its `cgroup-parent`, every container it starts.
   # Caps all jobs together, yields CPU to desktop.
   systemd.slices.gitlab-ci.sliceConfig = {
     MemoryHigh = "22G";
