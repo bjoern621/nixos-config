@@ -51,9 +51,9 @@ in
   # console=ttyS0 (modules/server-base.nix) stays for early boot output.
   systemd.services."serial-getty@ttyS0".enable = false;
 
-  # GitLab Omnibus runs beside the cluster on this host, and its four Ruby workers hold
-  # about 5 GiB of the 8 GiB. A job pod asking for a gigabyte found none and died without
-  # a line in its log, so the kernel gets somewhere to put what nothing is reading.
+  # GitLab Omnibus runs as a pod on this host. Its Ruby workers hold about 5 GiB of the
+  # 8 GiB, so the kernel gets somewhere to put what nothing is reading.
+  # CI job pods run on hetzner-hel1.
   #
   # 16 GiB against 8 GiB of RAM covers what a quiet Omnibus sits on, and stops short of a
   # size that lets a runaway thrash the disk for an hour before it fails. The root
@@ -65,18 +65,18 @@ in
     }
   ];
 
-  # Idle pages go out, pages a build is working on stay in. The default of 60 swaps a
-  # working set that a CI job is about to read again.
+  # Idle pages go out. Pages that a request is working on stay in. The default of 60 swaps
+  # out a working set that GitLab is about to read again.
   boot.kernel.sysctl."vm.swappiness" = 20;
 
   # The kubelet takes swap away from every container unless it is told otherwise: NodeSwap
   # is GA and on, but the default behaviour is NoSwap, which pins memory.swap.max at 0 and
   # leaves the swapfile untouched however short of memory the node runs.
   #
-  # LimitedSwap lends a burstable pod swap in proportion to the memory it requested, so
-  # GitLab's idle workers can leave RAM and a CI job's spike lands on disk rather than on
-  # the kernel's killer. Guaranteed and best-effort pods still get none, which is what
-  # keeps a latency-sensitive workload out of the swapfile.
+  # LimitedSwap lends a burstable pod swap in proportion to the memory it requested.
+  # GitLab's idle pages leave RAM. A spike lands on disk rather than on the kernel's killer.
+  # Guaranteed and best-effort pods get none. That keeps a latency-sensitive workload out
+  # of the swapfile.
   #
   # swapBehavior has no kubelet flag, so it arrives as a configuration file the agent reads.
   environment.etc."rancher/k3s/kubelet.yaml".text = ''
@@ -113,9 +113,9 @@ in
 
       # Swap on the host stops the kubelet from starting unless it is told to expect it, so
       # this flag and swapDevices above land in one activation or the node drops out.
-      # GitLab and a job pod both run burstable here, and the kubelet lends a burstable pod
-      # swap in proportion to the memory it requested, so an idle page leaves RAM instead of
-      # the pod holding it being killed.
+      # GitLab runs burstable here. The kubelet lends a burstable pod swap in proportion to
+      # the memory it requested, so an idle page leaves RAM instead of the pod holding it
+      # being killed.
       "--kubelet-arg=fail-swap-on=false"
       "--kubelet-arg=config=/etc/rancher/k3s/kubelet.yaml"
 
