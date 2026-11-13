@@ -133,9 +133,11 @@ in
     serviceConfig = {
       Slice = "gitlab-ci.slice";
       Restart = "on-failure";
+      RestartSec = 2;
       # No port forwarding either way.
       # Without --no-map-gw, a job reaches the host's loopback services through the gateway address.
-      ExecStart = "${pkgs.passt}/bin/pasta --foreground --quiet --config-net --no-map-gw -t none -u none -T none -U none --netns ${netnsPath}";
+      # Started as root, pasta drops to nobody, which may not enter a namespace that root owns.
+      ExecStart = "${pkgs.passt}/bin/pasta --foreground --quiet --runas 0 --config-net --no-map-gw -t none -u none -T none -U none --netns ${netnsPath}";
     };
   };
   systemd.services.docker-ci = {
