@@ -8,14 +8,16 @@
 # Lends fractal to the pidgemail GitLab group as CI runner through `ci-runners`.
 # Everything here stays inert until `ci-runners up`.
 let
-  cacheDir = "/var/lib/gitlab-runner-fractal/cache";
+  # Second SSD. Images and caches outgrow the system SSD.
+  ciRoot = "/games/ci";
+  cacheDir = "${ciRoot}/cache";
   netns = "docker-ci";
   netnsPath = "/run/netns/${netns}";
   ciDaemonConfig = (pkgs.formats.json { }).generate "docker-ci-daemon.json" (
     config.virtualisation.docker.daemon.settings
     // {
       hosts = [ "unix:///run/docker-ci.sock" ];
-      data-root = "/var/lib/docker-ci";
+      data-root = "${ciRoot}/docker";
       exec-root = "/run/docker-ci";
       pidfile = "/run/docker-ci.pid";
       cgroup-parent = "gitlab-ci.slice";
@@ -31,6 +33,7 @@ let
       pkgs.gnugrep
       pkgs.gnused
     ];
+    runtimeEnv.CACHE_DIR = cacheDir;
     text = builtins.readFile ./ci-runners.sh;
   };
   # The window stays open: `down` waits for running jobs and prints its progress.
@@ -55,10 +58,14 @@ in
     ciRunnersToggle
   ];
 
-  # Every job slot mounts this at /cache. Nothing caps its size, so the timer below prunes it.
-  systemd.tmpfiles.rules = [ "d ${cacheDir} 0755 root root -" ];
+  # Every job slot mounts cacheDir at /cache. Nothing caps its size, so the timer below prunes it.
   systemd.services.gitlab-ci-cache-prune = {
     description = "Drop CI cache archives no job has read for 14 days";
+    unitConfig = {
+      RequiresMountsFor = [ ciRoot ];
+      # docker-ci creates cacheDir on its first start.
+      ConditionPathIsDirectory = cacheDir;
+    };
     serviceConfig.Type = "oneshot";
     script = ''
       ${pkgs.findutils}/bin/find ${cacheDir} -type f -atime +14 -delete
@@ -151,9 +158,14 @@ in
       "docker-ci-pasta.service"
     ];
     inherit (config.systemd.services.docker) path;
+    # /games mounts with nofail.
+    # Unmounted, dockerd would fill empty mountpoint on system SSD.
+    unitConfig.RequiresMountsFor = [ ciRoot ];
     # Mirrors docker.service from the Docker package.
     serviceConfig = {
       Type = "notify";
+      # Not tmpfiles: at boot, systemd-tmpfiles-setup can run before nofail mount of /games.
+      ExecStartPre = "${pkgs.coreutils}/bin/install -d -m 0755 ${cacheDir}";
       ExecStart = "${config.virtualisation.docker.package}/bin/dockerd --config-file=${ciDaemonConfig}";
       ExecReload = "${pkgs.procps}/bin/kill -s HUP $MAINPID";
       NetworkNamespacePath = netnsPath;

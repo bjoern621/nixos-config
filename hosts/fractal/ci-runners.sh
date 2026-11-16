@@ -12,8 +12,7 @@ RUNNER_NAME="fractal"
 RUNNER_IMAGE="gitlab/gitlab-runner:v19.5.3"
 CONTAINER="gitlab-runner-fractal"
 STATE_DIR="$HOME/.local/share/gitlab-runner-fractal"
-# Created and pruned by ci-runner.nix.
-CACHE_DIR=/var/lib/gitlab-runner-fractal/cache
+# CACHE_DIR comes from ci-runner.nix, which creates and prunes it.
 SYSTEMCTL=/run/current-system/sw/bin/systemctl
 # CI daemon from ci-runner.nix, in a network namespace of its own.
 export DOCKER_HOST=unix:///run/docker-ci.sock

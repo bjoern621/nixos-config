@@ -311,6 +311,8 @@ sudo chown $USER:users /games
 
 Every later boot opens and mounts it from `crypttab` and `fstab`.
 Steam, Heroic, Lutris and Prism Launcher take `/games` as a library or install path in their settings.
+The CI runner keeps its Docker data and job cache in `/games/ci`.
+Its Docker daemon starts only while `/games` is mounted.
 
 ### Face login
 
