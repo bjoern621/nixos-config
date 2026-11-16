@@ -68,6 +68,9 @@ log_format = "json"
   executor = "docker"
   limit = 12
   request_concurrency = 4
+  # /builds: volume per slot and project, outlives job.
+  # Store beside checkout survives git clean. pnpm hard-links from it (pidgemail/ci README, "Caches").
+  environment = ["PNPM_STORE_DIR=/builds/.pnpm-store"]
 
   [runners.docker]
     image = "alpine:3.23"
