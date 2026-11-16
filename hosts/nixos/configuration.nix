@@ -19,6 +19,7 @@
     ../../modules/printing.nix
     ../../modules/scanning.nix
     ../../modules/cleanup.nix
+    ../../modules/docker-workstation.nix
     ../../modules/nix-search-tv.nix
     ../../modules/display-manager.nix
     ../../modules/wireguard.nix
@@ -156,8 +157,6 @@
 
   hardware.bluetooth.enable = true;
   services.blueman.enable = true;
-
-  virtualisation.docker.enable = true;
 
   system.hibernate = {
     enable = true;

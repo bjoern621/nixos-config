@@ -25,6 +25,7 @@
     ../../modules/printing.nix
     ../../modules/scanning.nix
     ../../modules/cleanup.nix
+    ../../modules/docker-workstation.nix
     ../../modules/nix-search-tv.nix
     ../../modules/display-manager.nix
     ../../modules/dns.nix
@@ -148,8 +149,6 @@
 
   hardware.bluetooth.enable = true;
   services.blueman.enable = true;
-
-  virtualisation.docker.enable = true;
 
   # Updates enter via CI stable flake.lock PRs (update-flake-locks.yml).
   # Host only converges to origin/main; never computes own revisions.
