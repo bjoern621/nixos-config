@@ -11,6 +11,8 @@ let
   # Second SSD. Images and caches outgrow the system SSD.
   ciRoot = "/games/ci";
   cacheDir = "${ciRoot}/cache";
+  # Chroot store (`--store`) of fractal's Nix jobs. Root owns it, host's own store and profiles stay out of reach.
+  nixStoreDir = "${ciRoot}/nix";
   netns = "docker-ci";
   netnsPath = "/run/netns/${netns}";
   ciDaemonConfig = (pkgs.formats.json { }).generate "docker-ci-daemon.json" (
@@ -33,7 +35,10 @@ let
       pkgs.gnugrep
       pkgs.gnused
     ];
-    runtimeEnv.CACHE_DIR = cacheDir;
+    runtimeEnv = {
+      CACHE_DIR = cacheDir;
+      NIX_STORE_DIR = nixStoreDir;
+    };
     text = builtins.readFile ./ci-runners.sh;
   };
   # The window stays open: `down` waits for running jobs and prints its progress.
@@ -193,7 +198,7 @@ in
     serviceConfig = {
       Type = "notify";
       # Not tmpfiles: at boot, systemd-tmpfiles-setup can run before nofail mount of /games.
-      ExecStartPre = "${pkgs.coreutils}/bin/install -d -m 0755 ${cacheDir}";
+      ExecStartPre = "${pkgs.coreutils}/bin/install -d -m 0755 ${cacheDir} ${nixStoreDir}";
       ExecStart = "${config.virtualisation.docker.package}/bin/dockerd --config-file=${ciDaemonConfig}";
       ExecReload = "${pkgs.procps}/bin/kill -s HUP $MAINPID";
       NetworkNamespacePath = netnsPath;

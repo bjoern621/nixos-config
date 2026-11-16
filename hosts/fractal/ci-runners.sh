@@ -12,7 +12,7 @@ RUNNER_NAME="fractal"
 RUNNER_IMAGE="gitlab/gitlab-runner:v19.5.3"
 CONTAINER="gitlab-runner-fractal"
 STATE_DIR="$HOME/.local/share/gitlab-runner-fractal"
-# CACHE_DIR comes from ci-runner.nix, which creates and prunes it.
+# CACHE_DIR and NIX_STORE_DIR come from ci-runner.nix, which creates both and prunes CACHE_DIR.
 SYSTEMCTL=/run/current-system/sw/bin/systemctl
 # CI daemon from ci-runner.nix, in a network namespace of its own.
 export DOCKER_HOST=unix:///run/docker-ci.sock
@@ -69,8 +69,10 @@ log_format = "json"
   limit = 12
   request_concurrency = 4
   # /builds: volume per slot and project, outlives job.
-  # Store beside checkout survives git clean. pnpm hard-links from it (pidgemail/ci README, "Caches").
-  environment = ["PNPM_STORE_DIR=/builds/.pnpm-store"]
+  # Stores beside checkout survive git clean. pnpm hard-links from its store there (pidgemail/ci README, "Caches").
+  # KEPT_NIX_STORE: one Nix store for every slot. Nix locks its own store, and a closure runs to gigabytes.
+  # PNPM_STORE_DIR serves ci releases older than KEPT_DIR.
+  environment = ["KEPT_DIR=/builds", "KEPT_NIX_STORE=/kept-nix", "PNPM_STORE_DIR=/builds/.pnpm-store"]
 
   [runners.docker]
     image = "alpine:3.23"
@@ -81,7 +83,7 @@ log_format = "json"
     memory_swap = "10g"
     shm_size = 1073741824
     # One host directory for every slot, so a job restores what any earlier job here saved.
-    volumes = ["$CACHE_DIR:/cache"]
+    volumes = ["$CACHE_DIR:/cache", "$NIX_STORE_DIR:/kept-nix"]
     pull_policy = ["if-not-present"]
 EOF
   )
