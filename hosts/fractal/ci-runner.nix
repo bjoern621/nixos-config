@@ -80,6 +80,34 @@ in
     };
   };
 
+  # Runner build volumes and every image version jobs pulled pile up with no cap.
+  systemd.services.docker-ci-prune = {
+    description = "Prune unused containers, volumes, images and build cache of the CI Docker daemon";
+    serviceConfig.Type = "oneshot";
+    path = [ config.virtualisation.docker.package ];
+    environment.DOCKER_HOST = "unix:///run/docker-ci.sock";
+    script = ''
+      # docker-ci runs only between `ci-runners up` and `down`.
+      ${pkgs.systemd}/bin/systemctl is-active --quiet docker-ci.service || exit 0
+      # Runner creates job containers before starting them; until= keeps those.
+      docker container prune -f --filter until=24h
+      # Volumes take no age filter. Next job on that slot clones again.
+      docker volume prune -a -f --filter label=com.gitlab.gitlab-runner.managed=true
+      docker volume prune -f
+      # until= compares image creation, not last use: unused older base images get pulled again.
+      docker image prune -a -f --filter until=336h
+      docker builder prune -f --filter until=336h
+    '';
+  };
+  # Weekly: each run costs re-pulls of base images.
+  systemd.timers.docker-ci-prune = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "weekly";
+      Persistent = true;
+    };
+  };
+
   services.openssh = {
     enable = true;
     ports = [ 22 ];
