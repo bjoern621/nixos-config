@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 # Windows sits on its own disk with its own ESP, and lanzaboote carries no entry for it.
 # BootNext points the firmware at the Windows Boot Manager for one boot, then the default returns.
@@ -20,12 +25,11 @@ let
       systemctl reboot
     '';
   };
-  # Launcher has no terminal for password prompt; `-n` fails instead of waiting on one.
   rebootToWindowsEntry = pkgs.makeDesktopItem {
     name = "reboot-to-windows";
     desktopName = "In Windows neu starten";
     comment = "Startet einmal Windows, danach wieder NixOS";
-    exec = "sudo -n reboot-to-windows";
+    exec = "systemctl start --no-block reboot-to-windows.service";
     icon = "distributor-logo-windows";
     categories = [ "System" ];
     keywords = [
@@ -37,21 +41,25 @@ let
   };
 in
 {
-  environment.systemPackages = [
-    rebootToWindows
-    rebootToWindowsEntry
-  ];
+  environment.systemPackages = [ rebootToWindowsEntry ];
+
+  systemd.services.reboot-to-windows = {
+    description = "Reboot into Windows once";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = lib.getExe rebootToWindows;
+    };
+  };
 
   # Writing BootNext needs root.
-  security.sudo.extraRules = [
-    {
-      users = [ "bjoern" ];
-      commands = [
-        {
-          command = "/run/current-system/sw/bin/reboot-to-windows";
-          options = [ "NOPASSWD" ];
-        }
-      ];
-    }
-  ];
+  # Launcher starts unit as user.
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (action.id == "org.freedesktop.systemd1.manage-units" &&
+          action.lookup("unit") == "reboot-to-windows.service" &&
+          subject.user == "${config.sysconf.user}") {
+        return polkit.Result.YES;
+      }
+    });
+  '';
 }
