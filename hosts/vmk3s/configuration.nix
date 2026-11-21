@@ -23,6 +23,7 @@ in
     ../../modules/backup-source.nix
     ../../modules/vmk3s/bitwarden-dump.nix
     ../../modules/vmk3s/travel-vpn.nix
+    ../../modules/vmk3s/ticket-watch.nix
     ../../modules/sops.nix
     ../../modules/telemetry-agent.nix
     ../../modules/connection-log.nix
@@ -43,6 +44,7 @@ in
   };
   services.connection-log.enable = true;
   services.blocklist.enable = true;
+  services.ticket-watch.enable = true;
 
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
