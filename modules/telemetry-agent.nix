@@ -159,7 +159,13 @@ in
     services.opentelemetry-collector = {
       enable = true;
       # journald and hostmetrics receivers live in contrib only.
-      package = pkgs.opentelemetry-collector-contrib;
+      # Go 1.27 lacks runtime internals that cockroachdb/swiss links (`undefined: fastrand64`).
+      # Back to pkgs.opentelemetry-collector-contrib once Hydra builds it again.
+      package =
+        (pkgs.opentelemetry-collector-releases.override {
+          buildGoModule = pkgs.buildGo126Module;
+          go = pkgs.go_1_26;
+        }).otelcol-contrib;
       # Build-time `otelcol validate` runs in Nix sandbox without /var/lib.
       # Override skips file_storage directory check; deployed config unchanged.
       validateConfigOverrides = [ "extensions::file_storage::create_directory=true" ];
