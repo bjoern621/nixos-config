@@ -2,19 +2,18 @@ import QtQuick
 import Quickshell.Hyprland
 import "../"
 
-// Outside-click and focus-loss dismissal, shared by the launcher overlays.
-// Covers every close except Escape and picking an entry, which the host owns.
+// Outside-click and focus-loss dismissal, shared by launcher overlays.
+// Covers every close except Escape and picking an entry, which host owns.
 //
-// Two paths, neither redundant:
-// - Focus grab. Surfaces are card-sized, so a click on another window never
-//   reaches the overlay. Hyprland clears the grab and swallows that click.
-// - Focus loss. Another overlay mapping steals keyboard focus with no click,
-//   which the grab does not report.
+// Two paths, neither redundant.
+// Focus grab: surfaces are card-sized, click on another window never reaches overlay.
+// Hyprland clears grab and swallows that click.
+// Focus loss: keyboard focus leaving with no click, which grab does not report.
 //
-// Host must set WlrKeyboardFocus.OnDemand. Exclusive pins keyboard focus
-// through clicks on other windows, so activeFocus never drops and neither path
-// fires. OnDemand without the grab is no good either: focus-follows-mouse hands
-// focus back to the window under the cursor and the overlay closes itself.
+// Host must set WlrKeyboardFocus.OnDemand.
+// Exclusive pins keyboard focus through clicks on other windows: activeFocus never drops, neither path fires.
+// OnDemand without grab breaks too.
+// Focus-follows-mouse hands focus back to window under cursor, overlay closes itself.
 QtObject {
     id: root
 
@@ -35,9 +34,22 @@ QtObject {
 
     signal dismissed
 
+    // Latches once host holds keyboard focus, resets on close.
+    property bool _focused: false
+
     onActiveChanged: {
         if (active)
             Globals.activeLauncherOverlay = root;
+        else
+            _focused = false;
+    }
+
+    property Connections _focusLatch: Connections {
+        target: root.watch
+        function onActiveFocusChanged() {
+            if (root.watch.activeFocus && root.active)
+                root._focused = true;
+        }
     }
 
     onSupersededChanged: {
@@ -51,9 +63,12 @@ QtObject {
         onLost: root.dismissed()
     }
 
+    // Grab waits for focus on map.
+    // Grab active before map sets seat focus directly, so Hyprland's focus state keeps previous window.
+    // Any other layer unmapping (volume OSD, toast) then restores that window's focus past the grab.
     property HyprlandFocusGrab _grab: HyprlandFocusGrab {
         windows: [root.hostWindow]
-        active: root.active
+        active: root.active && root._focused
         onCleared: root.dismissed()
     }
 }
