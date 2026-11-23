@@ -16,14 +16,6 @@
     options rtw89_pci disable_aspm_l1=1 disable_aspm_l1ss=1
   '';
 
-  # Samsung PM9A1 (MZVL21T0HCLR, fw CL1QGXA7) at times goes controller-fatal:
-  # "nvme nvme0: controller is down; will reset: CSTS=0x3".
-  # Failed reset takes / with it: black screen, nothing in journal, no pstore dump.
-  # APST off alone did not stop it; 2026-09-30 fault hit on battery with PCIe link in ASPM L1.2.
-  # Fix: APST off plus ASPM L1.1/L1.2 off on its link (udev rule below).
-  # Clearing link/*_aspm sets aspm_disable, which TLP's policy writes on AC/battery switch keep.
-  boot.kernelParams = [ "nvme_core.default_ps_max_latency_us=0" ];
-
   # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
   # Its DSP firmware state is not restored properly, causing tinny audio.
   #
@@ -37,6 +29,14 @@
   # never reaches s0ix, "Wakeup unrelated to ACPI SCI"), which is why lid
   # close hibernates directly (modules/hibernate.nix). The rules are kept for
   # the case that a BIOS update fixes s0ix and suspend gets re-enabled.
+  #
+  # PCI rule turns ASPM L1.1/L1.2 off on Samsung PM9A1 link.
+  # PM9A1 (MZVL21T0HCLR, fw CL1QGXA7) at times goes controller-fatal:
+  # "nvme nvme0: controller is down; will reset: CSTS=0x3".
+  # Failed reset takes / with it: black screen, nothing in journal, no pstore dump.
+  # APST off did not prevent it: one fault hit with APST off and link in ASPM L1.2.
+  # APST stays on. nvme-watch (modules/nvme-watch.nix) watches for controller-fatal resets.
+  # Clearing link/*_aspm sets aspm_disable, which TLP's policy writes on AC/battery switch keep.
   services.udev.extraRules = ''
     ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-TIAS2781:00", ATTR{power/control}="on"
     ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="PNP0C0A:00", ATTR{power/wakeup}="disabled"
