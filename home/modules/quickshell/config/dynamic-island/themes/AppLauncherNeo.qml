@@ -73,23 +73,27 @@ Scope {
         // The sizes must match the visible ThemeIcons, since the size forms part of
         // Qt's cache key. The holder sits in the launcher window to share its device
         // pixel ratio.
+        //
+        // Qt's image loader thread takes the newest waiting request first. The
+        // holder asks for the icons from Z to A, so a cold start loads them from A
+        // to Z, in the order of the list.
         Item {
             visible: false
 
             Repeater {
-                model: LauncherController.indexedApps
+                model: LauncherController.indexedApps.slice().reverse()
 
                 Item {
                     required property var modelData
                     readonly property string iconSource: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
 
                     ThemeIcon {
-                        size: 22
+                        size: 16
                         source: parent.iconSource
                     }
 
                     ThemeIcon {
-                        size: 16
+                        size: 22
                         source: parent.iconSource
                     }
                 }
