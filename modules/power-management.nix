@@ -16,6 +16,10 @@
     options rtw89_pci disable_aspm_l1=1 disable_aspm_l1ss=1
   '';
 
+  # Lazy RCU (CONFIG_RCU_LAZY) batches callbacks on offloaded CPUs alone.
+  # Without offload, rcu_preempt wakes several hundred times per second on idle desktop.
+  boot.kernelParams = [ "rcu_nocbs=all" ];
+
   # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
   # Its DSP firmware state is not restored properly, causing tinny audio.
   #
