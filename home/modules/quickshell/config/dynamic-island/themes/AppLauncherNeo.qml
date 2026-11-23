@@ -67,6 +67,35 @@ Scope {
             onDismissed: Globals.launcherVisible = false
         }
 
+        // Holds a reference to every app icon at the sizes that the rows and the
+        // action bar draw. Qt evicts unreferenced pixmaps over a few minutes. An
+        // evicted icon loads again and shows the letter fallback for a frame or more.
+        // The sizes must match the visible ThemeIcons, since the size forms part of
+        // Qt's cache key. The holder sits in the launcher window to share its device
+        // pixel ratio.
+        Item {
+            visible: false
+
+            Repeater {
+                model: LauncherController.indexedApps
+
+                Item {
+                    required property var modelData
+                    readonly property string iconSource: modelData.app.icon ? ("image://icon/" + modelData.app.icon) : ""
+
+                    ThemeIcon {
+                        size: 22
+                        source: parent.iconSource
+                    }
+
+                    ThemeIcon {
+                        size: 16
+                        source: parent.iconSource
+                    }
+                }
+            }
+        }
+
         Item {
             id: panelRoot
             anchors.fill: parent
