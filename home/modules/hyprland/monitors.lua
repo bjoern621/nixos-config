@@ -10,7 +10,15 @@
 -- Page dim still shows.
 -- Fullscreen toggle (SUPER + F) relayouts it into view.
 -- https://github.com/hyprwm/Hyprland/discussions/13827
-hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10 })
+-- 90 Hz on AC, 60 Hz on battery, read on each config load.
+-- edp-refresh-rate (edp-refresh-rate.nix) switches it on plug and unplug.
+local function edp_mode()
+    local online = io.open("/sys/class/power_supply/ADP0/online")
+    local on_ac = online ~= nil and online:read("l") == "1"
+    if online then online:close() end
+    return on_ac and "2944x1840@90" or "2944x1840@60"
+end
+hl.monitor({ output = "eDP-1", mode = edp_mode(), position = "1824x1440", scale = 2, bitdepth = 10 })
 -- 1440p144 needs HBR3.
 -- amdgpu-force-hbr3 (modules/external-monitors.nix) forces it on dock DPIA links,
 -- bypassing broken Phoenix1 AUX cap probe through CalDigit TS5 Plus.
@@ -35,6 +43,8 @@ hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 -- `hyprctl eval` with the hl.monitor API instead. Re-enable must pass
 -- `disabled = false` explicitly; setting mode/position alone leaves the
 -- disabled flag latched.
+-- Undocked, lid open after hibernate resume runs this bind as well.
+-- edp-refresh-rate then sets 60 Hz on battery.
 hl.bind(
     "switch:on:Lid Switch",
     hl.dsp.exec_cmd([[test "$(hyprctl monitors | grep -c '^Monitor ')" -gt 1 && hyprctl eval 'hl.monitor({ output = "eDP-1", disabled = true })']]),
@@ -42,6 +52,6 @@ hl.bind(
 )
 hl.bind(
     "switch:off:Lid Switch",
-    hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10, disabled = false })']]),
+    hl.dsp.exec_cmd([[hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "2944x1840@90", position = "1824x1440", scale = 2, bitdepth = 10, disabled = false })' && edp-refresh-rate]]),
     { locked = true }
 )

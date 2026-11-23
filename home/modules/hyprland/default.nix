@@ -34,6 +34,7 @@
     ./wallpaper-chooser.nix
     ./theme-switcher.nix
     ./hdr-toggle.nix
+    ./edp-refresh-rate.nix
   ];
 
   # Auto-start Hyprland uwsm after login
