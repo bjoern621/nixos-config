@@ -1,3 +1,23 @@
+{ pkgs, ... }:
+
+let
+  brightnessctl = "${pkgs.brightnessctl}/bin/brightnessctl";
+  # Marker tells resume that idle dimmed panel.
+  # Without it, resume on AC would restore stale saved brightness.
+  dimmedMarker = "$XDG_RUNTIME_DIR/hypridle-backlight-dimmed";
+
+  # Battery alone: docked, panel power counts for nothing.
+  dimBacklightOnBattery = pkgs.writeShellScript "hypridle-dim-backlight" ''
+    [ "$(cat /sys/class/power_supply/ADP0/online)" = 0 ] || exit 0
+    ${brightnessctl} --save set 0
+    touch "${dimmedMarker}"
+  '';
+  restoreBacklight = pkgs.writeShellScript "hypridle-restore-backlight" ''
+    [ -e "${dimmedMarker}" ] || exit 0
+    ${brightnessctl} --restore
+    rm "${dimmedMarker}"
+  '';
+in
 {
   # Lock the session before the machine sleeps (suspend/hibernate), so resume
   # requires a password. logind triggers hibernate on lid close
@@ -20,5 +40,12 @@
       # window; routing through the async Lock signal would race the freeze.
       before_sleep_cmd = "quickshell-lock";
     };
+    settings.listener = [
+      {
+        timeout = 300;
+        on-timeout = "${dimBacklightOnBattery}";
+        on-resume = "${restoreBacklight}";
+      }
+    ];
   };
 }
