@@ -31,6 +31,11 @@
         desc = "Yank selected files (copy)";
       }
       {
+        on = "<C-x>";
+        run = "yank --cut";
+        desc = "Yank selected files (cut)";
+      }
+      {
         on = "<C-v>";
         run = "paste";
         desc = "Paste yanked files";
