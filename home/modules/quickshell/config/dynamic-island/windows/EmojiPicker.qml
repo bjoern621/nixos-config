@@ -370,16 +370,14 @@ Scope {
                 }
             }
         }
-    }
 
-    Tooltip {
-        anchorItem: emojiScope.hoveredCell
-        text: emojiScope.hoveredCell ? emojiScope.hoveredText : ""
-        subtitle: emojiScope.hoveredCell ? emojiScope.hoveredSubtitle : ""
-        textFormat: Text.StyledText
-        screen: emojiWindow.screen
-        // Cells live in the card-sized surface, the tooltip in a fullscreen one.
-        anchorWindow: emojiWindow
-        recalcKey: emojiGrid.contentY
+        TooltipBubble {
+            anchors.fill: parent
+            anchorItem: emojiScope.hoveredCell
+            text: emojiScope.hoveredCell ? emojiScope.hoveredText : ""
+            subtitle: emojiScope.hoveredCell ? emojiScope.hoveredSubtitle : ""
+            textFormat: Text.StyledText
+            recalcKey: emojiGrid.contentY
+        }
     }
 }
