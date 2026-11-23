@@ -245,7 +245,7 @@ Scope {
 
     PanelWindow {
         id: clipWindow
-        visible: panel.mapped
+        visible: panel.mapped && !clipDismiss.superseded
         WlrLayershell.namespace: "quickshell-clipboard"
 
         // No anchors: the compositor centers a card-sized surface.
@@ -258,6 +258,7 @@ Scope {
         color: "transparent"
 
         LauncherDismiss {
+            id: clipDismiss
             hostWindow: clipWindow
             watch: panel
             active: clipScope.clipVisible

@@ -41,7 +41,7 @@ Scope {
 
     PanelWindow {
         id: launcherWindow
-        visible: LauncherController.launcherVisible || !hideComplete
+        visible: LauncherController.launcherVisible || (!hideComplete && !launcherDismiss.superseded)
         property bool hideComplete: true
         WlrLayershell.namespace: "quickshell-launcher"
         screen: Quickshell.screens.find(s => s.name === Globals.launcherScreenName) ?? null
@@ -61,6 +61,7 @@ Scope {
         color: "transparent"
 
         LauncherDismiss {
+            id: launcherDismiss
             hostWindow: launcherWindow
             watch: panelRoot
             active: LauncherController.launcherVisible

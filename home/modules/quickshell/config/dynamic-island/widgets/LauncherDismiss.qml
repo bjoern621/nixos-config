@@ -26,7 +26,24 @@ QtObject {
     // Tracks host visibility.
     property bool active: false
 
+    // Another overlay opened after this one.
+    // Host must unmap at once while superseded: `visible: <mapped> && !dismiss.superseded`.
+    // Surface unmapping after its hide animation triggers Hyprland's unmap refocus,
+    // which hands keyboard focus to window under pointer and closes newer overlay.
+    // Unmapping before newer overlay maps lets that overlay take focus on map.
+    readonly property bool superseded: Globals.activeLauncherOverlay !== null && Globals.activeLauncherOverlay !== root
+
     signal dismissed
+
+    onActiveChanged: {
+        if (active)
+            Globals.activeLauncherOverlay = root;
+    }
+
+    onSupersededChanged: {
+        if (superseded && active)
+            dismissed();
+    }
 
     property AutoCloseOnFocusLoss _focusLoss: AutoCloseOnFocusLoss {
         watch: root.watch

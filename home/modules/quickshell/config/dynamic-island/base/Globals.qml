@@ -46,6 +46,10 @@ QtObject {
     property bool launcherVisible: false
     property string launcherScreenName: ""
 
+    // Last launcher overlay opened, written by LauncherDismiss.
+    // Never cleared on close: every other overlay counts as superseded until it opens again.
+    property var activeLauncherOverlay: null
+
     property bool doNotDisturb: false
 
     // Design theme. Names a folder under themes/.

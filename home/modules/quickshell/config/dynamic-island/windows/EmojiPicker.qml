@@ -198,7 +198,7 @@ Scope {
 
     PanelWindow {
         id: emojiWindow
-        visible: panel.mapped
+        visible: panel.mapped && !emojiDismiss.superseded
         WlrLayershell.namespace: "quickshell-emoji"
 
         // No anchors: the compositor centers a card-sized surface.
@@ -211,6 +211,7 @@ Scope {
         color: "transparent"
 
         LauncherDismiss {
+            id: emojiDismiss
             hostWindow: emojiWindow
             watch: panel
             active: emojiScope.emojiVisible
