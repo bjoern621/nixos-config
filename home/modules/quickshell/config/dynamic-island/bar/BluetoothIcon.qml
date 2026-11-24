@@ -2,9 +2,9 @@ import QtQuick
 import "../"
 import "../base"
 
-// Bar Bluetooth indicator: glyph tinted by radio state, accent chip when a
-// device is connected. State comes from the BluetoothService singleton,
-// matching NetworkIcon's shape.
+// Bar Bluetooth glyph, slashed and muted while radio off.
+// Accent chip marks connected device.
+// State from BluetoothService singleton, same shape as NetworkIcon.
 Item {
     id: root
 
@@ -14,7 +14,7 @@ Item {
 
     TintedIcon {
         anchors.fill: parent
-        source: "../icons/icons8-bluetooth.svg"
+        source: BluetoothService.powered ? "../icons/icons8-bluetooth.svg" : "../icons/icons8-bluetooth-off.svg"
         color: BluetoothService.powered ? Colors.textColor : Colors.textColorMuted
         opacity: BluetoothService.powered ? 1.0 : 0.65
     }
