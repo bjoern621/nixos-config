@@ -121,6 +121,11 @@ Scope {
         }
     }
 
+    function previewImage(path) {
+        clipVisible = false;
+        Quickshell.execDetached(["xdg-open", path]);
+    }
+
     function decodeNextImage() {
         if (imageDecodeQueue.length === 0)
             return;
@@ -397,6 +402,28 @@ Scope {
                             raw: clipDelegate.raw,
                             clipId: clipDelegate.clipId
                         })
+                    }
+
+                    MiniIconButton {
+                        anchors {
+                            right: trashBtn.left
+                            rightMargin: Spacing.spacing4
+                            top: trashBtn.top
+                        }
+                        source: "../icons/eye.svg"
+                        // Preview file exists only after decode.
+                        readonly property bool decoded: !!clipScope.imageVersions[clipDelegate.clipId]
+                        opacity: clipDelegate.isImage && decoded && rowHover.hovered ? 1.0 : 0.0
+                        visible: opacity > 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 80
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+
+                        onClicked: clipScope.previewImage(clipDelegate.imagePath)
                     }
                 }
             }
