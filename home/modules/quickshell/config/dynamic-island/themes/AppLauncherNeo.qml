@@ -356,10 +356,8 @@ Scope {
                                         Connections {
                                             target: LauncherController
                                             function onLauncherVisibleChanged() {
-                                                if (LauncherController.launcherVisible) {
+                                                if (LauncherController.launcherVisible)
                                                     resultsList.positionViewAtBeginning();
-                                                    resultsList.reset();
-                                                }
                                             }
                                         }
 

@@ -4,9 +4,10 @@ import QtQuick
 // Place inside a ListView or GridView and pass `view: <viewId>`.
 //
 // Last input wins. Keystrokes claim the selection through keyboardSelect(),
-// cursor motion hands it to the item under the pointer. Hover-enter alone does
-// not claim it: a list re-filtering or an overlay mapping under a stationary
-// cursor would otherwise steal the keyboard's selection.
+// cursor motion hands it to the item under the pointer.
+// Opening under a resting cursor selects the item under it.
+// Hover-enter after a keystroke does not claim: a list re-filtering under a
+// stationary cursor would otherwise steal the keyboard's selection.
 Item {
     id: selection
 
@@ -22,22 +23,31 @@ Item {
     // currentIndex and hoveredIndex past the end. -1 on an empty view.
     readonly property int effectiveIndex: Math.min(selectedIndex, view.count - 1)
 
-    // Hover-enter delivers one position sample when the view maps under a
-    // stationary cursor. Swallowed, else opening an overlay claims mouse mode.
-    property bool pointerSampled: false
+    // Set by reset(), cleared by the first claim from either side.
+    // While set, hover-enter claims: the view mapping under a resting cursor
+    // hands the selection to the item under it.
+    property bool pointerArmed: false
 
     // Call on view open or model reload, else a stale hover or keyboard selection carries over.
+    // Call after any keyboardSelect() of the same open, which disarms the pointer.
     function reset() {
         view.currentIndex = 0;
         hoveredIndex = -1;
         keyboardNav = true;
-        pointerSampled = false;
+        pointerArmed = true;
     }
 
     // Keystroke claims the selection. Hover is ignored until the cursor moves.
     function keyboardSelect(index) {
         keyboardNav = true;
+        pointerArmed = false;
         view.currentIndex = Math.max(0, Math.min(index, view.count - 1));
+    }
+
+    function pointerSelect() {
+        keyboardNav = false;
+        pointerArmed = false;
+        syncHover();
     }
 
     function syncHover() {
@@ -66,19 +76,20 @@ Item {
         id: hoverArea
         parent: selection.view
         // Fires on hover flip, including the view re-appearing under a static cursor.
-        // Refreshes the index without claiming: motion alone switches to mouse.
-        onHoveredChanged: selection.syncHover()
+        // Claims only while armed. Otherwise refreshes the index: motion alone switches to mouse.
+        onHoveredChanged: {
+            if (hovered && selection.pointerArmed)
+                selection.pointerSelect();
+            else
+                selection.syncHover();
+        }
     }
 
     // scenePosition is window-relative, so this does not fire
     // when the view scrolls under a static cursor.
     readonly property point hoverScenePos: hoverArea.point.scenePosition
     onHoverScenePosChanged: {
-        if (!hoverArea.hovered)
-            return;
-        if (pointerSampled)
-            keyboardNav = false;
-        pointerSampled = true;
-        syncHover();
+        if (hoverArea.hovered)
+            pointerSelect();
     }
 }

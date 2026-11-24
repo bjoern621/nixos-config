@@ -34,6 +34,9 @@ Singleton {
         if (launcherVisible) {
             searchText = "";
             updateFilter();
+            // After updateFilter(): its keyboardSelect() would disarm the pointer that reset() arms.
+            if (selectionView)
+                selectionView.reset();
         }
     }
 

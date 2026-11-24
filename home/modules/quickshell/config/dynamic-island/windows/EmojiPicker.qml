@@ -70,9 +70,7 @@ Scope {
         requestFilter();
     }
     // Switching group replaces the model, so the selection resets with it.
-    // reset() over keyboardSelect(0): it also drops the previous group's
-    // hoveredIndex and re-arms the pointer gate, so the new grid mapping under
-    // a stationary cursor does not inherit a stale hover.
+    // reset() over keyboardSelect(0): it also drops the previous group's hoveredIndex.
     onSelectedGroupChanged: {
         hoveredCell = null;
         if (searchText === "")
@@ -116,10 +114,10 @@ Scope {
                     emojiScope.dispatchQuery();
                     return;
                 }
+                // Replacing the model moves currentIndex to 0.
+                // No keyboardSelect(): the result of an open lands after the
+                // cursor may have claimed the selection.
                 emojiScope.filteredEmojis = msg.items;
-                // Re-anchor on the new result set. The query was keystroke- or
-                // group-driven, both of which already reset the selection.
-                emojiGrid.keyboardSelect(0);
             }
         }
     }

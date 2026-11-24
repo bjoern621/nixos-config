@@ -37,6 +37,11 @@ Item {
             if (!selection.keyboardNav)
                 selection.syncHover();
         }
+        // A model landing after the cursor claimed puts new items under it.
+        function onCountChanged() {
+            if (!selection.keyboardNav)
+                selection.syncHover();
+        }
     }
 
     // Shared wheel step, no inertia. Wheel is mouse input, so it drops keyboard nav.
