@@ -40,7 +40,7 @@ Item {
     implicitWidth: 300 + Shape.shadowOffset
     implicitHeight: mainLayout.height + 2 * contentPadding + Shape.shadowOffset
     // Read by HoverMenu for the Bar surface.
-    readonly property real settledImplicitHeight: implicitHeight + outputSection.settledHeight - outputSection.height
+    readonly property real reservedImplicitHeight: implicitHeight + outputSection.reserveHeight
 
     property bool outputExpanded: false
 

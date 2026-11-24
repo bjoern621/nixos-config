@@ -20,8 +20,11 @@ Item {
     implicitWidth: 280 + Shape.shadowOffset
     implicitHeight: menuLayout.height + 2 * contentPadding + Shape.shadowOffset
     // Read by HoverMenu for the Bar surface.
-    // The track list animates its height twice: section expand, then rows arriving.
-    readonly property real settledImplicitHeight: implicitHeight + (signInHint.settledHeight - signInHint.height) + (trackListWrapper.settledHeight - trackListWrapper.height) + (controller.queueExpanded ? trackListView.contentHeight - trackListView.height : 0)
+    // Track list reserves its row cap: rows arrive after the open.
+    readonly property real reservedImplicitHeight: implicitHeight + signInHint.reserveHeight + Math.max(0, trackListMaxRows * trackRowHeight - trackListWrapper.height)
+    // 3 recent, current, 3 queued (NowPlayingModel).
+    readonly property int trackListMaxRows: 7
+    readonly property int trackRowHeight: 32 + Spacing.spacing8
 
     NowPlayingController {
         id: controller

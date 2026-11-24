@@ -65,11 +65,12 @@ Variants {
         // artifact invisible. Growth costs one mild dip frame, so it stays dynamic.
         implicitHeight: pillHidden ? 0 : Math.max(56, Math.ceil(popupSurfaceBottom) + Spacing.spacing8)
 
-        // Bottom edge of the tallest shown popup, in root coords.
+        // Bottom edge of the tallest shown or pending popup, in root coords.
         // Each popup is a direct child of interactionZone (anchored to root top, y=0).
-        // Its bottom: popupItem.y plus settled height (HoverMenu.settledHeight).
-        // Settled height grows the surface once, before a menu section animates open.
-        // Growth on every animation frame showed stale buffer rows stretched down the menu.
+        // Its bottom: popupItem.y plus reserved height (HoverMenu.reservedHeight), which covers sections the menu may open.
+        // A pending popup (hover delay running) counts.
+        // Surface grows before the menu maps.
+        // Surface growth with a menu on screen shows a squashed or stretched buffer for a few frames.
         // statusGroup wraps its own HoverItems.
         // implicitHeight, since a wrapper's height follows its layout and can answer a pass late,
         // and the value below latches what it reads.
@@ -83,8 +84,8 @@ Variants {
                     const p = c.popupItem;
                     if (!p)
                         continue;
-                    const bottom = p.y + (p.settledHeight ?? p.implicitHeight);
-                    if (p.visible && bottom > maxB)
+                    const bottom = p.y + (p.reservedHeight ?? p.implicitHeight);
+                    if ((p.visible || c.popupPending) && bottom > maxB)
                         maxB = bottom;
                 }
             };

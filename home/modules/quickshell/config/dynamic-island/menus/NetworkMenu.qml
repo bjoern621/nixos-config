@@ -60,15 +60,16 @@ Item {
     implicitHeight: mainLayout.height + 2 * contentPadding + Shape.shadowOffset
     // Read by HoverMenu for the Bar surface.
     // Upper bound: wifi list caps its height.
-    // Row growing inside it may grow menu less.
-    readonly property real settledImplicitHeight: implicitHeight + pendingRowsHeight(wifiRepeater) + pendingRowsHeight(wiredRepeater)
+    // Row opening inside it may grow menu less.
+    readonly property real reservedImplicitHeight: implicitHeight + Math.max(rowsReserveHeight(wifiRepeater), rowsReserveHeight(wiredRepeater))
 
-    // Sum of pendingHeight over a Repeater of expandable rows.
-    function pendingRowsHeight(repeater) {
-        let sum = 0;
+    // Largest reserveHeight in a Repeater of expandable rows.
+    // One row opens at a time.
+    function rowsReserveHeight(repeater) {
+        let max = 0;
         for (let i = 0; i < repeater.count; i++)
-            sum += repeater.itemAt(i)?.pendingHeight ?? 0;
-        return sum;
+            max = Math.max(max, repeater.itemAt(i)?.reserveHeight ?? 0);
+        return max;
     }
 
     onPasswordActiveChanged: if (passwordActive) pwCapture.forceActiveFocus()

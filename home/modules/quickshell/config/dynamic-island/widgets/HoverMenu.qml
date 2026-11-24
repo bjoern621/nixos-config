@@ -23,9 +23,9 @@ PopReveal {
     implicitWidth: menuWrapper.view ? menuWrapper.view.implicitWidth : 0
     implicitHeight: (menuWrapper.view ? menuWrapper.view.implicitHeight : 0) + gapHeight
 
-    // Height after the view finishes its running animations, for the Bar surface.
-    // A view without settledImplicitHeight reports its live height.
-    readonly property real settledHeight: (menuWrapper.view ? (menuWrapper.view.settledImplicitHeight ?? menuWrapper.view.implicitHeight) : 0) + gapHeight
+    // Tallest height the view may reach by opening its sections, for the Bar surface.
+    // A view without reservedImplicitHeight reports its live height.
+    readonly property real reservedHeight: (menuWrapper.view ? (menuWrapper.view.reservedImplicitHeight ?? menuWrapper.view.implicitHeight) : 0) + gapHeight
 
     HoverHandler {
         id: hoverHandler

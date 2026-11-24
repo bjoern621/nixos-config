@@ -13,6 +13,9 @@ Item {
     readonly property bool hovered: hoverHandler.hovered
     readonly property bool pressed: tapHandler.pressed
     readonly property bool popupOpen: internal.menuOpen
+    // Hover delay runs: menu shows once it ends.
+    // Bar grows its surface in that window, before the menu maps.
+    readonly property bool popupPending: menuShowTimer.running
     readonly property Item popupItem: menu
 
     signal clicked
