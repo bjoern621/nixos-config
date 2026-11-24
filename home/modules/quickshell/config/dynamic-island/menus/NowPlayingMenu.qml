@@ -19,6 +19,9 @@ Item {
     // Content + shadow gutter.
     implicitWidth: 280 + Shape.shadowOffset
     implicitHeight: menuLayout.height + 2 * contentPadding + Shape.shadowOffset
+    // Read by HoverMenu for the Bar surface.
+    // The track list animates its height twice: section expand, then rows arriving.
+    readonly property real settledImplicitHeight: implicitHeight + (signInHint.settledHeight - signInHint.height) + (trackListWrapper.settledHeight - trackListWrapper.height) + (controller.queueExpanded ? trackListView.contentHeight - trackListView.height : 0)
 
     NowPlayingController {
         id: controller
@@ -307,7 +310,7 @@ Item {
             }
 
             SpotifySignInHint {
-                width: parent.width
+                id: signInHint
                 applies: controller.isSpotify
             }
 

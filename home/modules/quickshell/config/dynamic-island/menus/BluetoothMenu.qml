@@ -25,6 +25,18 @@ Item {
 
     implicitWidth: baseWidth + Shape.shadowOffset
     implicitHeight: mainLayout.height + 2 * contentPadding + Shape.shadowOffset
+    // Read by HoverMenu for the Bar surface.
+    // Upper bound: paired list caps its height.
+    // Row growing inside it may grow menu less.
+    readonly property real settledImplicitHeight: implicitHeight + pendingRowsHeight(pairedRepeater)
+
+    // Sum of pendingHeight over a Repeater of expandable rows.
+    function pendingRowsHeight(repeater) {
+        let sum = 0;
+        for (let i = 0; i < repeater.count; i++)
+            sum += repeater.itemAt(i)?.pendingHeight ?? 0;
+        return sum;
+    }
 
     onRenameActiveChanged: if (renameActive) renameCapture.forceActiveFocus()
 
@@ -244,6 +256,7 @@ Item {
                 height: Math.min(implicitHeight, 300)
 
                 Repeater {
+                    id: pairedRepeater
                     model: BluetoothService.pairedDevices
                     BluetoothDeviceRow {
                         required property var modelData

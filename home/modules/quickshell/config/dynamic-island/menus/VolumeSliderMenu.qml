@@ -39,6 +39,8 @@ Item {
     // Pad size by shadowOffset so paper stays 300 wide, content unchanged.
     implicitWidth: 300 + Shape.shadowOffset
     implicitHeight: mainLayout.height + 2 * contentPadding + Shape.shadowOffset
+    // Read by HoverMenu for the Bar surface.
+    readonly property real settledImplicitHeight: implicitHeight + outputSection.settledHeight - outputSection.height
 
     property bool outputExpanded: false
 
@@ -157,6 +159,7 @@ Item {
 
             // Output device list (expandable)
             ExpandSection {
+                id: outputSection
                 expanded: root.outputExpanded
 
                 Column {
@@ -177,8 +180,7 @@ Item {
 
                     // Signed out, a Spotify device playing elsewhere cannot show up above.
                     SpotifySignInHint {
-                        x: Spacing.spacing8
-                        width: parent.width - 2 * Spacing.spacing8
+                        horizontalPadding: Spacing.spacing8
                         topPadding: Spacing.spacing4
                     }
                 }

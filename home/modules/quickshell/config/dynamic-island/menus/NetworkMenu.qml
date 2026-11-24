@@ -58,6 +58,18 @@ Item {
 
     implicitWidth: baseWidth + Shape.shadowOffset
     implicitHeight: mainLayout.height + 2 * contentPadding + Shape.shadowOffset
+    // Read by HoverMenu for the Bar surface.
+    // Upper bound: wifi list caps its height.
+    // Row growing inside it may grow menu less.
+    readonly property real settledImplicitHeight: implicitHeight + pendingRowsHeight(wifiRepeater) + pendingRowsHeight(wiredRepeater)
+
+    // Sum of pendingHeight over a Repeater of expandable rows.
+    function pendingRowsHeight(repeater) {
+        let sum = 0;
+        for (let i = 0; i < repeater.count; i++)
+            sum += repeater.itemAt(i)?.pendingHeight ?? 0;
+        return sum;
+    }
 
     onPasswordActiveChanged: if (passwordActive) pwCapture.forceActiveFocus()
 
@@ -302,6 +314,7 @@ Item {
                 height: root._listHeights.wifi
 
                 Repeater {
+                    id: wifiRepeater
                     model: NetworkService.wifiNetworks
                     NetworkRow {
                         required property var modelData
@@ -338,6 +351,7 @@ Item {
                     visible: NetworkService.wiredConnections.length > 0
                     width: parent.width
                     Repeater {
+                        id: wiredRepeater
                         model: NetworkService.wiredConnections
                         EthernetRow {
                             required property var modelData

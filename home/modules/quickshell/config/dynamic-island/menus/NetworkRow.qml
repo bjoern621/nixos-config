@@ -160,6 +160,9 @@ Item {
         }
     }
 
+    // Height the detail panel still adds before its animation ends, for the Bar surface.
+    readonly property real pendingHeight: Math.max(0, detail.settledHeight - detail.height)
+
     // ---- detail panel ----
     ExpandSection {
         id: detail

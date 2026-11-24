@@ -85,8 +85,10 @@ Singleton {
     property int builtQueueCount: 0
     // Skeletons only while a fetch runs. A queue that is genuinely short
     // (end of playlist) gets no placeholder.
-    readonly property int recentSkeletonCount: spotifyDataLoading ? Math.max(0, 3 - builtRecentCount) : 0
-    readonly property int queueSkeletonCount: spotifyDataLoading ? Math.max(0, 3 - builtQueueCount) : 0
+    // Signed out, the fetch returns no rows.
+    // Placeholders would grow the list, then drop again.
+    readonly property int recentSkeletonCount: spotifyDataLoading && !spotifySignedOut ? Math.max(0, 3 - builtRecentCount) : 0
+    readonly property int queueSkeletonCount: spotifyDataLoading && !spotifySignedOut ? Math.max(0, 3 - builtQueueCount) : 0
 
     // Identity key. title+artist, not uri: history entries carry no uri, and
     // remaster/live variants of one track differ in uri.

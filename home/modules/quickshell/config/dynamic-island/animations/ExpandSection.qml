@@ -8,6 +8,12 @@ Item {
     property bool horizontal: false
     property int duration: 180
 
+    // Height once the running transition ends.
+    // Bar sizes its surface by it.
+    // Surface grows once, before the animation.
+    // A menu holding a section passes it on as settledImplicitHeight (see HoverMenu).
+    readonly property real settledHeight: root.horizontal ? root.height : root.expanded ? contentContainer.childrenRect.height : 0
+
     clip: true
 
     states: [
