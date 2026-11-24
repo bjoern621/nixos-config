@@ -307,7 +307,7 @@ QtObject {
         }
     }
 
-    // Polls only while the view shows: each poll redraws the Bar surface.
+    // Polls only while view shows or is about to: each poll redraws Bar surface.
     property bool viewVisible: true
 
     property Timer _positionTimer: Timer {

@@ -263,10 +263,10 @@ Variants {
                             if (root.mprisPlayer)
                                 root.mprisPlayer.togglePlaying();
                         }
-                        // Smart shuffle and the context's disallows change with no MPRIS signal,
-                        // so every open refetches them.
-                        onPopupOpenChanged: {
-                            if (popupOpen)
+                        // Smart shuffle and context disallows change with no MPRIS signal.
+                        // Every open refetches them, from hover start to land before menu shows.
+                        onPopupPendingChanged: {
+                            if (popupPending)
                                 NowPlayingModel.refreshPlaybackState();
                         }
                         NowPlaying {
@@ -407,6 +407,7 @@ Variants {
                     width: implicitWidth
                     height: implicitHeight
                     player: root.mprisPlayer
+                    aboutToShow: nowPlayingHoverItem.popupPending
                 }
             }
 

@@ -10,6 +10,8 @@ Item {
 
     // Set by Bar. Public interface.
     property var player: null
+    // Set by Bar during hover delay before menu shows.
+    property bool aboutToShow: false
 
     // Read by Bar.qml to keep the menu open while a slider is held.
     readonly property bool sliderActive: positionSlider.pressed || volumeSlider.pressed
@@ -31,7 +33,9 @@ Item {
         player: root.player
         // seekActive needs the live slider press state.
         sliderPressed: positionSlider.pressed
-        viewVisible: root.visible
+        // Poll from hover start.
+        // Slider settles on live position before first frame, no slide from stale one.
+        viewVisible: root.visible || root.aboutToShow
     }
 
     // Card: cream fill + ink border + offset shadow.
