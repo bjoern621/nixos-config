@@ -20,6 +20,11 @@
   # Without offload, rcu_preempt wakes several hundred times per second on idle desktop.
   boot.kernelParams = [ "rcu_nocbs=all" ];
 
+  # dm-crypt hands each block to kcryptd worker threads by default.
+  # Every disk access then wakes those workers.
+  # bypassWorkqueues encrypts and decrypts in the I/O request itself.
+  boot.initrd.luks.devices."luks-d3e9b59e-a5a9-4a07-b5b2-405fca67f400".bypassWorkqueues = true;
+
   # Prevent runtime PM from suspending the TAS2781 speaker amplifier.
   # Its DSP firmware state is not restored properly, causing tinny audio.
   #
