@@ -1,14 +1,12 @@
 {
-  # Chrome and VSCode are started through XDG autostart (systemd-ordered), not
-  # Hyprland exec-once. exec-once fires the moment the compositor initializes,
-  # outside the systemd dependency graph, so it raced xdg-desktop-portal startup
-  # and the apps came up with their file dialogs permanently broken for the
-  # session. As XDG autostart entries they run under xdg-desktop-autostart.target,
-  # which desktop-portals.nix orders after the portal is ready.
+  # Chrome starts via XDG autostart, not Hyprland exec-once.
+  # exec-once fires at compositor init, outside systemd graph.
+  # It raced xdg-desktop-portal startup and broke file dialogs for whole session.
+  # XDG autostart runs under xdg-desktop-autostart.target.
+  # desktop-portals.nix orders that target after portal ready.
   #
-  # Launching still goes through `uwsm app` so the apps inherit the same scoped
-  # environment as before. Workspace placement comes from the class-based window
-  # rules in preferred-workspaces.nix (chrome -> 1, code -> 2).
+  # `uwsm app` gives Chrome same scoped environment as other apps.
+  # Workspace placement comes from class rules in preferred-workspaces.nix.
   xdg.configFile."autostart/google-chrome.desktop".text = ''
     [Desktop Entry]
     Type=Application

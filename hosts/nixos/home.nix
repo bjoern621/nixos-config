@@ -2,7 +2,7 @@
   imports = [
     ../../home/bjoern.nix
     ../../home/modules/dbeaver.nix
-    ../../home/modules/hyprland/vscode-autostart.nix
+    ../../home/modules/hyprland/exclusive-workspace.nix
     ../../home/modules/kooha.nix
     ../../home/modules/laptop-app-scale.nix
     ../../home/modules/quickshell/battery.nix
