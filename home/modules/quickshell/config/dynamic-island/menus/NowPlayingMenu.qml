@@ -306,6 +306,11 @@ Item {
                 }
             }
 
+            SpotifySignInHint {
+                width: parent.width
+                applies: controller.isSpotify
+            }
+
             // --- Wiedergabeliste Toggle ---
             Pressable {
                 id: queueToggle
@@ -520,7 +525,8 @@ Item {
                             property bool isCurrent: type === "current"
                             // History entry without Spotify match (or optimistic rewind entry)
                             // carries no uri; playUri would no-op, so the row reads inert.
-                            property bool playable: isCurrent || uri !== ""
+                            // Play goes through the Web API, so a signed-out shell cannot start a uri.
+                            property bool playable: isCurrent || (uri !== "" && !NowPlayingModel.spotifySignedOut)
 
                             width: trackListView.width
                             height: trackDelegateRow.implicitHeight + Spacing.spacing8

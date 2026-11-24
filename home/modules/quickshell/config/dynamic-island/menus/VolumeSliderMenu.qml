@@ -174,6 +174,13 @@ Item {
                             onBluetoothActivated: (deviceName, mac) => controller.activateBluetooth(deviceName, mac)
                         }
                     }
+
+                    // Signed out, a Spotify device playing elsewhere cannot show up above.
+                    SpotifySignInHint {
+                        x: Spacing.spacing8
+                        width: parent.width - 2 * Spacing.spacing8
+                        topPadding: Spacing.spacing4
+                    }
                 }
             }
 

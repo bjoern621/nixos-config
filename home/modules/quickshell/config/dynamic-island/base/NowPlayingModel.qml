@@ -56,6 +56,9 @@ Singleton {
     // null before the first fetch, after a failed one and while no device is active.
     // Consumers read null as unknown and leave every control enabled.
     property var spotifyPlayback: null
+    // Last fetch found no valid token: never signed in, or refresh refused.
+    // Other errors keep the last value, since they tell nothing about the token.
+    property bool spotifySignedOut: false
 
     // Track duration in seconds from the API. 0 unless it names the track MPRIS
     // sits on, since a fetch can lag a skip.
@@ -296,6 +299,10 @@ Singleton {
     }
 
     function _applyPayload(result) {
+        if (result.error === "not_authenticated")
+            root.spotifySignedOut = true;
+        else if (!result.error)
+            root.spotifySignedOut = false;
         if (result.recently_played)
             root.spotifyRecentlyPlayed = result.recently_played;
         if (result.queue)
