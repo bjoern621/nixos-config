@@ -102,6 +102,14 @@
       RADEON_DPM_STATE_ON_BAT = "battery";
       RADEON_DPM_PERF_LEVEL_ON_AC = "auto";
       RADEON_DPM_PERF_LEVEL_ON_BAT = "auto";
+
+      # Adaptive backlight management (ABM) needs backlight.
+      # Panel reports panel_type OLED.
+      # amdgpu refuses panel_power_savings writes with EBUSY.
+      # Empty level stops TLP writing its defaults (1 on battery).
+      AMDGPU_ABM_LEVEL_ON_AC = "";
+      AMDGPU_ABM_LEVEL_ON_BAT = "";
+      AMDGPU_ABM_LEVEL_ON_SAV = "";
     };
   };
 }
