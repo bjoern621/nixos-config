@@ -13,7 +13,7 @@ Item {
     }
 
     // Read by Bar.qml to keep the menu open while a slider is held.
-    readonly property bool sliderActive: masterSlider.pressed || root._anyAppSliderPressed
+    readonly property bool sliderActive: masterSlider.pressed || spotifyRow.sliderPressed || root._anyAppSliderPressed
 
     // Aggregated over live rows, never counted from press/release edges.
     // A row destroyed mid-drag emits no release.
@@ -43,6 +43,8 @@ Item {
     readonly property real reservedImplicitHeight: implicitHeight + outputSection.reserveHeight
 
     property bool outputExpanded: false
+
+    readonly property bool showApps: controller.streamNodes.length > 0 || controller.spotifyRemoteVolumeAvailable
 
     Card {
         id: card
@@ -187,7 +189,7 @@ Item {
             }
 
             Rectangle {
-                visible: controller.streamNodes.length > 0
+                visible: root.showApps
                 width: parent.width
                 height: 1
                 color: Colors.separatorColor
@@ -195,7 +197,7 @@ Item {
 
             // Per-application volume
             Label {
-                visible: controller.streamNodes.length > 0
+                visible: root.showApps
                 text: "Anwendungen"
                 font.pixelSize: Typography.fontSize12
                 color: Colors.textColorMuted
@@ -204,9 +206,22 @@ Item {
 
             Column {
                 id: appsColumn
-                visible: controller.streamNodes.length > 0
+                visible: root.showApps
                 width: parent.width
                 spacing: Spacing.spacing12
+
+                // Spotify Connect device in another room.
+                // Its level lives on the device, out of reach of the local streams below.
+                VolumeLevelRow {
+                    id: spotifyRow
+                    visible: controller.spotifyRemoteVolumeAvailable
+                    title: "Spotify · " + (controller.spotifyRemoteDevice?.name ?? "")
+                    level: controller.spotifyRemoteVolume / 100
+                    muted: controller.spotifyRemoteVolume === 0
+
+                    onMoved: newLevel => controller.setSpotifyRemoteVolume(newLevel * 100)
+                    onMuteTapped: controller.toggleSpotifyRemoteMute()
+                }
 
                 Repeater {
                     id: appRepeater

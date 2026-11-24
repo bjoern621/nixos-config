@@ -313,8 +313,11 @@ Singleton {
         // has to clear the previous one.
         if (result.current !== undefined)
             root.spotifyCurrent = result.current;
-        if (result.playback !== undefined)
+        if (result.playback !== undefined) {
             root.spotifyPlayback = result.playback;
+            if (result.playback?.device?.volumePercent === root._volumeTarget && !volumeProcess.running)
+                root._volumeTarget = -1;
+        }
     }
 
     function refreshSpotifyData() {
@@ -344,6 +347,73 @@ Singleton {
         if (!uri)
             return;
         Quickshell.execDetached(["python3", root.spotifyScriptPath, "play", uri]);
+    }
+
+    // Level of device Spotify plays on, 0-100.
+    // Value sent but not yet seen in playback fetch wins.
+    // Keeps slider where drag left it.
+    readonly property int spotifyDeviceVolume: _volumeTarget >= 0 ? _volumeTarget : (spotifyPlayback?.device?.volumePercent ?? 0)
+    property int _volumeTarget: -1
+    property int _volumeSent: -1
+    // Level that the mute button restores. Spotify has no mute of its own.
+    property int _volumeBeforeMute: 0
+
+    // One request in flight.
+    // A drag sends the value it rests on when the request returns, skipping the steps between.
+    function setSpotifyDeviceVolume(percent) {
+        root._volumeTarget = Math.max(0, Math.min(100, Math.round(percent)));
+        volumeHold.stop();
+        if (!volumeProcess.running)
+            root._sendVolume();
+    }
+
+    function toggleSpotifyDeviceMute() {
+        if (root.spotifyDeviceVolume > 0) {
+            root._volumeBeforeMute = root.spotifyDeviceVolume;
+            root.setSpotifyDeviceVolume(0);
+        } else if (root._volumeBeforeMute > 0) {
+            root.setSpotifyDeviceVolume(root._volumeBeforeMute);
+        }
+    }
+
+    function _sendVolume() {
+        root._volumeSent = root._volumeTarget;
+        volumeProcess.command = ["python3", root.spotifyScriptPath, "volume", String(root._volumeSent)];
+        volumeProcess.running = true;
+    }
+
+    Process {
+        id: volumeProcess
+
+        // Swallows keyring and API errors. Without a parser they reach the shell log.
+        stderr: SplitParser {
+            onRead: data => {}
+        }
+
+        onExited: {
+            if (root._volumeTarget !== root._volumeSent)
+                volumeResend.restart();
+            else
+                volumeHold.restart();
+        }
+    }
+
+    // Starting straight from onExited would hit a Process that has not cleared running yet.
+    Timer {
+        id: volumeResend
+        interval: 0
+        onTriggered: root._sendVolume()
+    }
+
+    // A device can apply a level late or refuse it.
+    // After the hold, the fetched level shows, whatever the device made of the request.
+    Timer {
+        id: volumeHold
+        interval: 3000
+        onTriggered: {
+            root._volumeTarget = -1;
+            playbackFetch.request();
+        }
     }
 
     // Track changes push to history. postTrackChanged fires once properties are updated.

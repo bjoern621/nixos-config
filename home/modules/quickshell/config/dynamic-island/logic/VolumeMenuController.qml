@@ -73,6 +73,19 @@ QtObject {
 
     readonly property int defaultSinkId: Pipewire.defaultAudioSink?.id ?? -1
     readonly property string defaultSinkDescription: Pipewire.defaultAudioSink?.description ?? "---"
+    // Remote device level goes through Spotify Web API.
+    // Local stream sliders cannot reach it.
+    readonly property bool spotifyRemoteVolumeAvailable: root.spotifyRemoteDevice?.supportsVolume ?? false
+    readonly property int spotifyRemoteVolume: NowPlayingModel.spotifyDeviceVolume
+
+    function setSpotifyRemoteVolume(percent) {
+        NowPlayingModel.setSpotifyDeviceVolume(percent);
+    }
+
+    function toggleSpotifyRemoteMute() {
+        NowPlayingModel.toggleSpotifyDeviceMute();
+    }
+
     readonly property string activeOutputsDescription: root.spotifyRemoteDevice ? root.defaultSinkDescription + " + " + root.spotifyRemoteDevice.name : root.defaultSinkDescription
     function toggleMute() {
         if (VolumeService.audioNode)

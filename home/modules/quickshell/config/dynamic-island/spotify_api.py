@@ -467,11 +467,19 @@ def _device_entry(device: dict[str, Any] | None) -> dict[str, Any] | None:
     if not isinstance(device, dict) or not device.get("name"):
         return None
     name = device["name"]
+    volume = device.get("volume_percent")
     return {
         "name": name,
         "type": device.get("type") or "",
         "isLocal": name.casefold() == socket.gethostname().casefold(),
+        "supportsVolume": bool(device.get("supports_volume")) and volume is not None,
+        "volumePercent": volume if volume is not None else 0,
     }
+
+
+def set_volume(percent: int) -> None:
+    """Set the volume of the active device.  Raises SpotifyError on failure."""
+    api_request(f"/v1/me/player/volume?volume_percent={percent}", method="PUT")
 
 
 def play_track(uri: str) -> None:
@@ -707,6 +715,9 @@ def main() -> None:
             file=sys.stderr,
         )
         print("  play <uri>    - Play a track by Spotify URI", file=sys.stderr)
+        print(
+            "  volume <0-100> - Set the volume of the active device", file=sys.stderr
+        )
         sys.exit(1)
 
     command = sys.argv[1]
@@ -773,6 +784,21 @@ def main() -> None:
         except SpotifyError as exc:
             print(f"'play' failed: {exc}", file=sys.stderr)
             print(json.dumps({"success": False, "error": exc.reason}))
+    elif command == "volume":
+        try:
+            percent = int(sys.argv[2]) if len(sys.argv) > 2 else -1
+        except ValueError:
+            percent = -1
+        if not 0 <= percent <= 100:
+            print(json.dumps({"success": False, "error": "volume must be 0-100"}))
+            sys.exit(1)
+        try:
+            set_volume(percent)
+            print(json.dumps({"success": True}))
+        except SpotifyError as exc:
+            print(f"volume failed: {exc}", file=sys.stderr)
+            print(json.dumps({"success": False, "error": exc.reason}))
+            sys.exit(1)
     else:
         print(f"Unknown command: {command}", file=sys.stderr)
         sys.exit(1)
