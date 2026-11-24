@@ -30,6 +30,7 @@ import json
 import os
 import secrets
 import signal
+import socket
 import sys
 import tempfile
 import time
@@ -440,6 +441,10 @@ def get_playback_state() -> dict[str, Any] | None:
     alone.  `smart_shuffle` is undocumented in the endpoint reference but present in
     the payload.  `disallows` lists only the forbidden actions, so an absent key
     means allowed.
+
+    `device` names the device that plays, which may sit in another room.
+    The desktop client registers under the hostname.
+    A name match marks it local.
     """
     result = api_request("/v1/me/player")
     if not result:
@@ -452,6 +457,20 @@ def get_playback_state() -> dict[str, Any] | None:
         "canToggleShuffle": not disallows.get("toggling_shuffle", False),
         "canRepeatContext": not disallows.get("toggling_repeat_context", False),
         "canRepeatTrack": not disallows.get("toggling_repeat_track", False),
+        "isPlaying": bool(result.get("is_playing")),
+        "device": _device_entry(result.get("device")),
+    }
+
+
+def _device_entry(device: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Shape the playing device for the QML model.  None without a device."""
+    if not isinstance(device, dict) or not device.get("name"):
+        return None
+    name = device["name"]
+    return {
+        "name": name,
+        "type": device.get("type") or "",
+        "isLocal": name.casefold() == socket.gethostname().casefold(),
     }
 
 

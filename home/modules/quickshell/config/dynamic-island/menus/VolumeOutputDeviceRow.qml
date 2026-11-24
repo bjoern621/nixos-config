@@ -17,20 +17,25 @@ Item {
 
     readonly property string deviceMac: outputDevice.mac ?? ""
     readonly property bool hasBtStatus: outputDevice.isBluetooth && deviceMac.length > 0 && (deviceMac === BluetoothConnector.statusMac) && BluetoothConnector.statusText.length > 0
-    height: hasBtStatus ? 46 : 32
+    readonly property string statusText: isSpotifyEntry ? "Spotify" : hasBtStatus ? BluetoothConnector.statusText : ""
+    height: statusText.length > 0 ? 46 : 32
 
     readonly property bool isSinkEntry: outputDevice.type === "sink"
+    // Spotify Connect device playing elsewhere. Spotify owns it, so the row takes no click.
+    readonly property bool isSpotifyEntry: outputDevice.type === "spotify"
     readonly property bool isDefault: isSinkEntry && outputDevice.node.id === root.defaultSinkId
+    // Default sink and a remote Spotify device play at once, so several rows can be active.
+    readonly property bool isActive: isDefault || isSpotifyEntry
     readonly property bool isBusyTarget: BluetoothConnector.busy && outputDevice.isBluetooth && (deviceMac === BluetoothConnector.connectingMac)
     readonly property bool isBluetoothLocked: !isSinkEntry && outputDevice.isBluetooth && BluetoothConnector.busy
 
     scale: sinkTap.pressed ? 0.97 : 1.0
     SquishBehavior on scale {}
 
-    // Selected sink = accent + 2px ink border (launcher selection). Locked shows lit cream.
+    // Active output = accent + 2px ink border (launcher selection). Locked shows lit cream.
     LauncherDelegateBg {
-        active: root.isDefault
-        hovered: sinkHover.hovered || root.isBluetoothLocked
+        active: root.isActive
+        hovered: (sinkHover.hovered && !root.isSpotifyEntry) || root.isBluetoothLocked
         pressed: sinkTap.pressed
     }
 
@@ -66,7 +71,7 @@ Item {
                 size: Typography.fontSize14
                 // On the selected (accent) background, tint with foreground ink/text.
                 color: Colors.textColor
-                visible: root.isDefault && !root.isBusyTarget
+                visible: root.isActive && !root.isBusyTarget
                 width: visible ? Typography.fontSize12 : 0
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -105,7 +110,7 @@ Item {
                 Label {
                     text: root.outputDevice.name
                     font.pixelSize: Typography.fontSize12
-                    font.weight: root.isDefault ? Font.Bold : Font.Normal
+                    font.weight: root.isActive ? Font.Bold : Font.Normal
                     // Selected row text sits on selectedBackground: use foreground text color.
                     color: root.isBluetoothLocked ? Colors.textColorMuted : Colors.textColor
                     elide: Text.ElideRight
@@ -116,7 +121,7 @@ Item {
                     id: bluetoothIcon
                     source: "../icons/icons8-bluetooth.svg"
                     size: Typography.fontSize14
-                    color: root.isDefault ? Colors.textColor : Colors.textColorMuted
+                    color: root.isActive ? Colors.textColor : Colors.textColorMuted
                     visible: root.outputDevice.isBluetooth
                     width: visible ? Typography.fontSize14 : 0
                     anchors.verticalCenter: parent.verticalCenter
@@ -124,9 +129,9 @@ Item {
             }
 
             Label {
-                visible: root.hasBtStatus
+                visible: root.statusText.length > 0
                 width: parent.width
-                text: BluetoothConnector.statusText
+                text: root.statusText
                 font.pixelSize: Typography.fontSize12
                 font.weight: Font.Normal
                 color: Colors.textColorMuted
@@ -137,11 +142,11 @@ Item {
 
     HoverHandler {
         id: sinkHover
-        cursorShape: root.isBluetoothLocked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+        cursorShape: root.isSpotifyEntry ? Qt.ArrowCursor : root.isBluetoothLocked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
     }
     TapHandler {
         id: sinkTap
-        enabled: root.isSinkEntry || !BluetoothConnector.busy
+        enabled: root.isSinkEntry || (!root.isSpotifyEntry && !BluetoothConnector.busy)
         onTapped: {
             if (root.isSinkEntry) {
                 root.sinkActivated(root.outputDevice.node);

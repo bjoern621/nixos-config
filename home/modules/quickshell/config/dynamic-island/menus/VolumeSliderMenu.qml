@@ -129,7 +129,7 @@ Item {
                     spacing: Spacing.spacing6
 
                     Label {
-                        text: controller.defaultSinkDescription
+                        text: controller.activeOutputsDescription
                         font.pixelSize: Typography.fontSize12
                         color: Colors.textColor
                         elide: Text.ElideRight

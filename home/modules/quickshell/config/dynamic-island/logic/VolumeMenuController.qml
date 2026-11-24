@@ -40,8 +40,30 @@ QtObject {
         return result;
     }
 
+    // Spotify Connect device playing outside this machine (speaker, phone), else null.
+    // Plays beside the default sink, so both rows show active.
+    readonly property var spotifyRemoteDevice: {
+        const playback = NowPlayingModel.spotifyPlayback;
+        const device = playback?.device ?? null;
+        if (!playback?.isPlaying || !device || device.isLocal)
+            return null;
+        return device;
+    }
+
     // Connect + audio switch live in BluetoothConnector: machine-global state, menu per-screen.
-    readonly property var outputDevices: BluetoothUtils.buildOutputDevices(root.sinkNodes, BluetoothConnector.targets)
+    readonly property var outputDevices: {
+        const devices = BluetoothUtils.buildOutputDevices(root.sinkNodes, BluetoothConnector.targets);
+        const remote = root.spotifyRemoteDevice;
+        if (remote)
+            devices.push({
+                type: "spotify",
+                node: null,
+                name: remote.name,
+                isBluetooth: false,
+                mac: ""
+            });
+        return devices;
+    }
 
     // Master default-sink facade.
     readonly property var audioNode: VolumeService.audioNode
@@ -51,7 +73,7 @@ QtObject {
 
     readonly property int defaultSinkId: Pipewire.defaultAudioSink?.id ?? -1
     readonly property string defaultSinkDescription: Pipewire.defaultAudioSink?.description ?? "---"
-
+    readonly property string activeOutputsDescription: root.spotifyRemoteDevice ? root.defaultSinkDescription + " + " + root.spotifyRemoteDevice.name : root.defaultSinkDescription
     function toggleMute() {
         if (VolumeService.audioNode)
             VolumeService.audioNode.muted = !VolumeService.audioNode.muted;

@@ -358,7 +358,12 @@ Variants {
                             clickable: true
                             menu: volumeMenu
                             // Claim keyed by screen: a plain bool is last-writer-wins across Bars.
-                            onPopupOpenChanged: Globals.setVolumeSliderOpen(root.modelData.name, popupOpen)
+                            onPopupOpenChanged: {
+                                Globals.setVolumeSliderOpen(root.modelData.name, popupOpen);
+                                // Lists a Spotify device playing elsewhere beside the local outputs.
+                                if (popupOpen)
+                                    NowPlayingModel.refreshPlaybackState();
+                            }
                             onClicked: {
                                 if (Pipewire.defaultAudioSink?.audio)
                                     Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
