@@ -52,6 +52,10 @@
     # 1 = restore the last session ("Continue where you left off")
     RestoreOnStartup = 1;
 
+    # Memory Saver discards inactive tabs.
+    # Discarded tab runs no scripts, reloads on next visit.
+    HighEfficiencyModeEnabled = true;
+
     BookmarkBarEnabled = true;
 
     PromotionalTabsEnabled = false;
