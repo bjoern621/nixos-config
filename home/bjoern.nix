@@ -10,6 +10,7 @@
     ./modules/spotify.nix
     ./modules/discord.nix
     ./modules/networkmanager.nix
+    ./modules/blueman.nix
     ./modules/hyprland/default.nix
     ./modules/terminal.nix
     ./modules/terminal-drop.nix

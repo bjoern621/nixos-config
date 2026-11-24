@@ -3,7 +3,7 @@
 /*
   NetworkManager manages all network connections in one place — wifi, ethernet,
   and VPN (including WireGuard). Benefits over wg-quick on a desktop:
-    - Single tray applet (nm-applet) to toggle any connection
+    - One bar menu (Quickshell) toggles any connection
     - Integrates with the system keyring for credential storage
     - Handles DNS, routing, and interface lifecycle centrally
     - Per-connection profiles survive reboots without manual systemctl
@@ -18,9 +18,8 @@
   Multiple conf files can coexist in /etc/wireguard/, one per VPN endpoint.
   Repeat the import steps for each new connection.
 
-  Manage via tray:
-    nm-applet runs on login (see home/modules/networkmanager.nix)
-    Right-click tray icon -> VPN connections -> <name>
+  Manage via bar:
+    Quickshell network menu lists VPN connections; click <name> to toggle
 
   Manage via CLI:
     nmcli connection up   <name>
@@ -33,6 +32,6 @@
   # networkmanager is enabled in hosts/default/configuration.nix
   environment.systemPackages = with pkgs; [
     wireguard-tools # wg, wg-quick
-    networkmanagerapplet # nm-applet (tray) + nm-connection-editor (GUI)
+    networkmanagerapplet # nm-connection-editor (GUI); nm-applet autostart hidden in home/modules/networkmanager.nix
   ];
 }
