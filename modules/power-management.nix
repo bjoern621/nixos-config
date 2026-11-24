@@ -102,10 +102,6 @@
       RADEON_DPM_STATE_ON_BAT = "battery";
       RADEON_DPM_PERF_LEVEL_ON_AC = "auto";
       RADEON_DPM_PERF_LEVEL_ON_BAT = "auto";
-
-      # Adaptive backlight management (ABM): dims backlight, brightens pixels to match.
-      AMDGPU_ABM_LEVEL_ON_AC = 0;
-      AMDGPU_ABM_LEVEL_ON_BAT = 2;
     };
   };
 }
