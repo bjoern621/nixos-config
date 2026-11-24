@@ -82,8 +82,9 @@
       PLATFORM_PROFILE_ON_BAT = "balanced";
 
       # --- Audio ---
-      # Disable audio power saving — the TAS2781 speaker amplifier
-      # loses DSP firmware state when the HDA codec suspends.
+      # TAS2781 speaker amplifier loses its DSP firmware state when HDA codec suspends.
+      # Speakers then sound thin.
+      # Retested 2026-11-24 on kernel 7.3.5: thin after 30 s of silence.
       SOUND_POWER_SAVE_ON_AC = 0;
       SOUND_POWER_SAVE_ON_BAT = 0;
 
