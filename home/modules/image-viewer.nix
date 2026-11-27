@@ -15,8 +15,15 @@ let
   ];
 in
 {
-  home.packages = with pkgs; [
-    imv
+  home.packages = [
+    # Pinch rotation tilts image on every touchpad zoom.
+    # imv has no option for it.
+    (pkgs.imv.overrideAttrs (old: {
+      postPatch = (old.postPatch or "") + ''
+        substituteInPlace src/imv.c \
+          --replace-fail "imv_viewport_rotate_by(imv->view, e->data.gesture_pinch.rotation);" ""
+      '';
+    }))
   ];
 
   # Checkerboard behind transparency.
